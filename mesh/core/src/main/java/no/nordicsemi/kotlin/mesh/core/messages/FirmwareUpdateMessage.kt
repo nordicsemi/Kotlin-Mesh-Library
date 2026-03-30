@@ -9,25 +9,25 @@ import java.net.URL
 import java.nio.ByteOrder
 
 /**
- * The Firmware ID state identifies a firmware image on the Node or on any subsystem within the Node.
+ * The Firmware ID state identifies a firmware image on the Node or on any subsystem
+ * within the Node.
  *
  * The Firmware ID consists of a Company Identifier and an optional vendor-specific version identifier
  * and is used to identify the firmware image on a Node.
  *
- * The Firmware ID is used by the Firmware Distribution Server to query new firmware image based on
- * the current Firmware ID. It should identify the device type and firmware version. For Zephyr and
- * nRF Connect SDK implementation see [Firmware images documentation]
- * (https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/bluetooth/api/mesh/dfu.html#firmware_images).
+ * The Firmware ID is used by the Firmware Distribution Server to query new firmware image
+ * based on the current Firmware ID. If should identify the device type and firmware version.
+ * - seeAlso: For Zephyr and nRF Connect SDK implementation see
+ * [Firmware images documentation](https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/bluetooth/api/mesh/dfu.html#firmware_images).
  *
  * @property companyIdentifier The 16-bit Company Identifier (CID) assigned by the Bluetooth SIG.
- *                             Company Identifiers are published in [Assigned Numbers]
- *                             (https://www.bluetooth.com/specifications/assigned-numbers/).
+ *                             Company Identifiers are published in [Assigned Numbers](https://www.bluetooth.com/specifications/assigned-numbers/).
  *
  * @property version           Vendor-specific information describing the firmware binary package.
  *                             The version information shall be 0-106 bytes long.
  *                             Use [versionString] to get a human-readable version string if the
  *                             version is following Zephyr build versioning scheme
- *                             ([UByte], [UByte], [UShort], [UShort]).
+ *                             (`UInt8, UInt8, UInt16, UInt32`).
  * @property bytes             Returns the Firmware ID as a byte array. This array can be used to
  *                             check and obtain updated firmware images using HTTPS.
  *
@@ -59,18 +59,21 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
      * If [version] is empty, `null` is returned. If the number of bytes is
      * different from 1, 2, 4 or 8, the `version` is returned as a hex string with "0x" prefix.
      */
-    @Suppress("RedundantExplicitType")
     val versionString: String?
         get() {
             if (version.isEmpty()) return null
-            val major: UByte = version[0].toUByte()
-            val minor: UByte = if (version.size >= 2) version[1].toUByte() else 0u
+            var major: UByte = 0u
+            var minor: UByte = 0u
             var revision: UShort = 0u
             var build: UInt = 0u
             when (version.size) {
                 8 -> build = version.getUInt(offset = 4, order = ByteOrder.LITTLE_ENDIAN)
                 4 -> revision = version.getUShort(offset = 2, order = ByteOrder.LITTLE_ENDIAN)
             }
+            if (version.size >= 2) {
+                minor = version[1].toUByte()
+            }
+            major = version[0].toUByte()
             return if (build == 0u) "$major.$minor.$revision" else "$major.$minor.$revision+$build"
         }
 
@@ -180,16 +183,6 @@ enum class FirmwareUpdateMessageStatus(val value: UByte) {
             TEMPORARILY_UNAVAILABLE -> "Temporarily Unavailable"
             BLOB_TRANSFER_BUSY -> "BLOB Transfer Busy"
         }
-
-    internal companion object {
-        /**
-         * Returns the [FirmwareUpdateMessageStatus] for the given [value].
-         *
-         * @param value The status value.
-         * @return The [FirmwareUpdateMessageStatus] for the given [value].
-         */
-        fun from(value: UByte) = entries.firstOrNull { it.value == value }
-    }
 }
 
 /**
@@ -287,17 +280,6 @@ enum class FirmwareDistributionMessageStatus(val value: UByte) {
             NEW_FIRMWARE_NOT_AVAILABLE -> "New Firmware Not Available"
             SUSPEND_FAILED -> "Suspend Failed"
         }
-
-    internal companion object {
-
-        /**
-         * Returns the [FirmwareDistributionMessageStatus] for the given [value].
-         *
-         * @param value The status value.
-         * @return The [FirmwareDistributionMessageStatus] for the given [value].
-         */
-        fun from(value: UByte) = entries.firstOrNull { it.value == value }
-    }
 }
 
 /**
@@ -384,17 +366,6 @@ enum class RetrievedUpdatePhase(internal val value: UByte) {
             APPLY_FAILED -> "Apply Failed"
             UNKNOWN -> "Unknown Phase"
         }
-
-    internal companion object {
-
-        /**
-         * Returns the [RetrievedUpdatePhase] for the given [value].
-         *
-         * @param value The phase value.
-         * @return The [RetrievedUpdatePhase] for the given [value].
-         */
-        fun from(value: UByte) = entries.firstOrNull { it.value == value }
-    }
 }
 
 /**
@@ -447,17 +418,6 @@ enum class FirmwareDistributionPhase(internal val value: UByte) {
             CANCELING_UPDATE -> "Canceling Update"
             TRANSFER_SUSPENDED -> "Transfer Suspended"
         }
-
-    internal companion object {
-
-        /**
-         * Returns the [FirmwareDistributionPhase] for the given [value].
-         *
-         * @param value The status value.
-         * @return The [FirmwareDistributionPhase] for the given [value].
-         */
-        fun from(value: UByte) = entries.firstOrNull { it.value == value }
-    }
 }
 
 /**
@@ -517,17 +477,6 @@ enum class FirmwareUpdatePolicy(internal val value: UByte) {
             VERIFY_ONLY -> "Verify Only"
             VERIFY_AND_APPLY -> "Verify And Apply"
         }
-
-    internal companion object {
-
-        /**
-         * Returns the [FirmwareUpdatePolicy] for the given [value].
-         *
-         * @param value The status value.
-         * @return The [FirmwareUpdatePolicy] for the given [value].
-         */
-        fun from(value: UByte) = entries.firstOrNull { it.value == value }
-    }
 }
 
 /**
@@ -538,14 +487,9 @@ enum class FirmwareUpdatePolicy(internal val value: UByte) {
  * @property message   Status message of the operation.
  */
 interface FirmwareDistributionStatusMessage : StatusMessage {
-    val status: FirmwareDistributionMessageStatus
+    val status : FirmwareDistributionMessageStatus
     override val isSuccess: Boolean
         get() = status == FirmwareDistributionMessageStatus.SUCCESS
     override val message: String
         get() = status.debugDescription
 }
-
-/**
- * Firmware distribution message initializer
- */
-interface FirmwareDistributionMessageInitializer : BaseMeshMessageInitializer, HasOpCode
