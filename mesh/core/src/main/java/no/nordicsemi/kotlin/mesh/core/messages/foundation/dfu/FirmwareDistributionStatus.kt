@@ -16,11 +16,11 @@ import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.DistributionMulticastAddress
-import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
+import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
+import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
-import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import java.nio.ByteOrder
 
 /**
@@ -49,13 +49,14 @@ import java.nio.ByteOrder
 class FirmwareDistributionStatus internal constructor(
     override val status: FirmwareDistributionMessageStatus,
     val phase: FirmwareDistributionPhase,
+    val firmwareImageIndex: UShort?,
     val multicastAddress: Address?,
     val applicationKeyIndex: KeyIndex?,
     val ttl: UByte?,
     val distributionTimeoutBase: UShort?,
     val distributionTransferMode: TransferMode?,
     val updatePolicy: FirmwareUpdatePolicy?,
-    val firmwareImageIndex: UShort?,
+    val distributionTimeoutBase: UShort?,
 ) : MeshResponse, FirmwareDistributionStatusMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters = status.value.toByteArray() +
@@ -129,18 +130,18 @@ class FirmwareDistributionStatus internal constructor(
     constructor(
         status: FirmwareDistributionMessageStatus,
         phase: FirmwareDistributionPhase,
-        distributionMulticastAddress: DistributionMulticastAddress,
-        applicationKeyIndex: KeyIndex,
-        ttl: UByte,
-        distributionTimeoutBase: UShort,
-        distributionTransferMode: TransferMode,
-        updatePolicy: FirmwareUpdatePolicy,
-        firmwareImageIndex: UShort,
+        firmwareImageIndex: UShort?,
+        distributionMulticastAddress: DistributionMulticastAddress?,
+        applicationKeyIndex: KeyIndex?,
+        ttl: UByte?,
+        distributionTransferMode: TransferMode?,
+        updatePolicy: FirmwareUpdatePolicy?,
+        distributionTimeoutBase: UShort?,
     ) : this(
         status = status,
         phase = phase,
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = distributionMulticastAddress.address,
+        multicastAddress = distributionMulticastAddress?.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -177,9 +178,6 @@ class FirmwareDistributionStatus internal constructor(
             if (parameters.size == 12) {
                 FirmwareDistributionStatus(
                     status = status,
-                    phase = FirmwareDistributionPhase.from(
-                        value = params[1].toUByte()
-                    ) ?: return@let null,
                     multicastAddress = params.getUShort(
                         offset = 2,
                         order = ByteOrder.LITTLE_ENDIAN
@@ -198,6 +196,9 @@ class FirmwareDistributionStatus internal constructor(
                     ) ?: return@let null,
                     updatePolicy = FirmwareUpdatePolicy.from(
                         value = ((params[9] shr 2) and 0x01).toUByte()
+                    ) ?: return@let null,
+                    phase = FirmwareDistributionPhase.from(
+                        value = params[1].toUByte()
                     ) ?: return@let null,
                     firmwareImageIndex = params.getUShort(
                         offset = 10,
