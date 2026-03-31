@@ -56,7 +56,6 @@ class FirmwareDistributionCapabilitiesStatus(
         override fun init(parameters: ByteArray?) = parameters?.takeIf {
             it.size >= 17
         }?.let { params ->
-            params
             FirmwareDistributionCapabilitiesStatus(
                 maxReceiversCount = params.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN),
                 maxFirmwareImagesListSize = params.getUShort(
