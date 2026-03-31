@@ -9,19 +9,19 @@ import java.net.URL
 import java.nio.ByteOrder
 
 /**
- * The Firmware ID state identifies a firmware image on the Node or on any subsystem
- * within the Node.
+ * The Firmware ID state identifies a firmware image on the Node or on any subsystem within the Node.
  *
  * The Firmware ID consists of a Company Identifier and an optional vendor-specific version identifier
  * and is used to identify the firmware image on a Node.
  *
- * The Firmware ID is used by the Firmware Distribution Server to query new firmware image
- * based on the current Firmware ID. If should identify the device type and firmware version.
- * - seeAlso: For Zephyr and nRF Connect SDK implementation see
- * [Firmware images documentation](https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/bluetooth/api/mesh/dfu.html#firmware_images).
+ * The Firmware ID is used by the Firmware Distribution Server to query new firmware image based on
+ * the current Firmware ID. If should identify the device type and firmware version. For Zephyr and
+ * nRF Connect SDK implementation see [Firmware images documentation]
+ * (https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/bluetooth/api/mesh/dfu.html#firmware_images).
  *
  * @property companyIdentifier The 16-bit Company Identifier (CID) assigned by the Bluetooth SIG.
- *                             Company Identifiers are published in [Assigned Numbers](https://www.bluetooth.com/specifications/assigned-numbers/).
+ *                             Company Identifiers are published in [Assigned Numbers]
+ *                             (https://www.bluetooth.com/specifications/assigned-numbers/).
  *
  * @property version           Vendor-specific information describing the firmware binary package.
  *                             The version information shall be 0-106 bytes long.
@@ -59,21 +59,20 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
      * If [version] is empty, `null` is returned. If the number of bytes is
      * different from 1, 2, 4 or 8, the `version` is returned as a hex string with "0x" prefix.
      */
+    @Suppress("RedundantExplicitType")
     val versionString: String?
         get() {
             if (version.isEmpty()) return null
-            var major: UByte = 0u
-            var minor: UByte = 0u
+            val major: UByte = version[0].toUByte()
+            val minor: UByte = if (version.size >= 2) {
+                version[1].toUByte()
+            } else 0u
             var revision: UShort = 0u
             var build: UInt = 0u
             when (version.size) {
                 8 -> build = version.getUInt(offset = 4, order = ByteOrder.LITTLE_ENDIAN)
                 4 -> revision = version.getUShort(offset = 2, order = ByteOrder.LITTLE_ENDIAN)
             }
-            if (version.size >= 2) {
-                minor = version[1].toUByte()
-            }
-            major = version[0].toUByte()
             return if (build == 0u) "$major.$minor.$revision" else "$major.$minor.$revision+$build"
         }
 
