@@ -46,16 +46,16 @@ import java.nio.ByteOrder
  * @property updatePolicy             Update policy used in a firmware image distribution.
  * @property distributionTimeoutBase  Base timeout value used in a firmware image distribution.
  */
-class FirmwareDistributionStatus internal constructor(
+class FirmwareDistributionStatus(
     override val status: FirmwareDistributionMessageStatus,
     val phase: FirmwareDistributionPhase,
+    val firmwareImageIndex: UShort?,
     val multicastAddress: Address?,
     val applicationKeyIndex: KeyIndex?,
     val ttl: UByte?,
-    val distributionTimeoutBase: UShort?,
     val distributionTransferMode: TransferMode?,
     val updatePolicy: FirmwareUpdatePolicy?,
-    val firmwareImageIndex: UShort?,
+    val distributionTimeoutBase: UShort?,
 ) : MeshResponse, FirmwareDistributionStatusMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters = status.value.toByteArray() +
@@ -129,32 +129,24 @@ class FirmwareDistributionStatus internal constructor(
     constructor(
         status: FirmwareDistributionMessageStatus,
         phase: FirmwareDistributionPhase,
-        distributionMulticastAddress: DistributionMulticastAddress,
-        applicationKeyIndex: KeyIndex,
-        ttl: UByte,
-        distributionTimeoutBase: UShort,
-        distributionTransferMode: TransferMode,
-        updatePolicy: FirmwareUpdatePolicy,
-        firmwareImageIndex: UShort,
+        firmwareImageIndex: UShort?,
+        distributionMulticastAddress: DistributionMulticastAddress?,
+        applicationKeyIndex: KeyIndex?,
+        ttl: UByte?,
+        distributionTransferMode: TransferMode?,
+        updatePolicy: FirmwareUpdatePolicy?,
+        distributionTimeoutBase: UShort?,
     ) : this(
         status = status,
         phase = phase,
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = distributionMulticastAddress.address,
+        multicastAddress = distributionMulticastAddress?.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
         updatePolicy = updatePolicy,
         distributionTimeoutBase = distributionTimeoutBase
     )
-
-    init {
-        multicastAddress?.let {
-            require(DistributionMulticastAddress.isValid(address = it)) {
-                "Invalid multicast address: 0x${multicastAddress.toHexString(format = HexFormat.UpperCase)}"
-            }
-        }
-    }
 
     companion object Initializer : BLOBMessageInitializer {
         override val opCode: UInt = 0x831Du
@@ -168,9 +160,6 @@ class FirmwareDistributionStatus internal constructor(
             if (parameters.size == 12) {
                 FirmwareDistributionStatus(
                     status = status,
-                    phase = FirmwareDistributionPhase.from(
-                        value = params[1].toUByte()
-                    ) ?: return@let null,
                     multicastAddress = params.getUShort(
                         offset = 2,
                         order = ByteOrder.LITTLE_ENDIAN
@@ -189,6 +178,9 @@ class FirmwareDistributionStatus internal constructor(
                     ) ?: return@let null,
                     updatePolicy = FirmwareUpdatePolicy.from(
                         value = ((params[9] shr 2) and 0x01).toUByte()
+                    ) ?: return@let null,
+                    phase = FirmwareDistributionPhase.from(
+                        value = params[1].toUByte()
                     ) ?: return@let null,
                     firmwareImageIndex = params.getUShort(
                         offset = 10,
