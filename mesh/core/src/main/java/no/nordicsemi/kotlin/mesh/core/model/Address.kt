@@ -273,8 +273,29 @@ data class GroupAddress(
  * fixed. Fixed group addresses are in the range of 0xFF00 through 0xFFFF.
  */
 @Serializable
-sealed class FixedGroupAddress(override val address: Address) : MeshAddress(), ProxyFilterAddress,
-    PublicationAddress, HeartbeatSubscriptionDestination, HeartbeatPublicationDestination
+sealed class FixedGroupAddress(
+    override val address: Address,
+) : MeshAddress(),
+    ProxyFilterAddress,
+    PublicationAddress,
+    HeartbeatSubscriptionDestination,
+    HeartbeatPublicationDestination,
+    DistributionMulticastAddress {
+    companion object {
+
+        /**
+         * Checks if the given address is a fixed group address.
+         *
+         * @param address Address to check.
+         * @return True if the given address is a fixed group address, false otherwise.
+         */
+        fun isValid(address: Address) = address == allProxies ||
+                address == allFriends ||
+                address == allRelays ||
+                address == allNodes
+
+    }
+}
 
 /**
  * A message sent to the all-proxies address shall be processed by the primary element of all nodes
