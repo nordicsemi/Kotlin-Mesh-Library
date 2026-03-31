@@ -18,7 +18,7 @@ import java.nio.ByteOrder
  * and is used to identify the firmware image on a Node.
  *
  * The Firmware ID is used by the Firmware Distribution Server to query new firmware image based on
- * the current Firmware ID. It should identify the device type and firmware version. For Zephyr and
+ * the current Firmware ID. If should identify the device type and firmware version. For Zephyr and
  * nRF Connect SDK implementation see [Firmware images documentation]
  * (https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/bluetooth/api/mesh/dfu.html#firmware_images).
  *
@@ -68,6 +68,10 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
         get() {
             if (version.isEmpty()) return null
             val major: UByte = version[0].toUByte()
+            val minor: UByte = if (version.size >= 2) {
+                version[1].toUByte()
+            } else 0u
+            val major: UByte = version[0].toUByte()
             val minor: UByte = if (version.size >= 2) version[1].toUByte() else 0u
             var revision: UShort = 0u
             var build: UInt = 0u
@@ -75,10 +79,6 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
                 8 -> build = version.getUInt(offset = 4, order = ByteOrder.LITTLE_ENDIAN)
                 4 -> revision = version.getUShort(offset = 2, order = ByteOrder.LITTLE_ENDIAN)
             }
-            if (version.size >= 2) {
-                minor = version[1].toUByte()
-            }
-            major = version[0].toUByte()
             return if (build == 0u) "$major.$minor.$revision" else "$major.$minor.$revision+$build"
         }
 
