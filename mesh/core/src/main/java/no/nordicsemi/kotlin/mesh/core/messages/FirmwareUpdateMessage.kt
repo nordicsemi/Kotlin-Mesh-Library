@@ -280,6 +280,17 @@ enum class FirmwareDistributionMessageStatus(val value: UByte) {
             NEW_FIRMWARE_NOT_AVAILABLE -> "New Firmware Not Available"
             SUSPEND_FAILED -> "Suspend Failed"
         }
+
+    internal companion object {
+
+        /**
+         * Returns the [FirmwareDistributionMessageStatus] for the given [value].
+         *
+         * @param value The status value.
+         * @return The [FirmwareDistributionMessageStatus] for the given [value].
+         */
+        fun from(value: UByte) = entries.firstOrNull { it.value == value }
+    }
 }
 
 /**
@@ -418,6 +429,17 @@ enum class FirmwareDistributionPhase(internal val value: UByte) {
             CANCELING_UPDATE -> "Canceling Update"
             TRANSFER_SUSPENDED -> "Transfer Suspended"
         }
+
+    internal companion object {
+
+        /**
+         * Returns the [FirmwareDistributionPhase] for the given [value].
+         *
+         * @param value The status value.
+         * @return The [FirmwareDistributionPhase] for the given [value].
+         */
+        fun from(value: UByte) = entries.firstOrNull { it.value == value }
+    }
 }
 
 /**
@@ -477,6 +499,17 @@ enum class FirmwareUpdatePolicy(internal val value: UByte) {
             VERIFY_ONLY -> "Verify Only"
             VERIFY_AND_APPLY -> "Verify And Apply"
         }
+
+    internal companion object {
+
+        /**
+         * Returns the [FirmwareUpdatePolicy] for the given [value].
+         *
+         * @param value The status value.
+         * @return The [FirmwareUpdatePolicy] for the given [value].
+         */
+        fun from(value: UByte) = entries.firstOrNull { it.value == value }
+    }
 }
 
 /**
@@ -487,7 +520,7 @@ enum class FirmwareUpdatePolicy(internal val value: UByte) {
  * @property message   Status message of the operation.
  */
 interface FirmwareDistributionStatusMessage : StatusMessage {
-    val status : FirmwareDistributionMessageStatus
+    val status: FirmwareDistributionMessageStatus
     override val isSuccess: Boolean
         get() = status == FirmwareDistributionMessageStatus.SUCCESS
     override val message: String
