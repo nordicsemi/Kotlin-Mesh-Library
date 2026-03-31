@@ -525,3 +525,8 @@ interface FirmwareDistributionStatusMessage : StatusMessage {
     override val message: String
         get() = status.debugDescription
 }
+
+/**
+ * Firmware distribution message initializer
+ */
+interface FirmwareDistributionMessageInitializer : BaseMeshMessageInitializer, HasOpCode
