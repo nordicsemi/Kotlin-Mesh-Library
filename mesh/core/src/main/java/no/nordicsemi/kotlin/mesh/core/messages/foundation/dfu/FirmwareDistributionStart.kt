@@ -11,7 +11,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
-import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
@@ -47,16 +46,14 @@ import kotlin.uuid.Uuid
  *                                    Timeout = (10,000 × (Timeout Base + 2)) + (100 × Transfer TTL)
  *                                    milliseconds.
  */
-class FirmwareDistributionStart @OptIn(ExperimentalUuidApi::class)
-internal constructor(
+class FirmwareDistributionStart internal constructor(
     val applicationKeyIndex: KeyIndex,
     val ttl: UByte = 0xFF.toUByte(),
     val distributionTimeoutBase: UShort = 118u, // 20 minutes
     val distributionTransferMode: TransferMode = TransferMode.PUSH,
     val updatePolicy: FirmwareUpdatePolicy = FirmwareUpdatePolicy.VERIFY_AND_APPLY,
     val firmwareImageIndex: UShort,
-    val address: Address? = null,
-    val labelUuid: Uuid? = null,
+    val multicastAddress: DistributionMulticastAddress,
 ) : AcknowledgedMeshMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionStatus.opCode
@@ -70,8 +67,8 @@ internal constructor(
                     ((distributionTransferMode.value) or (updatePolicy.value shl 2)).toByteArray() +
                     firmwareImageIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
             return when {
-                labelUuid != null -> data + labelUuid.toByteArray()
-                else -> data + address!!.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+                multicastAddress is VirtualAddress -> data + multicastAddress.uuid.toByteArray()
+                else -> data + UnassignedAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
             }
         }
 
@@ -109,7 +106,7 @@ internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        address = groupAddress.address,
+        multicastAddress = groupAddress,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -139,7 +136,7 @@ internal constructor(
     @OptIn(ExperimentalUuidApi::class)
     constructor(
         firmwareImageIndex: UShort,
-        virtualAddress: VirtualAddress,
+        labelUuid: Uuid,
         applicationKeyIndex: KeyIndex,
         ttl: UByte = 0xFF.toUByte(),
         distributionTransferMode: TransferMode = TransferMode.PUSH,
@@ -147,7 +144,7 @@ internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        labelUuid = virtualAddress.uuid,
+        multicastAddress = VirtualAddress(uuid = labelUuid),
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -184,7 +181,7 @@ internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        address = fixedGroupAddress.address,
+        multicastAddress = fixedGroupAddress,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -221,7 +218,7 @@ internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        address = UnassignedAddress.address,
+        multicastAddress = unassignedAddress,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -259,6 +256,31 @@ internal constructor(
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 10 || it.size == 24 }
             ?.let { params ->
+                FirmwareDistributionStart(
+                    applicationKeyIndex = params.getUShort(
+                        offset = 0,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    ),
+                    ttl = params[2].toUByte(),
+                    distributionTimeoutBase = params.getUShort(
+                        offset = 3,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    ),
+                    distributionTransferMode = TransferMode.from(
+                        value = (params[5] shr 6).toUByte()
+                    ) ?: return@let null,
+                    updatePolicy = FirmwareUpdatePolicy.from(
+                        value = ((params[5] shr 5) and 0x01).toUByte()
+                    ) ?: return@let null,
+                    firmwareImageIndex = params.getUShort(
+                        offset = 6,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    ),
+                    multicastAddress = when (params.size == 24) {
+                        true -> VirtualAddress(Uuid.fromByteArray(params.sliceArray(indices = 8 until 24)))
+                        false -> UnassignedAddress
+                    }
+                )
                 if (params.size == 24) {
                     FirmwareDistributionStart(
                         applicationKeyIndex = params.getUShort(
