@@ -53,7 +53,6 @@ class FirmwareDistributionStatus internal constructor(
     val multicastAddress: Address?,
     val applicationKeyIndex: KeyIndex?,
     val ttl: UByte?,
-    val distributionTimeoutBase: UShort?,
     val distributionTransferMode: TransferMode?,
     val updatePolicy: FirmwareUpdatePolicy?,
     val distributionTimeoutBase: UShort?,
