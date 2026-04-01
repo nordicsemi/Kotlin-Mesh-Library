@@ -46,7 +46,7 @@ import java.nio.ByteOrder
  * @property updatePolicy             Update policy used in a firmware image distribution.
  * @property distributionTimeoutBase  Base timeout value used in a firmware image distribution.
  */
-class FirmwareDistributionStatus(
+class FirmwareDistributionStatus internal constructor(
     override val status: FirmwareDistributionMessageStatus,
     val phase: FirmwareDistributionPhase,
     val firmwareImageIndex: UShort?,
