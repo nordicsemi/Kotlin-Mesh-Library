@@ -64,9 +64,7 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
         get() {
             if (version.isEmpty()) return null
             val major: UByte = version[0].toUByte()
-            val minor: UByte = if (version.size >= 2) {
-                version[1].toUByte()
-            } else 0u
+            val minor: UByte = if (version.size >= 2) version[1].toUByte() else 0u
             var revision: UShort = 0u
             var build: UInt = 0u
             when (version.size) {
