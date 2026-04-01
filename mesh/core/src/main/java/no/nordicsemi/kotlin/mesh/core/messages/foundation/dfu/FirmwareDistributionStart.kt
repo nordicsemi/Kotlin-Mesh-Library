@@ -11,6 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
+import no.nordicsemi.kotlin.mesh.core.model.DistributionMulticastAddress
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
