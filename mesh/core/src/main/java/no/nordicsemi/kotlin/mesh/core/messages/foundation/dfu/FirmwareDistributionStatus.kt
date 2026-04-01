@@ -148,6 +148,14 @@ class FirmwareDistributionStatus(
         distributionTimeoutBase = distributionTimeoutBase
     )
 
+    init {
+        multicastAddress?.let {
+            require(DistributionMulticastAddress.isValid(address = it)) {
+                "Invalid multicast address: 0x${multicastAddress.toHexString(format = HexFormat.UpperCase)}"
+            }
+        }
+    }
+
     companion object Initializer : BLOBMessageInitializer {
         override val opCode: UInt = 0x831Du
 
