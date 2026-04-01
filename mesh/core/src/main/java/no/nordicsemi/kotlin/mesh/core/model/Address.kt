@@ -152,7 +152,7 @@ data class UnicastAddress(
     constructor(address: Int) : this(address = address.toUShort())
 
     init {
-        require(isValid(address)) {
+        require(isValid(address = address)) {
             "A valid unicast address must range from $minUnicastAddress to $maxUnicastAddress!"
         }
     }
@@ -182,11 +182,10 @@ data class UnicastAddress(
 
 /**
  * A virtual address represents a set of destination addresses. Each virtual address logically
- * represents a Label Uuid,
- * which is a 128-bit value that does not have to be managed centrally. One or more elements may be
- * programmed to publish or subscribe to a Label Uuid. The Label Uuid is not transmitted and shall
- * be used as the Additional Data field of the message integrity check value in the upper transport
- * layer.
+ * represents a Label Uuid, which is a 128-bit value that does not have to be managed centrally. One
+ * or more elements may be programmed to publish or subscribe to a Label Uuid. The Label Uuid is not
+ * transmitted and shall be used as the Additional Data field of the message integrity check value
+ * in the upper transport layer.
  *
  * @property Uuid     Uuid label of the virtual address.
  */
@@ -253,7 +252,7 @@ data class GroupAddress(
     constructor(address: Int) : this(address = address.toUShort())
 
     init {
-        require(isValid(address)) {
+        require(isValid(address = address)) {
             "A valid group address must range from $minGroupAddress to $maxGroupAddress!"
         }
     }
