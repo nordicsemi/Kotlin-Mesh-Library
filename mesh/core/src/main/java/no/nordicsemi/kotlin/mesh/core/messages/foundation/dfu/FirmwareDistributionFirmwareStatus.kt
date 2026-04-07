@@ -32,8 +32,8 @@ class FirmwareDistributionFirmwareStatus(
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
         get() = status.value.toByteArray() +
-                entryCount.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                (imageIndex ?: 0xFFFFu).toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                entryCount.toByteArray(order = java.nio.ByteOrder.LITTLE_ENDIAN) +
+                (imageIndex ?: 0xFFFFu).toByteArray(order = java.nio.ByteOrder.LITTLE_ENDIAN) +
                 (firmwareId?.bytes ?: byteArrayOf())
 
     /**
@@ -130,7 +130,7 @@ class FirmwareDistributionFirmwareStatus(
             "firmwareId: ${firmwareId ?: "N/A"})"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
-        override val opCode: UInt = 0x8327u
+        override val opCode: UInt = 0x8319u
 
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 5 || it.size >= 7 }
