@@ -23,7 +23,7 @@ class FirmwareDistributionReceiversAdd(
             entriesLimit.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
-        override val opCode: UInt = 0x8314u
+        override val opCode: UInt = 0x8311u
 
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 4 }
