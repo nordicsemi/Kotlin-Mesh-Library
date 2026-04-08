@@ -130,7 +130,7 @@ class FirmwareDistributionFirmwareStatus(
             "firmwareId: ${firmwareId ?: "N/A"})"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
-        override val opCode: UInt = 0x8319u
+        override val opCode: UInt = 0x8327u
 
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 5 || it.size >= 7 }
