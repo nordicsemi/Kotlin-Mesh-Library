@@ -18,7 +18,7 @@ import java.nio.ByteOrder
  * and is used to identify the firmware image on a Node.
  *
  * The Firmware ID is used by the Firmware Distribution Server to query new firmware image based on
- * the current Firmware ID. If should identify the device type and firmware version. For Zephyr and
+ * the current Firmware ID. It should identify the device type and firmware version. For Zephyr and
  * nRF Connect SDK implementation see [Firmware images documentation]
  * (https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/bluetooth/api/mesh/dfu.html#firmware_images).
  *
