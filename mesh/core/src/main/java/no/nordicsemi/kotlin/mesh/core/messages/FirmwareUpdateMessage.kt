@@ -15,7 +15,7 @@ import java.nio.ByteOrder
  * and is used to identify the firmware image on a Node.
  *
  * The Firmware ID is used by the Firmware Distribution Server to query new firmware image based on
- * the current Firmware ID. If should identify the device type and firmware version. For Zephyr and
+ * the current Firmware ID. It should identify the device type and firmware version. For Zephyr and
  * nRF Connect SDK implementation see [Firmware images documentation]
  * (https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/bluetooth/api/mesh/dfu.html#firmware_images).
  *
@@ -27,7 +27,7 @@ import java.nio.ByteOrder
  *                             The version information shall be 0-106 bytes long.
  *                             Use [versionString] to get a human-readable version string if the
  *                             version is following Zephyr build versioning scheme
- *                             (`UInt8, UInt8, UInt16, UInt32`).
+ *                             ([UByte], [UByte], [UShort], [UShort]).
  * @property bytes             Returns the Firmware ID as a byte array. This array can be used to
  *                             check and obtain updated firmware images using HTTPS.
  *
@@ -180,6 +180,16 @@ enum class FirmwareUpdateMessageStatus(val value: UByte) {
             TEMPORARILY_UNAVAILABLE -> "Temporarily Unavailable"
             BLOB_TRANSFER_BUSY -> "BLOB Transfer Busy"
         }
+
+    internal companion object {
+        /**
+         * Returns the [FirmwareUpdateMessageStatus] for the given [value].
+         *
+         * @param value The status value.
+         * @return The [FirmwareUpdateMessageStatus] for the given [value].
+         */
+        fun from(value: UByte) = entries.firstOrNull { it.value == value }
+    }
 }
 
 /**
@@ -374,6 +384,17 @@ enum class RetrievedUpdatePhase(internal val value: UByte) {
             APPLY_FAILED -> "Apply Failed"
             UNKNOWN -> "Unknown Phase"
         }
+
+    internal companion object {
+
+        /**
+         * Returns the [RetrievedUpdatePhase] for the given [value].
+         *
+         * @param value The phase value.
+         * @return The [RetrievedUpdatePhase] for the given [value].
+         */
+        fun from(value: UByte) = entries.firstOrNull { it.value == value }
+    }
 }
 
 /**
