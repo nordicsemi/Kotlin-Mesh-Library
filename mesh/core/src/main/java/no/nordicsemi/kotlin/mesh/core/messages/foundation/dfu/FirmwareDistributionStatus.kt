@@ -140,7 +140,7 @@ class FirmwareDistributionStatus internal constructor(
         status = status,
         phase = phase,
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = distributionMulticastAddress?.address,
+        multicastAddress = distributionMulticastAddress.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
