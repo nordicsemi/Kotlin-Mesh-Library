@@ -197,7 +197,6 @@ class MeshNetworkManager(
      */
     @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
     suspend fun save() {
-        println("AAA Saving network")
         export()?.let {
             mutex.withLock { storage.save(network = it) }
         }
