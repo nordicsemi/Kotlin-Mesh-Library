@@ -94,7 +94,8 @@ class MeshNetworkManager(
     internal val scope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
     private val mutex by lazy { Mutex() }
     var networkParameters = NetworkParameters()
-    /** Teh currently loaded mesh network. */
+
+    /** The currently loaded mesh network. */
     internal var network: MeshNetwork? = null
     private val _meshNetwork = MutableStateFlow<MeshNetwork?>(null)
     val meshNetwork = _meshNetwork.asStateFlow()
@@ -196,13 +197,12 @@ class MeshNetworkManager(
      */
     @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
     suspend fun save() {
-        _meshNetwork.update {
-            network?.copy(
-                _timestamp = Instant.fromEpochMilliseconds(System.currentTimeMillis())
-            )
-        }
+        println("AAA Saving network")
         export()?.let {
             mutex.withLock { storage.save(network = it) }
+        }
+        _meshNetwork.update {
+            network?.copy(id = network!!.id.inc())
         }
     }
 
@@ -986,29 +986,33 @@ class MeshNetworkManager(
         val dst = MeshAddress.create(address = destination)
         require(dst is UnicastAddress) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "${destination.toHexString(
-                    format = HexFormat { 
-                        number { 
-                            prefix = "0x"
-                            minLength = 4
-                            upperCase = true
+                "${
+                    destination.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                minLength = 4
+                                upperCase = true
+                            }
                         }
-                    }
-                )} is not a Unicast Address"
+                    )
+                } is not a Unicast Address"
             }
             throw InvalidDestination()
         }
         val node = requireNotNull(value = network.node(address = dst)) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Unknown destination Node ${destination.toHexString(
-                    format = HexFormat {
-                        number {
-                            prefix = "0x"
-                            minLength = 4
-                            upperCase = true
+                "Unknown destination Node ${
+                    destination.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                minLength = 4
+                                upperCase = true
+                            }
                         }
-                    }
-                )}"
+                    )
+                }"
             }
             throw InvalidDestination()
         }

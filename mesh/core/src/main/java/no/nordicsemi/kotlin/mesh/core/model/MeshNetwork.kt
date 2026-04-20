@@ -99,6 +99,10 @@ data class MeshNetwork internal constructor(
     internal var _networkExclusions: MutableList<ExclusionList> = mutableListOf(),
     @SerialName("timestamp")
     internal var _timestamp: Instant = Instant.fromEpochMilliseconds(System.currentTimeMillis()),
+    // This is used to trigger updates in the state flow. This was added to the constructor so that
+    // it's included in the equals method.
+    @Transient
+    internal var id: Int = 0
 ) {
     var name: String
         get() = _name
@@ -214,6 +218,7 @@ data class MeshNetwork internal constructor(
 
     internal val localElements: List<Element>
         get() = _localElements
+
 
     /**
      * Convenience constructor to create a network for tests
@@ -346,7 +351,7 @@ data class MeshNetwork internal constructor(
      */
     @Throws(OverlappingProvisionerRanges::class)
     fun add(provisioner: Provisioner, address: UnicastAddress?) {
-        require(!_provisioners.contains(provisioner)) { throw ProvisionerAlreadyExists() }
+        require(provisioner(uuid = provisioner.uuid) == null) { throw ProvisionerAlreadyExists() }
         require(provisioner.network == null || provisioner.network?.uuid == uuid) {
             throw DoesNotBelongToNetwork()
         }
@@ -654,7 +659,7 @@ data class MeshNetwork internal constructor(
      */
     fun removeNetworkKeyAtIndex(index: Int, force: Boolean = false) {
         // Return as no op if the key does not exist
-        val key = networkKeys.getOrNull(index) ?: return
+        val key = networkKey(index = index.toUShort()) ?: return
         require(force || key.network?.uuid == uuid) { throw DoesNotBelongToNetwork() }
         require(force || !key.isInUse) { throw KeyInUse() }
         _networkKeys.removeAt(index = index)
@@ -766,7 +771,7 @@ data class MeshNetwork internal constructor(
     @Throws(DoesNotBelongToNetwork::class, KeyInUse::class)
     internal fun removeApplicationKeyAtIndex(index: Int, force: Boolean = false) {
         // Return as no op if the key does not exist
-        val key = applicationKeys.getOrNull(index) ?: return
+        val key = applicationKey(index = index.toUShort()) ?: return
         require(force || key.network?.uuid == uuid) { throw DoesNotBelongToNetwork() }
         require(force || !key.isInUse) { throw KeyInUse() }
         _applicationKeys.removeAt(index = index)
@@ -847,7 +852,7 @@ data class MeshNetwork internal constructor(
     )
     fun add(node: Node) {
         // Ensure the node does not exist already.
-        require(_nodes.none { it.uuid == node.uuid }) { throw NodeAlreadyExists() }
+        require(node(uuid = node.uuid) == null) { throw NodeAlreadyExists() }
         // Verify if the address range is available for the new Node.
         require(isAddressAvailable(address = node.primaryUnicastAddress, node = node)) {
             throw NoAddressesAvailable()
@@ -902,7 +907,7 @@ data class MeshNetwork internal constructor(
      */
     @Throws(GroupAlreadyExists::class, DoesNotBelongToNetwork::class)
     fun add(group: Group) {
-        require(!_groups.contains(group)) { throw GroupAlreadyExists() }
+        require(group(address = group.address.address) == null) { throw GroupAlreadyExists() }
         require(group.network == null) { throw GroupInUse() }
         _groups.add(group.also { it.network = this }).also { updateTimestamp() }
     }
@@ -975,12 +980,12 @@ data class MeshNetwork internal constructor(
      */
     @Throws(SceneAlreadyExists::class)
     fun add(name: String, number: SceneNumber): Scene {
-        require(_scenes.map { it.number }.none { it == number }) { throw SceneAlreadyExists() }
+        require(scene(number = number) == null) { throw SceneAlreadyExists() }
         return Scene(_name = name, number = number).apply {
             network = this@MeshNetwork
         }.also { scene ->
             _scenes
-                .apply { add(scene) }
+                .apply { add(element = scene) }
                 .sortBy { it.number }
             updateTimestamp()
         }
@@ -1010,7 +1015,7 @@ data class MeshNetwork internal constructor(
      */
     @Throws(DoesNotBelongToNetwork::class, SceneAlreadyExists::class)
     internal fun add(scene: Scene) {
-        require(!_scenes.contains(scene)) { throw SceneAlreadyExists() }
+        require(scene(number = scene.number) == null) { throw SceneAlreadyExists() }
         require(scene.network?.uuid == uuid) { throw DoesNotBelongToNetwork() }
         _scenes.add(scene.also { it.network = this }).also { updateTimestamp() }
     }
