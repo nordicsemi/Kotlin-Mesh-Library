@@ -74,6 +74,7 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 @Composable
 internal fun ProvisioningScreen(
+    snackbarHostState: SnackbarHostState,
     uiState: ProvisioningScreenUiState,
     beginProvisioning: (shouldReconfigure: Boolean) -> Unit,
     onNameChanged: (String) -> Unit,
@@ -88,7 +89,6 @@ internal fun ProvisioningScreen(
     onScanResultSelected: (ScanResult) -> Boolean,
 ) {
     val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
     var openDeviceCapabilitiesSheet by rememberSaveable { mutableStateOf(false) }
     val capabilitiesSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAuthenticationBottomSheet by rememberSaveable { mutableStateOf(false) }

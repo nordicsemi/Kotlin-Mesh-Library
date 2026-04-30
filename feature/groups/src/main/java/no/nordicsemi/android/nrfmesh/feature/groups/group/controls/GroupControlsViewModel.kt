@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.isSupportedGroupItem
@@ -28,8 +29,8 @@ import no.nordicsemi.kotlin.mesh.core.model.ModelId.Companion.decode
 @HiltViewModel(assistedFactory = GroupControlsViewModel.Factory::class)
 internal class GroupControlsViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
-    @Assisted("address") groupAddress: Int,
-    @Assisted("modelId") modelId: Int,
+    @Assisted("address") private val groupAddress: Int,
+    @Assisted("modelId") private val modelId: Int,
 ) : ViewModel() {
     private var group: Group? = null
     private val _uiState = MutableStateFlow(GroupControlsScreenUiState())
@@ -38,7 +39,12 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
     private lateinit var network: MeshNetwork
 
     init {
-        repository.network
+        observeNetwork()
+    }
+
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
             .filterNotNull()
             .onEach { network ->
                 network.group(address = groupAddress.toUShort())?.let { group ->
@@ -69,12 +75,11 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
                     _uiState.emit(value = state)
                     this@GroupControlsViewModel.network = network
                 }
-            }
-            .launchIn(scope = viewModelScope)
+            }.launchIn(scope = viewModelScope)
     }
 
     internal fun save() {
-        viewModelScope.launch { repository.save() }
+        repository.save()
     }
 
     @Suppress("unused")

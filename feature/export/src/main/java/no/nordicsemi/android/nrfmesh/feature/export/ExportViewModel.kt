@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -31,6 +32,7 @@ import kotlin.uuid.ExperimentalUuidApi
 class ExportViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
+    private lateinit var meshNetwork: MeshNetwork
     private val _uiState = MutableStateFlow(ExportScreenUiState())
     val uiState: StateFlow<ExportScreenUiState> = _uiState.asStateFlow()
 
@@ -38,18 +40,25 @@ class ExportViewModel @Inject internal constructor(
         observeNetwork()
     }
 
-    private fun observeNetwork() = repository.network
-        .filterNotNull()
-        .onEach { meshNetwork ->
-            _uiState.update { state ->
-                state.copy(
-                    networkName = meshNetwork.name,
-                    provisionerItemStates = meshNetwork.provisioners.map { ProvisionerItemState(it) },
-                    networkKeyItemStates = meshNetwork.networkKeys.map { NetworkKeyItemState(it) }
-                )
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach { meshNetwork ->
+                this.meshNetwork = meshNetwork
+                _uiState.update { state ->
+                    state.copy(
+                        networkName = meshNetwork.name,
+                        provisionerItemStates = meshNetwork.provisioners
+                            .map { ProvisionerItemState(provisioner = it)
+                        },
+                        networkKeyItemStates = meshNetwork.networkKeys
+                            .map { NetworkKeyItemState(it) }
+                    )
+                }
             }
-        }
-        .launchIn(viewModelScope)
+            .launchIn(viewModelScope)
+    }
 
     /**
      * Invoked when export option is toggled.
@@ -130,28 +139,27 @@ class ExportViewModel @Inject internal constructor(
                 state.copy(exportState = ExportState.Error(throwable))
             }
         }) {
-            repository.network.filterNotNull().collectLatest { network ->
-                uiState.value.run {
-                    val data = repository.exportNetwork(
-                        configuration = when (exportOption) {
-                            ExportOption.ALL -> NetworkConfiguration.Full
-                            ExportOption.PARTIAL -> createPartialConfiguration(
-                                network = network,
-                                networkKeyItemStates = networkKeyItemStates,
-                                provisionerItemStates = provisionerItemStates,
-                                exportDeviceKeys = exportDeviceKeys
-                            )
-                        }
-                    )
-
-                    contentResolver.openOutputStream(uri)?.run {
-                        write(data)
-                        close()
+            val network = meshNetwork
+            uiState.value.run {
+                val data = repository.exportNetwork(
+                    configuration = when (exportOption) {
+                        ExportOption.ALL -> NetworkConfiguration.Full
+                        ExportOption.PARTIAL -> createPartialConfiguration(
+                            network = network,
+                            networkKeyItemStates = networkKeyItemStates,
+                            provisionerItemStates = provisionerItemStates,
+                            exportDeviceKeys = exportDeviceKeys
+                        )
                     }
+                )
+
+                contentResolver.openOutputStream(uri)?.run {
+                    write(data)
+                    close()
                 }
-                _uiState.update {state ->
-                    state.copy(exportState = ExportState.Success)
-                }
+            }
+            _uiState.update { state ->
+                state.copy(exportState = ExportState.Success)
             }
         }
     }

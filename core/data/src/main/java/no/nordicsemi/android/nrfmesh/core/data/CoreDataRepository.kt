@@ -17,7 +17,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
@@ -49,13 +48,13 @@ import no.nordicsemi.kotlin.mesh.bearer.MeshBearer
 import no.nordicsemi.kotlin.mesh.bearer.gatt.GattBearer
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
 import no.nordicsemi.kotlin.mesh.core.MeshNetworkManager
+import no.nordicsemi.kotlin.mesh.core.NetworkEvent
 import no.nordicsemi.kotlin.mesh.core.ProxyFilter
 import no.nordicsemi.kotlin.mesh.core.exception.DoesNotBelongToNetwork
 import no.nordicsemi.kotlin.mesh.core.exception.KeyIndexOutOfRange
 import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.BaseMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.proxy.ProxyConfigurationMessage
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
@@ -110,12 +109,9 @@ class CoreDataRepository @Inject constructor(
     private var _developerSettingsStateFlow = MutableStateFlow(value = DeveloperSettings())
     val developerSettingsStateFlow = _developerSettingsStateFlow.asStateFlow()
 
-    val network: StateFlow<MeshNetwork?> = meshNetworkManager.meshNetwork
-    private val meshNetwork: MeshNetwork?
-        get() = network.value
-
-    val incomingMessages: SharedFlow<BaseMeshMessage>
-        get() = meshNetworkManager.incomingMeshMessages
+    val networkEvents: SharedFlow<NetworkEvent> = meshNetworkManager.networkEvents
+    val meshNetwork: MeshNetwork?
+        get() = meshNetworkManager.network
 
     private var meshBearer: MeshBearer? = null
     private var bearerStateObserverJob: Job? = null
@@ -160,27 +156,31 @@ class CoreDataRepository @Inject constructor(
     /**
      * Observes the automatic proxy connection state.
      */
-    private fun observerAutomaticProxyConnectionState() = preferences.data
-        .onEach { prefs ->
-            _proxyConnectionStateFlow.update {state ->
-                state.copy(autoConnect = prefs[PreferenceKeys.PROXY_AUTO_CONNECT] == true)
+    private fun observerAutomaticProxyConnectionState() {
+        preferences.data
+            .onEach { prefs ->
+                _proxyConnectionStateFlow.update { state ->
+                    state.copy(autoConnect = prefs[PreferenceKeys.PROXY_AUTO_CONNECT] == true)
+                }
             }
-        }
-        .launchIn(scope = ioScope)
+            .launchIn(scope = ioScope)
+    }
 
     /**
      * Observe changes to the developer settings.
      */
-    private fun observeDeveloperSettingsState() = preferences.data
-        .onEach { preferences ->
-            _developerSettingsStateFlow.update { state ->
-                state.copy(
-                    quickProvisioning = preferences[PreferenceKeys.QUICK_PROVISIONING] == true,
-                    alwaysReconfigure = preferences[PreferenceKeys.ALWAYS_RECONFIGURE] == true
-                )
+    private fun observeDeveloperSettingsState() {
+        preferences.data
+            .onEach { preferences ->
+                _developerSettingsStateFlow.update { state ->
+                    state.copy(
+                        quickProvisioning = preferences[PreferenceKeys.QUICK_PROVISIONING] == true,
+                        alwaysReconfigure = preferences[PreferenceKeys.ALWAYS_RECONFIGURE] == true
+                    )
+                }
             }
-        }
-        .launchIn(scope = ioScope)
+            .launchIn(scope = ioScope)
+    }
 
     /**
      * Loads an existing mesh network.
@@ -378,9 +378,11 @@ class CoreDataRepository @Inject constructor(
      * @param name            Name of the Network Key.
      */
     fun addNetworkKey(
-        name: String = "Network Key ${meshNetwork?.let { 
-            it.nextAvailableNetworkKeyIndex ?: throw KeyIndexOutOfRange() 
-        } ?: throw NoNetwork()}",
+        name: String = "Network Key ${
+            meshNetwork?.let {
+                it.nextAvailableNetworkKeyIndex ?: throw KeyIndexOutOfRange()
+            } ?: throw NoNetwork()
+        }",
     ): NetworkKey = meshNetwork?.add(name = name)
         ?.also { save() }
         ?: throw NoNetwork()
@@ -392,9 +394,11 @@ class CoreDataRepository @Inject constructor(
      * @param boundNetworkKey Bound Network Key
      */
     fun addApplicationKey(
-        name: String = "Application Key ${meshNetwork?.let {
-            it.nextAvailableApplicationKeyIndex?.inc() ?: throw KeyIndexOutOfRange()
-        } ?: throw NoNetwork()}",
+        name: String = "Application Key ${
+            meshNetwork?.let {
+                it.nextAvailableApplicationKeyIndex?.inc() ?: throw KeyIndexOutOfRange()
+            } ?: throw NoNetwork()
+        }",
         boundNetworkKey: NetworkKey,
     ): ApplicationKey = meshNetwork?.add(name = name, boundNetworkKey = boundNetworkKey)
         ?.also { save() }
@@ -404,7 +408,9 @@ class CoreDataRepository @Inject constructor(
      * Saves the mesh network.
      */
     fun save() {
-        ioScope.launch { meshNetworkManager.save() }
+        ioScope.launch {
+            meshNetworkManager.save()
+        }
     }
 
     suspend fun toggleQuickProvisioning(flag: Boolean): Unit = withContext(context = ioDispatcher) {
@@ -458,15 +464,21 @@ class CoreDataRepository @Inject constructor(
     @OptIn(ExperimentalUuidApi::class)
     private fun startAutomaticConnectivity() {
         // Make sure we don't start this multiple times.
-        if (connectivityJob != null) { return }
+        if (connectivityJob != null) {
+            return
+        }
 
         // Start a coroutine that will scan and connect to any GATT Proxy in this network.
         connectivityJob = ioScope.launch {
             while (isAutoConnectEnabled) {
+                // Added a check here to avoid a possible crash when the network is reset
+                if (meshNetwork == null) {
+                    break
+                }
                 val bearer = meshBearer ?: scanForGattProxy()
                 open(bearer)
                 awaitDisconnection(bearer)
-                // Added a 1500 second delay to avoid any reconnects
+                // Added a delay of 1500 seconds to avoid any reconnects
                 // Clarify this against scan results from gatt proxy
                 delay(1500.milliseconds)
             }
@@ -548,7 +560,7 @@ class CoreDataRepository @Inject constructor(
                     it.copy(connectionState = NetworkConnectionState.Scanning)
                 }
             }
-            .onCompletion { t ->
+            .onCompletion {
                 _proxyConnectionStateFlow.update { state ->
                     state.copy(connectionState = NetworkConnectionState.Disconnected)
                 }
@@ -595,7 +607,9 @@ class CoreDataRepository @Inject constructor(
      */
     private suspend fun open(bearer: MeshBearer) = withContext(context = ioDispatcher) {
         // Check if the bearer isn't already open. Can't be more open than that...
-        if (bearer.isOpen) { return@withContext }
+        if (bearer.isOpen) {
+            return@withContext
+        }
         // GATT Bearer does have a name - the name of the Bluetooth LE peripheral.
         val name = (bearer as? GattBearer)?.name
 
@@ -617,6 +631,7 @@ class CoreDataRepository @Inject constructor(
                             it.copy(connectionState = NetworkConnectionState.Connected(name))
                         }
                     }
+
                     is BearerEvent.Closed -> {
                         meshBearer = null
                         meshNetworkManager.proxyFilter.proxyDidDisconnect()
@@ -641,8 +656,10 @@ class CoreDataRepository @Inject constructor(
      *
      * @param bearer The bearer to expected to be disconnected.
      */
-    private suspend fun awaitDisconnection(bearer: MeshBearer) = withContext(context = ioDispatcher) {
-        bearer.state.first { it is BearerEvent.Closed }
+    private suspend fun awaitDisconnection(bearer: MeshBearer) {
+        withContext(context = ioDispatcher) {
+            bearer.state.first { it is BearerEvent.Closed }
+        }
     }
 
     /**
@@ -650,10 +667,12 @@ class CoreDataRepository @Inject constructor(
      *
      * This method does nothing if the [meshBearer] is not set.
      */
-    private suspend fun closeBearer() = withContext(NonCancellable) {
-        meshBearer?.close()
-        meshBearer = null
-        bearerStateObserverJob?.cancel()
+    private suspend fun closeBearer() {
+        withContext(NonCancellable) {
+            meshBearer?.close()
+            meshBearer = null
+            bearerStateObserverJob?.cancel()
+        }
     }
 
     /**

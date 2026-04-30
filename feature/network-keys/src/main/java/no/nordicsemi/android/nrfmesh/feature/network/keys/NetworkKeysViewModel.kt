@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -34,20 +35,23 @@ class NetworkKeysViewModel @Inject internal constructor(
         super.onCleared()
     }
 
-    private fun observeNetwork() = repository.network
-        .filterNotNull()
-        .onEach { meshNetwork ->
-            network = meshNetwork
-            _uiState.update { state ->
-                state.copy(
-                    keys = network.networkKeys
-                        .map { NetworkKeyData(key = it) }
-                        // Filter out the keys that are marked for deletion.
-                        .filter { it !in state.keysToBeRemoved },
-                )
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                _uiState.update { state ->
+                    state.copy(
+                        keys = network.networkKeys
+                            .map { NetworkKeyData(key = it) }
+                            // Filter out the keys that are marked for deletion.
+                            .filter { it !in state.keysToBeRemoved },
+                    )
+                }
             }
-        }
-        .launchIn(viewModelScope)
+            .launchIn(viewModelScope)
+    }
 
     /**
      * Adds a network key to the network.

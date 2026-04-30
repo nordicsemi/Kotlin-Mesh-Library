@@ -26,6 +26,7 @@ fun EntryProviderScope<NavKey>.provisioningEntry(
         val viewModel = hiltViewModel<ProvisioningViewModel>()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         ProvisioningScreen(
+            snackbarHostState = appState.snackbarHostState,
             uiState = uiState,
             beginProvisioning = viewModel::beginProvisioning,
             onNameChanged = viewModel::onNameChanged,

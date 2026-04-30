@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -20,10 +21,10 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 @HiltViewModel(assistedFactory = SettingsViewModel.Factory::class)
 class SettingsViewModel @AssistedInject constructor(
     private val repository: CoreDataRepository,
-    @Assisted clickableSetting: ClickableSetting?
+    @Assisted clickableSetting: ClickableSetting?,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(SettingsScreenUiState())
+    private val _uiState = MutableStateFlow(value = SettingsScreenUiState(selectedSetting = clickableSetting))
     val uiState: StateFlow<SettingsScreenUiState> = _uiState.asStateFlow()
 
     init {
@@ -33,21 +34,23 @@ class SettingsViewModel @AssistedInject constructor(
     /**
      * Observes the network state and updates the UI state with the current network data.
      */
-    private fun observeNetworkState() = repository.network
-        .filterNotNull()
-        .onEach { network ->
-            meshNetwork = network
-            _uiState.update { state ->
-                state.copy(
-                    networkState = MeshNetworkState.Success(
-                        network = network,
-                        settingsListData = SettingsListData(network)
-                    ),
-                    selectedSetting = state.selectedSetting
-                )
+    private fun observeNetworkState() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                meshNetwork = it
+                _uiState.update { state ->
+                    state.copy(
+                        networkState = MeshNetworkState.Success(
+                            settings = SettingsListData(network = meshNetwork)
+                        ),
+                        selectedSetting = state.selectedSetting
+                    )
+                }
             }
-        }
-        .launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
+    }
 
     /**
      * Invoked when a setting is selected.
@@ -86,11 +89,7 @@ class SettingsViewModel @AssistedInject constructor(
 }
 
 sealed interface MeshNetworkState {
-    data class Success(
-        val network: MeshNetwork,
-        val settingsListData: SettingsListData,
-    ) : MeshNetworkState
-
+    data class Success(val settings: SettingsListData) : MeshNetworkState
     data object Loading : MeshNetworkState
 }
 

@@ -4,8 +4,6 @@ package no.nordicsemi.kotlin.mesh.core.model
 
 import kotlinx.serialization.Serializable
 import no.nordicsemi.kotlin.data.HexString
-import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.data.toHexString
 import no.nordicsemi.kotlin.data.toUuid
 import no.nordicsemi.kotlin.mesh.core.model.serialization.MeshAddressSerializer
 import no.nordicsemi.kotlin.mesh.crypto.Crypto

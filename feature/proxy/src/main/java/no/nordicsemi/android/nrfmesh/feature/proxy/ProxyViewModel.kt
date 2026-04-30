@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -40,11 +41,14 @@ internal class ProxyViewModel @Inject internal constructor(
     }
 
     private fun observeNetwork() {
-        repository.network
+        repository.networkEvents
+            .map { repository.meshNetwork }
             .filterNotNull()
             .onEach { network ->
                 meshNetwork = network
-                _uiState.update { it.copy(meshNetworkState = MeshNetworkState.Success(network = network)) }
+                _uiState.update {
+                    it.copy(meshNetworkState = MeshNetworkState.Success(network = network))
+                }
             }
             .launchIn(scope = viewModelScope)
 

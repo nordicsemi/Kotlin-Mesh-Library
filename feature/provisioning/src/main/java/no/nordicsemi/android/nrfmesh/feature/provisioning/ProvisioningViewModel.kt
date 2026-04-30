@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Timer
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -15,7 +16,9 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,7 +63,7 @@ class ProvisioningViewModel @Inject constructor(
     @param:IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val centralManager: CentralManager,
 ) : ViewModel() {
-    private var meshNetwork: MeshNetwork? = null
+    private lateinit var meshNetwork: MeshNetwork
     private var pbBearer: ProvisioningBearer? = null
     private var pbBearerStateObserverJob: Job? = null
     private var provisioningManager: ProvisioningManager? = null
@@ -80,25 +83,30 @@ class ProvisioningViewModel @Inject constructor(
     /**
      * Observes the mesh network.
      */
-    private fun observeNetwork() = repository.network
-        .onEach { meshNetwork = it }
-        .filterNotNull()
-        .onEach {
-            _uiState.update { state ->
-                state.copy(
-                    networkKeys = it.networkKeys.toList(),
-                )
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                meshNetwork = it
+                _uiState.update { state ->
+                    state.copy(
+                        networkKeys = it.networkKeys.toList(),
+                    )
+                }
             }
-        }
-        .launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
+    }
 
-    private fun observeDeveloperSettings() = repository.developerSettingsStateFlow
-        .onEach {
-            _uiState.update { state ->
-                state.copy(developerSettings = it)
+    private fun observeDeveloperSettings() {
+        repository.developerSettingsStateFlow
+            .onEach {
+                _uiState.update { state ->
+                    state.copy(developerSettings = it)
+                }
             }
-        }
-        .launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
+    }
 
     /**
      * Selects the scan result for provisioning.
@@ -156,7 +164,7 @@ class ProvisioningViewModel @Inject constructor(
         unprovisionedDevice: UnprovisionedDevice,
         bearer: ProvisioningBearer,
     ) {
-        val meshNetwork = requireNotNull(meshNetwork) {  throw NoNetwork() }
+        val meshNetwork = requireNotNull(meshNetwork) { throw NoNetwork() }
 
         // The Provisioning Manager will carry on the provisioning.
         val provisioningManager = ProvisioningManager(
@@ -233,6 +241,7 @@ class ProvisioningViewModel @Inject constructor(
                             it.copy(provisionerState = Connected(unprovisionedDevice = unprovisionedDevice))
                         }
                     }
+
                     is BearerEvent.Closed -> {
                         this@ProvisioningViewModel.pbBearer = null
                         _uiState.update {

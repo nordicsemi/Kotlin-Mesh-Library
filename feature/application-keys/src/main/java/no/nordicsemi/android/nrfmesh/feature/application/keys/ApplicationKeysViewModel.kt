@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -21,9 +22,7 @@ import javax.inject.Inject
 internal class ApplicationKeysViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
-
     private lateinit var network: MeshNetwork
-
     private val _uiState = MutableStateFlow(ApplicationKeysScreenUiState())
     val uiState: StateFlow<ApplicationKeysScreenUiState> = _uiState.asStateFlow()
 
@@ -36,20 +35,23 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
         super.onCleared()
     }
 
-    private fun observeNetwork() = repository.network
-        .filterNotNull()
-        .onEach { meshNetwork ->
-            network = meshNetwork
-            _uiState.update { state ->
-                state.copy(
-                    keys = network.applicationKeys
-                        .map { ApplicationKeyData(key = it) }
-                        // Filter out the keys that are marked for deletion.
-                        .filter { it !in state.keysToBeRemoved },
-                )
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                _uiState.update { state ->
+                    state.copy(
+                        keys = network.applicationKeys
+                            .map { ApplicationKeyData(key = it) }
+                            // Filter out the keys that are marked for deletion.
+                            .filter { it !in state.keysToBeRemoved },
+                    )
+                }
             }
-        }
-        .launchIn(viewModelScope)
+            .launchIn(scope = viewModelScope)
+    }
 
     /**
      * Adds an application key to the network.
@@ -104,7 +106,7 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
      * Removes all keys that are queued for deletion.
      */
     private fun removeKeys() {
-        runCatching {
+        val _ = runCatching {
             _uiState.value.keysToBeRemoved.forEach { keyData ->
                 network.removeApplicationKeyWithIndex(index = keyData.index)
             }
@@ -113,7 +115,7 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
     }
 
 
-    internal fun selectKeyIndex(keyIndex: KeyIndex) {
+    internal fun selectKeyIndex(keyIndex: KeyIndex?) {
         _uiState.update { state ->
             state.copy(selectedKeyIndex = keyIndex)
         }

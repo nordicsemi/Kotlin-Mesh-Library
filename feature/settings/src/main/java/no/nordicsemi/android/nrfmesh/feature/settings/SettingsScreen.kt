@@ -47,7 +47,7 @@ internal fun SettingsListScreen(
     when (uiState.networkState) {
         is MeshNetworkState.Success -> {
             SettingsScreen(
-                settingsListData = uiState.networkState.settingsListData,
+                settingsListData = uiState.networkState.settings,
                 selectedSetting = uiState.selectedSetting,
                 highlightSelectedItem = highlightSelectedItem,
                 onNameChanged = onNameChanged,
@@ -93,22 +93,22 @@ private fun SettingsScreen(
         )
         NetworkNameRow(name = settingsListData.name, onNameChanged = onNameChanged)
         ProvisionersRow(
-            count = settingsListData.provisioners.size,
+            count = settingsListData.provisioners,
             isSelected = selectedSetting == ClickableSetting.PROVISIONERS && highlightSelectedItem,
             onProvisionersPressed = onProvisionersPressed
         )
         NetworkKeysRow(
-            count = settingsListData.networkKeys.size,
+            count = settingsListData.networkKeys,
             isSelected = selectedSetting == ClickableSetting.NETWORK_KEYS && highlightSelectedItem,
             onNetworkKeysPressed = onNetworkKeysPressed
         )
         ApplicationKeysRow(
-            count = settingsListData.appKeys.size,
+            count = settingsListData.appKeys,
             isSelected = selectedSetting == ClickableSetting.APPLICATION_KEYS && highlightSelectedItem,
             onApplicationKeysPressed = onApplicationKeysPressed
         )
         ScenesRow(
-            count = settingsListData.scenes.size,
+            count = settingsListData.scenes,
             isSelected = selectedSetting == ClickableSetting.SCENES && highlightSelectedItem,
             onScenesPressed = onScenesPressed
         )

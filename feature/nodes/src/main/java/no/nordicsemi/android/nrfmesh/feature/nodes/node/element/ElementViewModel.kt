@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.NotStarted
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -39,22 +39,22 @@ internal class ElementViewModel @AssistedInject internal constructor(
         observeNetworkChanges()
     }
 
-    private fun observeNetworkChanges() = repository.network
-        .filterNotNull()
-        .onEach {
-            val elementState = it.element(elementAddress = address)?.let { element ->
-                selectedNode = element.parentNode!!
-                ElementState.Success(element = element)
-            } ?: ElementState.Error(Throwable("Element containing node not found"))
-            _uiState.update { state ->
-                state.copy(
-                    elementState = elementState
-                )
+    private fun observeNetworkChanges() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                val elementState = it.element(elementAddress = address)?.let { element ->
+                    selectedNode = element.parentNode!!
+                    ElementState.Success(element = element)
+                } ?: ElementState.Error(Throwable("Element containing node not found"))
+                _uiState.update { state ->
+                    state.copy(elementState = elementState)
+                }
+                meshNetwork = it // update the local network instance
             }
-            meshNetwork = it // update the local network instance
-        }
-        .launchIn(scope = viewModelScope)
-
+            .launchIn(scope = viewModelScope)
+    }
 
     fun save() {
         repository.save()
@@ -78,4 +78,5 @@ internal sealed interface ElementState {
 internal data class ElementScreenUiState(
     val elementState: ElementState = ElementState.Loading,
     val messageState: MessageState = NotStarted,
+    val wasNetworkRemoved: Boolean = false,
 )

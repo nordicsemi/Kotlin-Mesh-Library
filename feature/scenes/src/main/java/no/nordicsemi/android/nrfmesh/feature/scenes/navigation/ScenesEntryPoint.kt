@@ -27,30 +27,26 @@ fun EntryProviderScope<NavKey>.scenesEntry(appState: AppState, navigator: Naviga
             sceneKey = SettingsListDetailSceneKey
         )
     ) {
-        val viewModel = hiltViewModel<ScenesViewModel, ScenesViewModel.Factory>(
-            key = "ScenesViewModel"
-        ) { factory ->
-            factory.create()
-        }
+        val viewModel = hiltViewModel<ScenesViewModel>()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         ScenesScreen(
             snackbarHostState = appState.snackbarHostState,
-            highlightSelectedItem =  !isCompactWidth() && appState.navigationState.currentKey is SceneContentKey,
+            highlightSelectedItem = !isCompactWidth() && appState.navigationState.currentKey is SceneContentKey,
             selectedSceneNumber = uiState.selectedSceneNumber,
             scenes = uiState.scenes,
             onAddSceneClicked = viewModel::addScene,
-            onSceneClicked = {
-                viewModel.selectScene(number = it)
-                navigator.navigate(key = SceneContentKey(number = it))
+            onSceneClicked = { sceneNumber ->
+                viewModel.selectScene(number = sceneNumber)
+                navigator.navigate(key = SceneContentKey(number = sceneNumber))
             },
-            navigateToScene = {
-                viewModel.selectScene(it)
-                navigator.navigate(key = SceneContentKey(number = it))
-            },
-            onSwiped = {
-                viewModel.onSwiped(scene = it)
-                if (uiState.selectedSceneNumber == it.number) {
-                    navigator.goBack()
+            onSwiped = { sceneData ->
+                viewModel.onSwiped(scene = sceneData)
+                if (uiState.selectedSceneNumber == sceneData.number) {
+                    val index = navigator.state.currentSubStack.indexOfFirst { it == ScenesContentKey }
+                    repeat(times = navigator.state.currentSubStack.size - index - 1) {
+                        navigator.goBack()
+                    }
+                    viewModel.selectScene(number = null)
                 }
             },
             onUndoClicked = viewModel::onUndoSwipe,

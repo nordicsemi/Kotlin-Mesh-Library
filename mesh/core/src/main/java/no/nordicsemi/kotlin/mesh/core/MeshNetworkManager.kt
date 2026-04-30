@@ -5,13 +5,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -32,10 +28,8 @@ import no.nordicsemi.kotlin.mesh.core.layers.access.InvalidSource
 import no.nordicsemi.kotlin.mesh.core.layers.access.InvalidTtl
 import no.nordicsemi.kotlin.mesh.core.layers.access.ModelNotBoundToAppKey
 import no.nordicsemi.kotlin.mesh.core.layers.access.NoAppKeysBoundToModel
-import no.nordicsemi.kotlin.mesh.core.layers.lowertransport.AccessMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.BaseMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
@@ -60,7 +54,6 @@ import no.nordicsemi.kotlin.mesh.core.model.serialization.config.NetworkConfigur
 import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -72,7 +65,10 @@ import kotlin.uuid.Uuid
  * @param secureProperties            Custom storage option allowing users to save the sequence
  *                                    number.
  * @param scope                       The scope in which the mesh network will be created.
- * @property meshNetwork              The state flow with the active mesh network.
+ * @property network                  Currently loaded mesh network. It will be null if the network has not
+ * @property networkEvents            A shared flow of events related to the mesh network. The events
+ *                                    are emitted when the network is loaded, created, updated or
+ *                                    cleared.
  * @property meshBearer               Mesh bearer is responsible for sending and receiving mesh
  *                                    messages.
  * @property logger                   The logger is responsible for logging mesh messages.
@@ -81,7 +77,6 @@ import kotlin.uuid.Uuid
  *                                    proxy node.
  * @property localElements            List of local elements in the mesh network. The primary
  *                                    element is always the first element in the list.
- * @property incomingMeshMessages     Flow containing incoming access messages received by the local
  *                                    node.
  * @property attentionTimer           Flow that notifies the client app about the health attention
  *                                    timer start and stop events.
@@ -96,9 +91,10 @@ class MeshNetworkManager(
     var networkParameters = NetworkParameters()
 
     /** The currently loaded mesh network. */
-    internal var network: MeshNetwork? = null
-    private val _meshNetwork = MutableStateFlow<MeshNetwork?>(null)
-    val meshNetwork = _meshNetwork.asStateFlow()
+    var network: MeshNetwork? = null
+        private set
+    private val _networkEvents = MutableSharedFlow<NetworkEvent>(replay = 1)
+    val networkEvents = _networkEvents.asSharedFlow()
 
     internal var observeNetworkManagerEvents: Job? = null
     internal var observeMeshMessages: Job? = null
@@ -109,12 +105,15 @@ class MeshNetworkManager(
             value?.let {
                 observeNetworkManagerEvents()
                 observeMeshMessages()
+            } ?: run {
+                // Cancel the observers when the network manager is set to null, which happens when
+                // the network is cleared.
+                observeNetworkManagerEvents?.cancel()
+                    ?.also { observeNetworkManagerEvents = null }
+                observeMeshMessages?.cancel()
+                    ?.also { observeMeshMessages = null }
             }
         }
-
-    private val _incomingMeshMessages = MutableSharedFlow<BaseMeshMessage>()
-    val incomingMeshMessages: SharedFlow<BaseMeshMessage>
-        get() = _incomingMeshMessages.asSharedFlow()
 
     var logger: Logger? = null
 
@@ -188,7 +187,7 @@ class MeshNetworkManager(
                 .apply { ivIndex = secureProperties.ivIndex(uuid = uuid) }
             networkManager = NetworkManager(manager = this)
             proxyFilter.onNewNetworkCreated()
-            _meshNetwork.update { network }
+            _networkEvents.emit(NetworkEvent.NetworkUpdated)
             true
         } == true
 
@@ -200,9 +199,7 @@ class MeshNetworkManager(
         export()?.let {
             mutex.withLock { storage.save(network = it) }
         }
-        _meshNetwork.update {
-            network?.copy(id = network!!.id.inc())
-        }
+        _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
     }
 
     /**
@@ -278,7 +275,7 @@ class MeshNetworkManager(
                 uuid = network.uuid,
                 ivIndex = network.ivIndex
             )
-            _meshNetwork.update { network }
+            _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
         }
     }
 
@@ -288,7 +285,7 @@ class MeshNetworkManager(
     suspend fun clear() {
         networkManager = null
         network = null
-        _meshNetwork.update { null }
+        _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
         mutex.withLock { storage.save(network = byteArrayOf()) }
     }
 
@@ -306,7 +303,7 @@ class MeshNetworkManager(
                 this.network = network
                 networkManager = NetworkManager(this)
                 proxyFilter.onNewNetworkCreated()
-                _meshNetwork.update { network }
+                _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
             }
     }.getOrElse {
         if (it is ImportError) throw it

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -29,14 +30,17 @@ internal class NodesViewModel @Inject internal constructor(
         observerNetworkChanges()
     }
 
-    internal fun observerNetworkChanges() = repository.network
-        .filterNotNull()
-        .onEach { network ->
-            _uiState.value = NodesScreenUiState(
-                nodes = network.nodes.toList()
-            )
-        }
-        .launchIn(scope = viewModelScope)
+    internal fun observerNetworkChanges() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach { network ->
+                _uiState.value = NodesScreenUiState(
+                    nodes = network.nodes.toList()
+                )
+            }
+            .launchIn(scope = viewModelScope)
+    }
 }
 
 internal data class NodesScreenUiState(val nodes: List<Node> = listOf())

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -31,18 +32,21 @@ class NetworkKeyViewModel @AssistedInject internal constructor(
         observeNetwork()
     }
 
-    private fun observeNetwork() = repository.network
-        .filterNotNull()
-        .onEach { meshNetwork ->
-            network = meshNetwork
-            val keyState = network.networkKey(index = keyIndex)
-                ?.let { NetKeyState.Success(key = it) }
-                ?: NetKeyState.Error(throwable = IllegalStateException("Network Key not found."))
-            _uiState.update { state ->
-                state.copy(keyState = keyState)
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                val keyState = network.networkKey(index = keyIndex)
+                    ?.let { NetKeyState.Success(key = it) }
+                    ?: NetKeyState.Error(throwable = IllegalStateException("Network Key not found."))
+                _uiState.update { state ->
+                    state.copy(keyState = keyState)
+                }
             }
-        }
-        .launchIn(viewModelScope)
+            .launchIn(viewModelScope)
+    }
 
     /**
      * Saves the network.

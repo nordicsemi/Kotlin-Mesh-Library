@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -41,25 +42,30 @@ internal class ProvisionerViewModel
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun observeNetwork() = repository.network
-        .filterNotNull()
-        .onEach { meshNetwork ->
-            network = meshNetwork
-            val provisionerState = network.provisioner(uuid = provisionerUuid)?.let { provisioner ->
-                this.provisioner = provisioner
-                ProvisionerState.Success(
-                    provisioner = provisioner,
-                    provisionerData = ProvisionerData(provisioner = provisioner)
-                )
-            } ?: ProvisionerState.Error(throwable = IllegalStateException("Provisioner not found."))
-            _uiState.update { state ->
-                state.copy(
-                    provisionerState = provisionerState,
-                    index = network.provisioners.indexOf(provisioner)
-                )
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                val provisionerState = network
+                    .provisioner(uuid = provisionerUuid)
+                    ?.let { provisioner ->
+                        this.provisioner = provisioner
+                        ProvisionerState.Success(
+                            provisioner = provisioner,
+                            provisionerData = ProvisionerData(provisioner = provisioner)
+                        )
+                    } ?: ProvisionerState.Error(throwable = IllegalStateException("Provisioner not found."))
+                _uiState.update { state ->
+                    state.copy(
+                        provisionerState = provisionerState,
+                        index = network.provisioners.indexOf(provisioner)
+                    )
+                }
             }
-        }
-        .launchIn(viewModelScope)
+            .launchIn(scope = viewModelScope)
+    }
 
     /**
      * Moves the provisioner to a new index in the list.

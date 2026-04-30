@@ -63,4 +63,6 @@
     <string name="label_done">Done</string>
     <string name="label_retry">Retry</string>
     <string name="label_cancel">Cancel</string>
+    <string name="label_no_network">No Network</string>
+    <string name="label_no_network_rationale">This network has been reset by a remote Node.</string>
 </resources>

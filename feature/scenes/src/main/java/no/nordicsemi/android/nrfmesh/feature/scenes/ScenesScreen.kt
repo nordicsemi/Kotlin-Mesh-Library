@@ -26,6 +26,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -34,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.dropUnlessResumed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.data.models.SceneData
@@ -48,7 +51,6 @@ import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.kotlin.mesh.core.exception.NoSceneRangeAllocated
-import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.Scene
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
@@ -59,8 +61,7 @@ internal fun ScenesScreen(
     selectedSceneNumber: SceneNumber?,
     scenes: List<SceneData>,
     onAddSceneClicked: () -> Scene,
-    onSceneClicked: (KeyIndex) -> Unit,
-    navigateToScene: (SceneNumber) -> Unit,
+    onSceneClicked: (SceneNumber) -> Unit,
     onSwiped: (SceneData) -> Unit,
     onUndoClicked: (SceneData) -> Unit,
     remove: (SceneData) -> Unit,
@@ -87,20 +88,25 @@ internal fun ScenesScreen(
                         title = stringResource(id = R.string.label_scenes)
                     )
                 }
-                items(items = scenes, key = { it.id }) { scene ->
-                    val isSelected =
-                        highlightSelectedItem && scene.number == selectedSceneNumber
-                    var visibility by remember { mutableStateOf(true) }
+                items(items = scenes, key = { it.number.toInt() }) { scene ->
+                    val isSelected = highlightSelectedItem && scene.number == selectedSceneNumber
+                    val dismissState = rememberSwipeToDismissBoxState()
+                    var visibility by rememberSaveable(scene.number.toInt()) {
+                        mutableStateOf(true)
+                    }
                     AnimatedVisibility(visible = visibility) {
                         SwipeToDismissScene(
                             scope = scope,
                             context = context,
                             snackbarHostState = snackbarHostState,
+                            dismissState = dismissState,
                             scene = scene,
                             isSelected = isSelected,
                             onSceneClicked = onSceneClicked,
                             onSwiped = {
+                                // Force a reset of the internal state before showing
                                 visibility = false
+                                scope.launch { dismissState.snapTo(SwipeToDismissBoxValue.Settled) }
                                 onSwiped(it)
                             },
                             onUndoClicked = {
@@ -120,11 +126,11 @@ internal fun ScenesScreen(
                 .defaultMinSize(minWidth = 150.dp),
             text = { Text(text = stringResource(R.string.label_add_scene)) },
             icon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
-            onClick = {
+            onClick = dropUnlessResumed {
                 runCatching {
                     onAddSceneClicked()
                 }.onSuccess { scene ->
-                    navigateToScene(scene.number)
+                    onSceneClicked(scene.number)
                 }.onFailure { t ->
                     scope.launch {
                         snackbarHostState.showSnackbar(
@@ -150,6 +156,7 @@ private fun SwipeToDismissScene(
     scope: CoroutineScope,
     context: Context,
     snackbarHostState: SnackbarHostState,
+    dismissState: SwipeToDismissBoxState,
     scene: SceneData,
     isSelected: Boolean,
     onSceneClicked: (SceneNumber) -> Unit,
@@ -157,7 +164,6 @@ private fun SwipeToDismissScene(
     onUndoClicked: (SceneData) -> Unit,
     remove: (SceneData) -> Unit,
 ) {
-    val dismissState = rememberSwipeToDismissBoxState()
     SwipeToDismissBox(
         // Added instead of using Arrangement.spacedBy to avoid leaving gaps when an item is swiped away.
         modifier = Modifier
@@ -170,7 +176,7 @@ private fun SwipeToDismissScene(
                     SwipeToDismissBoxValue.Settled,
                     SwipeToDismissBoxValue.StartToEnd,
                     SwipeToDismissBoxValue.EndToStart,
-                    -> if (scene.isInUse) Color.Gray else Color.Red
+                        -> if (scene.isInUse) Color.Gray else Color.Red
                 }
             )
             Box(
@@ -186,39 +192,43 @@ private fun SwipeToDismissScene(
             }
         },
         onDismiss = {
-            snackbarHostState.currentSnackbarData?.dismiss()
-            if (scene.isInUse) {
-                // The following functions are invoked in their own coroutine to ensure
-                // that they are executed sequentially
-                scope.launch {
-                    dismissState.reset()
-                    snackbarHostState.showSnackbar(
-                        message = context.getString(
-                            R.string.label_cannot_delete_scene_in_use,
-                            scene.name
+            // Check if the dismissal was caused by a swipe (target not Settled)
+            if (dismissState.targetValue != SwipeToDismissBoxValue.Settled) {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                if (scene.isInUse) {
+                    // The following functions are invoked in their own coroutine to ensure
+                    // that they are executed sequentially
+                    scope.launch {
+                        dismissState.reset()
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(
+                                R.string.label_cannot_delete_scene_in_use,
+                                scene.name
+                            )
                         )
-                    )
-                }
-            } else {
-                onSwiped(scene)
-                scope.launch {
-                    val result = snackbarHostState.showSnackbar(
-                        message = context.getString(
-                            R.string.label_scene_deleted,
-                            scene.name
-                        ),
-                        actionLabel = context.getString(R.string.action_undo),
-                        withDismissAction = true,
-                        duration = SnackbarDuration.Short
-                    )
+                    }
+                } else {
+                    onSwiped(scene)
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = context.getString(
+                                R.string.label_scene_deleted,
+                                scene.name
+                            ),
+                            actionLabel = context.getString(R.string.action_undo),
+                            withDismissAction = true,
+                            duration = SnackbarDuration.Short
+                        )
 
-                    when (result) {
-                        SnackbarResult.ActionPerformed -> {
-                            onUndoClicked(scene)
-                            dismissState.reset()
+                        when (result) {
+                            SnackbarResult.ActionPerformed -> {
+                                // IMPORTANT: Reset the offset before updating the visibility
+                                dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+                                onUndoClicked(scene)
+                            }
+
+                            SnackbarResult.Dismissed -> remove(scene)
                         }
-
-                        SnackbarResult.Dismissed -> remove(scene)
                     }
                 }
             }

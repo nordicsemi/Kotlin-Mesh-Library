@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -34,21 +35,23 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
         observeNetwork()
     }
 
-    private fun observeNetwork() = repository.network
-        .filterNotNull()
-        .onEach { meshNetwork ->
-            network = meshNetwork
-            _uiState.update { state ->
-                state.copy(
-                    provisioners = network.provisioners
-                        .map { ProvisionerData(provisioner = it) }
-                        // Filter out the provisioners that are marked for deletion.
-                        .filter { it !in state.provisionersToBeRemoved },
-
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                _uiState.update { state ->
+                    state.copy(
+                        provisioners = network.provisioners
+                            .map { ProvisionerData(provisioner = it) }
+                            // Filter out the provisioners that are marked for deletion.
+                            .filter { it !in state.provisionersToBeRemoved },
                     )
+                }
             }
-        }
-        .launchIn(viewModelScope)
+            .launchIn(viewModelScope)
+    }
 
     override fun onCleared() {
         removeProvisioners()

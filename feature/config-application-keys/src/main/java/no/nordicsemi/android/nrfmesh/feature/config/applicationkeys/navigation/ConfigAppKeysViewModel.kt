@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,21 +53,24 @@ internal class ConfigAppKeysViewModel @AssistedInject internal constructor(
         observeNetworkChanges()
     }
 
-    private fun observeNetworkChanges() = repository.network
-        .filterNotNull()
-        .onEach { network ->
-            this@ConfigAppKeysViewModel.selectedNode =
-                network.node(uuid = nodeUuid) ?: return@onEach
-            _uiState.update { state ->
-                state.copy(
-                    isLocalProvisionerNode = selectedNode.isLocalProvisioner,
-                    addedAppKeys = selectedNode.applicationKeys.toList(),
-                    availableAppKeys = selectedNode.unknownApplicationKeys()
-                )
+    private fun observeNetworkChanges() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach { network ->
+                this@ConfigAppKeysViewModel.selectedNode =
+                    network.node(uuid = nodeUuid) ?: return@onEach
+                _uiState.update { state ->
+                    state.copy(
+                        isLocalProvisionerNode = selectedNode.isLocalProvisioner,
+                        addedAppKeys = selectedNode.applicationKeys.toList(),
+                        availableAppKeys = selectedNode.unknownApplicationKeys()
+                    )
+                }
+                meshNetwork = network // update the local network instance
             }
-            meshNetwork = network // update the local network instance
-        }
-        .launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
+    }
 
     /**
      * Called when the user pulls down to refresh the node details.
@@ -178,7 +182,7 @@ internal class ConfigAppKeysViewModel @AssistedInject internal constructor(
     }
 
     internal fun addApplicationKey() = viewModelScope.launch {
-        repository.addApplicationKey(
+        val _ = repository.addApplicationKey(
             boundNetworkKey = meshNetwork.networkKeys.first()
         )
     }

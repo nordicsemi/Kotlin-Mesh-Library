@@ -44,7 +44,7 @@ internal fun ModelScreen(
     snackbarHostState: SnackbarHostState,
     messageState: MessageState,
     nodeIdentityStates: List<NodeIdentityStatus>,
-    modelState: ModelState,
+    modelState: ModelState.Success,
     send: (AcknowledgedConfigMessage) -> Unit,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
     requestNodeIdentityStates: (Model) -> Unit,
@@ -59,106 +59,100 @@ internal fun ModelScreen(
     // The reason for applying to the parent composable is to avoid scrolling directly to the
     // TextField when focused.
     // See issue: https://issuetracker.google.com/issues/445720462
-    when (modelState) {
-        is ModelState.Success -> {
-            val model = modelState.model
-            Column(
-                modifier = Modifier
-                    .verticalScroll(state = rememberScrollState())
-                    .focusable(),
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-            ) {
-                SectionTitle(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .padding(horizontal = 16.dp),
-                    title = stringResource(R.string.label_model)
-                )
-                CommonInformation(model = model)
-                if (model.isConfigurationServer) {
-                    ConfigurationServer(
-                        snackbarHostState = snackbarHostState,
-                        messageState = messageState,
-                        model = model,
-                        nodeIdentityStates = nodeIdentityStates,
-                        send = send,
-                        requestNodeIdentityStates = requestNodeIdentityStates,
-                        onAddGroupClicked = onAddGroupClicked,
-                    )
-                }
-                if (model.supportsModelPublication != false && model.supportsModelSubscription != false) {
-                    BoundApplicationKeys(
-                        model = model,
-                        messageState = messageState,
-                        send = send
-                    )
-                }
-                if (model.supportsModelPublication != false) {
-                    Publication(
-                        messageState = messageState,
-                        model = model,
-                        send = send
-                    )
-                }
-                if (model.supportsModelSubscription != false) {
-                    Subscriptions(
-                        snackbarHostState = snackbarHostState,
-                        messageState = messageState,
-                        model = model,
-                        navigateToGroups = navigateToGroups,
-                        send = send
-                    )
-                }
-                if (model.isGenericOnOffServer()) {
-                    GenericOnOffServer(
-                        model = model,
-                        messageState = messageState,
-                        sendApplicationMessage = sendApplicationMessage
-                    )
-                }
-                if (model.isGenericLevelServer()) {
-                    GenericLevelServer(
-                        model = model,
-                        messageState = messageState,
-                        sendApplicationMessage = sendApplicationMessage
-                    )
-                }
+    val model = modelState.model
+    Column(
+        modifier = Modifier
+            .verticalScroll(state = rememberScrollState())
+            .focusable(),
+        verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+    ) {
+        SectionTitle(
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .padding(horizontal = 16.dp),
+            title = stringResource(R.string.label_model)
+        )
+        CommonInformation(model = model)
+        if (model.isConfigurationServer) {
+            ConfigurationServer(
+                snackbarHostState = snackbarHostState,
+                messageState = messageState,
+                model = model,
+                nodeIdentityStates = nodeIdentityStates,
+                send = send,
+                requestNodeIdentityStates = requestNodeIdentityStates,
+                onAddGroupClicked = onAddGroupClicked,
+            )
+        }
+        if (model.supportsModelPublication != false && model.supportsModelSubscription != false) {
+            BoundApplicationKeys(
+                model = model,
+                messageState = messageState,
+                send = send
+            )
+        }
+        if (model.supportsModelPublication != false) {
+            Publication(
+                messageState = messageState,
+                model = model,
+                send = send
+            )
+        }
+        if (model.supportsModelSubscription != false) {
+            Subscriptions(
+                snackbarHostState = snackbarHostState,
+                messageState = messageState,
+                model = model,
+                navigateToGroups = navigateToGroups,
+                send = send
+            )
+        }
+        if (model.isGenericOnOffServer()) {
+            GenericOnOffServer(
+                model = model,
+                messageState = messageState,
+                sendApplicationMessage = sendApplicationMessage
+            )
+        }
+        if (model.isGenericLevelServer()) {
+            GenericLevelServer(
+                model = model,
+                messageState = messageState,
+                sendApplicationMessage = sendApplicationMessage
+            )
+        }
 
-                if (model.isVendorModel()) {
-                    VendorModelControls(
-                        model = model,
-                        messageState = messageState,
-                        sendApplicationMessage = sendApplicationMessage
-                    )
-                }
-                Spacer(modifier = Modifier.size(size = 8.dp))
-            }
+        if (model.isVendorModel()) {
+            VendorModelControls(
+                model = model,
+                messageState = messageState,
+                sendApplicationMessage = sendApplicationMessage
+            )
+        }
+        Spacer(modifier = Modifier.size(size = 8.dp))
+    }
 
-            when (messageState) {
-                is Failed -> MeshMessageStatusDialog(
-                    text = messageState.error.describe(),
-                    showDismissButton = !messageState.didFail(),
+    when (messageState) {
+        is Failed -> MeshMessageStatusDialog(
+            text = messageState.error.describe(),
+            showDismissButton = !messageState.didFail(),
+            onDismissRequest = resetMessageState,
+        )
+
+        is Completed -> {
+            messageState.response?.takeIf {
+                (it is ConfigStatusMessage && !it.isSuccess)
+            }?.let {
+                MeshMessageStatusDialog(
+                    text = (messageState.response as ConfigStatusMessage).message,
+                    showDismissButton = true,
                     onDismissRequest = resetMessageState,
                 )
-
-                is Completed -> {
-                    messageState.response?.takeIf {
-                        (it is ConfigStatusMessage && !it.isSuccess)
-                    }?.let {
-                        MeshMessageStatusDialog(
-                            text = (messageState.response as ConfigStatusMessage).message,
-                            showDismissButton = true,
-                            onDismissRequest = resetMessageState,
-                        )
-                    }
-                }
-
-                else -> {
-
-                }
             }
         }
 
-        else -> {}
+        else -> {
+
+        }
     }
 }
