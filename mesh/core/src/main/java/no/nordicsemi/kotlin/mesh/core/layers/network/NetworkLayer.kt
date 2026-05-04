@@ -81,7 +81,11 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
                 return if (networkPdu != null) {
                     logger?.i(LogCategory.NETWORK) { "$networkPdu received" }
                     networkManager.lowerTransportLayer.handle(networkPdu = networkPdu)?.let {
-                        ReceivedMessage(address = networkPdu.source, message = it)
+                        ReceivedMessage(
+                            source = networkPdu.source,
+                            destination = networkPdu.destination,
+                            message = it
+                        )
                     }
                 } else {
                     logger?.w(LogCategory.NETWORK) { "Failed to decrypt network pdu" }
@@ -430,7 +434,11 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
                     // Look for the proxy Node.
                     val proxyNode = meshNetwork.node(proxyPdu.source as UnicastAddress)
                     networkManager.proxy.handle(message = message, proxy = proxyNode)
-                    ReceivedMessage(address = proxyPdu.source, message = message)
+                    ReceivedMessage(
+                        source = proxyPdu.source,
+                        destination = proxyPdu.destination,
+                        message = message
+                    )
                 }
             }
 

@@ -98,11 +98,7 @@ data class MeshNetwork internal constructor(
     @SerialName("networkExclusions")
     internal var _networkExclusions: MutableList<ExclusionList> = mutableListOf(),
     @SerialName("timestamp")
-    internal var _timestamp: Instant = Instant.fromEpochMilliseconds(System.currentTimeMillis()),
-    // This is used to trigger updates in the state flow. This was added to the constructor so that
-    // it's included in the equals method.
-    @Transient
-    internal var id: Int = 0
+    internal var _timestamp: Instant = Instant.fromEpochMilliseconds(System.currentTimeMillis())
 ) {
     var name: String
         get() = _name
@@ -598,7 +594,7 @@ data class MeshNetwork internal constructor(
     ): NetworkKey {
         if (index != null) {
             // Check if the network key index is not already in use to avoid duplicates.
-            require(_networkKeys.none { it.index == index }) { throw DuplicateKeyIndex() }
+            require(networkKey(index = index) == null) { throw DuplicateKeyIndex() }
         }
         return NetworkKey(
             index = (index ?: nextAvailableNetworkKeyIndex) ?: throw KeyIndexOutOfRange(),
@@ -659,7 +655,7 @@ data class MeshNetwork internal constructor(
      */
     fun removeNetworkKeyAtIndex(index: Int, force: Boolean = false) {
         // Return as no op if the key does not exist
-        val key = networkKey(index = index.toUShort()) ?: return
+        val key = networkKeys.getOrNull(index) ?: return
         require(force || key.network?.uuid == uuid) { throw DoesNotBelongToNetwork() }
         require(force || !key.isInUse) { throw KeyInUse() }
         _networkKeys.removeAt(index = index)
@@ -702,7 +698,7 @@ data class MeshNetwork internal constructor(
         }
         if (index != null) {
             // Check if the application key index is not already in use to avoid duplicates.
-            require(_applicationKeys.none { it.index == index }) { throw DuplicateKeyIndex() }
+            require(applicationKey(index = index) == null) { throw DuplicateKeyIndex() }
         }
         return ApplicationKey(
             index = (index ?: nextAvailableApplicationKeyIndex) ?: throw KeyIndexOutOfRange(),
@@ -771,7 +767,7 @@ data class MeshNetwork internal constructor(
     @Throws(DoesNotBelongToNetwork::class, KeyInUse::class)
     internal fun removeApplicationKeyAtIndex(index: Int, force: Boolean = false) {
         // Return as no op if the key does not exist
-        val key = applicationKey(index = index.toUShort()) ?: return
+        val key = applicationKeys.getOrNull(index) ?: return
         require(force || key.network?.uuid == uuid) { throw DoesNotBelongToNetwork() }
         require(force || !key.isInUse) { throw KeyInUse() }
         _applicationKeys.removeAt(index = index)

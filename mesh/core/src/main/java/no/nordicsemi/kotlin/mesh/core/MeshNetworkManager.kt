@@ -96,7 +96,7 @@ class MeshNetworkManager(
     private val _networkEvents = MutableSharedFlow<NetworkEvent>(replay = 1)
     val networkEvents = _networkEvents.asSharedFlow()
 
-    internal var observeNetworkManagerEvents: Job? = null
+    internal var networkManagerEventObserver: Job? = null
     internal var observeMeshMessages: Job? = null
 
     internal var networkManager: NetworkManager? = null
@@ -108,10 +108,10 @@ class MeshNetworkManager(
             } ?: run {
                 // Cancel the observers when the network manager is set to null, which happens when
                 // the network is cleared.
-                observeNetworkManagerEvents?.cancel()
-                    ?.also { observeNetworkManagerEvents = null }
+                networkManagerEventObserver?.cancel()
+                networkManagerEventObserver = null
                 observeMeshMessages?.cancel()
-                    ?.also { observeMeshMessages = null }
+                observeMeshMessages = null
             }
         }
 
@@ -198,8 +198,8 @@ class MeshNetworkManager(
     suspend fun save() {
         export()?.let {
             mutex.withLock { storage.save(network = it) }
+            _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
         }
-        _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
     }
 
     /**
@@ -1146,23 +1146,22 @@ class MeshNetworkManager(
      */
     @OptIn(ExperimentalUuidApi::class)
     private fun observeNetworkManagerEvents() {
-        if (observeNetworkManagerEvents == null || observeNetworkManagerEvents?.isActive == false) {
+        if (networkManagerEventObserver == null) {
             runCatching {
-                observeNetworkManagerEvents = scope.launch {
-                    networkManager?.networkManagerEventFlow?.onEach {
+                networkManagerEventObserver = networkManager?.networkManagerEventFlow
+                    ?.onEach {
                         when (it) {
                             NetworkManagerEvent.OnNetworkChanged -> save()
-                            NetworkManagerEvent.OnNetworkReset -> {
+                            NetworkManagerEvent.OnNetworkReset ->
                                 network?.localProvisioner?.let { provisioner ->
-                                    val localElements = this@MeshNetworkManager.localElements
-                                    provisioner.network = null
-                                    create(provisioner = provisioner)
-                                    this@MeshNetworkManager.localElements = localElements
+                                    clear()
+                                    // val localElements = this@MeshNetworkManager.localElements
+                                    // provisioner.network = null
+                                    // create(provisioner = provisioner)
+                                    // this@MeshNetworkManager.localElements = localElements
                                 }
-                            }
                         }
                     }?.launchIn(scope = scope)
-                }
             }.onFailure {
                 logger?.w(category = LogCategory.FOUNDATION_MODEL) {
                     "Error while observing network manager events: ${it.message}"
@@ -1172,16 +1171,22 @@ class MeshNetworkManager(
     }
 
     /**
-     * Observes incoming mesh messages.
+     * Observes incoming mesh messages and emits [NetworkEvent.MeshMessageReceived] when a message
+     * is received from the network.
      */
     private fun observeMeshMessages() {
-        if (observeMeshMessages == null || observeMeshMessages?.isActive == false) {
+        if (observeMeshMessages == null) {
             runCatching {
-                observeMeshMessages = networkManager?.incomingMeshMessages?.onEach {
-                    if (it.message is AccessMessage) {
-                        _incomingMeshMessages.emit(it.message)
-                    }
-                }?.launchIn(scope = scope)
+                observeMeshMessages = networkManager?.incomingMeshMessages
+                    ?.onEach {
+                        _networkEvents.emit(
+                            value = NetworkEvent.MeshMessageReceived(
+                                source = it.source.address,
+                                destination = it.destination,
+                                message = it.message as MeshMessage
+                            )
+                        )
+                    }?.launchIn(scope = scope)
             }.onFailure {
                 logger?.w(category = LogCategory.FOUNDATION_MODEL) {
                     "Error while observing incoming mesh messages: ${it.message}"

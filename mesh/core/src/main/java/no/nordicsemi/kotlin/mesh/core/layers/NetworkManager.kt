@@ -6,7 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
@@ -111,7 +110,7 @@ internal class NetworkManager internal constructor(
         bearer?.pdus
             ?.onEach {
                 runCatching { handle(incomingPdu = it.data, type = it.type) }
-                    .onFailure {throwable ->
+                    .onFailure { throwable ->
                         logger?.e(LogCategory.BEARER) { "Bearer error: $throwable" }
                     }
             }?.launchIn(scope = scope)
@@ -198,7 +197,7 @@ internal class NetworkManager internal constructor(
             throw it
         }
         .firstOrNull {
-            destination == it.address && responseOpcode == (it.message as? HasOpCode)?.opCode
+            destination == it.source && responseOpcode == (it.message as? HasOpCode)?.opCode
         }
 
     /**
@@ -481,4 +480,16 @@ internal class NetworkManager internal constructor(
     }
 }
 
-internal data class ReceivedMessage(val address: MeshAddress, val message: BaseMeshMessage)
+/**
+ * Data class representing a received message, containing the source and destination addresses, and
+ * the message itself.
+ *
+ * @property source      Source address from which the message was received.
+ * @property destination Destination address to which the message is intended.
+ * @property message     Message that was received.
+ */
+internal data class ReceivedMessage(
+    val source: MeshAddress,
+    val destination: MeshAddress,
+    val message: BaseMeshMessage,
+)
