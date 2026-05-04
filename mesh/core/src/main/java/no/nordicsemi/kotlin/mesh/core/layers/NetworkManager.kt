@@ -98,10 +98,7 @@ internal class NetworkManager internal constructor(
     internal val incomingMeshMessages
         get() = _incomingMeshMessages.asSharedFlow()
 
-    private val _networkManagerEventFlow = MutableSharedFlow<NetworkManagerEvent>(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
+    private val _networkManagerEventFlow = MutableSharedFlow<NetworkManagerEvent>()
     override val networkManagerEventFlow
         get() = _networkManagerEventFlow.asSharedFlow()
 
