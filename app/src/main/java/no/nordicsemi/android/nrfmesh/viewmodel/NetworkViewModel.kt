@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,33 +34,41 @@ class NetworkViewModel @Inject constructor(
     private val storage: MeshSecurePropertiesStorage,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(NetworkScreenUiState())
+    private val _uiState = MutableStateFlow(value = NetworkScreenUiState())
     internal val uiState: StateFlow<NetworkScreenUiState> = _uiState.asStateFlow()
 
     init {
-        loadNetwork()
         observeNetworkChanges()
+        loadNetwork()
     }
-
-    // Observes the mesh network for any changes i.e. network reset etc.
-    private fun observeNetworkChanges() = repository.network
-        .filterNotNull()
-        .onEach { network ->
-            _uiState.update { state ->
-                state.copy(
-                    networkState = MeshNetworkState.Success(network = network),
-                    counter = state.counter + 1
-                )
-            }
-            promptProvisionerSelection(network)
-            meshNetwork = network
-        }
-        .launchIn(scope = viewModelScope)
-
 
     override fun onCleared() {
         super.onCleared()
         repository.disconnect()
+    }
+
+    // Observes the mesh network for any changes i.e. network reset etc.
+    private fun observeNetworkChanges() {
+        repository.networkEvents
+            .map {
+                if(repository.meshNetwork == null) {
+                    _uiState.update { state ->
+                        state.copy(networkState = MeshNetworkState.NoNetwork)
+                    }
+                }
+                repository.meshNetwork
+            }
+            .filterNotNull()
+            .onEach {
+                meshNetwork = it
+                _uiState.update { state ->
+                    state.copy(
+                        networkState = MeshNetworkState.Success(network = meshNetwork),
+                        id = state.id + 1
+                    )
+                }
+                promptProvisionerSelection(meshNetwork)
+            }.launchIn(scope = viewModelScope)
     }
 
     internal fun loadNetwork() {
@@ -168,24 +177,26 @@ class NetworkViewModel @Inject constructor(
                         // Usually, the keys are numbered from 0, so it's unlikely that 4095 exists.
                         val keyIndex = 4095.toUShort()
                         // Is there already a key with index 4095?
-                        firstAppKey = meshNetwork!!
+                        firstAppKey = meshNetwork
                             .applicationKeys
                             .firstOrNull { it.index == keyIndex }
                         if (firstAppKey == null) {
                             // Create such key.
-                            firstAppKey = meshNetwork!!.add(
+                            firstAppKey = meshNetwork.add(
                                 "Node Identification Key",
                                 index = keyIndex,
                                 boundNetworkKey = node.networkKeys.first()
                             )
                         }
                         // Send it to the node before binding.
-                        repository.send(node, ConfigAppKeyAdd(firstAppKey))
+                        val _ = repository.send(node, ConfigAppKeyAdd(firstAppKey))
                     }
                     // Bind the key. Here it is guaranteed, that the key is known to the node.
-                    repository.send(node, ConfigModelAppBind(
-                        healthServerModel, firstAppKey
-                    ))
+                    val _ = repository.send(
+                        node, ConfigModelAppBind(
+                            healthServerModel, firstAppKey
+                        )
+                    )
                 }
                 // Finally, start the attention timer for 3 seconds.
                 repository.send(
@@ -194,7 +205,7 @@ class NetworkViewModel @Inject constructor(
                 )
             }
         }
-    }
+}
 
 internal sealed interface MeshNetworkState {
     data object Loading : MeshNetworkState
@@ -205,6 +216,6 @@ internal sealed interface MeshNetworkState {
 internal data class NetworkScreenUiState(
     val networkState: MeshNetworkState = MeshNetworkState.Loading,
     val shouldSelectProvisioner: Boolean = false,
-    val counter: Int = 0,
+    internal val id: Int = 0,
     val importState: ImportState = ImportState.Unknown,
 )

@@ -19,10 +19,13 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.GppMaybe
+import androidx.compose.material.icons.outlined.GroupWork
 import androidx.compose.material.icons.outlined.Lan
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.RemoveModerator
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,8 +65,12 @@ import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedHexTextField
 import no.nordicsemi.android.nrfmesh.core.ui.MeshTwoLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.provisioners.R
+import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.AllocatedRanges
+import no.nordicsemi.kotlin.mesh.core.model.GroupRange
 import no.nordicsemi.kotlin.mesh.core.model.Provisioner
+import no.nordicsemi.kotlin.mesh.core.model.SceneRange
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
+import no.nordicsemi.kotlin.mesh.core.model.UnicastRange
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
@@ -72,6 +79,9 @@ internal fun ProvisionerScreen(
     snackbarHostState: SnackbarHostState,
     uiState: ProvisionerScreenUiState,
     moveProvisioner: (Provisioner, Int) -> Unit,
+    navigateToUnicastRanges: () -> Unit,
+    navigateToGroupRanges: () -> Unit,
+    navigateToSceneRanges: () -> Unit,
     save: () -> Unit,
 ) {
     when (uiState.provisionerState) {
@@ -82,6 +92,9 @@ internal fun ProvisionerScreen(
                 provisioner = uiState.provisionerState.provisioner,
                 provisionerData = uiState.provisionerState.provisionerData,
                 moveProvisioner = moveProvisioner,
+                navigateToUnicastRanges = navigateToUnicastRanges,
+                navigateToGroupRanges = navigateToGroupRanges,
+                navigateToSceneRanges = navigateToSceneRanges,
                 save = save
             )
         }
@@ -98,6 +111,9 @@ private fun ProvisionerContent(
     provisioner: Provisioner,
     provisionerData: ProvisionerData,
     moveProvisioner: (Provisioner, Int) -> Unit,
+    navigateToUnicastRanges: () -> Unit,
+    navigateToGroupRanges: () -> Unit,
+    navigateToSceneRanges: () -> Unit,
     save: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -152,29 +168,20 @@ private fun ProvisionerContent(
             modifier = Modifier.padding(horizontal = 16.dp),
             title = stringResource(R.string.label_allocated_ranges)
         )
-        UnicastRanges(
-            scope = scope,
-            snackbarHostState = snackbarHostState,
-            provisioner = provisioner,
+        UnicastRangesRow(
             provisionerData = provisionerData,
             otherRanges = provisioner.otherUnicastRanges,
-            save = save
+            navigateToUnicastRanges = navigateToUnicastRanges
         )
-        GroupRanges(
-            scope = scope,
-            snackbarHostState = snackbarHostState,
-            provisioner = provisioner,
+        GroupRangesRow(
             provisionerData = provisionerData,
             otherRanges = provisioner.otherGroupRanges,
-            save = save
+            navigateToGroupRanges = navigateToGroupRanges
         )
-        SceneRanges(
-            scope = scope,
-            snackbarHostState = snackbarHostState,
-            provisioner = provisioner,
+        SceneRangesRow (
             provisionerData = provisionerData,
             otherRanges = provisioner.otherSceneRanges,
-            save = save
+            navigateToSceneRanges = navigateToSceneRanges
         )
         AddressRangeLegendsForProvisioner()
         Spacer(modifier = Modifier.size(16.dp))
@@ -213,7 +220,7 @@ private fun UnicastAddress(
 ) {
     val context = LocalContext.current
     val initialValue by remember(key1 = provisioner.uuid) {
-        mutableStateOf(address?.toHexString() ?: "")
+        mutableStateOf(address?.address?.toString(radix = 16)?.uppercase() ?: "")
     }
     var value by rememberSaveable(
         stateSaver = TextFieldValue.Saver,
@@ -466,4 +473,58 @@ private fun MoveProvisioner(
             )
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun UnicastRangesRow(
+    provisionerData: ProvisionerData,
+    otherRanges: List<UnicastRange>,
+    navigateToUnicastRanges: () -> Unit,
+) {
+    OutlinedCard(modifier = Modifier.padding(horizontal = 16.dp)) {
+        AllocatedRanges(
+            imageVector = Icons.Outlined.Lan,
+            title = stringResource(id = R.string.label_unicast_range),
+            ranges = provisionerData.unicastRanges,
+            otherRanges = otherRanges,
+            onClick = navigateToUnicastRanges
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GroupRangesRow(
+    provisionerData: ProvisionerData,
+    otherRanges: List<GroupRange>,
+    navigateToGroupRanges: () -> Unit,
+) {
+    OutlinedCard(modifier = Modifier.padding(horizontal = 16.dp)) {
+        AllocatedRanges(
+            imageVector = Icons.Outlined.GroupWork,
+            title = stringResource(id = R.string.label_group_range),
+            ranges = provisionerData.groupRanges,
+            otherRanges = otherRanges,
+            onClick = navigateToGroupRanges
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SceneRangesRow(
+    provisionerData: ProvisionerData,
+    otherRanges: List<SceneRange>,
+    navigateToSceneRanges: () -> Unit,
+) {
+    OutlinedCard(modifier = Modifier.padding(horizontal = 16.dp)) {
+        AllocatedRanges(
+            imageVector = Icons.Outlined.Palette,
+            title = stringResource(id = R.string.label_scene_range),
+            ranges = provisionerData.sceneRanges,
+            otherRanges = otherRanges,
+            onClick = navigateToSceneRanges
+        )
+    }
 }

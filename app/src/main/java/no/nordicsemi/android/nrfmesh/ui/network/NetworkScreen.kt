@@ -38,7 +38,6 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +64,7 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.toEntries
+import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -135,12 +135,17 @@ internal fun NetworkScreen(
         }
 
         MeshNetworkState.NoNetwork -> {
-            LaunchedEffect(uiState.networkState) {
-                if (uiState.networkState is MeshNetworkState.NoNetwork) {
-                    navigateToWizard()
-                    resetMeshNetworkUiState()
-                }
-            }
+            // LaunchedEffect(Unit) {
+            //     appState.run {
+            //         snackbarHostState.currentSnackbarData?.dismiss()
+            //         snackbarHostState.showSnackbar(
+            //             message = "This Network has been reset. Returning to the onboarding wizard.",
+            //             duration = SnackbarDuration.Indefinite
+            //         )
+            //     }
+            // }
+            navigateToWizard()
+            resetMeshNetworkUiState()
         }
     }
 }
@@ -200,17 +205,26 @@ private fun NetworkContent(
             }
         }
     ) {
+        val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
         val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
         val entryProvider = entryProvider {
-            nodesEntry(appState = appState, navigator = navigator)
+            nodesEntry(
+                appState = appState,
+                navigator = navigator,
+                navigateToWizard = {
+                    resetNetwork()
+                    navigateToWizard()
+                }
+            )
             provisioningEntry(appState = appState, navigator = navigator)
             groupsEntry(appState = appState, navigator = navigator)
             proxyEntry()
             settingsEntry(appState = appState, navigator = navigator)
         }
         val entries = appState.navigationState.toEntries(entryProvider = entryProvider)
+        val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy)
         val sceneState = rememberSceneState(
-            entries = entries, sceneStrategy = listDetailStrategy, onBack = navigator::goBack
+            entries = entries, sceneStrategies = sceneStrategies, onBack = navigator::goBack
         )
         val scene = sceneState.currentScene
         Scaffold(
@@ -291,8 +305,8 @@ private fun NetworkContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues = padding),
-                entries = appState.navigationState.toEntries(entryProvider = entryProvider),
-                sceneStrategy = listDetailStrategy,
+                entries = entries,
+                sceneStrategies = sceneStrategies,
                 onBack = navigator::goBack
             )
         }

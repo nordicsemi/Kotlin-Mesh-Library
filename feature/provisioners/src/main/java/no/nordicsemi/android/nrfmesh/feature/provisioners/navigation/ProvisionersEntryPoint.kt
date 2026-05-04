@@ -60,5 +60,5 @@ fun EntryProviderScope<NavKey>.provisionersEntry(appState: AppState, navigator: 
             remove = viewModel::remove
         )
     }
-    provisionerEntry(appState = appState)
+    provisionerEntry(appState = appState, navigator = navigator)
 }
