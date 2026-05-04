@@ -14,7 +14,7 @@ internal interface NetworkManagerEventTransmitter {
 
     val networkManagerEventFlow: SharedFlow<NetworkManagerEvent>
 
-    fun emitNetworkManagerEvent(event: NetworkManagerEvent)
+    suspend fun emitNetworkManagerEvent(event: NetworkManagerEvent)
 }
 
 /**

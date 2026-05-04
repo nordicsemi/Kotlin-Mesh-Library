@@ -125,8 +125,8 @@ internal class NetworkManager internal constructor(
      *
      * @param event Network manager event.
      */
-    override fun emitNetworkManagerEvent(event: NetworkManagerEvent) {
-        _networkManagerEventFlow.tryEmit(event)
+    override suspend fun emitNetworkManagerEvent(event: NetworkManagerEvent) {
+        _networkManagerEventFlow.emit(value = event)
     }
 
     /**
@@ -458,7 +458,7 @@ internal class NetworkManager internal constructor(
      * @param message     Response message to be sent.
      * @param element     Source Element.
      */
-    fun reply(
+    suspend fun reply(
         origin: Address,
         message: MeshResponse,
         element: Element,
