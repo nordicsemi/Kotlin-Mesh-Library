@@ -12,8 +12,6 @@ import no.nordicsemi.kotlin.mesh.crypto.Algorithm.Companion.strongest
 /**
  * Configuration class that contains all the necessary information to provision a device.
  *
- * @property meshNetwork       Mesh Network to which the device will be provisioned.
- * @property capabilities      Capabilities of the device to be provisioned.
  * @property unicastAddress    Unicast address to be assigned to the device.
  * @property networkKey        Network key to be used for provisioning.
  * @property algorithm         Algorithm to be used for provisioning.
@@ -23,36 +21,32 @@ import no.nordicsemi.kotlin.mesh.crypto.Algorithm.Companion.strongest
  *                             network.
  * @throws NoLocalProvisioner  Exception thrown when there is no local provisioner added to the mesh
  *                             network.
+ * @throws NoAddressAvailable  Exception thrown when there is no available unicast address.
  */
-class ProvisioningParameters internal constructor(
-    private val capabilities: ProvisioningCapabilities,
-    var unicastAddress: UnicastAddress?,
-    var networkKey: NetworkKey,
-    var algorithm: Algorithm = capabilities.algorithms.strongest(),
-    var publicKey: PublicKey = PublicKey.NoOobPublicKey,
-    var authMethod: AuthenticationMethod = capabilities.supportedAuthMethods.first(),
+data class ProvisioningParameters(
+    val unicastAddress: UnicastAddress,
+    val networkKey: NetworkKey,
+    val algorithm: Algorithm,
+    val publicKey: PublicKey,
+    val authMethod: AuthenticationMethod,
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is ProvisioningParameters) return false
-
-        if (capabilities != other.capabilities) return false
-        if (unicastAddress != other.unicastAddress) return false
-        if (networkKey != other.networkKey) return false
-        if (algorithm != other.algorithm) return false
-        if (publicKey != other.publicKey) return false
-        if (authMethod != other.authMethod) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = capabilities.hashCode()
-        result = 31 * result + (unicastAddress?.hashCode() ?: 0)
-        result = 31 * result + networkKey.hashCode()
-        result = 31 * result + algorithm.hashCode()
-        result = 31 * result + publicKey.hashCode()
-        result = 31 * result + authMethod.hashCode()
-        return result
+    companion object {
+        /**
+         * Creates a default [ProvisioningParameters] based on the provided [ProvisioningCapabilities]
+         * for a given network and provisioner.
+         */
+        internal fun defaultFrom(
+            capabilities: ProvisioningCapabilities,
+            meshNetwork: MeshNetwork,
+        ) = ProvisioningParameters(
+            unicastAddress = meshNetwork.nextAvailableUnicastAddress(
+                elementCount = capabilities.numberOfElements,
+                provisioner = meshNetwork.localProvisioner ?: throw NoLocalProvisioner()
+            ) ?: throw NoAddressAvailable(),
+            networkKey = meshNetwork.networkKeys.firstOrNull() ?: throw NoNetworkKeysAdded(),
+            algorithm = capabilities.algorithms.strongest(),
+            publicKey = PublicKey.NoOobPublicKey,
+            authMethod = capabilities.supportedAuthMethods.first()
+        )
     }
 }

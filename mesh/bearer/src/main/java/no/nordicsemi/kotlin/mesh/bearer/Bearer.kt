@@ -40,11 +40,8 @@ interface Receiver {
  * @property isOpen              Returns true if the bearer is open, false otherwise.
  */
 interface Bearer : Transmitter, Receiver {
-
     val state: StateFlow<BearerEvent>
-
     val supportedTypes: Array<PduTypes>
-
     val isOpen: Boolean
 
     /**

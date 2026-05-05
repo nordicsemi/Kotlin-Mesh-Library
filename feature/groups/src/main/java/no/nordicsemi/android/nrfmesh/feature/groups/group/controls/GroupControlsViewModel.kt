@@ -7,9 +7,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.isSupportedGroupItem
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -26,23 +29,24 @@ import no.nordicsemi.kotlin.mesh.core.model.ModelId.Companion.decode
 @HiltViewModel(assistedFactory = GroupControlsViewModel.Factory::class)
 internal class GroupControlsViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
-    @Assisted("address") groupAddress: Int,
-    @Assisted("modelId") modelId: Int,
+    @Assisted("address") private val groupAddress: Int,
+    @Assisted("modelId") private val modelId: Int,
 ) : ViewModel() {
     private var group: Group? = null
     private val _uiState = MutableStateFlow(GroupControlsScreenUiState())
-    val uiState: StateFlow<GroupControlsScreenUiState> = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = GroupControlsScreenUiState()
-        )
+    val uiState: StateFlow<GroupControlsScreenUiState> = _uiState.asStateFlow()
 
     private lateinit var network: MeshNetwork
 
     init {
-        viewModelScope.launch {
-            repository.network.collect { network ->
+        observeNetwork()
+    }
+
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach { network ->
                 network.group(address = groupAddress.toUShort())?.let { group ->
                     this@GroupControlsViewModel.group = group
                     val models = mutableMapOf<ModelId, List<Model>>()
@@ -71,12 +75,11 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
                     _uiState.emit(value = state)
                     this@GroupControlsViewModel.network = network
                 }
-            }
-        }
+            }.launchIn(scope = viewModelScope)
     }
 
     internal fun save() {
-        viewModelScope.launch { repository.save() }
+        repository.save()
     }
 
     @Suppress("unused")

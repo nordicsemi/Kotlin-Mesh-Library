@@ -34,7 +34,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
@@ -42,11 +41,10 @@ import kotlin.uuid.Uuid
 internal fun BoundApplicationKeys(
     model: Model,
     messageState: MessageState,
-    navigateToConfigApplicationKeys: (Uuid) -> Unit,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
     val bottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = model.boundApplicationKeys.isEmpty()
+        skipPartiallyExpanded = model.parentElement?.parentNode?.applicationKeys?.isEmpty() ?: false
     )
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     Row(
@@ -88,15 +86,19 @@ internal fun BoundApplicationKeys(
             },
             buttonIcon = Icons.Outlined.Refresh,
             enabled = !messageState.isInProgress(),
-            isOnClickActionInProgress = messageState.isInProgress()
+            isOnClickActionInProgress = messageState.isInProgress() &&
+                    messageState.message is ConfigSigModelAppGet,
         )
     }
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.AddLink,
         title = stringResource(R.string.label_bind_application_keys),
-        subtitle = "${model.boundApplicationKeys.size} key(s) are bound",
-        onClick = { showBottomSheet = !showBottomSheet }
+        subtitle = pluralStringResource(
+            R.plurals.label_bound_application_keys_count,
+            model.boundApplicationKeys.size,
+            model.boundApplicationKeys.size),
+        onClick = { showBottomSheet = true }
     )
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -106,8 +108,7 @@ internal fun BoundApplicationKeys(
             content = {
                 BindAppKeysScreen(
                     model = model,
-                    send = send,
-                    navigateToConfigApplicationKeys = navigateToConfigApplicationKeys
+                    send = send
                 )
             }
         )

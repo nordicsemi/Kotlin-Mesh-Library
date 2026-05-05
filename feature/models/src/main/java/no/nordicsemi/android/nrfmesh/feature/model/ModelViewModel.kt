@@ -7,11 +7,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Completed
@@ -46,32 +47,31 @@ internal class ModelViewModel @AssistedInject internal constructor(
     private lateinit var selectedModel: Model
 
     private val _uiState = MutableStateFlow(ModelScreenUiState())
-    val uiState: StateFlow<ModelScreenUiState> = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ModelScreenUiState()
-        )
+    val uiState: StateFlow<ModelScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetworkChanges()
     }
 
-    private fun observeNetworkChanges() = repository.network
-        .onEach { network ->
-            val modelState = network
-                .element(elementAddress = address.toUShort())
-                ?.model(modelId = modelId.toUInt())
-                ?.let { model ->
-                    selectedNode = model.parentElement!!.parentNode!!
-                    ModelState.Success(model = model)
-                } ?: ModelState.Error(Throwable("Element containing node not found"))
-            _uiState.update { state ->
-                state.copy(modelState = modelState)
+    private fun observeNetworkChanges() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach { network ->
+                val modelState = network
+                    .element(elementAddress = address.toUShort())
+                    ?.model(modelId = modelId.toUInt())
+                    ?.let { model ->
+                        selectedNode = model.parentElement!!.parentNode!!
+                        ModelState.Success(model = model)
+                    } ?: ModelState.Error(Throwable("Element containing node not found"))
+                _uiState.update { state ->
+                    state.copy(modelState = modelState)
+                }
+                meshNetwork = network // update the local network instance
             }
-            meshNetwork = network // update the local network instance
-        }
-        .launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
+    }
 
     /**
      * Returns if the NodeIdentityState for this should be updated/refreshed.
@@ -228,4 +228,5 @@ internal data class ModelScreenUiState(
     val messageState: MessageState = NotStarted,
     val isRefreshing: Boolean = false,
     val nodeIdentityStates: List<NodeIdentityStatus> = emptyList(),
+    val wasNetworkRemoved: Boolean = false
 )

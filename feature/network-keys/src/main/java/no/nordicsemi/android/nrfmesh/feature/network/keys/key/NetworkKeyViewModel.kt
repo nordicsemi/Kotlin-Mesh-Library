@@ -7,11 +7,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
@@ -25,28 +26,27 @@ class NetworkKeyViewModel @AssistedInject internal constructor(
     private val keyIndex = index.toUShort()
     private lateinit var network: MeshNetwork
     private val _uiState = MutableStateFlow(NetworkKeyScreenUiState())
-    internal val uiState: StateFlow<NetworkKeyScreenUiState> = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = NetworkKeyScreenUiState()
-        )
+    internal val uiState: StateFlow<NetworkKeyScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetwork()
     }
 
-    private fun observeNetwork() = repository.network
-        .onEach { network ->
-            this.network = network
-            val keyState = network.networkKey(index = keyIndex)
-                ?.let { NetKeyState.Success(key = it) }
-                ?: NetKeyState.Error(throwable = IllegalStateException("Network Key not found."))
-            _uiState.update { state ->
-                state.copy(keyState = keyState)
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                val keyState = network.networkKey(index = keyIndex)
+                    ?.let { NetKeyState.Success(key = it) }
+                    ?: NetKeyState.Error(throwable = IllegalStateException("Network Key not found."))
+                _uiState.update { state ->
+                    state.copy(keyState = keyState)
+                }
             }
-        }
-        .launchIn(scope = viewModelScope)
+            .launchIn(viewModelScope)
+    }
 
     /**
      * Saves the network.

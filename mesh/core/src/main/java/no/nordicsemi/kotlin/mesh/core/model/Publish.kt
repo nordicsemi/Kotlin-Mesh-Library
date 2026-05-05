@@ -74,7 +74,8 @@ data class Publish(
 
     override fun toString() = when (address) {
         is UnassignedAddress -> "Disabled"
-        else -> "Publish(address: $address, index: $index, ttl: $ttl, period: $period, " +
+        else -> "Publish(address: ${address.toHexString()}, applicationKeyIndex: $index, " +
+                "ttl: $ttl, period: $period, " +
                 "credentials: $credentials, retransmit: $retransmit)"
     }
 }

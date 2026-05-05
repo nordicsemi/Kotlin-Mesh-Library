@@ -10,19 +10,13 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import no.nordicsemi.android.feature.config.networkkeys.navigation.ConfigNetKeysViewModel
 import no.nordicsemi.android.nrfmesh.core.navigation.AppState
-import no.nordicsemi.android.nrfmesh.core.navigation.ClickableSetting
-import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeListDetailSceneKey
-import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 
 @Serializable
 data class ConfigNetKeysKey(val uuid: String) : NavKey
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
-fun EntryProviderScope<NavKey>.configNetKeysEntry(
-    appState: AppState,
-    navigator: Navigator,
-) {
+fun EntryProviderScope<NavKey>.configNetKeysEntry(appState: AppState) {
     entry<ConfigNetKeysKey>(
         metadata = ListDetailSceneStrategy.detailPane(
             sceneKey = NodeListDetailSceneKey
@@ -42,9 +36,6 @@ fun EntryProviderScope<NavKey>.configNetKeysEntry(
             addedNetworkKeys = uiState.addedNetworkKeys,
             onAddNetworkKeyClicked = viewModel::addNetworkKey,
             isKeyInUse = viewModel::isKeyInUse,
-            navigateToNetworkKeys = {
-                navigator.navigate(key = SettingsKey(setting = ClickableSetting.NETWORK_KEYS))
-            },
             send = viewModel::send,
             resetMessageState = viewModel::resetMessageState
         )

@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoFixHigh
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,7 +36,6 @@ fun BottomSheetApplicationKeys(
     messageState: MessageState,
     keys: List<ApplicationKey>,
     onAddApplicationKeyClicked: () -> Unit,
-    navigateToApplicationKeys: () -> Unit,
     onAppKeyClicked: (ApplicationKey) -> Unit,
     onDismissClick: () -> Unit,
 ) {
@@ -63,12 +61,6 @@ fun BottomSheetApplicationKeys(
                 onClick = onAddApplicationKeyClicked,
                 buttonIcon = Icons.Outlined.AutoFixHigh,
                 text = stringResource(R.string.label_generate)
-            )
-            MeshOutlinedButton(
-                enabled = !messageState.isInProgress(),
-                onClick = navigateToApplicationKeys,
-                buttonIcon = Icons.Outlined.Settings,
-                text = stringResource(R.string.label_settings)
             )
         }
         when (keys.isEmpty()) {

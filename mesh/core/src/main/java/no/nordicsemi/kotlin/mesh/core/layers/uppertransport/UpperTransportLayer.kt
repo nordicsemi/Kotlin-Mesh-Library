@@ -15,11 +15,11 @@ import no.nordicsemi.kotlin.mesh.core.layers.lowertransport.LowerTransportPdu
 import no.nordicsemi.kotlin.mesh.core.layers.lowertransport.LowerTransportPduType
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.Address
+import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
-import java.util.HexFormat
 import java.util.Timer
 import kotlin.concurrent.timer
 import kotlin.time.DurationUnit
@@ -29,8 +29,8 @@ import kotlin.time.toDuration
  * Defines the behaviour of the Upper Transport Layer of the Mesh Networking Stack.
  */
 internal class UpperTransportLayer(private val networkManager: NetworkManager) : AutoCloseable{
-
-    private val meshNetwork = networkManager.meshNetwork
+    private val meshNetwork: MeshNetwork
+        get() = networkManager.meshNetwork
     private val logger: Logger?
         get() = networkManager.logger
     private val queue: MutableMap<Address, MutableList<MessageData>> = mutableMapOf()

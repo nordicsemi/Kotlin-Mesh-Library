@@ -26,6 +26,7 @@ fun EntryProviderScope<NavKey>.provisioningEntry(
         val viewModel = hiltViewModel<ProvisioningViewModel>()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         ProvisioningScreen(
+            snackbarHostState = appState.snackbarHostState,
             uiState = uiState,
             beginProvisioning = viewModel::beginProvisioning,
             onNameChanged = viewModel::onNameChanged,
@@ -44,7 +45,7 @@ fun EntryProviderScope<NavKey>.provisioningEntry(
                 navigator.goBack()
             },
             disconnect = viewModel::disconnect,
-            isDeviceAlreadyProvisioned = viewModel::isDeviceAlreadyProvisioned
+            onScanResultSelected = viewModel::onScanResultSelected
         )
     }
 }

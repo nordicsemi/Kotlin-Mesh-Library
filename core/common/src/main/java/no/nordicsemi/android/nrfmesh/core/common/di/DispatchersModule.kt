@@ -19,20 +19,21 @@ package no.nordicsemi.android.nrfmesh.core.common.di
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityRetainedComponent
-import dagger.hilt.android.scopes.ActivityRetainedScoped
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Qualifier
+import javax.inject.Singleton
 
 @Retention(AnnotationRetention.BINARY)
 @Qualifier
 annotation class IoDispatcher
 
 @Module
-@InstallIn(ActivityRetainedComponent::class)
+@InstallIn(SingletonComponent::class)
 object DispatchersModule {
 
+    @Singleton
     @Provides
     @IoDispatcher
     fun providesIoDispatcher(): CoroutineDispatcher = Dispatchers.IO

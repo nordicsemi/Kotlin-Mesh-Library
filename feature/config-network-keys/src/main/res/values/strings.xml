@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="label_no_keys_available">No Network Keys available</string>
-    <string name="label_no_keys_available_rationale">Go to settings and add a Network Key to the network.</string>
+    <string name="label_no_keys_available_rationale">Generate a key or go to settings add an application key manually.</string>
     <string name="label_no_keys_added">Go to settings and add a Network Key to the network configuration.</string>
     <string name="label_network_key_in_use">Cannot delete, %1$s is in use.</string>
     <string name="error_cannot_last_network_key_or_key_in_use">Cannot delete the last network key or a key in use.</string>

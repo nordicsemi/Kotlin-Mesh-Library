@@ -17,14 +17,14 @@ sealed class ProvisioningState {
      * Provisioning Capabilities were received.
      *
      * @property capabilities           Capabilities of the device.
-     * @property parameters             Default configuration parameters of the device.
+     * @property defaultParameters      Default configuration parameters of the device.
      * @property start                  Lambda func to invoke to start provisioning with the
      *                                  capabilities.
      * @property cancel                 Lambda func to invoke to cancel the provisioning.
      */
     data class CapabilitiesReceived(
         val capabilities: ProvisioningCapabilities,
-        val parameters: ProvisioningParameters,
+        val defaultParameters: ProvisioningParameters,
         val start: (parameters: ProvisioningParameters) -> Unit,
         val cancel: () -> Unit
     ) : ProvisioningState()
@@ -49,7 +49,7 @@ sealed class ProvisioningState {
     /**
      * The provisioning process is complete.
      */
-    object  Complete : ProvisioningState()
+    object Complete : ProvisioningState()
 
     /**
      * The provisioning has failed because of a local error.

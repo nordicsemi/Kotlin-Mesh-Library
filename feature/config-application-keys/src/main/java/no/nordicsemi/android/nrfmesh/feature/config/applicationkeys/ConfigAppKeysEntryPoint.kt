@@ -9,20 +9,14 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import no.nordicsemi.android.nrfmesh.core.navigation.AppState
-import no.nordicsemi.android.nrfmesh.core.navigation.ClickableSetting
-import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeListDetailSceneKey
-import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.ConfigAppKeysViewModel
 
 @Serializable
 data class ConfigAppKeysKey(val uuid: String) : NavKey
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
-fun EntryProviderScope<NavKey>.configAppKeysEntry(
-    appState: AppState,
-    navigator: Navigator,
-) {
+fun EntryProviderScope<NavKey>.configAppKeysEntry(appState: AppState, ) {
     entry<ConfigAppKeysKey>(
         metadata = ListDetailSceneStrategy.detailPane(
             sceneKey = NodeListDetailSceneKey
@@ -41,9 +35,6 @@ fun EntryProviderScope<NavKey>.configAppKeysEntry(
             availableApplicationKeys = uiState.availableAppKeys,
             addedApplicationKeys = uiState.addedAppKeys,
             onAddAppKeyClicked = viewModel::addApplicationKey,
-            navigateToApplicationKeys = {
-                navigator.navigate(key = SettingsKey(setting = ClickableSetting.APPLICATION_KEYS))
-            },
             readApplicationKeys = viewModel::readApplicationKeys,
             isKeyInUse = viewModel::isKeyInUse,
             messageState = uiState.messageState,

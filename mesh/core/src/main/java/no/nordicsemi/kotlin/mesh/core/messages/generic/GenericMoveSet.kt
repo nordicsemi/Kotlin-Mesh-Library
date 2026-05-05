@@ -29,6 +29,7 @@ class GenericMoveSet(
     override val opCode = Initializer.opCode
     override val responseOpCode = GenericLevelStatus.opCode
     override val transitionTime = transitionParams?.transitionTime
+    override val continueTransaction = true
     override val delay = transitionParams?.delay
     override val parameters = when (transitionTime != null && delay != null) {
         true -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +

@@ -35,6 +35,7 @@ import no.nordicsemi.kotlin.mesh.core.model.AllNodes
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.Element
 import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
+import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.PrimaryGroupAddress
@@ -96,15 +97,17 @@ internal class AcknowledgementContext(
 ) {
 
     var timeoutTimer: Timer? = Timer()
-    private var timeoutTask: TimerTask? = timeoutTimer?.schedule(delay = timeout.inWholeMilliseconds) {
-        invalidate()
-        timeoutBlock()
-    }
+    private var timeoutTask: TimerTask? = timeoutTimer
+        ?.schedule(delay = timeout.inWholeMilliseconds) {
+            invalidate()
+            timeoutBlock()
+        }
 
     var retryTimer: Timer? = Timer()
-    private var retryTimerTask: TimerTask? = retryTimer?.schedule(delay = delay.inWholeMilliseconds) {
-        repeatBlock()
-    }
+    private var retryTimerTask: TimerTask? = retryTimer
+        ?.schedule(delay = delay.inWholeMilliseconds) {
+            repeatBlock()
+        }
 
     init {
         initializeRetryTimer(delay = delay, callback = repeatBlock)
@@ -128,7 +131,7 @@ internal class AcknowledgementContext(
         retryTimer?.purge()
         retryTimer = Timer()
         retryTimerTask = retryTimer?.schedule(delay = delay.inWholeMilliseconds) {
-            if(retryTimer != null) {
+            if (retryTimer != null) {
                 callback()
                 initializeRetryTimer(delay = delay * 2, callback = callback)
             }
@@ -142,11 +145,12 @@ internal class AcknowledgementContext(
  * @property networkManager  Network manager.
  */
 internal class AccessLayer(private val networkManager: NetworkManager) : AutoCloseable {
+    private val network: MeshNetwork
+        get() = networkManager.meshNetwork
 
-    val mutex = Mutex()
-    val network = networkManager.meshNetwork
-    val scope = networkManager.scope
-    val logger: Logger?
+    private val mutex = Mutex()
+    private val scope = networkManager.scope
+    private val logger: Logger?
         get() = networkManager.logger
 
     private var transactions = mutableMapOf<Int, Transaction>()
@@ -154,10 +158,6 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
     internal val contexts: List<AcknowledgementContext>
         get() = reliableMessageContexts
     private var publishers = mutableMapOf<Model, TimerTask>()
-
-    init {
-        reinitializePublishers()
-    }
 
     private fun finalize() {
         transactions.clear()
@@ -367,7 +367,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
      * @param keySet       Set of keys that the message was encrypted with.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    fun reply(
+    suspend fun reply(
         origin: Address,
         destination: Address,
         message: MeshMessage,
@@ -407,11 +407,10 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
         } else {
             Random.nextInt(20, 500).toDuration(DurationUnit.MILLISECONDS)
         }
-        scope.launch {
-            delay(duration = delay)
-            logger?.i(LogCategory.ACCESS) { "Sending $pdu" }
-            networkManager.upperTransportLayer.send(accessPdu = pdu, ttl = null, keySet = keySet)
-        }
+
+        delay(duration = delay)
+        logger?.i(LogCategory.ACCESS) { "Sending $pdu" }
+        networkManager.upperTransportLayer.send(accessPdu = pdu, ttl = null, keySet = keySet)
     }
 
     internal suspend fun cancel(handle: MessageHandle) {
@@ -554,7 +553,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
                 val message = eventHandler.decode(accessPdu = accessPdu) ?: continue
                 newMessage = message
                 // Is this message targeting the local Node?
-                if (localNode.containsElementWithAddress(accessPdu.destination.address)) {
+                if (localNode.containsElementWithAddress(address = accessPdu.destination.address)) {
                     logger?.i(LogCategory.FOUNDATION_MODEL) {
                         "$message received from: ${
                             accessPdu.source.toHexString(
@@ -582,7 +581,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
                         // Some Config Messages require special handling.
                         handle(message = message)
                     }
-                    networkManager.emitNetworkManagerEvent(NetworkManagerEvent.OnNetworkChanged)
+                    networkManager.emitNetworkManagerEvent(event = NetworkManagerEvent.OnNetworkChanged)
                 } else {
                     logger?.i(LogCategory.FOUNDATION_MODEL) {
                         "$message received from: ${
@@ -617,7 +616,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
      *
      * @param message Config message to be handled.
      */
-    private fun handle(message: MeshMessage) {
+    private suspend fun handle(message: MeshMessage) {
         if (message is ConfigHeartbeatPublicationSet) {
             networkManager.upperTransportLayer.refreshHeartbeatPublisher()
         }

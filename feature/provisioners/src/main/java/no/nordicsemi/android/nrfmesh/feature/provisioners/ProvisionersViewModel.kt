@@ -6,11 +6,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.models.ProvisionerData
@@ -28,35 +29,33 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
     private lateinit var network: MeshNetwork
 
     private val _uiState = MutableStateFlow(ProvisionersScreenUiState())
-    val uiState: StateFlow<ProvisionersScreenUiState> = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ProvisionersScreenUiState()
-        )
+    val uiState: StateFlow<ProvisionersScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetwork()
     }
 
+    private fun observeNetwork() {
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                _uiState.update { state ->
+                    state.copy(
+                        provisioners = network.provisioners
+                            .map { ProvisionerData(provisioner = it) }
+                            // Filter out the provisioners that are marked for deletion.
+                            .filter { it !in state.provisionersToBeRemoved },
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
     override fun onCleared() {
         removeProvisioners()
         super.onCleared()
-    }
-
-    private fun observeNetwork() {
-        repository.network.onEach { network ->
-            this.network = network
-            _uiState.update { state ->
-                state.copy(
-                    provisioners = network.provisioners
-                        .map { ProvisionerData(provisioner = it) }
-                        // Filter out the provisioners that are marked for deletion.
-                        .filter { it !in state.provisionersToBeRemoved },
-
-                    )
-            }
-        }.launchIn(scope = viewModelScope)
     }
 
     /**

@@ -5,7 +5,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -73,7 +72,6 @@ internal fun ConfigAppKeysScreen(
     messageState: MessageState,
     availableApplicationKeys: List<ApplicationKey>,
     onAddAppKeyClicked: () -> Unit,
-    navigateToApplicationKeys: () -> Unit,
     readApplicationKeys: () -> Unit,
     isKeyInUse: (ApplicationKey) -> Boolean,
     send: (AcknowledgedConfigMessage) -> Unit,
@@ -81,7 +79,8 @@ internal fun ConfigAppKeysScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState()
+    val bottomSheetState =
+        rememberModalBottomSheetState(skipPartiallyExpanded = addedApplicationKeys.isEmpty())
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
     var keyToDelete by remember { mutableStateOf<ApplicationKey?>(null) }
@@ -193,14 +192,6 @@ internal fun ConfigAppKeysScreen(
                 }.onFailure {
                     scope.launch { snackbarHostState.showSnackbar(message = it.describe()) }
                 }
-            },
-            navigateToApplicationKeys = {
-                scope
-                    .launch { bottomSheetState.hide() }
-                    .invokeOnCompletion {
-                        navigateToApplicationKeys()
-                        if (!bottomSheetState.isVisible) showBottomSheet = !showBottomSheet
-                    }
             },
             onDismissClick = {
                 scope

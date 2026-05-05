@@ -306,11 +306,11 @@ private fun AutomaticConnectionRow(
 private fun NetworkConnectionState.describe() = when (this) {
     NetworkConnectionState.Scanning -> stringResource(R.string.label_scanning)
     is NetworkConnectionState.Connecting -> stringResource(
-        R.string.label_connecting_to, peripheral.name ?: R.string.label_unknown
+        R.string.label_connecting_to, name ?: R.string.label_unknown
     )
 
     is NetworkConnectionState.Connected -> stringResource(
-        R.string.label_connected_to, peripheral.name ?: R.string.label_unknown
+        R.string.label_connected_to, name ?: R.string.label_unknown
     )
 
     NetworkConnectionState.Disconnected -> stringResource(R.string.label_proxy_disconnected)

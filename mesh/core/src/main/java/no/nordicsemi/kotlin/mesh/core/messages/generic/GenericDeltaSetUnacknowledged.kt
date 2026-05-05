@@ -28,6 +28,7 @@ class GenericDeltaSetUnacknowledged(
 ) : UnacknowledgedMeshMessage, TransactionMessage, TransitionMessage {
     override val opCode = Initializer.opCode
     override val transitionTime = transitionParams?.transitionTime
+    override val continueTransaction = true
     override val delay = transitionParams?.delay
     override val parameters: ByteArray
         get() = when (transitionTime != null && delay != null) {

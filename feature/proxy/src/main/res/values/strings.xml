@@ -4,9 +4,9 @@
     <string name="title_proxy">Proxy</string>
     <string name="label_no_device_connected">No device connected</string>
     <string name="label_scanning">Scanning…</string>
-    <string name="label_connecting_to">Connecting to %s…</string>
-    <string name="label_connected_to">Connected to %s</string>
-    <string name="label_proxy_disconnected">Disconnected</string>
+    <string name="label_connecting_to">Connecting to <b>%s</b>…</string>
+    <string name="label_connected_to">Connected to <b>%s</b>.</string>
+    <string name="label_proxy_disconnected">Disconnected.</string>
     <string name="label_disconnected_rationale">Connect to network manually</string>
     <string name="label_unknown">Unknown</string>
     <string name="label_empty" />

@@ -39,7 +39,6 @@ fun BottomSheetNetworkKeys(
     keys: List<NetworkKey>,
     onAddNetworkKeyClicked: () -> Unit,
     onNetworkKeyClicked: (NetworkKey) -> Unit,
-    navigateToNetworkKeys: () -> Unit,
     onDismissClick: () -> Unit,
 ) {
     ModalBottomSheet(sheetState = bottomSheetState, onDismissRequest = onDismissClick) {
@@ -61,12 +60,6 @@ fun BottomSheetNetworkKeys(
                 onClick = onAddNetworkKeyClicked,
                 buttonIcon = Icons.Outlined.AutoFixHigh,
                 text = stringResource(R.string.label_generate)
-            )
-            MeshOutlinedButton(
-                enabled = !messageState.isInProgress(),
-                onClick = navigateToNetworkKeys,
-                buttonIcon = Icons.Outlined.Settings,
-                text = stringResource(R.string.label_settings)
             )
         }
         when (keys.isEmpty()) {

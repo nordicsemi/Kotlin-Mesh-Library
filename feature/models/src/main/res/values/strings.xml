@@ -18,12 +18,16 @@
     <string name="label_unknown_error">Unknown Error</string>
     <string name="label_success">Success</string>
     <string name="title_relay_count_and_interval">Relay Count &amp; Interval</string>
-    <string name="label_set_relay">Set Relay</string>
+    <string name="title_network_transmit">Network Transmit</string>
+    <plurals name="label_transmissions_count">
+        <item quantity="zero">No transmissions</item>
+        <item quantity="one">1 transmission</item>
+        <item quantity="other">%d transmissions</item>
+    </plurals>
     <string name="label_node_identity">Node Identity</string>
     <string name="label_node_identity_rationale">"Determines if a node is advertising with Node Identity messages on a subnet. If the Mesh Proxy Service is exposed, the node can be configured to advertise with node Identity on a given subnet."</string>
     <string name="label_snb">Secure Network Beacon</string>
     <string name="label_snb_rationale">"Determines if a node is periodically broadcasting Secure Network beacons."</string>
-    <string name="title_network_transmit">Network Transmit</string>
     <string name="title_heartbeat">Heartbeat</string>
     <string name="label_subscriptions">Subscriptions</string>
     <string name="label_subscriptions_rationale">Defines a composite state that controls receiving of Heartbeat messages</string>
@@ -63,6 +67,11 @@
     <string name="label_publication_triggers">Publication Triggers</string>
     <string name="label_bind">Bind</string>
     <string name="label_bound_application_keys">Bound Application Keys</string>
+    <plurals name="label_bound_application_keys_count">
+        <item quantity="zero">No keys bound</item>
+        <item quantity="one">1 key bound</item>
+        <item quantity="other">%d keys bound</item>
+    </plurals>
     <string name="label_bind_application_keys">Bind Application Keys</string>
     <string name="label_bind_key">Bind Key</string>
     <string name="label_settings">Settings</string>
@@ -133,9 +142,6 @@
     <string name="label_error_incorrect_hex_value">Incorrect hex value</string>
     <string name="label_empty" />
     <string name="label_invalid_vendor_op_code_range">Invalid Op Code. Valid range 0x00 – 0x3F</string>
-    <plurals name="label_bound_application_keys_count">
-        <item quantity="zero">No Application Keys bound</item>
-        <item quantity="one">1 Application Key bound</item>
-        <item quantity="other">%d Application Keys bound</item>
-    </plurals>
+    <string name="label_no_network">No Network</string>
+    <string name="label_no_network_rationale">This network has been reset by a remote Node.</string>
 </resources>

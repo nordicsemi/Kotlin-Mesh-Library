@@ -75,7 +75,6 @@ internal fun ConfigNetKeysScreen(
     messageState: MessageState,
     onAddNetworkKeyClicked: () -> Unit,
     isKeyInUse: (NetworkKey) -> Boolean,
-    navigateToNetworkKeys: () -> Unit,
     send: (AcknowledgedConfigMessage) -> Unit,
     resetMessageState: () -> Unit,
 ) {
@@ -191,16 +190,6 @@ internal fun ConfigNetKeysScreen(
                     }
                 }.onFailure {
                     scope.launch { snackbarHostState.showSnackbar(message = it.describe()) }
-                }
-            },
-            navigateToNetworkKeys = {
-                scope.launch {
-                    bottomSheetState.hide()
-                }.invokeOnCompletion {
-                    navigateToNetworkKeys()
-                    if (!bottomSheetState.isVisible) {
-                        showBottomSheet = !showBottomSheet
-                    }
                 }
             },
             onDismissClick = {

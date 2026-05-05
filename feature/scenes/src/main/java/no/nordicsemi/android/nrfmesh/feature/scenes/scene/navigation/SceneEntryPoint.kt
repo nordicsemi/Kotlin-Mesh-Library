@@ -8,7 +8,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
-import no.nordicsemi.android.nrfmesh.core.navigation.AppState
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsListDetailSceneKey
 import no.nordicsemi.android.nrfmesh.feature.scenes.scene.SceneScreen
 import no.nordicsemi.android.nrfmesh.feature.scenes.scene.SceneViewModel
@@ -19,7 +18,7 @@ data class SceneContentKey(val number: SceneNumber) : NavKey {
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
-fun EntryProviderScope<NavKey>.sceneEntry(appState: AppState) {
+fun EntryProviderScope<NavKey>.sceneEntry() {
     entry<SceneContentKey>(
         metadata = ListDetailSceneStrategy.extraPane(
             sceneKey = SettingsListDetailSceneKey

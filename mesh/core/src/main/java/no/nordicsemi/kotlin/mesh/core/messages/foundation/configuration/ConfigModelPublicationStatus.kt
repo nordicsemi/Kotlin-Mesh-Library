@@ -122,7 +122,7 @@ class ConfigModelPublicationStatus(
 
     override fun toString() = "ConfigModelPublicationStatus(" +
             "status: $status, " +
-            "elementAddress: ${elementAddress.address}, " +
+            "elementAddress: ${elementAddress.toHexString()}, " +
             "modelIdentifier: ${
                 modelIdentifier.toHexString(
                     format = HexFormat {

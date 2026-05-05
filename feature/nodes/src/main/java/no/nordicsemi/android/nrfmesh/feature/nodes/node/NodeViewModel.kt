@@ -8,11 +8,12 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Completed
@@ -29,7 +30,6 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigResponse
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigCompositionDataGet
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeReset
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
@@ -49,16 +49,10 @@ internal class NodeViewModel @AssistedInject internal constructor(
     private val messenger = repository.messengers.messenger(uuid = nodeUuid)
 
     private val _uiState = MutableStateFlow(NodeScreenUiState())
-    val uiState: StateFlow<NodeScreenUiState> = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-            initialValue = NodeScreenUiState()
-        )
+    val uiState: StateFlow<NodeScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetworkChanges()
-        observeConfigNodeReset()
         observeMessenger()
         executeTasks()
     }
@@ -69,39 +63,27 @@ internal class NodeViewModel @AssistedInject internal constructor(
     }
 
     private fun observeNetworkChanges() {
-        repository.network.onEach {
-            val nodeState = it.node(uuid = nodeUuid)?.let { node ->
-                this@NodeViewModel.selectedNode = node
-                NodeState.Success(
-                    node = node,
-                    nodeInfoListData = NodeInfoListData(node = node)
-                )
-            } ?: NodeState.Error(Throwable("Node not found"))
-            _uiState.update { state ->
-                state.copy(
-                    nodeState = nodeState,
-                    availableNetworkKeys = selectedNode.unknownNetworkKeys(),
-                    availableAppKeys = selectedNode.unknownApplicationKeys()
-                )
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                val nodeState = it.node(uuid = nodeUuid)?.let { node ->
+                    this@NodeViewModel.selectedNode = node
+                    NodeState.Success(
+                        node = node,
+                        nodeInfoListData = NodeInfoListData(node = node)
+                    )
+                } ?: NodeState.Error(Throwable("Node not found"))
+                _uiState.update { state ->
+                    state.copy(
+                        nodeState = nodeState,
+                        availableNetworkKeys = selectedNode.unknownNetworkKeys(),
+                        availableAppKeys = selectedNode.unknownApplicationKeys()
+                    )
+                }
+                meshNetwork = it // update the local network instance
             }
-            meshNetwork = it // update the local network instance
-        }.launchIn(scope = viewModelScope)
-    }
-
-    /**
-     * Observes incoming messages from the repository to handle node reset events.
-     */
-    private fun observeConfigNodeReset() {
-        repository.incomingMessages.onEach {
-            if (it is ConfigNodeReset) {
-                _uiState.value = _uiState.value.copy(
-                    nodeState = NodeState.Error(
-                        throwable = Throwable("Node has been reset and is no longer available.")
-                    ),
-                    isRefreshing = false
-                )
-            }
-        }.launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
     }
 
     /**
@@ -109,25 +91,25 @@ internal class NodeViewModel @AssistedInject internal constructor(
      */
     private fun observeMessenger() {
         messenger?.meshTaskFlow
-            ?.onEach { tasks ->
-                _uiState.update { it.copy(tasks = tasks.toList()) }
-            }?.launchIn(scope = viewModelScope)
+            ?.onEach { tasks -> _uiState.update { it.copy(tasks = tasks.toList()) } }
+            ?.launchIn(scope = viewModelScope)
     }
 
     /**
      * Requests the composition data for the selected node when the network is connected.
      */
     private fun executeTasks() {
-        // Request the composition data when the network is connected if it has not been requested yet.
-        repository.proxyConnectionStateFlow.onEach {
-            if (it.connectionState is NetworkConnectionState.Connected) {
-                // Add a small delay to ensure proxy filter is set up before sending the message.
-                if (!selectedNode.isCompositionDataReceived) {
-                    delay(timeMillis = 1000)
-                    messenger?.execute(meshNetwork = meshNetwork, newNode = selectedNode)
+        repository.proxyConnectionStateFlow
+            .onEach {
+                if (it.connectionState is NetworkConnectionState.Connected) {
+                    // Add a small delay to ensure proxy filter is set up before sending the message.
+                    if (!selectedNode.isCompositionDataReceived) {
+                        delay(timeMillis = 1000)
+                        messenger?.execute(meshNetwork = meshNetwork, newNode = selectedNode)
+                    }
                 }
             }
-        }.launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
     }
 
     internal fun onReconfigCompletePressed() {
@@ -157,9 +139,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
      */
     internal fun onExcluded(exclude: Boolean) {
         selectedNode.excluded = exclude
-        viewModelScope.launch {
-            repository.save()
-        }
+        repository.save()
     }
 
     internal fun onItemSelected(item: ClickableNodeInfoItem) {
@@ -208,9 +188,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
     }
 
     fun save() {
-        viewModelScope.launch {
-            repository.save()
-        }
+        repository.save()
     }
 
     @AssistedFactory
@@ -240,4 +218,5 @@ internal data class NodeScreenUiState(
     val availableNetworkKeys: List<NetworkKey> = emptyList(),
     val availableAppKeys: List<ApplicationKey> = emptyList(),
     val tasks: List<MeshTask> = emptyList(),
+    val wasNetworkRemoved: Boolean = false,
 )

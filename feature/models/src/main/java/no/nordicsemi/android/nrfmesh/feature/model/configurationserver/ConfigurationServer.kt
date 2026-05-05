@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -141,10 +142,10 @@ private fun RelayFeature(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var retransmissions by remember(key1 = relayRetransmit) {
+    var retransmissions by rememberSaveable(System.identityHashCode(relayRetransmit)) {
         mutableFloatStateOf(relayRetransmit?.count?.toFloat() ?: 0f)
     }
-    var interval by remember(key1 = relayRetransmit) {
+    var interval by rememberSaveable(System.identityHashCode(relayRetransmit)) {
         mutableFloatStateOf(relayRetransmit?.interval?.toFloat() ?: 0f)
     }
     ElevatedCardItem(
@@ -166,8 +167,12 @@ private fun RelayFeature(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (relayRetransmit) {
-                    null -> "Unknown"
-                    else -> "${retransmissions.roundToInt()} transmission(s)"
+                    null -> stringResource(R.string.unknown)
+                    else -> pluralStringResource(
+                        R.plurals.label_transmissions_count,
+                        retransmissions.roundToInt(),
+                        retransmissions.roundToInt()
+                    )
                 },
                 textAlign = TextAlign.End
             )
@@ -187,8 +192,8 @@ private fun RelayFeature(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (relayRetransmit) {
-                    null -> "Unknown"
-                    else -> "${interval.roundToInt()} ms"
+                    null -> stringResource(R.string.unknown)
+                    else -> stringResource(R.string.label_time_ms, interval.roundToInt())
                 },
                 textAlign = TextAlign.End
             )
@@ -207,7 +212,7 @@ private fun RelayFeature(
                 isOnClickActionInProgress = messageState.isInProgress()
                         && messageState.message is ConfigRelaySet,
                 buttonIcon = Icons.Outlined.Upload,
-                text = stringResource(R.string.label_set_relay),
+                text = stringResource(R.string.label_set_state),
                 onClick = {
                     runCatching {
                         send(
@@ -237,10 +242,10 @@ private fun NetworkTransmit(
     networkTransmit: NetworkTransmit?,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
-    var transmissions by remember(key1 = networkTransmit) {
+    var transmissions by rememberSaveable(System.identityHashCode(networkTransmit)) {
         mutableFloatStateOf(networkTransmit?.count?.toFloat() ?: 0f)
     }
-    var interval by remember(key1 = networkTransmit) {
+    var interval by rememberSaveable(System.identityHashCode(networkTransmit)) {
         mutableFloatStateOf(networkTransmit?.interval?.toFloat() ?: 0f)
     }
     ElevatedCardItem(
@@ -264,8 +269,12 @@ private fun NetworkTransmit(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (networkTransmit) {
-                    null -> "Unknown"
-                    else -> "${transmissions.roundToInt()} transmission(s)"
+                    null -> stringResource(R.string.unknown)
+                    else -> pluralStringResource(
+                        R.plurals.label_transmissions_count,
+                        transmissions.roundToInt(),
+                        transmissions.roundToInt()
+                    )
                 },
                 textAlign = TextAlign.End
             )
@@ -283,8 +292,8 @@ private fun NetworkTransmit(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (networkTransmit) {
-                    null -> "Unknown"
-                    else -> "${interval.roundToInt()} ms"
+                    null -> stringResource(R.string.unknown)
+                    else -> stringResource(R.string.label_time_ms, interval.roundToInt())
                 },
                 textAlign = TextAlign.End
             )
