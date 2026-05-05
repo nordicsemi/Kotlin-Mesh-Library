@@ -1522,7 +1522,7 @@ data class MeshNetwork internal constructor(
     private fun filterNodesUnknownToNetworkKeys() {
         _nodes = _nodes.filter { node ->
             networkKeys.map { it.index }.any { keyIndex ->
-                keyIndex !in node.netKeys.map { it.index }
+                keyIndex in node.netKeys.map { it.index }
             }
         }.toMutableList()
     }
