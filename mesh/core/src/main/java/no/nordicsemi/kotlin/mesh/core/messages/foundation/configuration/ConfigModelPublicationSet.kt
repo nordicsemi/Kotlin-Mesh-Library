@@ -50,7 +50,7 @@ class ConfigModelPublicationSet(
             data += publish.ttl.toByte()
             data += (publish.period.steps and 0x3Fu).toByte() or
                     (publish.period.resolution.value.toInt() shl 6).toByte()
-            data += (publish.retransmit.count.toInt() shl 3).toByte() or
+            data += (publish.retransmit.count.toInt() and 0x07).toByte() or
                     (publish.retransmit.steps.toInt() shl 3).toByte()
             data += companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
                 ?.plus(modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
@@ -97,7 +97,14 @@ class ConfigModelPublicationSet(
     )
 
     override fun toString() = "ConfigModelPublicationSet(" +
-            "elementAddress: ${elementAddress.address}, " +
+            "elementAddress: ${elementAddress.address.toHexString(
+                format = HexFormat {
+                    number {
+                        prefix = "0x"
+                        upperCase = true
+                    }
+                }
+            )}, " +
             "modelIdentifier: ${
                 modelIdentifier.toHexString(
                     format = HexFormat {
