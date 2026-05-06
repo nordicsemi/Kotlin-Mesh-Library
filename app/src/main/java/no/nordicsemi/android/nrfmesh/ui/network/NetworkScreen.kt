@@ -29,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -69,7 +68,8 @@ import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
-import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportScreen
+import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
+import no.nordicsemi.android.nrfmesh.feature.export.navigation.exportEntry
 import no.nordicsemi.android.nrfmesh.feature.groups.navigation.groupsEntry
 import no.nordicsemi.android.nrfmesh.feature.nodes.navigation.nodesEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.provisioningEntry
@@ -173,8 +173,6 @@ private fun NetworkContent(
 ) {
     val scope = rememberCoroutineScope()
     val selectProvisionerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    var showExportBottomSheet by rememberSaveable { mutableStateOf(false) }
-    val exportSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showResetNetworkDialog by rememberSaveable { mutableStateOf(false) }
     var showAutoConfigurationHealthServerDialog by rememberSaveable { mutableStateOf(false) }
     val navigator = remember { Navigator(appState.navigationState) }
@@ -220,6 +218,7 @@ private fun NetworkContent(
             groupsEntry(appState = appState, navigator = navigator)
             proxyEntry()
             settingsEntry(appState = appState, navigator = navigator)
+            exportEntry(appState = appState, navigator = navigator)
         }
         val entries = appState.navigationState.toEntries(entryProvider = entryProvider)
         val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy)
@@ -261,7 +260,7 @@ private fun NetworkContent(
                                 },
                                 navigateToExport = {
                                     menuExpanded = false
-                                    showExportBottomSheet = true
+                                    navigator.navigate(key = ExportKey)
                                 },
                                 onResetNetworkClicked = {
                                     menuExpanded = false
@@ -363,31 +362,6 @@ private fun NetworkContent(
                 )
             }
         }
-        if (showExportBottomSheet) {
-            ModalBottomSheet(
-                sheetState = exportSheetState,
-                onDismissRequest = { showExportBottomSheet = false },
-                content = {
-                    ExportScreen(onDismissRequest = {
-                        scope.launch { exportSheetState.hide() }.invokeOnCompletion {
-                            if (!exportSheetState.isVisible) {
-                                showExportBottomSheet = false
-                            }
-                        }
-                    }, onExportCompleted = { message ->
-                        scope.launch {
-                            exportSheetState.hide()
-                            appState.snackbarHostState.showSnackbar(
-                                message = message, duration = SnackbarDuration.Short
-                            )
-                        }.invokeOnCompletion {
-                            if (!exportSheetState.isVisible) {
-                                showExportBottomSheet = false
-                            }
-                        }
-                    })
-                })
-        }
         if (shouldSelectProvisioner) {
             ModalBottomSheet(
                 properties = ModalBottomSheetProperties(
@@ -412,11 +386,11 @@ private fun NetworkContent(
                             ElevatedCardItem(
                                 imageVector = Icons.Filled.PersonPin, title = it.name, onClick = {
                                     onProvisionerSelected(it)
-                                    scope.launch { exportSheetState.hide() }.invokeOnCompletion {
-                                        if (!exportSheetState.isVisible) {
-                                            showExportBottomSheet = false
-                                        }
-                                    }
+                                    // scope.launch { exportSheetState.hide() }.invokeOnCompletion {
+                                    //     if (!exportSheetState.isVisible) {
+                                    //         // showExportBottomSheet = false
+                                    //     }
+                                    // }
                                 }
                             )
                         }
