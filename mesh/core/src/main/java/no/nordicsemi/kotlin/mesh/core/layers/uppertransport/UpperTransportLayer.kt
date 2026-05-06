@@ -56,14 +56,14 @@ internal class UpperTransportLayer(private val networkManager: NetworkManager) :
                 val message = UpperTransportPdu.decode(
                     message = accessMessage, network = meshNetwork
                 )?.let {
-                    logger?.i(LogCategory.UPPER_TRANSPORT) { "Received ${it.first}" }
+                    logger?.i(category = LogCategory.UPPER_TRANSPORT) { "Received ${it.first}" }
                     networkManager.accessLayer.handle(
                         upperTransportPdu = it.first,
                         keySet = it.second
                     )
                 }
                 if (message == null) {
-                    logger?.w(LogCategory.UPPER_TRANSPORT) { "Failed to decode PDU" }
+                    logger?.w(category = LogCategory.UPPER_TRANSPORT) { "Failed to decode PDU" }
                 }
                 return message
             }
@@ -73,7 +73,7 @@ internal class UpperTransportLayer(private val networkManager: NetworkManager) :
                 when (message.opCode) {
                     HeartbeatMessage.OP_CODE -> {
                         HeartbeatMessage.init(message = message).also { heartbeat ->
-                            logger?.i(LogCategory.UPPER_TRANSPORT) {
+                            logger?.i(category = LogCategory.UPPER_TRANSPORT) {
                                 "$heartbeat received from ${message.source.toHexString()}."
                             }
                             handle(heartbeat = heartbeat)
@@ -81,7 +81,7 @@ internal class UpperTransportLayer(private val networkManager: NetworkManager) :
                     }
 
                     else -> {
-                        logger?.i(LogCategory.UPPER_TRANSPORT) {
+                        logger?.i(category = LogCategory.UPPER_TRANSPORT) {
                             "Unsupported Control Message received (opCode: ${
                                 message.opCode.toHexString(
                                     format = HexFormat {

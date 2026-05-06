@@ -67,7 +67,7 @@ internal class UpperTransportPdu(
         /**
          * Constructs an UpperTransportPdu from a given AccessMessage.
          *
-         * @param message       AccessMessage to be decode from.
+         * @param message       AccessMessage to be decoded from.
          * @param key           Key to be used for decryption.
          * @param virtualGroup  Virtual group address if the message is a virtual group message.
          * @return an UpperTransportPdu or null if the pdu could not be decoded.
@@ -75,12 +75,7 @@ internal class UpperTransportPdu(
         @OptIn(ExperimentalUuidApi::class)
         fun init(message: AccessMessage, key: ByteArray, virtualGroup: Group?): UpperTransportPdu? {
             val micSize = message.transportMicSize.toInt()
-            val encryptedData = message.upperTransportPdu.copyOfRange(
-                fromIndex = 0, toIndex = message.upperTransportPdu.size
-            )
-            /*val mic = accessMessage.upperTransportPdu.sliceArray(
-                encryptedDataSize until encryptedDataSize + micSize
-            )*/
+            val encryptedData = message.upperTransportPdu
 
             // The nonce type is 0x01 for messages signed with Application Key and 0x02 for messages
             // signed with Device Key (Configuration Messages).
@@ -108,7 +103,7 @@ internal class UpperTransportPdu(
             return UpperTransportPdu(
                 source = message.source.address,
                 destination = virtualGroup?.address?.address?.let { address ->
-                    MeshAddress.create(address)
+                    MeshAddress.create(address = address)
                 } ?: message.destination,
                 aid = message.aid,
                 transportMicSize = message.transportMicSize,

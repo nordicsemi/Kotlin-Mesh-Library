@@ -4,7 +4,7 @@
 package no.nordicsemi.kotlin.mesh.core.layers.network
 
 import no.nordicsemi.kotlin.data.IntFormat
-import no.nordicsemi.kotlin.data.getInt
+import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.hasBitSet
 import no.nordicsemi.kotlin.data.shl
@@ -189,7 +189,10 @@ internal object NetworkPduDecoder {
         networkKey.oldDerivatives?.takeIf { nid == it.nid }?.let { keySets += it }
         require(keySets.isNotEmpty()) { return null }
 
-        val currentIvIndex = ivIndex.index(ivi)
+        // IVI should match the LSB bit of current IV Index.
+        // If it doesn't, the PDU will be deobfuscated and decoded with IV Index decremented by 1.
+        // See: Bluetooth Mesh Profile 1.0.1 Specification, chapter: 3.10.5.
+        val currentIvIndex = ivIndex.index(ivi = ivi)
 
         for (keys in keySets) {
             // 6 bytes following IVI
@@ -206,17 +209,17 @@ internal object NetworkPduDecoder {
 
             // First validation: Control messages have a NetMIC of size 64 bits.
             val ctl = deobfuscatedData[0] ushr 7
-            val type = LowerTransportPduType.from(ctl)!!
-            if (type != LowerTransportPduType.CONTROL_MESSAGE && pdu.size < 18) continue
+            val type = LowerTransportPduType.from(type = ctl)!!
+            if (type != LowerTransportPduType.ACCESS_MESSAGE && pdu.size < 18) continue
 
             val ttl = (deobfuscatedData[0] and 0x7F).toUByte()
 
             // Multiple octet values use Big Endian.
-            val sequence = deobfuscatedData.getInt(
+            val sequence = deobfuscatedData.getUInt(
                 offset = 1,
                 format = IntFormat.UINT24,
                 order = ByteOrder.BIG_ENDIAN
-            ).toUInt()
+            )
 
             val src = deobfuscatedData.getUShort(offset = 4)
 
@@ -224,7 +227,7 @@ internal object NetworkPduDecoder {
             val destAndTransportPdu = pdu.copyOfRange(fromIndex = 7, toIndex = pdu.size)
             val mic = pdu.copyOfRange(fromIndex = micOffset, toIndex = pdu.size)
 
-            val nonce = byteArrayOf(pduType.nonceId.toByte()) +
+            val nonce = pduType.nonceId.toByteArray() +
                     deobfuscatedData +
                     byteArrayOf(0x00, 0x00) +
                     currentIvIndex.toByteArray()

@@ -10,6 +10,7 @@ import no.nordicsemi.kotlin.mesh.core.layers.network.NetworkPdu
 import no.nordicsemi.kotlin.mesh.core.layers.uppertransport.UpperTransportPdu
 import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
+import java.io.ByteArrayOutputStream
 import kotlin.experimental.and
 import kotlin.experimental.or
 
@@ -124,20 +125,19 @@ internal open class AccessMessage(
          */
         fun init(segments: List<SegmentedAccessMessage>): AccessMessage {
             require(segments.isNotEmpty()) { throw InvalidPdu() }
-
-            val pdu = segments.fold(byteArrayOf()) { acc, sam -> acc + sam.upperTransportPdu }
-            return segments.first().run {
-                AccessMessage(
-                    source = source,
-                    destination = destination,
-                    networkKey = networkKey,
-                    ivIndex = ivIndex,
-                    upperTransportPdu = pdu,
-                    transportMicSize = transportMicSize,
-                    sequence = sequence,
-                    aid = aid
-                )
-            }
+            val segment = segments.first()
+            return AccessMessage(
+                source = segment.source,
+                destination = segment.destination,
+                networkKey = segment.networkKey,
+                ivIndex = segment.ivIndex,
+                upperTransportPdu =  ByteArrayOutputStream().apply {
+                    segments.forEach { write(it.upperTransportPdu) }
+                }.toByteArray(),
+                transportMicSize = segment.transportMicSize,
+                sequence = segment.sequence,
+                aid = segment.aid
+            )
         }
     }
 }

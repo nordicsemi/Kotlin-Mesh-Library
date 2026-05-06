@@ -12,7 +12,7 @@ import kotlinx.serialization.Transient
  *
  * After a node is removed from a network, other nodes keep SeqAuth values associated with addresses
  * used by the removed node. Packets sent from a new node using the same set of addresses would be
- * discarded until the new sequence numbers would get higher then the what is in Replay Protection
+ * discarded until the new sequence numbers would get higher than what is in Replay Protection
  * List or the receivers. Therefore, until the IV index is incremented by 2, the addresses of a
  * removed node are reserved and cannot be assigned to a new node. When the IV index increments by
  * at least 2, the SeqAuth is guaranteed to be higher, no matter what the sequence number used by
