@@ -17,8 +17,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
-data class SceneRangesContentKey(val uuid: String) : NavKey {
-}
+data class SceneRangesContentKey(val uuid: String) : NavKey
 
 @OptIn(
     ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class,

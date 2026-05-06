@@ -18,8 +18,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import no.nordicsemi.android.feature.config.networkkeys.ConfigNetKeysKey
-import no.nordicsemi.android.feature.config.networkkeys.configNetKeysEntry
+import no.nordicsemi.android.feature.config.networkkeys.navigation.ConfigNetKeysKey
+import no.nordicsemi.android.feature.config.networkkeys.navigation.configNetKeysEntry
 import no.nordicsemi.android.nrfmesh.core.navigation.AppState
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
@@ -28,8 +28,8 @@ import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.PlaceHolder
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
-import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.ConfigAppKeysKey
-import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.configAppKeysEntry
+import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.ConfigAppKeysKey
+import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.configAppKeysEntry
 import no.nordicsemi.android.nrfmesh.feature.nodes.R
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.ClickableNodeInfoItem
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.NodeScreen
@@ -135,7 +135,7 @@ fun EntryProviderScope<NavKey>.nodeEntry(
             }
         }
     }
-    configNetKeysEntry(appState = appState)
-    configAppKeysEntry(appState = appState)
+    configNetKeysEntry(appState = appState, navigator = navigator)
+    configAppKeysEntry(appState = appState, navigator = navigator)
     elementEntry(appState = appState, navigator = navigator)
 }

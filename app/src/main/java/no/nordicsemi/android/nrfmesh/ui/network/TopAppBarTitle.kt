@@ -1,7 +1,8 @@
 package no.nordicsemi.android.nrfmesh.ui.network
 
 import android.content.Context
-import no.nordicsemi.android.feature.config.networkkeys.ConfigNetKeysKey
+import no.nordicsemi.android.feature.config.networkkeys.navigation.AddNetKeysKey
+import no.nordicsemi.android.feature.config.networkkeys.navigation.ConfigNetKeysKey
 import no.nordicsemi.android.nrfmesh.R
 import no.nordicsemi.android.nrfmesh.core.navigation.GroupsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NavigationState
@@ -11,7 +12,8 @@ import no.nordicsemi.android.nrfmesh.core.navigation.ProxyKey
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.key.navigation.ApplicationKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.navigation.ApplicationKeysContentKey
-import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.ConfigAppKeysKey
+import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.AddAppKeysKey
+import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.ConfigAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.developer.navigation.DeveloperSettingsContentKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.GroupControlsKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.navigation.GroupKey
@@ -22,6 +24,9 @@ import no.nordicsemi.android.nrfmesh.feature.network.keys.navigation.NetworkKeys
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.ElementKey
 import no.nordicsemi.android.nrfmesh.feature.provisioners.navigation.ProvisionersContentKey
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.navigation.ProvisionerContentKey
+import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.navigation.GroupRangesContentKey
+import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.navigation.SceneRangesContentKey
+import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.navigation.UnicastRangesContentKey
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.ProvisioningKey
 import no.nordicsemi.android.nrfmesh.feature.scenes.navigation.ScenesContentKey
 import no.nordicsemi.android.nrfmesh.feature.scenes.scene.navigation.SceneContentKey
@@ -64,8 +69,14 @@ internal fun title(
     is ConfigNetKeysKey -> if (isCompactWidth) context.getString(R.string.label_network_keys)
     else network.node(uuid = Uuid.parse(uuidString = key.uuid))?.name
         ?: context.getString(R.string.label_unknown)
+    is AddNetKeysKey -> if (isCompactWidth) context.getString(R.string.label_network_keys)
+    else network.node(uuid = Uuid.parse(uuidString = key.uuid))?.name
+        ?: context.getString(R.string.label_unknown)
 
     is ConfigAppKeysKey -> if (isCompactWidth) context.getString(R.string.label_application_keys)
+    else network.node(uuid = Uuid.parse(uuidString = key.uuid))?.name
+        ?: context.getString(R.string.label_unknown)
+    is AddAppKeysKey -> if (isCompactWidth) context.getString(R.string.label_application_keys)
     else network.node(uuid = Uuid.parse(uuidString = key.uuid))?.name
         ?: context.getString(R.string.label_unknown)
 
@@ -103,9 +114,28 @@ internal fun title(
     else context.getString(R.string.label_settings)
 
     is ProvisionerContentKey -> if (isCompactWidth) {
-        network.provisioner(Uuid.parse(uuidString = key.uuid))?.name
+        network.provisioner(uuid = Uuid.parse(uuidString = key.uuid))?.name
             ?: context.getString(R.string.label_unknown)
     } else context.getString(R.string.label_provisioners)
+
+    is UnicastRangesContentKey -> {
+        if(isCompactWidth) {
+            network.provisioner(uuid = Uuid.parse(uuidString = key.uuid))?.name
+                ?: context.getString(R.string.label_unknown)
+        } else context.getString(R.string.label_provisioners)
+    }
+    is GroupRangesContentKey -> {
+        if(isCompactWidth) {
+            network.provisioner(uuid = Uuid.parse(uuidString = key.uuid))?.name
+                ?: context.getString(R.string.label_unknown)
+        } else context.getString(R.string.label_provisioners)
+    }
+    is SceneRangesContentKey -> {
+        if(isCompactWidth) {
+            network.provisioner(uuid = Uuid.parse(uuidString = key.uuid))?.name
+                ?: context.getString(R.string.label_unknown)
+        } else context.getString(R.string.label_provisioners)
+    }
 
     is NetworkKeysContentKey -> if (isCompactWidth) context.getString(R.string.label_network_keys)
     else context.getString(R.string.label_settings)

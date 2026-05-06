@@ -28,4 +28,5 @@
     <string name="label_application_key_added">Application Key added</string>
     <string name="label_remove_key">Remove Key</string>
     <string name="label_remove_key_confirmation">The selected key is bound to one or more models in the Node. When removed, it will be unbound automatically, and the models may stop working. \n\nDo you wish to continue?</string>
+    <string name="label_available_application_keys">Available Application Keys</string>
 </resources>

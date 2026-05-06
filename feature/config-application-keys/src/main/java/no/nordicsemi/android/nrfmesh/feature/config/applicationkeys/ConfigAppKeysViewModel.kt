@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation
+package no.nordicsemi.android.nrfmesh.feature.config.applicationkeys
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

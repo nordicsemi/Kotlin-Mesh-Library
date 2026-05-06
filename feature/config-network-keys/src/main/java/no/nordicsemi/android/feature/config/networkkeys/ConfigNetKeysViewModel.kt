@@ -1,4 +1,4 @@
-package no.nordicsemi.android.feature.config.networkkeys.navigation
+package no.nordicsemi.android.feature.config.networkkeys
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

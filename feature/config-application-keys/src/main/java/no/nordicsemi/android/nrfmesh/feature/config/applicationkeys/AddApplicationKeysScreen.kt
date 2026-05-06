@@ -1,6 +1,7 @@
 package no.nordicsemi.android.nrfmesh.feature.config.applicationkeys
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,36 +14,35 @@ import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import no.nordicsemi.android.nrfmesh.core.common.Completed
+import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
+import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
+import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
 import no.nordicsemi.android.nrfmesh.core.ui.Row
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheetApplicationKeys(
-    bottomSheetState: SheetState,
+fun AddApplicationKeysScreen(
     messageState: MessageState,
     keys: List<ApplicationKey>,
     onAddApplicationKeyClicked: () -> Unit,
     onAppKeyClicked: (ApplicationKey) -> Unit,
-    onDismissClick: () -> Unit,
+    resetMessageState: () -> Unit,
 ) {
-    ModalBottomSheet(
-        sheetState = bottomSheetState,
-        onDismissRequest = onDismissClick
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -54,7 +54,7 @@ fun BottomSheetApplicationKeys(
                 modifier = Modifier
                     .weight(weight = 1f)
                     .padding(horizontal = 16.dp),
-                title = stringResource(R.string.label_application_keys)
+                title = stringResource(R.string.label_available_application_keys)
             )
             MeshOutlinedButton(
                 enabled = !messageState.isInProgress(),
@@ -94,5 +94,31 @@ fun BottomSheetApplicationKeys(
                 }
             }
         }
+    }
+
+    when (messageState) {
+        is Failed -> MeshMessageStatusDialog(
+            text = messageState.error.describe(),
+            showDismissButton = !messageState.didFail(),
+            onDismissRequest = resetMessageState,
+        )
+
+        is Completed -> messageState.response?.takeIf {
+            it is ConfigStatusMessage
+        }?.let {
+            when (!(it as ConfigStatusMessage).isSuccess) {
+                true -> MeshMessageStatusDialog(
+                    text = it.message,
+                    showDismissButton = true,
+                    onDismissRequest = resetMessageState,
+                )
+
+                false -> {
+
+                }
+            }
+        }
+
+        else -> {}
     }
 }

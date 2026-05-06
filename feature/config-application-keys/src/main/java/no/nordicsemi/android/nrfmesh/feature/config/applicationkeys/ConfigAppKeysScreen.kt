@@ -30,7 +30,6 @@ import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,7 +57,6 @@ import no.nordicsemi.android.nrfmesh.core.ui.Row
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyDelete
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyGet
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
@@ -67,10 +65,8 @@ import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 @Composable
 internal fun ConfigAppKeysScreen(
     snackbarHostState: SnackbarHostState,
-    isLocalProvisionerNode: Boolean,
     addedApplicationKeys: List<ApplicationKey>,
     messageState: MessageState,
-    availableApplicationKeys: List<ApplicationKey>,
     onAddAppKeyClicked: () -> Unit,
     readApplicationKeys: () -> Unit,
     isKeyInUse: (ApplicationKey) -> Boolean,
@@ -79,8 +75,6 @@ internal fun ConfigAppKeysScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val bottomSheetState =
-        rememberModalBottomSheetState(skipPartiallyExpanded = addedApplicationKeys.isEmpty())
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
     var keyToDelete by remember { mutableStateOf<ApplicationKey?>(null) }
@@ -160,47 +154,10 @@ internal fun ConfigAppKeysScreen(
                 modifier = Modifier.defaultMinSize(minWidth = 150.dp),
                 text = { Text(text = stringResource(R.string.label_add_key)) },
                 icon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
-                onClick = { showBottomSheet = true },
+                onClick = onAddAppKeyClicked,
                 expanded = true
             )
         }
-    }
-
-    if (showBottomSheet) {
-        BottomSheetApplicationKeys(
-            bottomSheetState = bottomSheetState,
-            messageState = messageState,
-            keys = availableApplicationKeys,
-            onAppKeyClicked = { key ->
-                scope
-                    .launch { bottomSheetState.hide() }
-                    .invokeOnCompletion {
-                        send(ConfigAppKeyAdd(key = key))
-                        if (!bottomSheetState.isVisible) showBottomSheet = !showBottomSheet
-                    }
-            },
-            onAddApplicationKeyClicked = {
-                runCatching {
-                    onAddAppKeyClicked()
-                    if (isLocalProvisionerNode) {
-                        scope
-                            .launch { bottomSheetState.hide() }
-                            .invokeOnCompletion {
-                                if (!bottomSheetState.isVisible) showBottomSheet = !showBottomSheet
-                            }
-                    }
-                }.onFailure {
-                    scope.launch { snackbarHostState.showSnackbar(message = it.describe()) }
-                }
-            },
-            onDismissClick = {
-                scope
-                    .launch { bottomSheetState.hide() }
-                    .invokeOnCompletion {
-                        if (!bottomSheetState.isVisible) showBottomSheet = !showBottomSheet
-                    }
-            }
-        )
     }
 
     if (showDeleteConfirmationDialog) {
@@ -257,21 +214,6 @@ internal fun ConfigAppKeysScreen(
                                 }
                             }
                         }
-                    } else if (messageState.message is ConfigAppKeyAdd) {
-                        snackbarHostState
-                            .run {
-                                currentSnackbarData?.dismiss()
-                                showSnackbar(
-                                    message = context.getString(R.string.label_application_key_added),
-                                    duration = SnackbarDuration.Short,
-                                ).also { result ->
-                                    when (result) {
-                                        SnackbarResult.Dismissed,
-                                        SnackbarResult.ActionPerformed,
-                                            -> resetMessageState()
-                                    }
-                                }
-                            }
                     }
                 }
             }

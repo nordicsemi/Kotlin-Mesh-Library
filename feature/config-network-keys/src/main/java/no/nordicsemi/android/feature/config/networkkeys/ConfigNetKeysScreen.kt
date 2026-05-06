@@ -69,9 +69,7 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 @Composable
 internal fun ConfigNetKeysScreen(
     snackbarHostState: SnackbarHostState,
-    isLocalProvisionerNode: Boolean,
     addedNetworkKeys: List<NetworkKey>,
-    availableNetworkKeys: List<NetworkKey>,
     messageState: MessageState,
     onAddNetworkKeyClicked: () -> Unit,
     isKeyInUse: (NetworkKey) -> Boolean,
@@ -80,7 +78,6 @@ internal fun ConfigNetKeysScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState()
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
     var keyToDelete by remember { mutableStateOf<NetworkKey?>(null) }
@@ -156,52 +153,10 @@ internal fun ConfigNetKeysScreen(
                 modifier = Modifier.defaultMinSize(minWidth = 150.dp),
                 text = { Text(text = stringResource(R.string.label_add_key)) },
                 icon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
-                onClick = { showBottomSheet = true },
+                onClick = onAddNetworkKeyClicked,
                 expanded = true
             )
         }
-    }
-
-    if (showBottomSheet) {
-        BottomSheetNetworkKeys(
-            bottomSheetState = bottomSheetState,
-            messageState = messageState,
-            keys = availableNetworkKeys,
-            onNetworkKeyClicked = { key ->
-                scope.launch {
-                    bottomSheetState.hide()
-                }.invokeOnCompletion {
-                    send(ConfigNetKeyAdd(key = key))
-                    if (!bottomSheetState.isVisible) {
-                        showBottomSheet = false
-                    }
-                }
-            },
-            onAddNetworkKeyClicked = {
-                runCatching {
-                    onAddNetworkKeyClicked()
-                    if (isLocalProvisionerNode) {
-                        scope
-                            .launch {
-                                bottomSheetState.hide()
-                            }.invokeOnCompletion {
-                                if (!bottomSheetState.isVisible) showBottomSheet = false
-                            }
-                    }
-                }.onFailure {
-                    scope.launch { snackbarHostState.showSnackbar(message = it.describe()) }
-                }
-            },
-            onDismissClick = {
-                scope.launch {
-                    bottomSheetState.hide()
-                }.invokeOnCompletion {
-                    if (!bottomSheetState.isVisible) {
-                        showBottomSheet = !showBottomSheet
-                    }
-                }
-            }
-        )
     }
 
     if (showDeleteConfirmationDialog) {
@@ -272,8 +227,7 @@ internal fun ConfigNetKeysScreen(
             }
         }
 
-        else -> { /* Do nothing */
-        }
+        else -> { }
     }
 }
 
