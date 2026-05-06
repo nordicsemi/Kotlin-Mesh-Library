@@ -5,6 +5,7 @@ package no.nordicsemi.kotlin.mesh.core.layers.lowertransport
 import no.nordicsemi.kotlin.data.hasBitSet
 import no.nordicsemi.kotlin.data.shl
 import no.nordicsemi.kotlin.data.shr
+import no.nordicsemi.kotlin.data.ushr
 import no.nordicsemi.kotlin.mesh.core.exception.InvalidPdu
 import no.nordicsemi.kotlin.mesh.core.layers.network.NetworkPdu
 import no.nordicsemi.kotlin.mesh.core.layers.uppertransport.UpperTransportPdu
@@ -156,12 +157,12 @@ internal class SegmentedAccessMessage(
             offset: UByte,
         ): SegmentedAccessMessage {
             val lowerBound = offset.toInt() * 12
-            val upperBound = min(pdu.transportPdu.size, (offset.toInt() + 1) * 12)
-            val segment = pdu.transportPdu.copyOfRange(lowerBound, upperBound)
+            val upperBound = min(a = pdu.transportPdu.size, b = (offset.toInt() + 1) * 12)
+            val segment = pdu.transportPdu.copyOfRange(fromIndex = lowerBound, toIndex = upperBound)
             return SegmentedAccessMessage(
                 message = pdu.message,
                 aid = pdu.aid,
-                source = MeshAddress.create(pdu.source),
+                source = MeshAddress.create(address = pdu.source),
                 destination = pdu.destination,
                 networkKey = networkKey,
                 ivIndex = pdu.ivIndex,
