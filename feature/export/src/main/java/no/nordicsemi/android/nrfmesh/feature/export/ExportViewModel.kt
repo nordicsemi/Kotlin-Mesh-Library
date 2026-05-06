@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -29,7 +28,7 @@ import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
-class ExportViewModel @Inject internal constructor(
+internal class ExportViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
