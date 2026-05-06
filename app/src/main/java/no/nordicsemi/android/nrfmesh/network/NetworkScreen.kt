@@ -1,19 +1,15 @@
-package no.nordicsemi.android.nrfmesh.ui.network
+package no.nordicsemi.android.nrfmesh.network
 
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PersonPin
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.NotificationsActive
@@ -26,8 +22,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
@@ -37,6 +31,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -57,6 +51,7 @@ import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.theme.nordicSun
 import no.nordicsemi.android.common.ui.view.NordicAppBar
+import no.nordicsemi.android.nrfmesh.MeshAppState
 import no.nordicsemi.android.nrfmesh.R
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
@@ -64,9 +59,7 @@ import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.toEntries
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
-import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
-import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.exportEntry
@@ -75,9 +68,11 @@ import no.nordicsemi.android.nrfmesh.feature.nodes.navigation.nodesEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.provisioningEntry
 import no.nordicsemi.android.nrfmesh.feature.proxy.navigation.proxyEntry
 import no.nordicsemi.android.nrfmesh.feature.settings.navigation.settingsEntry
-import no.nordicsemi.android.nrfmesh.navigation.MeshAppState
-import no.nordicsemi.android.nrfmesh.viewmodel.MeshNetworkState
-import no.nordicsemi.android.nrfmesh.viewmodel.NetworkScreenUiState
+import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.ProvisionerSelectorKey
+import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.provisionerSelectorEntry
+import no.nordicsemi.android.nrfmesh.network.util.ImportState
+import no.nordicsemi.android.nrfmesh.network.util.createKeysForAppTitles
+import no.nordicsemi.android.nrfmesh.network.util.title
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.Provisioner
@@ -219,6 +214,7 @@ private fun NetworkContent(
             proxyEntry()
             settingsEntry(appState = appState, navigator = navigator)
             exportEntry(appState = appState, navigator = navigator)
+            provisionerSelectorEntry(navigator = navigator)
         }
         val entries = appState.navigationState.toEntries(entryProvider = entryProvider)
         val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy)
@@ -362,41 +358,10 @@ private fun NetworkContent(
                 )
             }
         }
-        if (shouldSelectProvisioner) {
-            ModalBottomSheet(
-                properties = ModalBottomSheetProperties(
-                    shouldDismissOnBackPress = false, shouldDismissOnClickOutside = false
-                ),
-                sheetState = selectProvisionerSheetState,
-                sheetGesturesEnabled = false,
-                onDismissRequest = { },
-                content = {
-                    SectionTitle(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .padding(vertical = 8.dp),
-                        title = stringResource(R.string.label_select_provisioner_rationale),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                    ) {
-                        items(items = network.provisioners, key = { it.uuid.toString() }) {
-                            ElevatedCardItem(
-                                imageVector = Icons.Filled.PersonPin, title = it.name, onClick = {
-                                    onProvisionerSelected(it)
-                                    // scope.launch { exportSheetState.hide() }.invokeOnCompletion {
-                                    //     if (!exportSheetState.isVisible) {
-                                    //         // showExportBottomSheet = false
-                                    //     }
-                                    // }
-                                }
-                            )
-                        }
-                    }
-                }
-            )
+        LaunchedEffect(shouldSelectProvisioner) {
+            if (shouldSelectProvisioner) {
+                navigator.navigate(key = ProvisionerSelectorKey)
+            }
         }
     }
 }

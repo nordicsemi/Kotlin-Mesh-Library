@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.navigation
+package no.nordicsemi.android.nrfmesh
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi

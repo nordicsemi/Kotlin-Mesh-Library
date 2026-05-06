@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.ui.network.wizard
+package no.nordicsemi.android.nrfmesh.network.wizard.navigation
 
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -6,6 +6,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
+import no.nordicsemi.android.nrfmesh.network.wizard.NetworkWizardScreen
+import no.nordicsemi.android.nrfmesh.network.wizard.NetworkWizardViewModel
 
 @Serializable
 object NetworkWizardKey : NavKey

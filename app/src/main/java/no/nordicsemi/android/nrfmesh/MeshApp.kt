@@ -1,13 +1,13 @@
-package no.nordicsemi.android.nrfmesh.ui
+package no.nordicsemi.android.nrfmesh
 
 import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import no.nordicsemi.android.nrfmesh.ui.network.NetworkScreenKey
-import no.nordicsemi.android.nrfmesh.ui.network.networkScreenEntry
-import no.nordicsemi.android.nrfmesh.ui.network.wizard.NetworkWizardKey
-import no.nordicsemi.android.nrfmesh.ui.network.wizard.networkWizardEntry
+import no.nordicsemi.android.nrfmesh.network.navigation.NetworkScreenKey
+import no.nordicsemi.android.nrfmesh.network.navigation.networkScreenEntry
+import no.nordicsemi.android.nrfmesh.network.wizard.navigation.NetworkWizardKey
+import no.nordicsemi.android.nrfmesh.network.wizard.navigation.networkWizardEntry
 
 @Composable
 fun MeshApp() {

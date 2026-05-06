@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.viewmodel
+package no.nordicsemi.android.nrfmesh.network
 
 import android.content.ContentResolver
 import android.net.Uri
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.storage.MeshSecurePropertiesStorage
-import no.nordicsemi.android.nrfmesh.ui.network.ImportState
+import no.nordicsemi.android.nrfmesh.network.util.ImportState
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
 import no.nordicsemi.kotlin.mesh.core.messages.health.HealthAttentionSetUnacknowledged

@@ -6,7 +6,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import dagger.hilt.android.AndroidEntryPoint
 import no.nordicsemi.android.common.theme.NordicActivity
 import no.nordicsemi.android.common.theme.NordicTheme
-import no.nordicsemi.android.nrfmesh.ui.MeshApp
 
 @AndroidEntryPoint
 class MainActivity : NordicActivity() {

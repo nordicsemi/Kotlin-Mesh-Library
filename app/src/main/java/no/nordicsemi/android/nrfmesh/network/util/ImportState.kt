@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.ui.network
+package no.nordicsemi.android.nrfmesh.network.util
 
 /**
  * Defines the state of the import process.

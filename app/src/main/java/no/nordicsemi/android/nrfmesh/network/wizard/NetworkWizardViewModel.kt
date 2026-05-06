@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.ui.network.wizard
+package no.nordicsemi.android.nrfmesh.network.wizard
 
 import android.content.ContentResolver
 import android.net.Uri
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Configuration
 import no.nordicsemi.android.nrfmesh.core.common.ConfigurationProperty
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
-import no.nordicsemi.android.nrfmesh.ui.network.ImportState
+import no.nordicsemi.android.nrfmesh.network.util.ImportState
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 

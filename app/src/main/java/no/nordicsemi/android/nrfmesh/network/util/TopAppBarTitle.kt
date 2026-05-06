@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.ui.network
+package no.nordicsemi.android.nrfmesh.network.util
 
 import android.content.Context
 import no.nordicsemi.android.feature.config.networkkeys.navigation.AddNetKeysKey
@@ -31,6 +31,7 @@ import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.nav
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.ProvisioningKey
 import no.nordicsemi.android.nrfmesh.feature.scenes.navigation.ScenesContentKey
 import no.nordicsemi.android.nrfmesh.feature.scenes.scene.navigation.SceneContentKey
+import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.ProvisionerSelectorKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -113,6 +114,7 @@ internal fun title(
     is ProxyKey -> context.getString(R.string.label_proxy)
     is SettingsKey,
     is ExportKey,
+    is ProvisionerSelectorKey,
         -> context.getString(R.string.label_settings)
 
     is ProvisionersContentKey -> if (isCompactWidth) context.getString(R.string.label_provisioners)

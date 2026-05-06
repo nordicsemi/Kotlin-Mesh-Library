@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.ui.network
+package no.nordicsemi.android.nrfmesh.network.navigation
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
@@ -11,8 +11,9 @@ import kotlinx.serialization.Serializable
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.rememberNavigationState
-import no.nordicsemi.android.nrfmesh.navigation.rememberMeshAppState
-import no.nordicsemi.android.nrfmesh.viewmodel.NetworkViewModel
+import no.nordicsemi.android.nrfmesh.network.NetworkScreen
+import no.nordicsemi.android.nrfmesh.rememberMeshAppState
+import no.nordicsemi.android.nrfmesh.network.NetworkViewModel
 
 @Serializable
 object NetworkScreenKey : NavKey

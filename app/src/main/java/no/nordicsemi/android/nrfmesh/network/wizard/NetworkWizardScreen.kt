@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.ui.network.wizard
+package no.nordicsemi.android.nrfmesh.network.wizard
 
 import android.content.ContentResolver
 import android.net.Uri
@@ -59,7 +59,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
 import no.nordicsemi.android.nrfmesh.feature.nodes.R.drawable
-import no.nordicsemi.android.nrfmesh.ui.network.ImportState
+import no.nordicsemi.android.nrfmesh.network.util.ImportState
 
 @Composable
 internal fun NetworkWizardScreen(
