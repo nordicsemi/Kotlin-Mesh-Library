@@ -35,7 +35,6 @@ fun EntryProviderScope<NavKey>.networkScreenEntry(
         appState = appState,
         uiState = uiState,
         shouldSelectProvisioner = uiState.shouldSelectProvisioner,
-        onProvisionerSelected = viewModel::onProvisionerSelected,
         resetNetwork = viewModel::resetNetwork,
         navigateToWizard = navigateToWizard,
         importNetwork = viewModel::importNetwork,

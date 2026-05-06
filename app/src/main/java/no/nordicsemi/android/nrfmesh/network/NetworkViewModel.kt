@@ -23,7 +23,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.health.HealthAttentionSetUnacknow
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import no.nordicsemi.kotlin.mesh.core.model.Provisioner
 import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
@@ -63,11 +62,11 @@ class NetworkViewModel @Inject constructor(
                 meshNetwork = it
                 _uiState.update { state ->
                     state.copy(
-                        networkState = MeshNetworkState.Success(network = meshNetwork),
+                        networkState = MeshNetworkState.Success(network = it),
                         id = state.id + 1
                     )
                 }
-                promptProvisionerSelection(meshNetwork)
+                promptProvisionerSelection(meshNetwork = it)
             }.launchIn(scope = viewModelScope)
     }
 
@@ -81,24 +80,6 @@ class NetworkViewModel @Inject constructor(
             } else {
                 repository.onBluetoothEnabled()
             }
-        }
-    }
-
-    /**
-     * Selects the given provisioner.
-     *
-     * @param provisioner Provisioner to be selected.
-     */
-    @OptIn(ExperimentalUuidApi::class)
-    internal fun onProvisionerSelected(provisioner: Provisioner) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(shouldSelectProvisioner = false)
-            meshNetwork.move(provisioner = provisioner, to = 0)
-            storage.storeLocalProvisioner(
-                uuid = meshNetwork.uuid,
-                localProvisionerUuid = provisioner.uuid
-            )
-            repository.save()
         }
     }
 

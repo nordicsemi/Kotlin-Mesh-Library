@@ -23,13 +23,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -75,7 +75,6 @@ import no.nordicsemi.android.nrfmesh.network.util.createKeysForAppTitles
 import no.nordicsemi.android.nrfmesh.network.util.title
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import no.nordicsemi.kotlin.mesh.core.model.Provisioner
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -85,7 +84,6 @@ internal fun NetworkScreen(
     appState: MeshAppState,
     uiState: NetworkScreenUiState,
     shouldSelectProvisioner: Boolean,
-    onProvisionerSelected: (provisioner: Provisioner) -> Unit,
     importNetwork: (uri: Uri, contentResolver: ContentResolver) -> Unit,
     onImportErrorAcknowledged: () -> Unit,
     resetNetwork: () -> Unit,
@@ -118,7 +116,6 @@ internal fun NetworkScreen(
                 appState = appState,
                 network = uiState.networkState.network,
                 shouldSelectProvisioner = shouldSelectProvisioner,
-                onProvisionerSelected = onProvisionerSelected,
                 importState = uiState.importState,
                 importNetwork = importNetwork,
                 resetNetwork = resetNetwork,
@@ -130,15 +127,15 @@ internal fun NetworkScreen(
         }
 
         MeshNetworkState.NoNetwork -> {
-            // LaunchedEffect(Unit) {
-            //     appState.run {
-            //         snackbarHostState.currentSnackbarData?.dismiss()
-            //         snackbarHostState.showSnackbar(
-            //             message = "This Network has been reset. Returning to the onboarding wizard.",
-            //             duration = SnackbarDuration.Indefinite
-            //         )
-            //     }
-            // }
+            LaunchedEffect(Unit) {
+                appState.run {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(
+                        message = "This Network has been reset. Returning to the onboarding wizard.",
+                        duration = SnackbarDuration.Indefinite
+                    )
+                }
+            }
             navigateToWizard()
             resetMeshNetworkUiState()
         }
@@ -157,7 +154,6 @@ private fun NetworkContent(
     appState: MeshAppState,
     network: MeshNetwork,
     shouldSelectProvisioner: Boolean,
-    onProvisionerSelected: (provisioner: Provisioner) -> Unit,
     importState: ImportState,
     importNetwork: (uri: Uri, contentResolver: ContentResolver) -> Unit,
     onImportErrorAcknowledged: () -> Unit,
@@ -167,7 +163,6 @@ private fun NetworkContent(
     startAttentionTimer: (Node) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val selectProvisionerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showResetNetworkDialog by rememberSaveable { mutableStateOf(false) }
     var showAutoConfigurationHealthServerDialog by rememberSaveable { mutableStateOf(false) }
     val navigator = remember { Navigator(appState.navigationState) }
