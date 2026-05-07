@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Timer
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -256,7 +254,17 @@ class ProvisioningViewModel @Inject constructor(
         _uiState.update {
             it.copy(provisionerState = Connecting(unprovisionedDevice = unprovisionedDevice))
         }
-        pbBearer.open()
+
+        try {
+            // This will suspend until the bearer is open.
+            pbBearer.open()
+        } catch (e: Exception) {
+            repository.logger.log(
+                message = { "Failed to open bearer while provisioning: ${e.message}" },
+                category = LogCategory.BEARER,
+                level = LogLevel.ERROR
+            )
+        }
     }
 
     /**

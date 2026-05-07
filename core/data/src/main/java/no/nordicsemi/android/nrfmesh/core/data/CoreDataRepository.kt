@@ -647,8 +647,16 @@ class CoreDataRepository @Inject constructor(
         _proxyConnectionStateFlow.update {
             it.copy(connectionState = NetworkConnectionState.Connecting(name))
         }
-        // This will suspend until the bearer is open.
-        bearer.open()
+        try {
+            // This will suspend until the bearer is open.
+            bearer.open()
+        } catch (e : Exception) {
+            logger.log(
+                message = { "Failed to open bearer: ${e.message}" },
+                category = LogCategory.BEARER,
+                level = LogLevel.ERROR
+            )
+        }
     }
 
     /**
