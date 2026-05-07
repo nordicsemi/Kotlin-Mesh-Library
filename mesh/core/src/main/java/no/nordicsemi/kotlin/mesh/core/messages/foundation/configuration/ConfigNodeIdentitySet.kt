@@ -1,6 +1,5 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration
 
-import no.nordicsemi.kotlin.data.toHexString
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigNetKeyMessage
@@ -12,11 +11,11 @@ import no.nordicsemi.kotlin.mesh.core.model.NodeIdentityState
  * Defines message sent to set the current Node Identity state. [ConfigNodeIdentityStatus]
  * will be the response to this message.
  *
- * @property index   Network Key Index of the Node Identity state.
+ * @property networkKeyIndex   Network Key Index of the Node Identity state.
  * @property identityState     Expected node Identity state [NodeIdentityState].
  */
 class ConfigNodeIdentitySet(
-    override val index: KeyIndex,
+    override val networkKeyIndex: KeyIndex,
     val identityState: NodeIdentityState
 ) : AcknowledgedConfigMessage, ConfigNetKeyMessage {
     override val opCode = Initializer.opCode
@@ -31,12 +30,12 @@ class ConfigNodeIdentitySet(
      *                        [NodeIdentityState.STOPPED] otherwise.
      */
     constructor(networkKeyIndex: KeyIndex, start: Boolean) : this(
-        index = networkKeyIndex,
+        networkKeyIndex = networkKeyIndex,
         identityState = if (start) NodeIdentityState.RUNNING else NodeIdentityState.STOPPED
     )
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString(): String = "ConfigNodeIdentityGet(index: $index, " +
+    override fun toString(): String = "ConfigNodeIdentityGet(index: $networkKeyIndex, " +
             "nodeIdentityState: $identityState})"
 
     companion object Initializer : ConfigMessageInitializer {
@@ -46,7 +45,7 @@ class ConfigNodeIdentitySet(
             ?.takeIf { it.size == 3 }
             ?.let {
                 ConfigNodeIdentitySet(
-                    index = decodeNetKeyIndex(data = it, offset = 0),
+                    networkKeyIndex = decodeNetKeyIndex(data = it, offset = 0),
                     identityState = NodeIdentityState.from(it[2].toUByte())
                 )
             }

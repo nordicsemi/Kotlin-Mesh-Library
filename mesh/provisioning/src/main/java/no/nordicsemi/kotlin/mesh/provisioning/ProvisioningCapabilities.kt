@@ -62,11 +62,11 @@ data class ProvisioningCapabilities(
 
     private fun authMethods(): List<AuthenticationMethod> {
         val authMethods = mutableListOf<AuthenticationMethod>()
-        if (!oobTypes.contains(OobType.OnlyOobAuthenticatedProvisioningSupported)) {
+        if (OobType.OnlyOobAuthenticatedProvisioningSupported !in oobTypes) {
             authMethods.add(AuthenticationMethod.NoOob)
         }
 
-        if (oobTypes.contains(OobType.StaticOobInformationAvailable)) {
+        if (OobType.StaticOobInformationAvailable in oobTypes) {
             authMethods.add(AuthenticationMethod.StaticOob)
         }
 

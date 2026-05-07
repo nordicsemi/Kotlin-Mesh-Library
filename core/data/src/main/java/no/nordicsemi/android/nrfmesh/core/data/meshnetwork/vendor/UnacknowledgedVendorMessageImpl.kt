@@ -32,7 +32,6 @@ class UnacknowledgedVendorMessageImpl(
                     format = HexFormat {
                         number.prefix = "0x"
                         upperCase = true
-                        number.removeLeadingZeros = true
                     }
                 )
             }, " +

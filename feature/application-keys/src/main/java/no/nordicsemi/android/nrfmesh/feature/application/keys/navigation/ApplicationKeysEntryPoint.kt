@@ -37,16 +37,16 @@ fun EntryProviderScope<NavKey>.applicationKeysEntry(appState: AppState, navigato
             onAddKeyClicked = viewModel::addApplicationKey,
             onApplicationKeyClicked = {
                 viewModel.selectKeyIndex(keyIndex = it)
-                navigator.navigate(ApplicationKeyContentKey(keyIndex = it))
-            },
-            navigateToKey = {
-                viewModel.selectKeyIndex(keyIndex = it)
-                navigator.navigate(ApplicationKeyContentKey(keyIndex = it))
+                navigator.navigate(key = ApplicationKeyContentKey(keyIndex = it))
             },
             onSwiped = {
-                viewModel.onSwiped(it)
+                viewModel.onSwiped(key = it)
                 if (uiState.selectedKeyIndex == it.index) {
-                    navigator.goBack()
+                    val index = navigator.state.currentSubStack.indexOfFirst { it == ApplicationKeysContentKey }
+                    repeat(times = navigator.state.currentSubStack.size - index - 1) {
+                        navigator.goBack()
+                    }
+                    viewModel.selectKeyIndex(keyIndex = null)
                 }
             },
             onUndoClicked = viewModel::onUndoSwipe,

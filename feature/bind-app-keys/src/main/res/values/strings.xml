@@ -6,7 +6,7 @@
     <string name="label_bind_key">Bind Key</string>
     <string name="label_settings">Settings</string>
     <string name="label_no_bound_app_keys">No Application Keys bound</string>
-    <string name="label_bind_an_app_key_rationale">Bind an Application Key to be able to send application layer messages</string>
+    <string name="label_bind_an_app_key_rationale">Add an Application Key to the current node to be able to bind a key</string>
     <string name="label_add_key">Add Key</string>
     <string name="warning">Warning</string>
     <string name="warning_unbind_rationale">This key is currently used by publication. Unbinding will clear any publications. Do you want to continue?</string>

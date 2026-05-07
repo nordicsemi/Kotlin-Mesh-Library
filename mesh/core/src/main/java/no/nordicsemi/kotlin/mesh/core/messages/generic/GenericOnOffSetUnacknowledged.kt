@@ -54,9 +54,9 @@ class GenericOnOffSetUnacknowledged(
     @Suppress("unused")
     constructor(on: Boolean, tid: UByte) : this(on = on, tid = tid, transitionParams = null)
 
-    override fun toString() = "GenericOnOffSetUnacknowledged(tid: $tid, on: $on, " +
+    override fun toString() = "GenericOnOffSetUnacknowledged(tid: $tid, on: $on" +
             if (transitionTime != null && delay != null) {
-                "transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
+                ", transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
             } else ")"
 
     companion object Initializer : GenericMessageInitializer {

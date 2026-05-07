@@ -12,14 +12,14 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 /**
  * This message is used to delete a network key from the mesh network.
  *
- * @property index                Index of the network key to be deleted.
+ * @property networkKeyIndex                Index of the network key to be deleted.
  * @property opCode               Message op code.
  * @property parameters           Message parameters.
  * @property responseOpCode       Op Code of the response message.
  * @constructor Constructs the ConfigNetKeyDelete message.
  */
-data class ConfigNetKeyDelete(
-    override val index: KeyIndex,
+class ConfigNetKeyDelete(
+    override val networkKeyIndex: KeyIndex,
 ) : AcknowledgedConfigMessage, ConfigNetKeyMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
@@ -27,14 +27,16 @@ data class ConfigNetKeyDelete(
 
     override val responseOpCode = ConfigNetKeyStatus.opCode
 
-    constructor(key: NetworkKey) : this(index = key.index)
+    constructor(key: NetworkKey) : this(networkKeyIndex = key.index)
+
+    override fun toString() = "ConfigNetKeyDelete(networkKeyIndex: $networkKeyIndex)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8041u
         override fun init(parameters: ByteArray?) = parameters?.takeIf {
             it.size == 2
         }?.let {
-            ConfigNetKeyDelete(index = decodeNetKeyIndex(data = it, offset = 0))
+            ConfigNetKeyDelete(networkKeyIndex = decodeNetKeyIndex(data = it, offset = 0))
         }
     }
 }

@@ -2,7 +2,6 @@
 
 package no.nordicsemi.kotlin.mesh.core.messages
 
-import no.nordicsemi.kotlin.data.toHexString
 import no.nordicsemi.kotlin.mesh.core.layers.access.AccessPdu
 
 /**
@@ -31,11 +30,11 @@ class UnknownMessage(
 
     @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
-        return "Unknown Message (opCode: ${opCode.toHexString(
+        return "UnknownMessage(opCode: ${opCode.toHexString(
             format = HexFormat {
                 number.prefix = "0x"
                 upperCase = true
             }
-        )}, parameters: ${parameters.toHexString(prefixOx = true, format = HexFormat.UpperCase)})"
+        )}, parameters: 0x${parameters.toHexString(HexFormat.UpperCase)})"
     }
 }

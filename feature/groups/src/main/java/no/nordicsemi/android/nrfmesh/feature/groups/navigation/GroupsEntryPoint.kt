@@ -22,7 +22,7 @@ fun EntryProviderScope<NavKey>.groupsEntry(appState: AppState, navigator: Naviga
         GroupsScreen(
              snackbarHostState = appState.snackbarHostState,
             uiState = uiState,
-            navigateToGroup = { navigator.navigate(key = GroupKey(address = it.toHexString())) },
+            navigateToGroup = { navigator.navigate(key = GroupKey(address = it.address)) },
             onAddGroupClicked = viewModel::addGroup,
             nextAvailableGroupAddress = viewModel::nextAvailableGroupAddress
         )

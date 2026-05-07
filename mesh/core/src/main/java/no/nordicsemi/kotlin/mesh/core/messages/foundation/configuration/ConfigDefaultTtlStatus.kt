@@ -17,14 +17,7 @@ class ConfigDefaultTtlStatus(val ttl: UByte) : ConfigResponse {
     override val parameters: ByteArray? = ttl.toByteArray()
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigDefaultTtlStatus(opCode: ${
-        opCode.toHexString(
-            format = HexFormat {
-                number.prefix = "0x"
-                upperCase = true
-            }
-        )
-    }, ttl: $ttl)"
+    override fun toString() = "ConfigDefaultTtlStatus(ttl: $ttl)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x800Eu

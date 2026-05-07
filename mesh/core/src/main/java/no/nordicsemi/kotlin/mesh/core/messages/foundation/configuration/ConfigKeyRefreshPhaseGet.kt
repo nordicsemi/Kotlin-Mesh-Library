@@ -12,9 +12,9 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 /**
  * This message is used to request the [no.nordicsemi.kotlin.mesh.core.model.KeyRefreshPhaseTransition] for a given Network Key.
  *
- * @property index The index of the Network Key.
+ * @property networkKeyIndex The index of the Network Key.
  */
-class ConfigKeyRefreshPhaseGet(override val index: KeyIndex) : AcknowledgedConfigMessage,
+class ConfigKeyRefreshPhaseGet(override val networkKeyIndex: KeyIndex) : AcknowledgedConfigMessage,
     ConfigNetKeyMessage {
     override val opCode: UInt = Initializer.opCode
 
@@ -25,11 +25,10 @@ class ConfigKeyRefreshPhaseGet(override val index: KeyIndex) : AcknowledgedConfi
     /**
      * Constructs a [ConfigKeyRefreshPhaseGet] message using the given [NetworkKey].
      */
-    constructor(networkKey: NetworkKey) : this(index = networkKey.index)
+    constructor(networkKey: NetworkKey) : this(networkKeyIndex = networkKey.index)
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigKeyRefreshPhaseGet(opCode: 0x${opCode.toHexString()}, " +
-            "index: $index)"
+    override fun toString() = "ConfigKeyRefreshPhaseGet(networkKeyIndex: $networkKeyIndex)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8015u
@@ -42,6 +41,6 @@ class ConfigKeyRefreshPhaseGet(override val index: KeyIndex) : AcknowledgedConfi
          */
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 2 }
-            ?.let { ConfigKeyRefreshPhaseGet(index = decodeNetKeyIndex(data = it, offset = 0)) }
+            ?.let { ConfigKeyRefreshPhaseGet(networkKeyIndex = decodeNetKeyIndex(data = it, offset = 0)) }
     }
 }

@@ -14,12 +14,12 @@ import no.nordicsemi.kotlin.mesh.core.messages.ConfigMessageInitializer
 class ConfigDefaultTtlSet(val ttl: UByte) : AcknowledgedConfigMessage {
     override val opCode: UInt = Initializer.opCode
 
-    override val parameters: ByteArray? = ttl.toByteArray()
+    override val parameters: ByteArray = ttl.toByteArray()
 
     override val responseOpCode = ConfigDefaultTtlStatus.opCode
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigDefaultTtlSet(opCode: 0x${opCode.toHexString()}, ttl: $ttl)"
+    override fun toString() = "ConfigDefaultTtlSet(ttl: $ttl)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x800Du

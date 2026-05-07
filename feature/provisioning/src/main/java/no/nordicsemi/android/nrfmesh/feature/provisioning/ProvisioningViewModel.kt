@@ -2,23 +2,28 @@ package no.nordicsemi.android.nrfmesh.feature.provisioning
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeviceHub
+import androidx.compose.material.icons.outlined.Timer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.DeveloperSettings
+import no.nordicsemi.android.nrfmesh.core.data.bearer.AndroidPbGattBearer
 import no.nordicsemi.android.nrfmesh.core.data.configurator.ConfigTask
 import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisionerState.Connected
 import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisionerState.Connecting
@@ -26,11 +31,14 @@ import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisionerState.Disco
 import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisionerState.Error
 import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisionerState.Provisioning
 import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisionerState.Scanning
+import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.ScanResult
 import no.nordicsemi.kotlin.mesh.bearer.BearerEvent
 import no.nordicsemi.kotlin.mesh.bearer.provisioning.ProvisioningBearer
+import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigCompositionDataGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigDefaultTtlGet
+import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.Node
@@ -51,23 +59,19 @@ import kotlin.uuid.Uuid
 class ProvisioningViewModel @Inject constructor(
     private val repository: CoreDataRepository,
     @param:IoDispatcher private val dispatcher: CoroutineDispatcher,
+    private val centralManager: CentralManager,
 ) : ViewModel() {
-    private var meshNetwork: MeshNetwork? = null
+    private lateinit var meshNetwork: MeshNetwork
+    private var pbBearer: ProvisioningBearer? = null
+    private var pbBearerStateObserverJob: Job? = null
     private var provisioningManager: ProvisioningManager? = null
     private var unprovisionedDevice: UnprovisionedDevice? = null
-    private var selectedScanResult: ScanResult? = null
-    private var selectedNode: Node? = null
-
+    private var originalNode: Node? = null
 
     private val _uiState = MutableStateFlow(
         value = ProvisioningScreenUiState(provisionerState = Scanning)
     )
-    internal val uiState = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5000),
-            initialValue = ProvisioningScreenUiState(provisionerState = Scanning)
-        )
+    internal val uiState = _uiState.asStateFlow()
 
     init {
         observeNetwork()
@@ -78,72 +82,73 @@ class ProvisioningViewModel @Inject constructor(
      * Observes the mesh network.
      */
     private fun observeNetwork() {
-        repository.network
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
             .onEach {
                 meshNetwork = it
-                val state = _uiState.value
-                _uiState.value = ProvisioningScreenUiState(
-                    networkKeys = it.networkKeys.toList(),
-                    nodes = it.nodes.toList(),
-                    provisionerState = state.provisionerState,
-                    developerSettings = state.developerSettings
-                )
+                _uiState.update { state ->
+                    state.copy(
+                        networkKeys = it.networkKeys.toList(),
+                    )
+                }
             }
             .launchIn(scope = viewModelScope)
     }
 
     private fun observeDeveloperSettings() {
-        repository.developerSettingsStateFlow.onEach {
-            _uiState.update { state ->
-                state.copy(developerSettings = it)
+        repository.developerSettingsStateFlow
+            .onEach {
+                _uiState.update { state ->
+                    state.copy(developerSettings = it)
+                }
             }
-        }.launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
     }
 
     /**
-     * Checks if the given device is already provisioned.
+     * Selects the scan result for provisioning.
+     *
+     * This method also returns if there exist a Node already in the network with the same UUID.
      *
      * @param scanResult Scan result of the device to be checked.
-     * @return True if the device is already provisioned, false otherwise.
+     * @return True if there exist a Node already in the network with the same UUID.
+     * @throws IllegalArgumentException if the advertisement data is invalid.
      */
     @OptIn(ExperimentalUuidApi::class)
-    internal fun isDeviceAlreadyProvisioned(scanResult: ScanResult) = try {
-        val device = UnprovisionedDevice.from(advertisementData = scanResult.advertisingData.raw)
-        selectedScanResult = scanResult
-        meshNetwork?.node(uuid = device.uuid)?.also {
-            selectedNode = it
-        } != null
-    } catch (_: Exception) {
-        false
+    internal fun onScanResultSelected(scanResult: ScanResult): Boolean {
+        assert(pbBearer == null)
+
+        // Note: This method may crash if the advertising data is invalid.
+        val device = UnprovisionedDevice
+            .from(advertisementData = scanResult.advertisingData.raw)
+
+        // Store the selected results.
+        pbBearer = AndroidPbGattBearer(centralManager, scanResult.peripheral, dispatcher)
+            .apply { logger = repository.logger }
+        unprovisionedDevice = device
+        originalNode = meshNetwork?.node(uuid = device.uuid)
+
+        // Return whether the Node with the same UUID already exists in the network.
+        return originalNode != null
     }
 
     /**
      * Starts the provisioning process by identifying the node
      */
-    internal fun beginProvisioning() {
-        val scanResult = selectedScanResult ?: return
+    internal fun beginProvisioning(shouldReconfigure: Boolean = false) {
+        // The onScanResultSelected must be called prior to this method.
+        val pbBearer = pbBearer ?: return
+        val device = unprovisionedDevice ?: return
+
+        // Clear the original Node it reconfiguration is not needed.
+        if (!shouldReconfigure) {
+            originalNode = null
+        }
+
         viewModelScope.launch {
-            val device = UnprovisionedDevice
-                .from(advertisementData = scanResult.advertisingData.raw)
-                .also { this@ProvisioningViewModel.unprovisionedDevice = it }
-            _uiState.update {
-                it.copy(provisionerState = Connecting(unprovisionedDevice = device))
-            }
-            val pbGattBearer = repository.connectOverPbGattBearer(device = scanResult.peripheral)
-            pbGattBearer.state
-                .takeWhile { it !is BearerEvent.Closed }
-                .onEach {
-                    if (it is BearerEvent.Opened) {
-                        _uiState.update {
-                            it.copy(provisionerState = Connected(unprovisionedDevice = device))
-                        }
-                        identifyNode(unprovisionedDevice = device, bearer = pbGattBearer)
-                    }
-                }.onCompletion {
-                    _uiState.update {
-                        it.copy(provisionerState = Disconnected(unprovisionedDevice = device))
-                    }
-                }.launchIn(scope = this)
+            connectOverPbGattBearer(unprovisionedDevice = device, pbBearer = pbBearer)
+            identifyNode(unprovisionedDevice = device, bearer = pbBearer)
         }
     }
 
@@ -157,61 +162,108 @@ class ProvisioningViewModel @Inject constructor(
         unprovisionedDevice: UnprovisionedDevice,
         bearer: ProvisioningBearer,
     ) {
-        meshNetwork?.let {
-            val provisioningManager = ProvisioningManager(
-                unprovisionedDevice = unprovisionedDevice,
-                meshNetwork = it,
-                bearer = bearer,
-                ioDispatcher = dispatcher
-            ).apply {
-                logger = repository
-                this@ProvisioningViewModel.provisioningManager = this
-            }
+        val meshNetwork = requireNotNull(meshNetwork) { throw NoNetwork() }
 
-            provisioningManager.provision(attentionTimer = 10u)
-                .onEach { state ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            provisionerState = Provisioning(
-                                unprovisionedDevice = unprovisionedDevice,
-                                state = state
-                            ),
-                        )
-                    }
-                    state.run {
-                        if (this is ProvisioningState.CapabilitiesReceived) {
-                            if (capabilities.supportedAuthMethods.contains(AuthenticationMethod.NoOob) &&
-                                _uiState.value.developerSettings.quickProvisioning
-                            ) {
-                                // Added a delay to allow the UI to update during quick provisioning
-                                // If not everything happens too fast.
-                                parameters.authMethod = AuthenticationMethod.NoOob
-                                start(parameters)
-                            }
-                        }
-                    }
-                }.catch { throwable ->
-                    repository.log(
-                        message = { "Error while provisioning $throwable" },
-                        category = LogCategory.PROVISIONING,
-                        level = LogLevel.ERROR
-                    )
-                    _uiState.value = _uiState.value.copy(
-                        provisionerState = Error(
+        // The Provisioning Manager will carry on the provisioning.
+        val provisioningManager = ProvisioningManager(
+            unprovisionedDevice = unprovisionedDevice,
+            meshNetwork = meshNetwork,
+            bearer = bearer,
+            ioDispatcher = dispatcher
+        ).apply {
+            logger = repository.logger
+            provisioningManager = this
+        }
+
+        provisioningManager.provision(attentionTimer = 10u)
+            .onEach { state ->
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        provisionerState = Provisioning(
                             unprovisionedDevice = unprovisionedDevice,
-                            throwable = throwable
-                        )
+                            state = state
+                        ),
+                        provisioningParameters = when (state) {
+                            is ProvisioningState.CapabilitiesReceived -> state.defaultParameters
+                            else -> uiState.provisioningParameters
+                        }
                     )
-                }.onCompletion { throwable ->
-                    _uiState.value.provisionerState.let { provisionerState ->
-                        if (provisionerState is Provisioning) {
-                            // Save when the provisioning completes.
-                            if (throwable == null && provisionerState.state is ProvisioningState.Complete) {
-                                repository.save()
-                            }
+                }
+                if (state is ProvisioningState.Complete) {
+                    repository.save()
+                }
+            }
+            .filterIsInstance<ProvisioningState.CapabilitiesReceived>()
+            .onEach { state ->
+                // If Quick Provisioning is set, use default parameters.
+                if (_uiState.value.developerSettings.quickProvisioning) {
+                    state.start(state.defaultParameters)
+                }
+            }
+            .catch { throwable ->
+                repository.logger.log(
+                    message = { "Error while provisioning: $throwable" },
+                    category = LogCategory.PROVISIONING,
+                    level = LogLevel.ERROR
+                )
+                _uiState.value = _uiState.value.copy(
+                    provisionerState = Error(
+                        unprovisionedDevice = unprovisionedDevice,
+                        throwable = throwable
+                    )
+                )
+            }
+            .launchIn(scope = viewModelScope)
+    }
+
+    /**
+     * Connects to the unprovisioned node over PB-Gatt bearer.
+     *
+     * @param unprovisionedDevice Device to be provisioned.
+     * @param pbBearer            Provisioning bearer to be used.
+     */
+    private suspend fun connectOverPbGattBearer(
+        unprovisionedDevice: UnprovisionedDevice,
+        pbBearer: ProvisioningBearer,
+    ) = withContext(context = dispatcher) {
+        // Make sure the old observer is closed.
+        pbBearerStateObserverJob?.cancel()
+
+        // Observe state changes.
+        pbBearerStateObserverJob = pbBearer.state
+            .drop(1)
+            .onEach { event ->
+                when (event) {
+                    is BearerEvent.Opened -> {
+                        _uiState.update {
+                            it.copy(provisionerState = Connected(unprovisionedDevice = unprovisionedDevice))
                         }
                     }
-                }.launchIn(scope = viewModelScope)
+
+                    is BearerEvent.Closed -> {
+                        this@ProvisioningViewModel.pbBearer = null
+                        _uiState.update {
+                            it.copy(provisionerState = Disconnected(unprovisionedDevice = unprovisionedDevice))
+                        }
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+
+        // And open the bearer.
+        _uiState.update {
+            it.copy(provisionerState = Connecting(unprovisionedDevice = unprovisionedDevice))
+        }
+
+        try {
+            // This will suspend until the bearer is open.
+            pbBearer.open()
+        } catch (e: Exception) {
+            repository.logger.log(
+                message = { "Failed to open bearer while provisioning: ${e.message}" },
+                category = LogCategory.BEARER,
+                level = LogLevel.ERROR
+            )
         }
     }
 
@@ -220,7 +272,9 @@ class ProvisioningViewModel @Inject constructor(
      */
     internal fun disconnect() {
         viewModelScope.launch {
-            repository.disconnect()
+            pbBearer?.close()
+            pbBearerStateObserverJob?.cancel()
+            pbBearer = null
             _uiState.update { it.copy(provisionerState = Scanning) }
         }
     }
@@ -237,27 +291,26 @@ class ProvisioningViewModel @Inject constructor(
     /**
      * Invoked when the user changes the unicast address.
      *
-     * @param configuration Provisioning configuration containing the unicast address.
-     * @param elementCount  Number of elements.
      * @param address       Address to be assigned to the node.
      */
     internal fun onAddressChanged(
-        configuration: ProvisioningParameters,
-        elementCount: Int,
-        address: Int,
-    ) = runCatching {
-        val unicastAddress = UnicastAddress(address.toUShort())
+        address: Address,
+    ) {
+        val provisionerState =
+            _uiState.value.provisionerState as? Provisioning ?: return
+        val capabilitiesReceivedState =
+            provisionerState.state as? ProvisioningState.CapabilitiesReceived ?: return
+        val elementCount = capabilitiesReceivedState.capabilities.numberOfElements
+        val unicastAddress = UnicastAddress(address)
+
         provisioningManager?.isUnicastAddressValid(
-            unicastAddress = UnicastAddress(address.toUShort()),
-            numberOfElements = elementCount
+            unicastAddress = unicastAddress,
+            numberOfElements = elementCount,
         ).also {
-            configuration.unicastAddress = UnicastAddress(address.toUShort())
-            val provisionerState =
-                _uiState.value.provisionerState as Provisioning
-            val state = provisionerState.state as ProvisioningState.CapabilitiesReceived
-            state.parameters.unicastAddress = unicastAddress
             _uiState.update {
-                it.copy(provisionerState = provisionerState)
+                it.copy(
+                    provisioningParameters = it.provisioningParameters?.copy(unicastAddress = unicastAddress)
+                )
             }
         }
     }
@@ -265,29 +318,14 @@ class ProvisioningViewModel @Inject constructor(
     /**
      * Checks if the given address is valid.
      */
-    internal fun isValidAddress(address: UShort): Boolean = when {
+    internal fun isValidAddress(address: Address): Boolean = when {
         UnicastAddress.isValid(address = address) -> true
         else -> throw Throwable("Invalid unicast address")
     }
 
     internal fun onNetworkKeyClicked(key: NetworkKey) {
-        val provisionerState = _uiState.value.provisionerState
-        if (provisionerState is Provisioning &&
-            provisionerState.state is ProvisioningState.CapabilitiesReceived
-        ) {
-            val provisioningState = provisionerState.state
-            val provisioningParameters = provisioningState
-                .parameters
-                .apply { networkKey = key }
-            _uiState.update {
-                it.copy(
-                    provisionerState = provisionerState.copy(
-                        state = provisioningState.copy(
-                            parameters = provisioningParameters
-                        )
-                    )
-                )
-            }
+        _uiState.update {
+            it.copy(provisioningParameters = it.provisioningParameters?.copy(networkKey = key))
         }
     }
 
@@ -297,18 +335,14 @@ class ProvisioningViewModel @Inject constructor(
      * @param authMethod Authentication method to be used.
      */
     internal fun onAuthenticationMethodSelected(authMethod: AuthenticationMethod) {
-        val state = uiState.value
+        val parameters = _uiState.value.provisioningParameters ?: return
+        val provisionerState =
+            _uiState.value.provisionerState as? Provisioning ?: return
+        val capabilitiesReceivedState =
+            provisionerState.state as? ProvisioningState.CapabilitiesReceived ?: return
+
         viewModelScope.launch {
-            state.provisionerState.let {
-                if (it is Provisioning) {
-                    if (it.state is ProvisioningState.CapabilitiesReceived) {
-                        it.state.run {
-                            parameters.authMethod = authMethod
-                            start(parameters)
-                        }
-                    }
-                }
-            }
+            capabilitiesReceivedState.start(parameters.copy(authMethod = authMethod))
         }
     }
 
@@ -334,31 +368,30 @@ class ProvisioningViewModel @Inject constructor(
      */
     @OptIn(ExperimentalUuidApi::class)
     internal fun onProvisioningComplete(uuid: Uuid) {
+        disconnect()
+
         // Queue ConfigCompositionDataGet and ConfigDefaultTtl
         // When provisioning is complete we enqueue the next configuration tasks that can be resumed
         val messenger = repository.messengers.createMessenger(nodeUuid = uuid)
         messenger.enqueueTask(
             task = ConfigTask(
                 icon = Icons.Outlined.DeviceHub,
-                label = "Reading composition of the node",
+                label = "Reading composition data",
                 message = ConfigCompositionDataGet(page = 0x00u)
             )
         )
-        if (_uiState.value.developerSettings.alwaysReconfigure) {
-            selectedNode?.let {
-                messenger.enqueueReconfigurationWith(originalNode = it)
-            }
-        } else {
+        originalNode?.let {
+            messenger.enqueueReconfigurationWith(it)
+        } ?: run {
             messenger.enqueueTask(
                 task = ConfigTask(
-                    icon = Icons.Outlined.DeviceHub,
-                    label = "Reading composition of the node",
+                    icon = Icons.Outlined.Timer,
+                    label = "Reading default TTL",
                     message = ConfigDefaultTtlGet()
                 )
             )
         }
-        disconnect()
-        repository.startAutomaticConnectivity(meshNetwork = meshNetwork)
+        repository.connect(uuid)
     }
 
     /**
@@ -393,7 +426,7 @@ sealed class ProvisionerState {
 
 internal data class ProvisioningScreenUiState(
     val networkKeys: List<NetworkKey> = emptyList(),
-    val nodes: List<Node> = emptyList(),
+    val provisioningParameters: ProvisioningParameters? = null,
     val provisionerState: ProvisionerState,
     val developerSettings: DeveloperSettings = DeveloperSettings(),
 )

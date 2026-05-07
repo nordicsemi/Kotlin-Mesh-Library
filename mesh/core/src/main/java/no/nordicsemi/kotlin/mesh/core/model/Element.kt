@@ -16,8 +16,11 @@ import no.nordicsemi.kotlin.mesh.core.layers.foundation.PrivateBeaconHandler
 import no.nordicsemi.kotlin.mesh.core.layers.foundation.RemoteProvisioningClientHandler
 import no.nordicsemi.kotlin.mesh.core.layers.foundation.SarConfigurationClientHandler
 import no.nordicsemi.kotlin.mesh.core.layers.foundation.SceneClientHandler
+import no.nordicsemi.kotlin.mesh.core.messages.health.HealthAttentionTimer
 import no.nordicsemi.kotlin.mesh.core.model.serialization.LocationAsStringSerializer
+import no.nordicsemi.kotlin.mesh.logger.Logger
 import java.nio.ByteOrder
+import kotlin.time.Duration
 
 /**
  * Element represents a mesh element that is defined as an addressable entity within a mesh node.
@@ -152,7 +155,10 @@ class Element(
      *
      * Note: This is only to be called for the primary element of the Local Node.
      */
-    internal fun addPrimaryElementModels() {
+    internal fun addPrimaryElementModels(
+        triggerAttentionTimer: (HealthAttentionTimer) -> Unit,
+        logger: Logger?,
+    ) {
         require(isPrimary) { return }
         insert(
             model = Model(
@@ -171,7 +177,10 @@ class Element(
         insert(
             model = Model(
                 modelId = SigModelId(Model.HEALTH_SERVER_MODEL_ID),
-                handler = HealthServerHandler()
+                handler = HealthServerHandler(
+                    triggerAttentionTimer = triggerAttentionTimer,
+                    logger = logger
+                )
             ),
             index = 2
         )

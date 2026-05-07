@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.nordic.application.compose)
     // https://github.com/NordicSemiconductor/Android-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidHiltConventionPlugin.kt
     alias(libs.plugins.nordic.hilt)
-    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -11,6 +10,7 @@ android {
     namespace = "no.nordicsemi.android.nrfmesh"
     defaultConfig {
         minSdk = 23
+        compileSdk = 37
         applicationId = "no.nordicsemi.android.nrfmesh"
         multiDexEnabled = true
     }

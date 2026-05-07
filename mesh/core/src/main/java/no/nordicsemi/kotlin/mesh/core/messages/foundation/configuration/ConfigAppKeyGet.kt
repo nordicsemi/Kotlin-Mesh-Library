@@ -13,20 +13,14 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
  * This message is used to request all the application key indexes that are bound to a given network
  * key.
  *
- * @property index                Index of the bound network key.
- * @property opCode               Message op code.
- * @property parameters           Message parameters.
- * @property responseOpCode       Op Code of the response message.
- * @constructor Constructs the ConfigAppKeyAdd message.
+ * @param networkKeyIndex Index of the bound network key.
  */
 class ConfigAppKeyGet(
-    override val index: KeyIndex,
+    override val networkKeyIndex: KeyIndex,
 ) : AcknowledgedConfigMessage, ConfigNetKeyMessage {
     override val opCode: UInt = Initializer.opCode
-
-    override val parameters = encodeNetKeyIndex()
-
     override val responseOpCode = ConfigAppKeyList.opCode
+    override val parameters = encodeNetKeyIndex()
 
     /**
      * Convenience constructor to create a [ConfigAppKeyGet] message.
@@ -35,10 +29,10 @@ class ConfigAppKeyGet(
      * @constructor Constructs the ConfigAppKeyAdd message.
      */
     constructor(key: NetworkKey) : this(
-        index = key.index
+        networkKeyIndex = key.index
     )
 
-    override fun toString() = "ConfigAppKeyGet(index: $index)"
+    override fun toString() = "ConfigAppKeyGet(networkKeyIndex: $networkKeyIndex)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8001u
@@ -49,10 +43,10 @@ class ConfigAppKeyGet(
          * @param parameters Message parameters.
          * @return ConfigAppKeyAdd or null if the parameters are invalid.
          */
-        override fun init(parameters: ByteArray?) = parameters?.takeIf {
-            it.size == 2
-        }?.let { params ->
-            ConfigAppKeyGet(index = decodeNetKeyIndex(params, 0))
-        }
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.size == 2 }
+            ?.let { params ->
+                ConfigAppKeyGet(networkKeyIndex = decodeNetKeyIndex(params, 0))
+            }
     }
 }

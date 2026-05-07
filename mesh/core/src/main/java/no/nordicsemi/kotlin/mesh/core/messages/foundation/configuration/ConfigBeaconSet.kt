@@ -15,9 +15,7 @@ class ConfigBeaconSet(val enable: Boolean) : AcknowledgedConfigMessage {
     override val responseOpCode = ConfigBeaconStatus.opCode
     override val parameters: ByteArray = byteArrayOf(if (enable) 0x01 else 0x00)
 
-    @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigBeaconSet(opCode: " +
-            "0x${opCode.toHexString(format = HexFormat.UpperCase)})"
+    override fun toString() = "ConfigBeaconSet(enable: $enable)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x800Au

@@ -24,7 +24,7 @@ import java.nio.ByteOrder
  * @constructor Constructs the ConfigAppKeyAdd message.
  */
 class ConfigModelAppBind(
-    override val keyIndex: KeyIndex,
+    override val applicationKeyIndex: KeyIndex,
     override val elementAddress: UnicastAddress,
     override val modelId: ModelId,
 ) : AcknowledgedConfigMessage, ConfigAnyAppKeyModelMessage, ConfigAnyModelMessage {
@@ -34,7 +34,7 @@ class ConfigModelAppBind(
     override val parameters: ByteArray
         get() {
             var data = elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    encodeAppKeyIndex(applicationKeyIndex = keyIndex)
+                    encodeAppKeyIndex(applicationKeyIndex = applicationKeyIndex)
             data += companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
                 ?.plus(modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
                 ?: modelIdentifier.toByteArray(ByteOrder.LITTLE_ENDIAN)
@@ -56,13 +56,13 @@ class ConfigModelAppBind(
      * @constructor Constructs the ConfigModelAppBind message.
      */
     constructor(model: Model, applicationKey: ApplicationKey) : this(
-        keyIndex = applicationKey.index,
+        applicationKeyIndex = applicationKey.index,
         elementAddress = model.parentElement?.unicastAddress
             ?: throw IllegalArgumentException("Parent element address is null"),
         modelId = model.modelId
     )
 
-    override fun toString() = "ConfigModelAppBind(applicationKeyIndex: $keyIndex, " +
+    override fun toString() = "ConfigModelAppBind(applicationKeyIndex: $applicationKeyIndex, " +
             "elementAddress: ${
                 elementAddress.address.toHexString(
                     format = HexFormat {
@@ -122,7 +122,7 @@ class ConfigModelAppBind(
                 )
             }
             ConfigModelAppBind(
-                keyIndex = appKeyIndex,
+                applicationKeyIndex = appKeyIndex,
                 elementAddress = UnicastAddress(elementAddress),
                 modelId = modelId
             )

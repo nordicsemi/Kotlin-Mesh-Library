@@ -13,8 +13,7 @@ class ConfigRelayGet : AcknowledgedConfigMessage {
     override val responseOpCode: UInt = ConfigRelayStatus.opCode
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString(): String =
-        "ConfigRelayGet(opCode: 0x${opCode.toHexString()}, parameters: $parameters)"
+    override fun toString(): String = "ConfigRelayGet"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8026u

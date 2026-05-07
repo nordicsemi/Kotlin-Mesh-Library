@@ -24,14 +24,7 @@ class PairingResponse(val status: UByte, val passKey: Int) : VendorResponse {
     override val parameters = byteArrayOf(0x01, status.toByte()) + passKey.toByteArray()
 
     override fun toString(): String {
-        return "PairingResponse(opCode: ${
-            opCode.toHexString(
-                format = HexFormat {
-                    number.prefix = "0x"
-                    upperCase = true
-                }
-            )
-        } status: $status, passKey: $passKey)"
+        return "PairingResponse(status: $status, passKey: $passKey)"
     }
 
     companion object Initializer : VendorMessageInitializer {

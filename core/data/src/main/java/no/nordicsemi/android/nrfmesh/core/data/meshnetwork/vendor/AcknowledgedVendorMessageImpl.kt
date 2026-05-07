@@ -38,10 +38,7 @@ class AcknowledgedVendorMessageImpl(
             "opCode: ${
                 opCode.toHexString(
                     format = HexFormat {
-                        number {
-                            prefix = "0x"
-                            removeLeadingZeros = true
-                        }
+                        number.prefix = "0x"
                         upperCase = true
                     }
                 )
@@ -50,10 +47,7 @@ class AcknowledgedVendorMessageImpl(
             "responseOpCode: ${
                 responseOpCode.toHexString(
                     format = HexFormat {
-                        number {
-                            prefix = "0x"
-                            removeLeadingZeros = true
-                        }
+                        number.prefix = "0x"
                         upperCase = true
                     }
                 )

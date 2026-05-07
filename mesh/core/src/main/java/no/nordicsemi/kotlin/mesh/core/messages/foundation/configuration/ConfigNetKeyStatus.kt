@@ -18,19 +18,19 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
  * Status declaring if the the [ConfigNetKeyMessage] operation succeeded or not.
  *
  * @property opCode           Message op code.
- * @property index  Index of the network key.
+ * @property networkKeyIndex  Index of the network key.
  * @property parameters       Message parameters.
  * @property status           Status of the message.
  * @constructor Constructs the ConfigNetKeyStatus message.
  */
-data class ConfigNetKeyStatus(
-    override val index: KeyIndex,
+class ConfigNetKeyStatus(
+    override val networkKeyIndex: KeyIndex,
     override val status: ConfigMessageStatus
 ) : ConfigResponse, ConfigStatusMessage, ConfigNetKeyMessage {
 
     override val opCode = Initializer.opCode
     override val parameters: ByteArray
-        get() = status.value.toByteArray() + encodeNetKeyIndex(index)
+        get() = status.value.toByteArray() + encodeNetKeyIndex(networkKeyIndex)
 
     /**
      * Constructs the ConfigNetKeyStatus message.
@@ -42,9 +42,11 @@ data class ConfigNetKeyStatus(
     constructor(
         request: ConfigNetKeyMessage,
         status: ConfigMessageStatus
-    ) : this(request.index, status)
+    ) : this(request.networkKeyIndex, status)
 
     constructor(networkKey: NetworkKey) : this(networkKey.index, ConfigMessageStatus.SUCCESS)
+
+    override fun toString(): String = "ConfigNetKeyStatus(networkKeyIndex: $networkKeyIndex, status: $status)"
 
     companion object Initializer : ConfigMessageInitializer {
 
@@ -54,7 +56,7 @@ data class ConfigNetKeyStatus(
             it.size == 3
         }?.let { params ->
             ConfigMessageStatus.from(params.first().toUByte())?.let {
-                ConfigNetKeyStatus(index = decodeNetKeyIndex(params, 1), status = it)
+                ConfigNetKeyStatus(networkKeyIndex = decodeNetKeyIndex(params, 1), status = it)
             }
         }
     }

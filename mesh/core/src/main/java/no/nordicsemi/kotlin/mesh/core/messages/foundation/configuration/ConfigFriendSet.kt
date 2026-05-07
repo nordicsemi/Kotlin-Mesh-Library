@@ -23,14 +23,15 @@ data class ConfigFriendSet(val state: FeatureState) : AcknowledgedConfigMessage 
     constructor(enable: Boolean) :
             this(state = if (enable) FeatureState.Enabled else FeatureState.Disabled)
 
-    @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigFriendSet(opCode: 0x${opCode.toHexString()}, state: $state)"
+    override fun toString() = "ConfigFriendSet(state: $state)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8010u
 
-        override fun init(parameters: ByteArray?) = parameters?.takeIf { it.size == 1 }?.let {
-            ConfigFriendSet(FeatureState.from(it[0].toUByte().toInt()))
-        }
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.size == 1 }
+            ?.let {
+                ConfigFriendSet(FeatureState.from(it[0].toUByte().toInt()))
+            }
     }
 }

@@ -21,14 +21,14 @@ class AndroidGattBearer(
         Peripheral.Executor,
         ConjunctionFilterScope,
         ScanResult
-        >(
+>(
     centralManager = centralManager,
     peripheral = peripheral,
     ioDispatcher = ioDispatcher
 ) {
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun configurePeripheral(peripheral: Peripheral) {
-        // Request highest connection parameters after connect in the super.open()
+        // Request the highest connection parameters after connect in the super.open()
         peripheral.requestHighestValueLength()
         mtu = peripheral.maximumWriteValueLength(WriteType.WITHOUT_RESPONSE)
     }

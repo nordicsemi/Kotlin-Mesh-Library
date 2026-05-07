@@ -1,6 +1,5 @@
 package no.nordicsemi.android.nrfmesh.feature.model.common
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -46,15 +44,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -146,7 +141,7 @@ internal fun Publication(
             onClick = { send(ConfigModelPublicationSet(model = model)) },
             buttonIcon = Icons.Outlined.Delete,
             isOnClickActionInProgress = messageState.isInProgress() &&
-                    messageState.message is ConfigModelPublicationSet,
+                    (messageState.message as? ConfigModelPublicationSet)?.publish?.isCanceled == true,
             enabled = !messageState.isInProgress(),
         )
         MeshIconButton(
@@ -154,7 +149,8 @@ internal fun Publication(
             buttonIcon = Icons.Outlined.Add,
             enabled = !messageState.isInProgress(),
             isOnClickActionInProgress = messageState.isInProgress() &&
-                    messageState.message is ConfigModelPublicationSet,
+                  ((messageState.message as? ConfigModelPublicationSet)?.publish?.isCanceled == false ||
+                    messageState.message is ConfigModelPublicationVirtualAddressSet),
         )
     }
 
@@ -193,7 +189,7 @@ internal fun Publication(
                         )
                         MeshOutlinedButton(
                             modifier = Modifier.padding(end = 16.dp),
-                            enabled = destination != null && retransmit != null,
+                            enabled = destination != null,
                             onClick = {
                                 send(
                                     if (destination is VirtualAddress)
@@ -204,7 +200,7 @@ internal fun Publication(
                                                 ttl = ttl.toUByte(),
                                                 period = publishPeriod,
                                                 credentials = credentials,
-                                                retransmit = retransmit!!
+                                                retransmit = retransmit ?: Retransmit.disabled
                                             ),
                                             model = model
                                         )
@@ -217,7 +213,7 @@ internal fun Publication(
                                                 ttl = ttl.toUByte(),
                                                 period = publishPeriod,
                                                 credentials = credentials,
-                                                retransmit = retransmit!!
+                                                retransmit = retransmit ?: Retransmit.disabled
                                             )
                                         )
                                 ).also {
@@ -319,7 +315,7 @@ private fun Destination(
                     expanded = expanded
                 )
             },
-            subtitle = destination?.let { "0x${it.toHexString()}" } ?: ""
+            subtitle = destination?.toHexString()
         )
         DropdownMenu(
             modifier = Modifier.exposedDropdownSize(),
@@ -367,7 +363,7 @@ private fun Destination(
                                     },
                                     title = element.name
                                         ?: stringResource(R.string.label_unknown),
-                                    subtitle = "0x${element.unicastAddress.toHexString()}"
+                                    subtitle = element.unicastAddress.toHexString()
                                 )
                             }
                         }

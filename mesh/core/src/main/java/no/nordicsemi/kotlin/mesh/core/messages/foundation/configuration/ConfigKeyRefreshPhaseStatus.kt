@@ -22,7 +22,7 @@ import no.nordicsemi.kotlin.mesh.core.model.NormalOperation
  */
 class ConfigKeyRefreshPhaseStatus(
     override val status: ConfigMessageStatus,
-    override val index: KeyIndex,
+    override val networkKeyIndex: KeyIndex,
     val refreshPhase: KeyRefreshPhase,
 ) : ConfigResponse, ConfigStatusMessage, ConfigNetKeyMessage {
     override val opCode: UInt = Initializer.opCode
@@ -39,7 +39,7 @@ class ConfigKeyRefreshPhaseStatus(
      */
     constructor(networkKey: NetworkKey) : this(
         status = ConfigMessageStatus.SUCCESS,
-        index = networkKey.index,
+        networkKeyIndex = networkKey.index,
         refreshPhase = NormalOperation
     )
 
@@ -51,14 +51,13 @@ class ConfigKeyRefreshPhaseStatus(
      */
     constructor(request: ConfigNetKeyMessage, status: ConfigMessageStatus) : this(
         status = status,
-        index = request.index,
+        networkKeyIndex = request.networkKeyIndex,
         refreshPhase = NormalOperation
     )
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigKeyRefreshPhaseStatus(opCode: " +
-            "0x${opCode.toHexString()}, status: $status, index: $index, " +
-            "refreshPhase: $refreshPhase)"
+    override fun toString() = "ConfigKeyRefreshPhaseStatus(status: $status, " +
+            "networkKeyIndex: $networkKeyIndex, refreshPhase: $refreshPhase)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8017u
@@ -75,7 +74,7 @@ class ConfigKeyRefreshPhaseStatus(
                 ConfigMessageStatus.from(params.first().toUByte())?.let { status ->
                     ConfigKeyRefreshPhaseStatus(
                         status = status,
-                        index = decodeNetKeyIndex(data = params, offset = 0),
+                        networkKeyIndex = decodeNetKeyIndex(data = params, offset = 0),
                         refreshPhase = KeyRefreshPhase.from(params[2].toInt())
                     )
                 }

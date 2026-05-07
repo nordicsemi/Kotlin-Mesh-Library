@@ -41,20 +41,18 @@ sealed class ModelId {
          * Converts a [HexString] encoded model ID to a [ModelId].
          *
          * @return [ModelId] instance.
-         * @throws IllegalArgumentException If the model ID is invalid.
          */
-        @Throws(IllegalArgumentException::class)
-        fun HexString.decode(): ModelId = runCatching {
-            this.toUInt(radix = 16).let { modelId ->
-                when (modelId and 0xFFFF0000u) {
-                    0u -> SigModelId(modelIdentifier = modelId.toUShort())
-                    else -> VendorModelId(id = modelId)
-                }
-            }
-        }.getOrElse {
-            throw IllegalArgumentException(
-                "Error while deserializing model id $this", it
-            )
+        @Throws(NumberFormatException::class)
+        fun HexString.decode(): ModelId = toUInt(radix = 16).decode()
+
+        /**
+         * Converts a [UInt] encoded model ID to a [ModelId].
+         *
+         * @return [ModelId] instance.
+         */
+        fun UInt.decode(): ModelId = when (this and 0xFFFF0000u) {
+            0u -> SigModelId(modelIdentifier = this.toUShort())
+            else -> VendorModelId(id = this)
         }
     }
 }
@@ -73,7 +71,17 @@ class SigModelId(
 
     @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String =
-        "SigModelId(modelIdentifier: ${modelIdentifier.toHexString(format = HexFormat.UpperCase)})"
+        "SigModelId(${
+            modelIdentifier.toHexString(
+                format = HexFormat {
+                    number {
+                        prefix = "0x"
+                        minLength = 4
+                        removeLeadingZeros = true
+                    }
+                }
+            )
+        })"
 
     override fun equals(other: Any?): Boolean {
         if (other !is SigModelId)
@@ -116,9 +124,28 @@ class VendorModelId(
 
     @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
-        return "VendorModelId(" +
-                "modelIdentifier: ${modelIdentifier.toHexString(format = HexFormat.UpperCase)}, " +
-                "companyIdentifier: ${companyIdentifier.toHexString(format = HexFormat.UpperCase)})"
+        return "VendorModelId(${
+                    modelIdentifier.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                minLength = 4
+                                upperCase = true
+                            }
+                        }
+                    )
+                }, " +
+                "companyIdentifier: ${
+                    companyIdentifier.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                minLength = 4
+                                upperCase = true
+                            }
+                        }
+                    )
+                })"
     }
 
     override fun equals(other: Any?): Boolean {

@@ -67,6 +67,7 @@ class Messengers(
 
     fun messenger(uuid: Uuid) = _messengers[uuid]
 
+    @Suppress("unused")
     fun removeMessenger(nodeUuid: Uuid) {
         _messengers.remove(nodeUuid)
     }
@@ -92,6 +93,7 @@ class Messenger(
     private var originalNode: Node? = null
     private var job: Job? = null
 
+    @Suppress("unused")
     private val isCompleted: Boolean
         get() = _configTasksFlow.value.none {
             it.status !is TaskStatus.Completed
@@ -149,7 +151,7 @@ class Messenger(
                 reconfigTasks.add(
                     element = ConfigTask(
                         icon = Icons.Outlined.WifiTethering,
-                        label = "${if (it) "Enable" else "Disable"} Secure Network Beacon  on ${newNode.name}",
+                        label = "${if (it) "Enable" else "Disable"} Secure Network beacon on ${newNode.name}",
                         message = ConfigBeaconSet(enable = it)
                     )
                 )
@@ -171,7 +173,7 @@ class Messenger(
                                 reconfigTasks.add(
                                     element = ConfigTask(
                                         icon = Icons.Outlined.NetworkPing,
-                                        label = "Set Retransmit to ${it.timeInterval} on ${newNode.name}",
+                                        label = "Set Retransmit to ${it.interval} ms on ${newNode.name}",
                                         message = ConfigRelaySet(relayRetransmit = it)
                                     )
                                 )
@@ -197,7 +199,7 @@ class Messenger(
                         reconfigTasks.add(
                             element = ConfigTask(
                                 icon = Icons.Outlined.Hub,
-                                label = "${if (proxy.state is FeatureState.Enabled) "Enabling" else "Disabling"} Gatt Proxy on ${newNode.name}",
+                                label = "${if (proxy.state is FeatureState.Enabled) "Enabling" else "Disabling"} GATT Proxy on ${newNode.name}",
                                 message = ConfigGattProxySet(enable = proxy.state is FeatureState.Enabled)
                             )
                         )
@@ -249,7 +251,7 @@ class Messenger(
                                 heartbeat.address.address.toHexString(HexFormat.UpperCase)
                             }",
                             message = ConfigHeartbeatPublicationSet(
-                                index = heartbeat.index,
+                                networkKeyIndex = heartbeat.index,
                                 destination = heartbeat.address,
                                 countLog = 0u,
                                 periodLog = 0u,
@@ -490,13 +492,13 @@ class Messenger(
                     node = newNode,
                     initialTtl = null
                 )?.let {
-                    if (it is ConfigStatusMessage) {
-                        tempTask = when (it.isSuccess) {
+                    tempTask = if (it is ConfigStatusMessage) {
+                        when (it.isSuccess) {
                             true -> tempTask.copy(status = TaskStatus.Completed)
                             else -> tempTask.copy(status = TaskStatus.Error(error = it.message))
                         }
                     } else {
-                        tempTask = tempTask.copy(status = TaskStatus.Completed)
+                        tempTask.copy(status = TaskStatus.Completed)
                     }
 
                 } ?: run { tempTask = tempTask.copy(status = TaskStatus.Skipped) }
@@ -532,9 +534,14 @@ class Messenger(
                     node = newNode,
                     initialTtl = null
                 )?.let {
-                    tempTask = when ((it as ConfigStatusMessage).isSuccess) {
-                        true -> tempTask.copy(status = TaskStatus.Completed)
-                        else -> tempTask.copy(status = TaskStatus.Error(error = it.message))
+                    tempTask = when ((it as? ConfigStatusMessage) != null) {
+                        true -> if(it.isSuccess) {
+                            tempTask.copy(status = TaskStatus.Completed)
+                        }
+                        else {
+                            tempTask.copy(status = TaskStatus.Error(error = it.message))
+                        }
+                        else -> tempTask.copy(status = TaskStatus.Completed)
                     }
                 } ?: run { tempTask = tempTask.copy(status = TaskStatus.Skipped) }
             } catch (e: Exception) {

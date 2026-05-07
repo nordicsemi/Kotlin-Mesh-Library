@@ -6,7 +6,6 @@ import no.nordicsemi.kotlin.data.and
 import no.nordicsemi.kotlin.data.hasBitSet
 import no.nordicsemi.kotlin.data.shl
 import no.nordicsemi.kotlin.data.shr
-import no.nordicsemi.kotlin.mesh.core.exception.InvalidPdu
 import no.nordicsemi.kotlin.mesh.core.layers.network.NetworkPdu
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
@@ -48,44 +47,46 @@ internal class SegmentedControlMessage(
     override val type = LowerTransportPduType.CONTROL_MESSAGE
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "Segmented $type (opCode: $opCode, seqZero: $sequenceZero, " +
-            "segO: $segmentOffset, segN: $lastSegmentNumber, " +
-            "data: ${
-                upperTransportPdu.toHexString(
-                    format = HexFormat {
-                        number.prefix = "0x"
-                        upperCase = true
-                    }
-                )
-            })"
+    override fun toString() = "Segmented $type (opCode: ${
+            opCode.toHexString(
+                format = HexFormat {
+                    number.prefix = "0x"
+                    upperCase = true
+                }
+            )
+        }, seqZero: $sequenceZero, " +
+          "segO: $segmentOffset, segN: $lastSegmentNumber, " +
+          "data: 0x${upperTransportPdu.toHexString(HexFormat.UpperCase)})"
 
     internal companion object {
 
         /**
-         * Crates a Segmented Control Message using the given NetworkPdu.
+         * Creates a Segmented Control Message using the given Network PDU.
          *
-         * @param networkPdu Network pdu containing the segmented control message.
-         * @return SegmentedControlMessage containing the decoded data.
+         * @param pdu Network pdu containing the segmented control message.
+         * @return Segmented Control Message containing the decoded data.
          */
-        fun init(pdu: NetworkPdu): SegmentedControlMessage {
+        fun init(pdu: NetworkPdu): SegmentedControlMessage? {
             // Minimum length of a Access Message is 6 bytes:
             // * 1 byte for SEG | AKF | AID
             // * 3 bytes for SZMIC | SeqZero | SegO | SegN
             // * At least 1 byte of segment payload
-            require(pdu.transportPdu.size >= 5) { throw InvalidPdu() }
+            require(pdu.transportPdu.size >= 5) { return null }
 
             // Make sure the SEG is 0, that is the message is segmented.
-            require(pdu.transportPdu[0] hasBitSet 7) { throw InvalidPdu() } // TODO Change exception?
+            require(pdu.transportPdu[0] hasBitSet 7) { return null } // TODO Change exception?
 
             val opCode = pdu.transportPdu[0].toUByte() and 0x7Fu
-            val sequenceZero = (pdu.transportPdu[1].toUShort() and 0x7Fu shl 6) or
+            require(opCode != 0x00.toUByte()) { return null } // Op Code 0 is reserved for future use.
+
+            val sequenceZero = ((pdu.transportPdu[1].toUShort() and 0x7Fu) shl 6) or
                     (pdu.transportPdu[2].toUShort() shr 2)
-            val segmentOffset = (pdu.transportPdu[2].toUByte() and 0x03u shl 3) or
+            val segmentOffset = ((pdu.transportPdu[2].toUByte() and 0x03u) shl 3) or
                     (pdu.transportPdu[3].toUByte() shr 5)
             val lastSegmentNumber = pdu.transportPdu[3].toUByte() and 0x1Fu
 
             // Make sure SegO is less than or equal to SegN.
-            require(segmentOffset <= lastSegmentNumber) { throw InvalidPdu() } // TODO Change exception?
+            require(segmentOffset <= lastSegmentNumber) { return null } // TODO Change exception?
 
             return SegmentedControlMessage(
                 opCode = opCode,
@@ -93,7 +94,10 @@ internal class SegmentedControlMessage(
                 destination = pdu.destination,
                 networkKey = pdu.key,
                 ivIndex = pdu.ivIndex,
-                upperTransportPdu = pdu.transportPdu.copyOfRange(4, pdu.transportPdu.size),
+                upperTransportPdu = pdu.transportPdu.copyOfRange(
+                    fromIndex = 4,
+                    toIndex = pdu.transportPdu.size
+                ),
                 sequenceZero = sequenceZero,
                 segmentOffset = segmentOffset,
                 lastSegmentNumber = lastSegmentNumber,

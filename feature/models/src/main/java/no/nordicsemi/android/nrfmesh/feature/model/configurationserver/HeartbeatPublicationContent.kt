@@ -14,10 +14,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.SportsScore
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Upload
@@ -65,7 +65,6 @@ import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigHeartbeatPublicationGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigHeartbeatPublicationSet
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigHeartbeatSubscriptionGet
 import no.nordicsemi.kotlin.mesh.core.model.AllFriends
 import no.nordicsemi.kotlin.mesh.core.model.AllNodes
 import no.nordicsemi.kotlin.mesh.core.model.AllProxies
@@ -106,7 +105,7 @@ internal fun HeartBeatPublicationContent(
 
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Forum,
+        imageVector = Icons.Outlined.MonitorHeart,
         title = stringResource(R.string.label_publications),
         titleAction = {
             AnimatedVisibility(visible = publication != null) {
@@ -124,7 +123,7 @@ internal fun HeartBeatPublicationContent(
                 enabled = !messageState.isInProgress(),
                 isOnClickActionInProgress = messageState.isInProgress()
                         && messageState.message is ConfigHeartbeatPublicationGet,
-                onClick = { send(ConfigHeartbeatSubscriptionGet()) },
+                onClick = { send(ConfigHeartbeatPublicationGet()) },
                 buttonIcon = Icons.Outlined.Download,
                 text = stringResource(R.string.label_get_state)
             )
@@ -180,7 +179,7 @@ internal fun HeartBeatPublicationContent(
                                 onClick = {
                                     send(
                                         ConfigHeartbeatPublicationSet(
-                                            index = keyIndex.toUShort(),
+                                            networkKeyIndex = keyIndex.toUShort(),
                                             destination = destination!!,
                                             countLog = countLog,
                                             periodLog = periodLog,
@@ -342,7 +341,7 @@ private fun DestinationRow(
                     expanded = expanded
                 )
             },
-            subtitle = destination?.let { "0x${it.toHexString()}" } ?: ""
+            subtitle = destination?.toHexString()
         )
         HeartbeatPublicationDestinationsDropdownMenu(
             network = network,

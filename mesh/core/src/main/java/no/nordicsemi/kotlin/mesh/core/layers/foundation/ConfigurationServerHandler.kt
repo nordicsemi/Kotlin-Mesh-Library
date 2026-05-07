@@ -82,7 +82,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.Page0
 import no.nordicsemi.kotlin.mesh.core.model.AllFriends
 import no.nordicsemi.kotlin.mesh.core.model.AllProxies
 import no.nordicsemi.kotlin.mesh.core.model.AllRelays
-import no.nordicsemi.kotlin.mesh.core.model.FeatureState
 import no.nordicsemi.kotlin.mesh.core.model.Group
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.HeartbeatPublication
@@ -183,7 +182,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
 
                 is ConfigNetKeyAdd -> {
                     runCatching {
-                        val keyIndex = request.index
+                        val keyIndex = request.networkKeyIndex
                         // Make sure the key with given index didn't exist or was identical to the one
                         // in the request. Otherwise, return [KEY_INDEX_ALREADY_STORED].
                         val existingKey = meshNetwork.networkKey(index = keyIndex)
@@ -214,7 +213,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                 }
 
                 is ConfigNetKeyUpdate -> {
-                    val keyIndex = request.index
+                    val keyIndex = request.networkKeyIndex
                     val networkKey = meshNetwork.networkKey(index = keyIndex)
                     // If there’s no such key, return invalidNetKeyIndex
                     if (networkKey == null) {
@@ -246,7 +245,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                 }
 
                 is ConfigNetKeyDelete -> {
-                    val index = request.index
+                    val index = request.networkKeyIndex
 
                     // If the key isn't present, respond with success (deleting a non-existent key
                     // is a no-op)
@@ -275,10 +274,10 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                     )
                 }
 
-                is ConfigNetKeyGet -> ConfigNetKeyList(networkKeys = meshNetwork.networkKeys)
+                is ConfigNetKeyGet -> ConfigNetKeyList(networkKeyIndexes = meshNetwork.networkKeys.map { it.index })
 
                 is ConfigAppKeyAdd -> {
-                    val networkKeyIndex = request.index
+                    val networkKeyIndex = request.networkKeyIndex
                     // If the Network Key does not exist, return INVALID_NET_KEY_INDEX
                     val networkKey = meshNetwork.networkKey(index = networkKeyIndex)
                         ?: return ConfigAppKeyStatus(
@@ -286,7 +285,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                             status = ConfigMessageStatus.INVALID_NET_KEY_INDEX
                         )
 
-                    val keyIndex = request.keyIndex
+                    val keyIndex = request.applicationKeyIndex
 
                     return runCatching {
                         // Check if the application key exists or is an identical key bound to the same network key
@@ -322,7 +321,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                 }
 
                 is ConfigAppKeyUpdate -> {
-                    val networkKeyIndex = request.index
+                    val networkKeyIndex = request.networkKeyIndex
                     // If the Network Key does not exist, return INVALID_NET_KEY_INDEX
                     val networkKey = meshNetwork.networkKey(index = networkKeyIndex)
                         ?: return ConfigAppKeyStatus(
@@ -330,7 +329,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                             status = ConfigMessageStatus.INVALID_NET_KEY_INDEX
                         )
 
-                    val keyIndex = request.keyIndex
+                    val keyIndex = request.applicationKeyIndex
 
                     // If the Application Key does not exist, return INVALID_APP_KEY_INDEX
                     val applicationKey = meshNetwork.applicationKey(index = keyIndex)
@@ -375,7 +374,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                 }
 
                 is ConfigAppKeyDelete -> {
-                    val networkKeyIndex = request.index
+                    val networkKeyIndex = request.networkKeyIndex
                     // If the Network Key does not exist, return INVALID_NET_KEY_INDEX
                     val networkKey = meshNetwork.networkKey(index = networkKeyIndex)
                         ?: return ConfigAppKeyStatus(
@@ -383,7 +382,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                             status = ConfigMessageStatus.INVALID_NET_KEY_INDEX
                         )
 
-                    val keyIndex = request.keyIndex
+                    val keyIndex = request.applicationKeyIndex
 
                     // If the Application Key does not exist, respond with SUCCESS (as per Mesh spec)
                     val applicationKey = meshNetwork.applicationKey(index = keyIndex)
@@ -413,7 +412,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                 }
 
                 is ConfigAppKeyGet -> {
-                    val networkKeyIndex = request.index
+                    val networkKeyIndex = request.networkKeyIndex
 
                     // If the Network Key does not exist, return INVALID_NET_KEY_INDEX
                     val networkKey = meshNetwork.networkKey(index = networkKeyIndex)
@@ -444,7 +443,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                             status = ConfigMessageStatus.INVALID_MODEL
                         )
                     val applicationKey =
-                        meshNetwork.applicationKey(index = request.keyIndex)
+                        meshNetwork.applicationKey(index = request.applicationKeyIndex)
                             ?: return ConfigModelAppStatus(
                                 request = request,
                                 status = ConfigMessageStatus.INVALID_APP_KEY_INDEX
@@ -464,7 +463,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                             request = request,
                             status = ConfigMessageStatus.INVALID_MODEL
                         )
-                    model.unbind(index = request.keyIndex)
+                    model.unbind(index = request.applicationKeyIndex)
                     return ConfigModelAppStatus(request = request)
                 }
 
@@ -827,19 +826,17 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
 
                 is ConfigRelayGet, is ConfigRelaySet -> {
                     // Relay feature is not supported
-                    ConfigRelayStatus(
-                        state = FeatureState.Unsupported, count = 0, steps = 0u
-                    )
+                    ConfigRelayStatus.unsupported
                 }
 
                 is ConfigGattProxyGet, is ConfigGattProxySet -> {
                     // Gatt Proxy feature is not supported
-                    ConfigGattProxyStatus(state = FeatureState.Unsupported)
+                    ConfigGattProxyStatus.unsupported
                 }
 
                 is ConfigFriendGet, is ConfigFriendSet -> {
                     // Friend feature is not supported
-                    ConfigFriendStatus(state = FeatureState.Unsupported)
+                    ConfigFriendStatus.unsupported
                 }
 
                 is ConfigBeaconGet, is ConfigBeaconSet -> {
@@ -877,8 +874,8 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                                 )
                             }
 
-                            !request.index.isValidKeyIndex() ||
-                                    (meshNetwork.networkKey(index = request.index) == null) &&
+                            !request.networkKeyIndex.isValidKeyIndex() ||
+                                    (meshNetwork.networkKey(index = request.networkKeyIndex) == null) &&
                                     request.isPublicationEnabled -> {
                                 return ConfigHeartbeatPublicationStatus(
                                     request = request,
@@ -951,7 +948,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
 
                 is ConfigKeyRefreshPhaseGet -> {
                     // If there is no such key, return .invalidNetKeyIndex.
-                    val networkKey = meshNetwork.networkKey(index = request.index)
+                    val networkKey = meshNetwork.networkKey(index = request.networkKeyIndex)
                         ?: return ConfigKeyRefreshPhaseStatus(
                             request = request,
                             status = ConfigMessageStatus.INVALID_NET_KEY_INDEX
@@ -962,7 +959,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
 
                 is ConfigKeyRefreshPhaseSet -> {
                     // If there is no such key, return .invalidNetKeyIndex.
-                    val networkKey = meshNetwork.networkKey(index = request.index)
+                    val networkKey = meshNetwork.networkKey(index = request.networkKeyIndex)
                         ?: return ConfigKeyRefreshPhaseStatus(
                             request = request,
                             status = ConfigMessageStatus.INVALID_NET_KEY_INDEX

@@ -33,6 +33,8 @@
     <string name="label_address">Address</string>
     <string name="label_add">Add</string>
     <string name="address">Address</string>
+    <string name="label_identify">Identify</string>
+    <string name="label_identify_rationale">Health Server model requires configuration.\n\nWould you like to configure it automatically?</string>
     <string name="label_select_provisioner">Select a Provisioner</string>
     <string name="label_select_provisioner_rationale">Select a Provisioner to use with this device</string>
     <string name="label_network_keys">Network Keys</string>

@@ -13,12 +13,10 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsListDetailSceneKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.key.ApplicationKeyScreen
 import no.nordicsemi.android.nrfmesh.feature.application.keys.key.ApplicationKeyViewModel
-import no.nordicsemi.kotlin.data.HexString
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 
 @Serializable
-data class ApplicationKeyContentKey(val keyIndex: HexString) : NavKey {
-    constructor(keyIndex: KeyIndex) : this(keyIndex = keyIndex.toHexString())
+data class ApplicationKeyContentKey(val keyIndex: KeyIndex) : NavKey {
 }
 
 
@@ -29,10 +27,8 @@ fun EntryProviderScope<NavKey>.applicationKeyEntry(appState: AppState, navigator
             sceneKey = SettingsListDetailSceneKey
         )
     ) { key ->
-        val viewModel = hiltViewModel<ApplicationKeyViewModel, ApplicationKeyViewModel.Factory>(
-            key = "ApplicationKeyViewModel:${key.keyIndex}"
-        ) { factory ->
-            factory.create(index = key.keyIndex)
+        val viewModel = hiltViewModel<ApplicationKeyViewModel, ApplicationKeyViewModel.Factory> { factory ->
+            factory.create(index = key.keyIndex.toInt())
         }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         ApplicationKeyScreen(

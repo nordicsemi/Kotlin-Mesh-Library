@@ -64,7 +64,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigMo
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigSigModelSubscriptionGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigVendorModelSubscriptionGet
 import no.nordicsemi.kotlin.mesh.core.model.AllNodes
-import no.nordicsemi.kotlin.mesh.core.model.Element
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.Group
 import no.nordicsemi.kotlin.mesh.core.model.Model
@@ -109,8 +108,8 @@ internal fun Subscriptions(
             buttonIcon = Icons.Outlined.Refresh,
             enabled = !messageState.isInProgress(),
             isOnClickActionInProgress = messageState.isInProgress() &&
-                    (messageState.message is ConfigSigModelSubscriptionGet ||
-                            messageState.message is ConfigVendorModelSubscriptionGet),
+                   (messageState.message is ConfigSigModelSubscriptionGet ||
+                    messageState.message is ConfigVendorModelSubscriptionGet),
         )
         MeshIconButton(
             onClick = { showDeleteAllDialog = true },
@@ -123,6 +122,9 @@ internal fun Subscriptions(
             onClick = { showBottomSheet = true },
             buttonIcon = Icons.Outlined.Add,
             enabled = !messageState.isInProgress(),
+            isOnClickActionInProgress = messageState.isInProgress() &&
+                    (messageState.message is ConfigModelSubscriptionAdd ||
+                     messageState.message is ConfigModelSubscriptionVirtualAddressAdd),
         )
     }
     if (model.subscribe.isNotEmpty()) {

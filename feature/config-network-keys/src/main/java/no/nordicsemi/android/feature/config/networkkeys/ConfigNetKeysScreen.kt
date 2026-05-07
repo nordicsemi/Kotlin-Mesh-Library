@@ -69,19 +69,15 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 @Composable
 internal fun ConfigNetKeysScreen(
     snackbarHostState: SnackbarHostState,
-    isLocalProvisionerNode: Boolean,
     addedNetworkKeys: List<NetworkKey>,
-    availableNetworkKeys: List<NetworkKey>,
     messageState: MessageState,
     onAddNetworkKeyClicked: () -> Unit,
     isKeyInUse: (NetworkKey) -> Boolean,
-    navigateToNetworkKeys: () -> Unit,
     send: (AcknowledgedConfigMessage) -> Unit,
     resetMessageState: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState()
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
     var keyToDelete by remember { mutableStateOf<NetworkKey?>(null) }
@@ -92,55 +88,59 @@ internal fun ConfigNetKeysScreen(
             onRefresh = { send(ConfigNetKeyGet()) },
             isRefreshing = messageState.isInProgress() && messageState.message is ConfigNetKeyGet
         ) {
-            when (addedNetworkKeys.isNotEmpty()) {
-                true -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(space = 8.dp)
-                ) {
-                    item {
-                        SectionTitle(
-                            modifier = Modifier.padding(top = 8.dp),
-                            title = stringResource(R.string.label_added_network_keys)
-                        )
-                    }
-                    items(items = addedNetworkKeys, key = { KeyIdGenerator.nextId() }) { key ->
-                        // Hold the current state from the Swipe to Dismiss composable
-                        val dismissState = rememberSwipeToDismissBoxState()
-                        val isInUse = isKeyInUse(key)
-                        SwipeToDismissKey(
-                            isInUse = isInUse,
-                            dismissState = dismissState,
-                            key = key,
-                            onSwiped = {
-                                if (isInUse) {
-                                    keyToDelete = key
-                                    showDeleteConfirmationDialog = true
-                                    scope.launch { dismissState.reset() }
-                                } else {
-                                    if (!messageState.isInProgress()) {
-                                        send(ConfigNetKeyDelete(key = key))
-                                        snackbarHostState.currentSnackbarData?.dismiss()
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                message = context.getString(R.string.label_network_key_deleting),
-                                                duration = SnackbarDuration.Short,
-                                            )
-                                        }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+            ) {
+                when (addedNetworkKeys.isNotEmpty()) {
+                    true -> {
+                        item {
+                            SectionTitle(
+                                modifier = Modifier.padding(top = 8.dp),
+                                title = stringResource(R.string.label_added_network_keys)
+                            )
+                        }
+                        items(items = addedNetworkKeys, key = { KeyIdGenerator.nextId() }) { key ->
+                            // Hold the current state from the Swipe to Dismiss composable
+                            val dismissState = rememberSwipeToDismissBoxState()
+                            val isInUse = isKeyInUse(key)
+                            SwipeToDismissKey(
+                                isInUse = isInUse,
+                                dismissState = dismissState,
+                                key = key,
+                                onSwiped = {
+                                    if (isInUse) {
+                                        keyToDelete = key
+                                        showDeleteConfirmationDialog = true
+                                        scope.launch { dismissState.reset() }
+                                    } else {
+                                        if (!messageState.isInProgress()) {
+                                            send(ConfigNetKeyDelete(key = key))
+                                            snackbarHostState.currentSnackbarData?.dismiss()
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    message = context.getString(R.string.label_network_key_deleting),
+                                                    duration = SnackbarDuration.Short,
+                                                )
+                                            }
 
+                                        }
                                     }
                                 }
-                            }
+                            )
+                        }
+                        item { Spacer(modifier = Modifier.size(size = 16.dp)) }
+                    }
+
+                    false -> item {
+                        MeshNoItemsAvailable(
+                            modifier = Modifier.fillParentMaxSize(),
+                            imageVector = Icons.Outlined.VpnKey,
+                            title = stringResource(R.string.label_no_keys_added)
                         )
                     }
-                    item { Spacer(modifier = Modifier.size(size = 16.dp)) }
                 }
-
-                false -> MeshNoItemsAvailable(
-                    modifier = Modifier.fillMaxSize(),
-                    imageVector = Icons.Outlined.VpnKey,
-                    title = stringResource(R.string.label_no_keys_added)
-                )
             }
         }
         AnimatedVisibility(
@@ -153,62 +153,10 @@ internal fun ConfigNetKeysScreen(
                 modifier = Modifier.defaultMinSize(minWidth = 150.dp),
                 text = { Text(text = stringResource(R.string.label_add_key)) },
                 icon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
-                onClick = { showBottomSheet = true },
+                onClick = onAddNetworkKeyClicked,
                 expanded = true
             )
         }
-    }
-
-    if (showBottomSheet) {
-        BottomSheetNetworkKeys(
-            bottomSheetState = bottomSheetState,
-            messageState = messageState,
-            keys = availableNetworkKeys,
-            onNetworkKeyClicked = { key ->
-                scope.launch {
-                    bottomSheetState.hide()
-                }.invokeOnCompletion {
-                    send(ConfigNetKeyAdd(key = key))
-                    if (!bottomSheetState.isVisible) {
-                        showBottomSheet = false
-                    }
-                }
-            },
-            onAddNetworkKeyClicked = {
-                runCatching {
-                    onAddNetworkKeyClicked()
-                    if (isLocalProvisionerNode) {
-                        scope
-                            .launch {
-                                bottomSheetState.hide()
-                            }.invokeOnCompletion {
-                                if (!bottomSheetState.isVisible) showBottomSheet = false
-                            }
-                    }
-                }.onFailure {
-                    scope.launch { snackbarHostState.showSnackbar(message = it.describe()) }
-                }
-            },
-            navigateToNetworkKeys = {
-                scope.launch {
-                    bottomSheetState.hide()
-                }.invokeOnCompletion {
-                    navigateToNetworkKeys()
-                    if (!bottomSheetState.isVisible) {
-                        showBottomSheet = !showBottomSheet
-                    }
-                }
-            },
-            onDismissClick = {
-                scope.launch {
-                    bottomSheetState.hide()
-                }.invokeOnCompletion {
-                    if (!bottomSheetState.isVisible) {
-                        showBottomSheet = !showBottomSheet
-                    }
-                }
-            }
-        )
     }
 
     if (showDeleteConfirmationDialog) {
@@ -279,8 +227,7 @@ internal fun ConfigNetKeysScreen(
             }
         }
 
-        else -> { /* Do nothing */
-        }
+        else -> { }
     }
 }
 

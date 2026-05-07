@@ -96,6 +96,7 @@ fun MeshTwoLineListItem(
             if (!subtitle.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.size(4.dp))
                 Text(
+                    modifier = Modifier.padding(end = 16.dp),
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = subtitleMaxLines,

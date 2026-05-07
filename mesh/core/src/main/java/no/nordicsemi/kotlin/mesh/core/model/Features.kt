@@ -71,13 +71,15 @@ data class Features internal constructor(
         lowPower ?: LowPower(state = FeatureState.Unsupported)
     )
 
+    override fun toString(): String = toList().joinToString()
+
     internal companion object {
 
         /**
          * Constructs a Features object from the given mask.
          *
          * Note: The state of the following features is unknown until the corresponding Config...Get
-         * message is sent to the node. However if the Low Power state is enabled it cannot be
+         * message is sent to the node. However, if the Low Power state is enabled it cannot be
          * disabled.
          *
          * @param mask  Raw value of the features.
@@ -129,7 +131,7 @@ sealed class Feature {
 data class Relay(override val state: FeatureState) : Feature() {
     override val rawValue: UShort = (state.value shr 0).toUShort()
 
-    override fun toString() = "Relay(state: $state, rawValue: $rawValue)"
+    override fun toString() = "Relay($state)"
 }
 
 /**
@@ -142,7 +144,7 @@ data class Relay(override val state: FeatureState) : Feature() {
 data class Proxy(override var state: FeatureState) : Feature() {
     override val rawValue: UShort = (state.value shr 1).toUShort()
 
-    override fun toString() = "Proxy(state: $state, rawValue: $rawValue)"
+    override fun toString() = "Proxy($state)"
 }
 
 /**
@@ -155,7 +157,7 @@ data class Proxy(override var state: FeatureState) : Feature() {
 data class Friend(override val state: FeatureState) : Feature() {
     override val rawValue: UShort = (state.value shr 2).toUShort()
 
-    override fun toString() = "Friend(state: $state, rawValue: $rawValue)"
+    override fun toString() = "Friend($state)"
 }
 
 /**
@@ -168,7 +170,7 @@ data class Friend(override val state: FeatureState) : Feature() {
 data class LowPower(override val state: FeatureState) : Feature() {
     override val rawValue: UShort = (state.value shr 3).toUShort()
 
-    override fun toString() = "LowPower(state: $state, rawValue: $rawValue)"
+    override fun toString() = "LowPower($state)"
 }
 
 /**
@@ -199,16 +201,13 @@ sealed class FeatureState(val value: Int) {
     val isSupported: Boolean
         get() = this !is Unsupported
 
-    override fun toString() = "FeatureState(${
-        when (this) {
-            Disabled -> "Disabled"
-            Enabled -> "Enabled"
-            Unsupported -> "Unsupported"
-        }
-    })"
+    override fun toString() = when (this) {
+        Disabled -> "Disabled"
+        Enabled -> "Enabled"
+        Unsupported -> "Unsupported"
+    }
 
     companion object {
-
         private const val DISABLED = 0
         private const val ENABLED = 1
         private const val UNSUPPORTED = 2

@@ -18,28 +18,30 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNe
  */
 @ConsistentCopyVisibility
 @Serializable
-data class NetworkTransmit internal constructor(
-    val count: UByte,
-    val interval: UShort
-) {
+data class NetworkTransmit internal constructor(val count: Int, val interval: Int) {
+    /**
+     * Interval in milliseconds.
+     */
     @Transient
-    var steps = toSteps(interval = interval)
-        internal set
+    val intervalAsMilliseconds : Long = interval.toLong()
 
-    val intervalAsSeconds : Double
-        get() = interval.toInt() / 1000.0
-
-    val intervalAsMilliseconds : Long
-        get() = interval.toInt() * 1000L
+    init {
+        require(count in COUNT_RANGE) {
+            "Network Transmit count must be in range $COUNT_RANGE"
+        }
+        require(interval in INTERVAL_RANGE) {
+            "Network Transmit interval must in range $INTERVAL_RANGE milliseconds"
+        }
+    }
 
     /**
      * Convenience constructor.
      *
      * @param request Network transmit settings received from a node.
      */
-    internal constructor(request : ConfigNetworkTransmitSet) : this(
-        count = (request.count + 1u).toUByte(),
-        interval = ((request.steps + 1u).toUShort() * 10u).toUShort()
+    internal constructor(request: ConfigNetworkTransmitSet) : this(
+        count = request.count.toInt() + 1,
+        interval = (request.steps.toInt() + 1) * 10
     )
 
     /**
@@ -48,32 +50,16 @@ data class NetworkTransmit internal constructor(
      * @param status Network transmit status received from the node.
      */
     internal constructor(status: ConfigNetworkTransmitStatus) : this(
-        count = (status.count + 1u).toUByte(),
-        interval = ((status.steps + 1u).toUShort() * 10u).toUShort()
+        count = status.count.toInt() + 1,
+        interval = (status.steps.toInt() + 1) * 10
     )
 
-    init {
-        require(count.toInt() in MIN_COUNT..MAX_COUNT) {
-            "Error while creating NetworkTransmit: count must be a value from " +
-                    "$MIN_COUNT to $MAX_COUNT number of transmissions!"
-        }
-        require(interval.toInt() in MIN_INTERVAL..MAX_INTERVAL) {
-            "Error while creating NetworkTransmit: interval must be a value from " +
-                    "$MIN_INTERVAL to $MAX_INTERVAL milliseconds between transmissions!"
-        }
-    }
-
     companion object {
-        private const val MIN_COUNT = 1
-        private const val MAX_COUNT = 8
-        private const val MIN_INTERVAL = 10
-        private const val MAX_INTERVAL = 320
-
-        /**
-         * Converts Interval to steps.
-         *
-         * @param interval Interval in milliseconds between the transmissions.
-         */
-        fun toSteps(interval: UShort): UByte = ((interval.toInt() / 10) - 1).toUByte()
+        const val MIN_COUNT = 1
+        const val MAX_COUNT = 8
+        val COUNT_RANGE = MIN_COUNT..MAX_COUNT
+        const val MIN_INTERVAL = 10
+        const val MAX_INTERVAL = 320
+        val INTERVAL_RANGE = MIN_INTERVAL..MAX_INTERVAL
     }
 }

@@ -8,9 +8,6 @@ plugins {
 
 android {
     namespace = "no.nordicsemi.android.nrfmesh.core.data"
-    kotlinOptions {
-        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
-    }
 }
 
 wire {

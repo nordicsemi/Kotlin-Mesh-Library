@@ -72,7 +72,7 @@ data class HeartbeatPublication internal constructor(
         address = status.destination,
         period = periodLog2Period(periodLog = status.periodLog),
         ttl = status.ttl,
-        index = status.index,
+        index = status.networkKeyIndex,
         features = status.features
     ) {
         require(period.toInt() in MIN_PERIOD..MAX_PERIOD) {
@@ -95,7 +95,7 @@ data class HeartbeatPublication internal constructor(
         ) as HeartbeatPublicationDestination,
         period = periodLog2Period(periodLog = request.periodLog),
         ttl = request.ttl,
-        index = request.index,
+        index = request.networkKeyIndex,
         features = request.features
     ) {
         require(period.toInt() in MIN_PERIOD..MAX_PERIOD) {

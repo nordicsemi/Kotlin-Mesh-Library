@@ -16,7 +16,11 @@ import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.Provisionin
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
-fun EntryProviderScope<NavKey>.nodesEntry(appState: AppState, navigator: Navigator) {
+fun EntryProviderScope<NavKey>.nodesEntry(
+    appState: AppState,
+    navigator: Navigator,
+    navigateToWizard: () -> Unit,
+) {
     entry<NodesKey> {
         val viewModel = hiltViewModel<NodesViewModel>()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -26,5 +30,5 @@ fun EntryProviderScope<NavKey>.nodesEntry(appState: AppState, navigator: Navigat
             addNode = { navigator.navigate(key = ProvisioningKey) }
         )
     }
-    nodeEntry(appState = appState, navigator = navigator)
+    nodeEntry(appState = appState, navigator = navigator, navigateToWizard = navigateToWizard)
 }

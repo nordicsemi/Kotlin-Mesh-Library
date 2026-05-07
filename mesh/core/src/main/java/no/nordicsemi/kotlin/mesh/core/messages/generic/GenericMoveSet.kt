@@ -29,15 +29,15 @@ class GenericMoveSet(
     override val opCode = Initializer.opCode
     override val responseOpCode = GenericLevelStatus.opCode
     override val transitionTime = transitionParams?.transitionTime
+    override val continueTransaction = true
     override val delay = transitionParams?.delay
-    override val parameters: ByteArray
-        get() = when (transitionTime != null && delay != null) {
-            true -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    tid!!.toByteArray() + transitionTime.rawValue.toByteArray() +
-                    delay.toByteArray()
+    override val parameters = when (transitionTime != null && delay != null) {
+        true -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                tid!!.toByteArray() + transitionTime.rawValue.toByteArray() +
+                delay.toByteArray()
 
-            else -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) + tid!!.toByteArray()
-        }
+        else -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) + tid!!.toByteArray()
+    }
 
     /**
      * Convenience constructor to create a GenericMoveSet message.
@@ -90,9 +90,9 @@ class GenericMoveSet(
         transitionParams = null
     )
 
-    override fun toString() = "GenericMoveSet(tid: $tid, level: $deltaLevel, " +
+    override fun toString() = "GenericMoveSet(tid: $tid, deltaLevel: $deltaLevel" +
             if (transitionTime != null && delay != null) {
-                "transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
+                ", transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
             } else ")"
 
     companion object Initializer : GenericMessageInitializer {

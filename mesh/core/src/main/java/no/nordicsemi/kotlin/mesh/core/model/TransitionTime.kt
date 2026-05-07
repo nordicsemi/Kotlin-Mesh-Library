@@ -47,7 +47,7 @@ data class TransitionTime(val steps: UByte, val stepResolution: StepResolution) 
      */
     constructor(rawValue: UByte) : this(
         steps = rawValue and 0x3Fu,
-        stepResolution = StepResolution.from(value = rawValue.toUByte() shr 6)
+        stepResolution = StepResolution.from(value = rawValue shr 6)
     )
 
     val milliseconds: Int?

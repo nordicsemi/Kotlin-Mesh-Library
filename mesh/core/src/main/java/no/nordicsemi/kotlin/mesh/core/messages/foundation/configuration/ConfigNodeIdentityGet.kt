@@ -12,15 +12,14 @@ import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
  * will be the response to this message.
  */
 class ConfigNodeIdentityGet(
-    override val index: KeyIndex
+    override val networkKeyIndex: KeyIndex
 ) : AcknowledgedConfigMessage, ConfigNetKeyMessage {
     override val opCode = Initializer.opCode
     override val parameters = encodeNetKeyIndex()
     override val responseOpCode: UInt = ConfigNodeIdentityStatus.opCode
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString(): String = "ConfigNodeIdentityGet(opCode: 0x${opCode.toHexString()}, " +
-                "parameters: ${parameters.toHexString(prefixOx = true, format = HexFormat.UpperCase)})"
+    override fun toString(): String = "ConfigNodeIdentityGet(networkKeyIndex: $networkKeyIndex)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8046u

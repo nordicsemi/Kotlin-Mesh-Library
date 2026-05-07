@@ -519,7 +519,7 @@ object Crypto {
      * @return 128-bit key T.
      */
     internal fun k1(N: ByteArray, SALT: ByteArray, P: ByteArray): ByteArray {
-        require(SALT.size == 16) { "Salt must be 128-bits." }
+        require(SALT.size == 16) { "Salt must be 128-bits" }
         val t = calculateCmac(N, SALT)
         return calculateCmac(P, t)
     }
@@ -538,10 +538,10 @@ object Crypto {
      */
     internal fun k2(N: ByteArray, P: ByteArray): SecurityMaterial {
         require(N.size == 16) {
-            "N must be 128-bits."
+            "N must be 128-bits"
         }
         require(P.isNotEmpty()) {
-            "P must be 1 or more octets."
+            "P must be 1 or more octets"
         }
         val s1 = calculateS1(input = smk2)
         val T = calculateCmac(input = N, key = s1)
@@ -608,7 +608,7 @@ object Crypto {
      * @return 128-bit message authentication code (MAC).
      */
     private fun calculateCmac(input: ByteArray, key: ByteArray): ByteArray {
-        require(key.size == 16) { "Key must be 128-bits." }
+        require(key.size == 16) { "Key must be 128-bits" }
         return CMac(blockCipher).run {
             init(KeyParameter(key))
             update(input, 0, input.count())
@@ -631,7 +631,7 @@ object Crypto {
      * @return 256-bit hash-based message authentication code (HMAC).
      */
     private fun calculateHmac256(input: ByteArray, key: ByteArray): ByteArray {
-        require(key.size == 32) { "Key must be 256-bits." }
+        require(key.size == 32) { "Key must be 256-bits" }
         return HMac(SHA256Digest()).run {
             init(KeyParameter(key))
             update(input, 0, input.count())

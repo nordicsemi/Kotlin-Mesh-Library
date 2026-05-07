@@ -17,24 +17,24 @@ import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 /**
  * Status declaring if the the [ConfigNetAndAppKeyMessage] operation succeeded or not.
  *
- * @property keyIndex Index of the application key.
- * @property index     Index of the network key.
+ * @property applicationKeyIndex Index of the application key.
+ * @property networkKeyIndex     Index of the network key.
  * @property status              Status of the message.
  * @property opCode              Message op code.
  * @property parameters          Message parameters.
  * @constructor Constructs the ConfigAppKeyStatus message.
  */
 class ConfigAppKeyStatus(
-    override val keyIndex: KeyIndex,
-    override val index: KeyIndex,
+    override val applicationKeyIndex: KeyIndex,
+    override val networkKeyIndex: KeyIndex,
     override val status: ConfigMessageStatus
 ) : ConfigResponse, ConfigStatusMessage, ConfigNetAndAppKeyMessage {
 
     override val opCode = Initializer.opCode
     override val parameters: ByteArray
         get() = status.value.toByteArray() + encodeNetAndAppKeyIndex(
-            appKeyIndex = keyIndex,
-            netKeyIndex = index
+            appKeyIndex = applicationKeyIndex,
+            netKeyIndex = networkKeyIndex
         )
 
     /**
@@ -44,8 +44,8 @@ class ConfigAppKeyStatus(
      * @constructor Constructs the ConfigAppKeyStatus message.
      */
     constructor(applicationKey: ApplicationKey) : this(
-        keyIndex = applicationKey.index,
-        index = applicationKey.boundNetKeyIndex,
+        applicationKeyIndex = applicationKey.index,
+        networkKeyIndex = applicationKey.boundNetKeyIndex,
         status = ConfigMessageStatus.SUCCESS
     )
 
@@ -60,13 +60,13 @@ class ConfigAppKeyStatus(
         request: ConfigNetAndAppKeyMessage,
         status: ConfigMessageStatus
     ) : this(
-        keyIndex = request.keyIndex,
-        index = request.index,
+        applicationKeyIndex = request.applicationKeyIndex,
+        networkKeyIndex = request.networkKeyIndex,
         status = status
     )
 
-    override fun toString() = "ConfigAppKeyStatus(applicationKeyIndex: $keyIndex, " +
-            "networkKeyIndex: $index, status: $status)"
+    override fun toString() = "ConfigAppKeyStatus(networkKeyIndex: $networkKeyIndex, " +
+            "applicationKeyIndex: $applicationKeyIndex, status: $status)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8003u
@@ -85,8 +85,8 @@ class ConfigAppKeyStatus(
             ) ?: return null
             val decodedNetAndAppKeyIndex = decodeNetAndAppKeyIndex(data = params, offset = 1)
             ConfigAppKeyStatus(
-                keyIndex = decodedNetAndAppKeyIndex.applicationKeyIndex,
-                index = decodedNetAndAppKeyIndex.networkKeyIndex,
+                applicationKeyIndex = decodedNetAndAppKeyIndex.applicationKeyIndex,
+                networkKeyIndex = decodedNetAndAppKeyIndex.networkKeyIndex,
                 status = status
             )
         }

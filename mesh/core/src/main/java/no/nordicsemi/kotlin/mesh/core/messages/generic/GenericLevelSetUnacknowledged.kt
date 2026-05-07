@@ -27,6 +27,7 @@ class GenericLevelSetUnacknowledged(
 ) : UnacknowledgedMeshMessage, TransactionMessage, TransitionMessage {
     override val opCode = Initializer.opCode
     override val transitionTime = transitionParams?.transitionTime
+    override val continueTransaction = true
     override val delay = transitionParams?.delay
     override val parameters: ByteArray
         get() = when (transitionTime != null && delay != null) {
@@ -86,9 +87,9 @@ class GenericLevelSetUnacknowledged(
     @Suppress("unused")
     constructor(level: Short, tid: UByte) : this(level = level, tid = tid, transitionParams = null)
 
-    override fun toString() = "GenericLevelSetUnacknowledged(tid: $tid, level: $level, " +
+    override fun toString() = "GenericLevelSetUnacknowledged(tid: $tid, level: $level" +
             if (transitionTime != null && delay != null) {
-                "transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
+                ", transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
             } else ")"
 
     companion object Initializer : GenericMessageInitializer {

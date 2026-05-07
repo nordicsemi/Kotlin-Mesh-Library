@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -172,7 +173,7 @@ private fun DeleteGroup(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Delete,
         title = stringResource(id = R.string.label_delete),
-        subtitle = stringResource(id = R.string.label_delete_group_rationale),
+        supportingText = stringResource(id = R.string.label_delete_group_rationale),
     ) {
         MeshOutlinedButton(
             border = BorderStroke(width = 1.dp, color = Color.Red),
@@ -207,7 +208,7 @@ private fun ModelRow(
         },
         imageVector = models.first().toIcon(),
         title = models.firstOrNull()?.name() ?: "Unknown Model",
-        subtitle = "${models.size} ${stringResource(R.string.label_models1)}",
+        subtitle = pluralStringResource(R.plurals.label_models_count, models.size, models.size),
         onClick = { onModelClicked(models.first().modelId) }
     )
 }

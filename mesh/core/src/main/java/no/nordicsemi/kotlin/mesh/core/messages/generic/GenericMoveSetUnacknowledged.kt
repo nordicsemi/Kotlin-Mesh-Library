@@ -28,6 +28,7 @@ class GenericMoveSetUnacknowledged(
 ) : UnacknowledgedMeshMessage, TransactionMessage, TransitionMessage {
     override val opCode = Initializer.opCode
     override val transitionTime = transitionParams?.transitionTime
+    override val continueTransaction = true
     override val delay = transitionParams?.delay
     override val parameters: ByteArray
         get() = when (transitionTime != null && delay != null) {
@@ -89,9 +90,9 @@ class GenericMoveSetUnacknowledged(
         transitionParams = null
     )
 
-    override fun toString() = "GenericMoveSetUnacknowledged(tid: $tid, level: $deltaLevel, " +
+    override fun toString() = "GenericMoveSetUnacknowledged(tid: $tid, deltaLevel: $deltaLevel" +
             if (transitionTime != null && delay != null) {
-                "transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
+                ", transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
             } else ")"
 
     companion object Initializer : GenericMessageInitializer {

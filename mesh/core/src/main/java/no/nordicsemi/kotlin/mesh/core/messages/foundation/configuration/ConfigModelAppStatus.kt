@@ -26,7 +26,7 @@ import java.nio.ByteOrder
  */
 class ConfigModelAppStatus(
     override val status: ConfigMessageStatus,
-    override val keyIndex: KeyIndex,
+    override val applicationKeyIndex: KeyIndex,
     override val elementAddress: UnicastAddress,
     override val modelId: ModelId,
 ) : ConfigResponse, ConfigStatusMessage, ConfigAnyAppKeyModelMessage, ConfigAnyModelMessage {
@@ -36,7 +36,7 @@ class ConfigModelAppStatus(
         get() {
             var data = status.value.toByteArray() +
                     elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    encodeAppKeyIndex(applicationKeyIndex = keyIndex)
+                    encodeAppKeyIndex(applicationKeyIndex = applicationKeyIndex)
             data += companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
                 ?.plus(modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
                 ?: modelIdentifier.toByteArray(ByteOrder.LITTLE_ENDIAN)
@@ -68,13 +68,13 @@ class ConfigModelAppStatus(
      */
     constructor(request: ConfigAnyAppKeyModelMessage, status: ConfigMessageStatus) : this(
         status = status,
-        keyIndex = request.keyIndex,
+        applicationKeyIndex = request.applicationKeyIndex,
         elementAddress = request.elementAddress,
         modelId = request.modelId
     )
 
     override fun toString() = "ConfigModelAppStatus(status: ${status}, " +
-            "applicationKeyIndex: $keyIndex, " +
+            "applicationKeyIndex: $applicationKeyIndex, " +
             "elementAddress: ${elementAddress.address.toHexString(
                 format = HexFormat { 
                     number.prefix = "0x"
@@ -105,7 +105,7 @@ class ConfigModelAppStatus(
                             order = ByteOrder.LITTLE_ENDIAN
                         )
                     ),
-                    keyIndex = decodeAppKeyIndex(data = params, offset = 3),
+                    applicationKeyIndex = decodeAppKeyIndex(data = params, offset = 3),
                     modelId = when (params.size) {
                         9 -> VendorModelId(
                             companyIdentifier = params.getUShort(

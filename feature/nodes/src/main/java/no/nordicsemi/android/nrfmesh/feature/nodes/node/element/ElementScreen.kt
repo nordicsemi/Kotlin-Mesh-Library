@@ -15,16 +15,13 @@ import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.nrfmesh.core.data.models.ElementData
 import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
@@ -41,58 +38,53 @@ import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 
 @Composable
 internal fun ElementScreen(
-    elementState: ElementState,
+    element: Element,
     highlightSelectedItem: Boolean,
     navigateToModel: (Model) -> Unit,
     save: () -> Unit,
 ) {
-    if (elementState is ElementState.Success) {
-        val element = elementState.element
-        var selectedIndex by rememberSaveable { mutableIntStateOf(-1) }
-        Column(
+    var selectedIndex by rememberSaveable { mutableIntStateOf(-1) }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(state = rememberScrollState())
+    ) {
+        SectionTitle(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(state = rememberScrollState())
-        ) {
-            SectionTitle(
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .padding(horizontal = 16.dp),
-                title = stringResource(id = R.string.label_element)
-            )
-            NameRow(
-                name = element.name ?: stringResource(id = R.string.unknown),
-                onNameChanged = {
-                    element.name = it
-                    save()
+                .padding(vertical = 8.dp)
+                .padding(horizontal = 16.dp),
+            title = stringResource(id = R.string.label_element)
+        )
+        NameRow(
+            name = element.name ?: stringResource(id = R.string.unknown),
+            onNameChanged = {
+                element.name = it
+                save()
+            }
+        )
+        Spacer(modifier = Modifier.size(size = 8.dp))
+        AddressRow(address = element.unicastAddress)
+        Spacer(modifier = Modifier.size(size = 8.dp))
+        LocationRow(location = element.location)
+        SectionTitle(
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .padding(horizontal = 16.dp),
+            title = stringResource(id = R.string.label_models)
+        )
+        element.models.forEachIndexed { index, model ->
+            ModelRow(
+                model = model,
+                isSelected = index == selectedIndex && highlightSelectedItem,
+                onModelClicked = {
+                    selectedIndex = index
+                    navigateToModel(it)
                 }
             )
-            Spacer(modifier = Modifier.size(size = 8.dp))
-            AddressRow(address = element.unicastAddress)
-            Spacer(modifier = Modifier.size(size = 8.dp))
-            LocationRow(location = element.location)
-            SectionTitle(
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .padding(horizontal = 16.dp),
-                title = stringResource(id = R.string.label_models)
-            )
-            element.models.forEachIndexed { index, model ->
-                ModelRow(
-                    model = model,
-                    isSelected = index == selectedIndex && highlightSelectedItem,
-                    onModelClicked = {
-                        selectedIndex = index
-                        navigateToModel(it)
-                    }
-                )
-                if (index < element.models.size - 1)
-                    Spacer(modifier = Modifier.size(size = 8.dp))
-            }
-            Spacer(modifier = Modifier.size(size = 8.dp))
+            if (index < element.models.size - 1)
+                Spacer(modifier = Modifier.size(size = 8.dp))
         }
-    } else {
-
+        Spacer(modifier = Modifier.size(size = 8.dp))
     }
 }
 
@@ -167,7 +159,7 @@ private fun AddressRow(address: UnicastAddress) {
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Lan,
         title = stringResource(id = R.string.label_address),
-        subtitle = "0x${address.toHexString()}",
+        subtitle = address.toHexString(),
     )
 }
 

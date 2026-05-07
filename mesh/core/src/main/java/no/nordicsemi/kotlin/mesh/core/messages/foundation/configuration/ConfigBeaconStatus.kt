@@ -14,7 +14,6 @@ class ConfigBeaconStatus(val isEnabled: Boolean) : ConfigResponse {
     override val opCode = Initializer.opCode
     override val parameters = byteArrayOf(if (isEnabled) 0x01 else 0x00)
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigBeaconStatus(isEnabled: $isEnabled)"
 
     companion object Initializer : ConfigMessageInitializer {

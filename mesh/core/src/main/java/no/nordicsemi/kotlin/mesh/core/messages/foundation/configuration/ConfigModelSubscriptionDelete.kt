@@ -22,22 +22,17 @@ import java.nio.ByteOrder
  * @property companyIdentifier Company identifier, if the model is a vendor model.
  */
 class ConfigModelSubscriptionDelete(
-    override val elementAddress: UnicastAddress,
     override val address: Address,
+    override val elementAddress: UnicastAddress,
     override val modelIdentifier: UShort,
     override val companyIdentifier: UShort?,
 ) : AcknowledgedConfigMessage, ConfigAnyModelAddressMessage {
     override val opCode = Initializer.opCode
     override val responseOpCode = ConfigModelSubscriptionStatus.opCode
-    override val parameters: ByteArray
-        get() {
-            val data = elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    address.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            return data.plus(elements = companyIdentifier?.let { companyIdentifier ->
-                companyIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                        modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            } ?: modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
-        }
+    override val parameters= elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            (companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN) ?: byteArrayOf()) +
+            modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     /**
      * Convenience constructor to create a ConfigModelSubscriptionDelete message.
@@ -78,11 +73,42 @@ class ConfigModelSubscriptionDelete(
     )
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigModelSubscriptionDelete(address: " +
-            "${address.toHexString(format = HexFormat.UpperCase)}, " +
-            "elementAddress: ${elementAddress.toHexString()}, " +
-            "modelIdentifier: $modelIdentifier, " +
-            "companyIdentifier: $companyIdentifier)"
+    override fun toString() = "ConfigModelSubscriptionDelete(" +
+            "address: ${
+                address.toHexString(
+                    format = HexFormat {
+                        number {
+                            prefix = "0x"
+                            minLength = 4
+                            upperCase = true
+                        }
+                    }
+                )
+            }, " +
+            "elementAddress: $elementAddress, " +
+            "modelIdentifier: ${
+                modelIdentifier.toHexString(
+                    format = HexFormat {
+                        number {
+                            prefix = "0x"
+                            upperCase = true
+                        }
+                    }
+                )
+            }" +
+            if (companyIdentifier != null) {
+                ", companyIdentifier: ${
+                    companyIdentifier.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                upperCase = true
+                            }
+                        }
+                    )
+                }"
+            } else { "" } +
+            ")"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x801Cu

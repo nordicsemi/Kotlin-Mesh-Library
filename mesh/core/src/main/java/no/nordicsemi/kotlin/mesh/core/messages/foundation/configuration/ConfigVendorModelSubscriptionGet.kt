@@ -21,10 +21,9 @@ class ConfigVendorModelSubscriptionGet(
     override val responseOpCode = ConfigSigModelSubscriptionList.opCode
     override val modelIdentifier = modelId.modelIdentifier
     override val companyIdentifier = modelId.companyIdentifier
-    override val parameters: ByteArray
-        get() = byteArrayOf() +
-                elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+    override val parameters = byteArrayOf() +
+            elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     /**
      * Convenience constructor to create a ConfigVendorModelSubscriptionGet message.
@@ -42,24 +41,24 @@ class ConfigVendorModelSubscriptionGet(
         }
     )
 
-    override fun toString() = "ConfigVendorModelSubscriptionGet(elementAddress: " +
-            "${elementAddress.toHexString()} modelId: ${modelId.toHex()})"
+    override fun toString() = "ConfigVendorModelSubscriptionGet(" +
+            "elementAddress: $elementAddress, modelId: $modelId)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x802Bu
 
-        override fun init(parameters: ByteArray?) = parameters?.takeIf {
-            it.size == 6
-        }?.let { params ->
-            ConfigVendorModelSubscriptionGet(
-                elementAddress = UnicastAddress(
-                    address = params.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
-                ),
-                modelId = VendorModelId(
-                    companyIdentifier = params.getUShort(2, ByteOrder.LITTLE_ENDIAN),
-                    modelIdentifier = params.getUShort(4, ByteOrder.LITTLE_ENDIAN)
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.size == 6 }
+            ?.let { params ->
+                ConfigVendorModelSubscriptionGet(
+                    elementAddress = UnicastAddress(
+                        address = params.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
+                    ),
+                    modelId = VendorModelId(
+                        companyIdentifier = params.getUShort(2, ByteOrder.LITTLE_ENDIAN),
+                        modelIdentifier = params.getUShort(4, ByteOrder.LITTLE_ENDIAN)
+                    )
                 )
-            )
-        }
+            }
     }
 }

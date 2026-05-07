@@ -16,8 +16,8 @@ import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
  *                         the present state.
  */
 class GenericOnOffStatus(
-    override val remainingTime: TransitionTime?,
     val isOn: Boolean,
+    override val remainingTime: TransitionTime?,
     val targetState: Boolean?,
 ) : MeshResponse, UnacknowledgedMeshMessage, TransitionStatusMessage {
     override val opCode = Initializer.opCode
@@ -42,8 +42,10 @@ class GenericOnOffStatus(
     @Suppress("unused")
     constructor(isOn: Boolean) : this(remainingTime = null, isOn = isOn, targetState = null)
 
-    override fun toString() = "GenericOnOffStatus(isOn: $isOn, targetState: $targetState, " +
-            "remainingTime: $remainingTime)"
+    override fun toString() = "GenericOnOffStatus(isOn: $isOn" +
+            if (targetState != null && remainingTime != null) {
+                ", targetState: $targetState, remainingTime: $remainingTime)"
+            } else ")"
 
     companion object Initializer : GenericMessageInitializer {
         override val opCode = 0x8204u

@@ -27,13 +27,16 @@ import kotlin.uuid.ExperimentalUuidApi
 /**
  * This message is used to set the publication state of a model.
  *
- * @property publish               Contains the publication state with a VirtualAddress
+ * @property companyIdentifier     The company identifier, as registered at Bluetooth SIG.
+ * @property modelIdentifier       The model identifier.
+ * @property elementAddress        The target element address.
+ * @property publish               Contains the publication state with a VirtualAddress.
  */
 @OptIn(ExperimentalUuidApi::class)
 data class ConfigModelPublicationVirtualAddressSet(
+    override val elementAddress: UnicastAddress,
     override val companyIdentifier: UShort?,
     override val modelIdentifier: UShort,
-    override val elementAddress: UnicastAddress,
     val publish: Publish,
 ) : AcknowledgedConfigMessage, ConfigAnyModelMessage {
     override val opCode: UInt = Initializer.opCode
@@ -83,6 +86,32 @@ data class ConfigModelPublicationVirtualAddressSet(
             "Address must be VirtualAddress or consider sending ConfigModelPublicationSet"
         }
     }
+
+    override fun toString() = "ConfigModelPublicationVirtualAddressSet(" +
+            "elementAddress: ${elementAddress.address}, " +
+            "modelIdentifier: ${
+                modelIdentifier.toHexString(
+                    format = HexFormat {
+                        number {
+                            prefix = "0x"
+                            upperCase = true
+                        }
+                    }
+                )
+            }, " +
+            if (companyIdentifier != null) {
+                "companyIdentifier: ${
+                    companyIdentifier.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                upperCase = true
+                            }
+                        }
+                    )
+                }, "
+            } else { "" } +
+            "publish: $publish)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode: UInt = 0x801Au

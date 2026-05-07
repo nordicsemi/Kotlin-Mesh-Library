@@ -183,7 +183,7 @@ data class NetworkKey internal constructor(
         } ?: false
 
     init {
-        require(index.isValidKeyIndex()) { "Key index must be in range from 0 to 4095." }
+        require(index.isValidKeyIndex()) { "Key index must be in range from 0 to 4095" }
         regenerateKeyDerivatives()
     }
 

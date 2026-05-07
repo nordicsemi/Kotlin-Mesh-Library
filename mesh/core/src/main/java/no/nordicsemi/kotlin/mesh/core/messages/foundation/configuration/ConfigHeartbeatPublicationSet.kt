@@ -36,7 +36,7 @@ import kotlin.math.pow
  * @constructor Creates a ConfigHeartbeatPublicationSet message.
  */
 class ConfigHeartbeatPublicationSet(
-    override val index: KeyIndex,
+    override val networkKeyIndex: KeyIndex,
     val destination: HeartbeatPublicationDestination = UnassignedAddress,
     val countLog: CountLog,
     val periodLog: PeriodLog,
@@ -50,7 +50,7 @@ class ConfigHeartbeatPublicationSet(
                 periodLog.toByte() +
                 ttl.toByte() +
                 features.toUShort().toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                index.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+                networkKeyIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     val count: RemainingHeartbeatPublicationCount
         get() = when {
@@ -98,7 +98,7 @@ class ConfigHeartbeatPublicationSet(
      * Convenience constructor to disable heartbeat publications.
      */
     constructor() : this(
-        index = 0u,
+        networkKeyIndex = 0u,
         destination = UnassignedAddress,
         countLog = 0u,
         periodLog = 0u,
@@ -125,7 +125,7 @@ class ConfigHeartbeatPublicationSet(
                         order = ByteOrder.LITTLE_ENDIAN
                     )
                 ).toList(),
-                index = params.getUShort(offset = 7, order = ByteOrder.LITTLE_ENDIAN)
+                networkKeyIndex = params.getUShort(offset = 7, order = ByteOrder.LITTLE_ENDIAN)
             )
         }
 
@@ -163,7 +163,7 @@ class ConfigHeartbeatPublicationSet(
                 periodLog = periodLog,
                 ttl = ttl,
                 features = features.toList(),
-                index = networkKey.index
+                networkKeyIndex = networkKey.index
             )
         }
     }

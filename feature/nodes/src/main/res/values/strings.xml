@@ -25,6 +25,7 @@
     <string name="label_node_not_excluded">Node is not excluded from the network</string>
     <string name="label_node_excluded">Node is excluded from the network</string>
     <string name="label_exclusion_rationale">If checked, the node will be excluded from the key exchange process. When the key refresh procedure is complete, this node will no longer be able to receive or send messages to the mesh network.</string>
+    <string name="label_node_deletion">Node Deletion</string>
     <string name="label_reset">Reset</string>
     <string name="label_reset_node">Reset Node</string>
     <string name="label_reset_node_rationale">Resetting this node will change its provisioned state back to an un-provisioned state.</string>
@@ -62,4 +63,6 @@
     <string name="label_done">Done</string>
     <string name="label_retry">Retry</string>
     <string name="label_cancel">Cancel</string>
+    <string name="label_no_network">No Network</string>
+    <string name="label_no_network_rationale">This network has been reset by a remote Node.</string>
 </resources>

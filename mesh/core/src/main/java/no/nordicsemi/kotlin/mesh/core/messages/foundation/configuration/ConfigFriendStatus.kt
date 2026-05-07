@@ -19,8 +19,7 @@ data class ConfigFriendStatus(val state: FeatureState) : ConfigResponse {
     constructor(node: Node) : this(node.features.friend?.state ?: FeatureState.Unsupported)
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigFriendStatus(opCode: " +
-            "0x${opCode.toHexString(format = HexFormat.UpperCase)}, state: $state)"
+    override fun toString() = "ConfigFriendStatus(state: $state)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8011u
@@ -28,5 +27,10 @@ data class ConfigFriendStatus(val state: FeatureState) : ConfigResponse {
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 1 }
             ?.let { ConfigFriendStatus(state = FeatureState.from(it[0].toUInt().toInt())) }
+
+        /**
+         * The status reporting that the Friend feature is not supported.
+         */
+        val unsupported = ConfigFriendStatus(state = FeatureState.Unsupported)
     }
 }

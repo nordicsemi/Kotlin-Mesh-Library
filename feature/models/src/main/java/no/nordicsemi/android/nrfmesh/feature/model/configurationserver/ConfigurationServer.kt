@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -141,10 +142,10 @@ private fun RelayFeature(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var retransmissions by remember {
+    var retransmissions by rememberSaveable(System.identityHashCode(relayRetransmit)) {
         mutableFloatStateOf(relayRetransmit?.count?.toFloat() ?: 0f)
     }
-    var interval by remember {
+    var interval by rememberSaveable(System.identityHashCode(relayRetransmit)) {
         mutableFloatStateOf(relayRetransmit?.interval?.toFloat() ?: 0f)
     }
     ElevatedCardItem(
@@ -166,14 +167,18 @@ private fun RelayFeature(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (relayRetransmit) {
-                    null -> "Unknown"
-                    else -> "${retransmissions.roundToInt()} transmission(s)"
+                    null -> stringResource(R.string.unknown)
+                    else -> pluralStringResource(
+                        R.plurals.label_transmissions_count,
+                        retransmissions.roundToInt(),
+                        retransmissions.roundToInt()
+                    )
                 },
                 textAlign = TextAlign.End
             )
             Slider(
                 enabled = relay?.state?.isSupported == true &&
-                        retransmissions > 0 &&
+                        retransmissions > RelayRetransmit.MIN_COUNT &&
                         !messageState.isInProgress(),
                 value = interval,
                 onValueChange = { interval = it },
@@ -187,8 +192,8 @@ private fun RelayFeature(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (relayRetransmit) {
-                    null -> "Unknown"
-                    else -> "${interval.roundToInt()} ms"
+                    null -> stringResource(R.string.unknown)
+                    else -> stringResource(R.string.label_time_ms, interval.roundToInt())
                 },
                 textAlign = TextAlign.End
             )
@@ -207,15 +212,13 @@ private fun RelayFeature(
                 isOnClickActionInProgress = messageState.isInProgress()
                         && messageState.message is ConfigRelaySet,
                 buttonIcon = Icons.Outlined.Upload,
-                text = stringResource(R.string.label_set_relay),
+                text = stringResource(R.string.label_set_state),
                 onClick = {
                     runCatching {
                         send(
                             ConfigRelaySet(
-                                relayRetransmit = RelayRetransmit(
-                                    count = retransmissions.roundToInt(),
-                                    interval = interval.roundToInt()
-                                )
+                                count = retransmissions.roundToInt(),
+                                interval = interval.roundToInt()
                             )
                         )
                     }.onFailure {
@@ -239,10 +242,10 @@ private fun NetworkTransmit(
     networkTransmit: NetworkTransmit?,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
-    var transmissions by remember {
+    var transmissions by rememberSaveable(System.identityHashCode(networkTransmit)) {
         mutableFloatStateOf(networkTransmit?.count?.toFloat() ?: 0f)
     }
-    var interval by remember {
+    var interval by rememberSaveable(System.identityHashCode(networkTransmit)) {
         mutableFloatStateOf(networkTransmit?.interval?.toFloat() ?: 0f)
     }
     ElevatedCardItem(
@@ -256,7 +259,7 @@ private fun NetworkTransmit(
                 onValueChange = {
                     transmissions = it
                 },
-                valueRange = RelayRetransmit.COUNT_RANGE.toFloat(),
+                valueRange = NetworkTransmit.COUNT_RANGE.toFloat(),
                 steps = 6,
                 colors = NordicSliderDefaults.colors()
             )
@@ -266,16 +269,20 @@ private fun NetworkTransmit(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (networkTransmit) {
-                    null -> "Unknown"
-                    else -> "${transmissions.roundToInt()} transmission(s)"
+                    null -> stringResource(R.string.unknown)
+                    else -> pluralStringResource(
+                        R.plurals.label_transmissions_count,
+                        transmissions.roundToInt(),
+                        transmissions.roundToInt()
+                    )
                 },
                 textAlign = TextAlign.End
             )
             Slider(
-                enabled = transmissions > 0 && !messageState.isInProgress(),
+                enabled = transmissions > NetworkTransmit.MIN_COUNT && !messageState.isInProgress(),
                 value = interval,
                 onValueChange = { interval = it },
-                valueRange = RelayRetransmit.INTERVAL_RANGE.toFloat(),
+                valueRange = NetworkTransmit.INTERVAL_RANGE.toFloat(),
                 steps = 30,
                 colors = NordicSliderDefaults.colors()
             )
@@ -285,8 +292,8 @@ private fun NetworkTransmit(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (networkTransmit) {
-                    null -> "Unknown"
-                    else -> "${interval.roundToInt()} ms"
+                    null -> stringResource(R.string.unknown)
+                    else -> stringResource(R.string.label_time_ms, interval.roundToInt())
                 },
                 textAlign = TextAlign.End
             )
@@ -309,12 +316,12 @@ private fun NetworkTransmit(
                 onClick = {
                     send(
                         ConfigNetworkTransmitSet(
-                            count = transmissions.roundToInt().toUByte(),
-                            steps = NetworkTransmit.toSteps(interval.roundToInt().toUShort())
+                            count = transmissions.roundToInt(),
+                            interval = interval.roundToInt()
                         )
                     )
                 },
-                enabled = !messageState.isInProgress()
+                enabled = transmissions > 0 && !messageState.isInProgress()
             )
         }
     )

@@ -6,7 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
@@ -59,7 +58,6 @@ import kotlin.time.DurationUnit
 internal class NetworkManager internal constructor(
     private val manager: MeshNetworkManager,
 ) : NetworkManagerEventTransmitter {
-
     internal val scope: CoroutineScope = manager.scope
     internal var proxy: ProxyFilterEventHandler = manager.proxyFilter
 
@@ -99,10 +97,7 @@ internal class NetworkManager internal constructor(
     internal val incomingMeshMessages
         get() = _incomingMeshMessages.asSharedFlow()
 
-    private val _networkManagerEventFlow = MutableSharedFlow<NetworkManagerEvent>(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
+    private val _networkManagerEventFlow = MutableSharedFlow<NetworkManagerEvent>()
     override val networkManagerEventFlow
         get() = _networkManagerEventFlow.asSharedFlow()
 
@@ -115,7 +110,7 @@ internal class NetworkManager internal constructor(
         bearer?.pdus
             ?.onEach {
                 runCatching { handle(incomingPdu = it.data, type = it.type) }
-                    .onFailure {throwable ->
+                    .onFailure { throwable ->
                         logger?.e(LogCategory.BEARER) { "Bearer error: $throwable" }
                     }
             }?.launchIn(scope = scope)
@@ -126,8 +121,8 @@ internal class NetworkManager internal constructor(
      *
      * @param event Network manager event.
      */
-    override fun emitNetworkManagerEvent(event: NetworkManagerEvent) {
-        _networkManagerEventFlow.tryEmit(event)
+    override suspend fun emitNetworkManagerEvent(event: NetworkManagerEvent) {
+        _networkManagerEventFlow.emit(value = event)
     }
 
     /**
@@ -202,7 +197,7 @@ internal class NetworkManager internal constructor(
             throw it
         }
         .firstOrNull {
-            destination == it.address && responseOpcode == (it.message as? HasOpCode)?.opCode
+            destination == it.source && responseOpcode == (it.message as? HasOpCode)?.opCode
         }
 
     /**
@@ -359,7 +354,7 @@ internal class NetworkManager internal constructor(
             destination = destination,
             ttl = initialTtl,
             applicationKey = applicationKey,
-            retransmit = true
+            retransmit = false
         ).also {
             mutex.withLock { outgoingMessages.remove(destination) }
         }
@@ -459,7 +454,7 @@ internal class NetworkManager internal constructor(
      * @param message     Response message to be sent.
      * @param element     Source Element.
      */
-    fun reply(
+    suspend fun reply(
         origin: Address,
         message: MeshResponse,
         element: Element,
@@ -485,4 +480,16 @@ internal class NetworkManager internal constructor(
     }
 }
 
-internal data class ReceivedMessage(val address: MeshAddress, val message: BaseMeshMessage)
+/**
+ * Data class representing a received message, containing the source and destination addresses, and
+ * the message itself.
+ *
+ * @property source      Source address from which the message was received.
+ * @property destination Destination address to which the message is intended.
+ * @property message     Message that was received.
+ */
+internal data class ReceivedMessage(
+    val source: MeshAddress,
+    val destination: MeshAddress,
+    val message: BaseMeshMessage,
+)

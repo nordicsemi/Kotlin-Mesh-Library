@@ -19,7 +19,7 @@ class SimpleOnOffSetUnacknowledged(val isOn: Boolean) : UnacknowledgedVendorMess
     override val parameters
         get() = byteArrayOf(if (isOn) 0x01 else 0x00)
 
-    override fun toString() = "SimpleOnOffSet()"
+    override fun toString() = "SimpleOnOffSetUnacknowledged(isOn: $isOn)"
 
     companion object Initializer : GenericMessageInitializer {
         override val opCode = 0xC35900u

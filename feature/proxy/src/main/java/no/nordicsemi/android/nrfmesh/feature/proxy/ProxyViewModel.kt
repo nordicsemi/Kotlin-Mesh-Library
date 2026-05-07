@@ -4,10 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Completed
@@ -31,29 +32,31 @@ import javax.inject.Inject
 internal class ProxyViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
-    private var meshNetwork: MeshNetwork? = null
+    private lateinit var meshNetwork: MeshNetwork
     private val _uiState = MutableStateFlow(ProxyScreenUiState())
-    internal val uiState = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ProxyScreenUiState()
-        )
+    internal val uiState = _uiState.asStateFlow()
 
     init {
         observeNetwork()
     }
 
     private fun observeNetwork() {
-        repository.network.onEach { network ->
-            meshNetwork = network
-            _uiState.update { it.copy(meshNetworkState = MeshNetworkState.Success(network = network)) }
-        }.launchIn(scope = viewModelScope)
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach { network ->
+                meshNetwork = network
+                _uiState.update {
+                    it.copy(meshNetworkState = MeshNetworkState.Success(network = network))
+                }
+            }
+            .launchIn(scope = viewModelScope)
 
-        repository.proxyConnectionStateFlow.onEach { proxyConnectionState ->
-            println("Proxy connection state: $proxyConnectionState")
-            _uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
-        }.launchIn(scope = viewModelScope)
+        repository.proxyConnectionStateFlow
+            .onEach { proxyConnectionState ->
+                _uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
+            }
+            .launchIn(scope = viewModelScope)
 
         // Setup initial state
         _uiState.update {
@@ -63,43 +66,45 @@ internal class ProxyViewModel @Inject internal constructor(
             )
         }
 
-        repository.proxyFilter.proxyFilterStateFlow.onEach { state ->
-            when (state) {
-                is ProxyFilterState.ProxyFilterUpdated -> {
-                    val addresses = mutableListOf<ProxyFilterAddress>()
-                    addresses.addAll(state.addresses)
-                    _uiState.update {
-                        it.copy(
-                            filterType = state.type,
-                            addresses = state.addresses.toList(),
-                            isProxyLimitReached = false
-                        )
+        repository.proxyFilter.proxyFilterStateFlow
+            .onEach { state ->
+                when (state) {
+                    is ProxyFilterState.ProxyFilterUpdated -> {
+                        val addresses = mutableListOf<ProxyFilterAddress>()
+                        addresses.addAll(state.addresses)
+                        _uiState.update {
+                            it.copy(
+                                filterType = state.type,
+                                addresses = state.addresses.toList(),
+                                isProxyLimitReached = false
+                            )
+                        }
                     }
-                }
 
-                is ProxyFilterState.ProxyFilterLimitReached -> {
-                    _uiState.update {
-                        it.copy(
-                            filterType = state.type,
-                            isProxyLimitReached = true
-                        )
+                    is ProxyFilterState.ProxyFilterLimitReached -> {
+                        _uiState.update {
+                            it.copy(
+                                filterType = state.type,
+                                isProxyLimitReached = true
+                            )
+                        }
                     }
-                }
 
-                is ProxyFilterState.ProxyFilterUpdateAcknowledged -> {
-                    _uiState.update {
-                        it.copy(
-                            filterType = state.type,
-                            addresses = repository.proxyFilter.addresses.toList(),
-                        )
+                    is ProxyFilterState.ProxyFilterUpdateAcknowledged -> {
+                        _uiState.update {
+                            it.copy(
+                                filterType = state.type,
+                                addresses = repository.proxyFilter.addresses.toList(),
+                            )
+                        }
                     }
-                }
 
-                ProxyFilterState.Unknown -> {
+                    ProxyFilterState.Unknown -> {
 
+                    }
                 }
             }
-        }.launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
     }
 
     internal fun onAutoConnectToggled(enabled: Boolean) {
@@ -112,10 +117,7 @@ internal class ProxyViewModel @Inject internal constructor(
     }
 
     internal fun connect(result: ScanResult) {
-        viewModelScope.launch {
-            repository.disconnect()
-            repository.connectOverGattBearer(peripheral = result.peripheral)
-        }
+        repository.connect(peripheral = result.peripheral)
     }
 
     internal fun disconnect() {
@@ -129,13 +131,13 @@ internal class ProxyViewModel @Inject internal constructor(
 
     internal fun onBluetoothEnabled(enabled: Boolean) {
         if (enabled) {
-            repository.startAutomaticConnectivity(meshNetwork = meshNetwork)
+            repository.onBluetoothEnabled()
         }
     }
 
     internal fun onLocationEnabled(enabled: Boolean) {
         if (enabled) {
-            repository.startAutomaticConnectivity(meshNetwork = meshNetwork)
+            repository.onBluetoothEnabled()
         }
     }
 

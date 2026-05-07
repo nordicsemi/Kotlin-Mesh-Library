@@ -1,7 +1,6 @@
 package no.nordicsemi.kotlin.mesh.core.messages.generic
 
 import no.nordicsemi.kotlin.data.getShort
-import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.GenericMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
@@ -41,8 +40,10 @@ class GenericLevelStatus(
     @Suppress("unused")
     constructor(level: Short) : this(remainingTime = null, level = level, targetLevel = null)
 
-    override fun toString() = "GenericLevelStatus(isOn: $level, targetState: $targetLevel, " +
-            "remainingTime: $remainingTime)"
+    override fun toString() = "GenericLevelStatus(level: $level" +
+            if (targetLevel != null && remainingTime != null) {
+                ", targetState: $targetLevel, remainingTime: $remainingTime)"
+            } else ")"
 
     companion object Initializer : GenericMessageInitializer {
         override val opCode = 0x8208u

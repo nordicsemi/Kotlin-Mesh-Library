@@ -13,12 +13,10 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsListDetailSceneKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.key.NetworkKeyScreen
 import no.nordicsemi.android.nrfmesh.feature.network.keys.key.NetworkKeyViewModel
-import no.nordicsemi.kotlin.data.HexString
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 
 @Serializable
-data class NetworkKeyContentKey(val keyIndex: HexString) : NavKey {
-    constructor(keyIndex: KeyIndex) : this(keyIndex.toHexString())
+data class NetworkKeyContentKey(val keyIndex: KeyIndex) : NavKey {
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -28,10 +26,8 @@ fun EntryProviderScope<NavKey>.networkKeyEntry(appState: AppState, navigator: Na
             sceneKey = SettingsListDetailSceneKey
         )
     ) { key ->
-        val viewModel = hiltViewModel<NetworkKeyViewModel, NetworkKeyViewModel.Factory>(
-            key = "NetworkKeyViewModel:${key.keyIndex}"
-        ) { factory ->
-            factory.create(index = key.keyIndex)
+        val viewModel = hiltViewModel<NetworkKeyViewModel, NetworkKeyViewModel.Factory> { factory ->
+            factory.create(index = key.keyIndex.toInt())
         }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         NetworkKeyScreen(uiState = uiState, save = viewModel::save)

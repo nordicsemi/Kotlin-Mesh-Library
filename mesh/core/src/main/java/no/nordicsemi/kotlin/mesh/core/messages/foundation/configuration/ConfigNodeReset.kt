@@ -14,7 +14,7 @@ class ConfigNodeReset : AcknowledgedConfigMessage {
     override val responseOpCode = ConfigNodeResetStatus.opCode
     override val parameters = null
 
-    override fun toString() = "ConfigNodeReset(opCode: $opCode)"
+    override fun toString() = "ConfigNodeReset"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode: UInt = 0x8049u

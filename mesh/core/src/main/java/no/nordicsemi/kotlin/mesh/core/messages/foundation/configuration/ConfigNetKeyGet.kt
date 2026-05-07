@@ -19,12 +19,7 @@ class ConfigNetKeyGet : AcknowledgedConfigMessage {
 
     override val responseOpCode = ConfigNetKeyList.opCode
 
-    override fun toString() = "ConfigNetKeyGet(opCode: ${
-        opCode.toHexString(format = HexFormat {
-            number.prefix = "0x"
-            upperCase = true
-        })
-    })"
+    override fun toString() = "ConfigNetKeyGet"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8042u

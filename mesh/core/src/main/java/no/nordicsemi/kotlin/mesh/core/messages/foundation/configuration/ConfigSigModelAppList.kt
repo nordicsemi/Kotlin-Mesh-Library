@@ -30,7 +30,7 @@ class ConfigSigModelAppList(
         get() = byteArrayOf(status.value.toByte()) +
                 elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
                 modelId.modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                encode(indexes = applicationKeyIndexes.toTypedArray())
+                encode(indexes = applicationKeyIndexes)
     override val modelIdentifier: UShort = modelId.modelIdentifier
 
     /**

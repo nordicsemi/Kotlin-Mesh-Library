@@ -15,12 +15,12 @@ import no.nordicsemi.kotlin.mesh.core.model.NodeIdentityState
  * will be the response to this message.
  *
  * @property identity Node Identity state.
- * @property index Network key index.
+ * @property networkKeyIndex Network key index.
  * @property status Status of the message.
  */
 class ConfigNodeIdentityStatus(
     override val status: ConfigMessageStatus,
-    override val index: KeyIndex,
+    override val networkKeyIndex: KeyIndex,
     val identity: NodeIdentityState,
 ) : ConfigResponse, ConfigStatusMessage, ConfigNetKeyMessage {
     override val opCode = Initializer.opCode
@@ -30,15 +30,14 @@ class ConfigNodeIdentityStatus(
 
     constructor(request: ConfigNetKeyMessage) : this(
         status = ConfigMessageStatus.SUCCESS,
-        index = request.index,
+        networkKeyIndex = request.networkKeyIndex,
         // TODO Add support for Node Identity state
         identity = NodeIdentityState.NOT_SUPPORTED
     )
 
     @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String =
-        "ConfigNodeIdentityStatus(opCode: 0x${opCode.toHexString()}, status: $status, " +
-                "networkKeyIndex: $index, identity: $identity)"
+        "ConfigNodeIdentityStatus(status: $status, networkKeyIndex: $networkKeyIndex, identity: $identity)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8048u
@@ -49,7 +48,7 @@ class ConfigNodeIdentityStatus(
                 ConfigMessageStatus.from(params.first().toUByte())?.let {
                     ConfigNodeIdentityStatus(
                         status = it,
-                        index = decodeNetKeyIndex(params, 1),
+                        networkKeyIndex = decodeNetKeyIndex(params, 1),
                         identity = NodeIdentityState.from(params[3].toUByte())
                     )
                 }

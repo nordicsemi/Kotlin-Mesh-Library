@@ -10,10 +10,10 @@ nordicNexusPublishing {
     POM_NAME = "Provisioning in Bluetooth Mesh"
     POM_DESCRIPTION =
         "Provides a Provisioning related functionality in Bluetooth Mesh for the Kotlin Mesh Library."
-    POM_URL = "https://github.com/NordicSemiconductor/Kotlin-Mesh-Library"
-    POM_SCM_URL = "https://github.com/NordicSemiconductor/Kotlin-Mesh-Library"
-    POM_SCM_CONNECTION = "scm:git@github.com:NordicSemiconductor/Kotlin-Mesh-Library.git"
-    POM_SCM_DEV_CONNECTION = "scm:git@github.com:NordicSemiconductor/Kotlin-Mesh-Library.git"
+    POM_URL = "https://github.com/nordicsemi/Kotlin-Mesh-Library"
+    POM_SCM_URL = "https://github.com/nordicsemi/Kotlin-Mesh-Library"
+    POM_SCM_CONNECTION = "scm:git@github.com:nordicsemi/Kotlin-Mesh-Library.git"
+    POM_SCM_DEV_CONNECTION = "scm:git@github.com:nordicsemi/Kotlin-Mesh-Library.git"
 }
 
 dependencies {
