@@ -36,7 +36,7 @@ import java.nio.ByteOrder
  */
 class ConfigHeartbeatPublicationStatus(
     override val status: ConfigMessageStatus = ConfigMessageStatus.SUCCESS,
-    override val index: KeyIndex = 0u,
+    override val networkKeyIndex: KeyIndex = 0u,
     val destination: HeartbeatPublicationDestination = UnassignedAddress,
     val countLog: CountLog = 0x00u,
     val periodLog: UByte = 0x00u,
@@ -52,7 +52,7 @@ class ConfigHeartbeatPublicationStatus(
                 periodLog.toByte() +
                 ttl.toByte() +
                 features.toUShort().toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                index.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+                networkKeyIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     val count: RemainingHeartbeatPublicationCount
         get() = countLog.toRemainingPublicationCount()
@@ -77,7 +77,7 @@ class ConfigHeartbeatPublicationStatus(
         periodLog = publication?.periodLog ?: 0u,
         ttl = publication?.ttl ?: 0u,
         features = publication?.features ?: emptyList(),
-        index = publication?.index ?: 0u
+        networkKeyIndex = publication?.index ?: 0u
     )
 
     /**
@@ -92,7 +92,7 @@ class ConfigHeartbeatPublicationStatus(
         periodLog = request.periodLog,
         ttl = request.ttl,
         features = request.features,
-        index = request.index,
+        networkKeyIndex = request.networkKeyIndex,
         status = status
     )
 
@@ -107,13 +107,13 @@ class ConfigHeartbeatPublicationStatus(
         periodLog = request.periodLog,
         ttl = request.ttl,
         features = request.features,
-        index = request.index
+        networkKeyIndex = request.networkKeyIndex
     )
 
     override fun toString() = "ConfigHeartbeatPublicationStatus(destination: $destination, " +
-            "countLog: $countLog, periodLog: $periodLog, ttl: $ttl, features: {${
-                features.joinToString(separator = ", ") { it.toString() }
-            }}, " + "networkKeyIndex: $index, status: $status)"
+            "countLog: $countLog, periodLog: $periodLog, ttl: $ttl, features: ${
+                features.joinToString()
+            }, " + "networkKeyIndex: $networkKeyIndex, status: $status)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode: UInt = 0x06u
@@ -136,7 +136,7 @@ class ConfigHeartbeatPublicationStatus(
                             order = ByteOrder.LITTLE_ENDIAN
                         )
                     ).toList(),
-                    index = parameters.getUShort(
+                    networkKeyIndex = parameters.getUShort(
                         offset = 8,
                         order = ByteOrder.LITTLE_ENDIAN
                     )

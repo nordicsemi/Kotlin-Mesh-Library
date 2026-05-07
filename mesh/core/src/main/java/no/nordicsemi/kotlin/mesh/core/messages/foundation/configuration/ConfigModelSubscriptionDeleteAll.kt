@@ -25,15 +25,9 @@ class ConfigModelSubscriptionDeleteAll(
 ) : AcknowledgedConfigMessage, ConfigAnyModelMessage {
     override val opCode = Initializer.opCode
     override val responseOpCode = ConfigModelSubscriptionStatus.opCode
-    override val parameters: ByteArray
-        get() {
-            val data = byteArrayOf() +
-                    elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            return data.plus(elements = companyIdentifier?.let { companyIdentifier ->
-                companyIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                        modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            } ?: modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
-        }
+    override val parameters= elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            (companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN) ?: byteArrayOf()) +
+            modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     /**
      * Convenience constructor to create a ConfigModelSubscriptionAdd message.
@@ -52,8 +46,31 @@ class ConfigModelSubscriptionDeleteAll(
         companyIdentifier = (model.modelId as? VendorModelId)?.companyIdentifier,
     )
 
-    override fun toString() = "ConfigModelSubscriptionDeleteAll(elementAddress: $elementAddress, " +
-            "modelIdentifier: $modelIdentifier, companyIdentifier: $companyIdentifier)"
+    override fun toString() = "ConfigModelSubscriptionDeleteAll(" +
+            "elementAddress: $elementAddress, " +
+            "modelIdentifier: ${
+                modelIdentifier.toHexString(
+                    format = HexFormat {
+                        number {
+                            prefix = "0x"
+                            upperCase = true
+                        }
+                    }
+                )
+            }" +
+            if (companyIdentifier != null) {
+                ", companyIdentifier: ${
+                    companyIdentifier.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                upperCase = true
+                            }
+                        }
+                    )
+                }"
+            } else { "" } +
+            ")"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x801Du

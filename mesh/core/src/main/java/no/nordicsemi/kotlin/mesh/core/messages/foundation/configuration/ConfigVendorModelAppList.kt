@@ -27,12 +27,11 @@ class ConfigVendorModelAppList(
 ) : ConfigResponse, ConfigStatusMessage, ConfigModelAppList {
     override val opCode: UInt = Initializer.opCode
     override val modelIdentifier: UShort = modelId.modelIdentifier
-    override val parameters: ByteArray?
-        get() = byteArrayOf(status.value.toByte()) +
-                elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                modelId.modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                modelId.companyIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                encode(indexes = applicationKeyIndexes.toTypedArray())
+    override val parameters: ByteArray = byteArrayOf(status.value.toByte()) +
+            elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            modelId.modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            modelId.companyIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            encode(indexes = applicationKeyIndexes)
 
     /**
      * Convenience constructor to create the ConfigSigModelAppList message.
@@ -64,6 +63,7 @@ class ConfigVendorModelAppList(
 
 
     override fun toString() = "ConfigVendorModelAppList(" +
+            "status: $status, " +
             "applicationKeyIndexes: $applicationKeyIndexes, " +
             "elementAddress: $elementAddress, " +
             "modelId: $modelId)"

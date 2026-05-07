@@ -5,6 +5,7 @@ package no.nordicsemi.kotlin.mesh.core.layers.lowertransport
 import no.nordicsemi.kotlin.data.hasBitSet
 import no.nordicsemi.kotlin.data.shl
 import no.nordicsemi.kotlin.data.shr
+import no.nordicsemi.kotlin.data.ushr
 import no.nordicsemi.kotlin.mesh.core.exception.InvalidPdu
 import no.nordicsemi.kotlin.mesh.core.layers.network.NetworkPdu
 import no.nordicsemi.kotlin.mesh.core.layers.uppertransport.UpperTransportPdu
@@ -83,14 +84,7 @@ internal class SegmentedAccessMessage(
             }, " +
             "szmic: ${if (transportMicSize == 4.toUByte()) 0 else 1}, " +
             "seqZero: $sequenceZero, segO: $segmentOffset, segN: $lastSegmentNumber " +
-            "data: ${
-                upperTransportPdu.toHexString(
-                    format = HexFormat {
-                        number.prefix = "0x"
-                        upperCase = true
-                    }
-                )
-            })"
+            "data: 0x${upperTransportPdu.toHexString(format = HexFormat.UpperCase)})"
 
     internal companion object {
 
@@ -104,30 +98,34 @@ internal class SegmentedAccessMessage(
          * @throws InvalidPdu If the PDU is invalid.
          */
         fun init(pdu: NetworkPdu): SegmentedAccessMessage? {
+            val data = pdu.transportPdu
             // Minimum length of a Access Message is 6 bytes:
             // * 1 byte for SEG | AKF | AID
             // * 3 bytes for SZMIC | SeqZero | SegO | SegN
             // * At least 1 byte of segment payload
-            require(pdu.transportPdu.size >= 5) { return null /*throw InvalidPdu()*/ }
+            require(data.size >= 5) { return null }
 
             // Make sure the SEG is 0, that is the message is segmented.
-            require(pdu.transportPdu[0] hasBitSet 7) { return null /*throw InvalidPdu()*/ } // TODO Change exception?
+            require(data[0] hasBitSet 7) { return null }
 
-            val akf = pdu.transportPdu[0] hasBitSet 6
-            val aid = if (akf) pdu.transportPdu[0] and 0x3F else null
+            val akf = data[0] hasBitSet 6
+            val aid = if (akf) data[0] and 0x3F else null
 
-            val szmic = pdu.transportPdu[1] hasBitSet 7
+            val szmic = data[1] hasBitSet 7
             val transportMicSize: UByte = if (szmic) 8u else 4u
-            val sequenceZero = (pdu.transportPdu[1].toUShort() and 0x7Fu shl 6) or
-                    (pdu.transportPdu[2].toUShort() shr 2)
-            val segmentOffset = (pdu.transportPdu[2].toUByte() and 0x03u shl 3) or
-                    ((pdu.transportPdu[3].toUByte() and 0xE0u) shr 5)
-            val lastSegmentNumber = pdu.transportPdu[3].toUByte() and 0x1Fu
+            val sequenceZero = ((data[1] and 0x7F).toUShort() shl 6) or
+                    (data[2] ushr 2).toUShort()
+            val segmentOffset = ((data[2].toUByte() and 0x03u) shl 3) or
+                    ((data[3].toUByte() and 0xE0u) shr 5)
+            val lastSegmentNumber = data[3].toUByte() and 0x1Fu
 
             // Make sure SegO is less than or equal to SegN.
-            require(segmentOffset <= lastSegmentNumber) { return null /*throw InvalidPdu()*/ } // TODO Change exception?
+            require(segmentOffset <= lastSegmentNumber) { return null }
 
-            val upperTransportPdu = pdu.transportPdu.copyOfRange(4, pdu.transportPdu.size)
+            val upperTransportPdu = data.copyOfRange(
+                fromIndex = 4,
+                toIndex = data.size
+            )
             val sequence = (pdu.sequence and 0xFFE000u) or sequenceZero.toUInt()
             return SegmentedAccessMessage(
                 source = pdu.source,
@@ -159,12 +157,12 @@ internal class SegmentedAccessMessage(
             offset: UByte,
         ): SegmentedAccessMessage {
             val lowerBound = offset.toInt() * 12
-            val upperBound = min(pdu.transportPdu.size, (offset.toInt() + 1) * 12)
-            val segment = pdu.transportPdu.copyOfRange(lowerBound, upperBound)
+            val upperBound = min(a = pdu.transportPdu.size, b = (offset.toInt() + 1) * 12)
+            val segment = pdu.transportPdu.copyOfRange(fromIndex = lowerBound, toIndex = upperBound)
             return SegmentedAccessMessage(
                 message = pdu.message,
                 aid = pdu.aid,
-                source = MeshAddress.create(pdu.source),
+                source = MeshAddress.create(address = pdu.source),
                 destination = pdu.destination,
                 networkKey = networkKey,
                 ivIndex = pdu.ivIndex,

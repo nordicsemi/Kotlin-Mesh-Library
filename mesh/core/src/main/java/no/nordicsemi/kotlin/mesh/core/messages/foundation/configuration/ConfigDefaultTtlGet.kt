@@ -16,7 +16,7 @@ class ConfigDefaultTtlGet : AcknowledgedConfigMessage {
     override val responseOpCode = ConfigDefaultTtlStatus.opCode
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigDefaultTtlGet(opCode: 0x${opCode.toHexString()})"
+    override fun toString() = "ConfigDefaultTtlGet"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x800Cu

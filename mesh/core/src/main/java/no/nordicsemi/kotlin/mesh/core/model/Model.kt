@@ -18,7 +18,7 @@ import kotlin.uuid.ExperimentalUuidApi
  *                                                      vendor-defined model identifier.
  * @property subscribe                                  The subscribe property contains a list of
  *                                                      [MeshAddress].
- * @property publish                                    The publish property contains a [Publish]
+ * @property publish                                    Publish property contains a [Publish]
  *                                                      that describes the configuration of this
  *                                                      model’s publication.
  * @property bind                                       The bind property contains a list of
@@ -58,17 +58,17 @@ import kotlin.uuid.ExperimentalUuidApi
  *                                                      model.
  * @property isPrivateBeaconClient                      True if the model is a private beacon client
  *                                                      model.
- * @property isOnDemandPrivateProxyServer               True if the model is a on demand private
+ * @property isOnDemandPrivateProxyServer               True if the model is an on demand private
  *                                                      proxy server model.
- * @property isOnDemandPrivateProxyClient               True if the model is a on demand private
+ * @property isOnDemandPrivateProxyClient               True if the model is an on demand private
  *                                                      proxy client model.
  * @property isSarConfigurationServer                   True if the model is a SAR configuration
  *                                                      server model.
  * @property isSarConfigurationClient                   True if the model is a SAR configuration
  *                                                      client model.
- * @property isOpcodesAggregatorServer                  True if the model is a opcodes aggregator
+ * @property isOpcodesAggregatorServer                  True if the model is an opcodes aggregator
  *                                                      server model.
- * @property isOpcodesAggregatorClient                  True if the model is a opcodes aggregator
+ * @property isOpcodesAggregatorClient                  True if the model is an opcodes aggregator
  *                                                      client model.
  * @property isLargeCompositionDataServer               True if the model is a large composition
  *                                                      data server model.
@@ -83,7 +83,7 @@ import kotlin.uuid.ExperimentalUuidApi
  *                                                      Note: Models that operate on bound states
  *                                                      share a single subscription list per element.
  *                                                      Note: Model Extension is only defined for
- *                                                      SIG Models. Currently it is not possible to
+ *                                                      SIG Models. Currently, it is not possible to
  *                                                      get relationships between Vendor Models, and
  *                                                      for those this method returns an empty list.
  * @property baseModels                                 List of all base [Model]s extended by Model,
@@ -93,7 +93,7 @@ import kotlin.uuid.ExperimentalUuidApi
  *                                                      Note: Models that operate on bound states
  *                                                      share a single subscription list per element.
  *                                                      Note: Model Extension is only defined for
- *                                                      SIG Models. Currently it is not possible to
+ *                                                      SIG Models. Currently, it is not possible to
  *                                                      get relationships between Vendor Models, and
  *                                                      for those this method returns an empty list.
  * @property directExtendingModels                      List of [Model]s directly extending the
@@ -107,7 +107,7 @@ import kotlin.uuid.ExperimentalUuidApi
  *                                                      Note: Models that operate on bound states
  *                                                      share a single subscription list per element.
  *                                                      Note: Model Extension is only defined for
- *                                                      SIG Models. Currently it is not possible to
+ *                                                      SIG Models. Currently, it is not possible to
  *                                                      get relationships between Vendor Models, and
  *                                                      for those this method returns an empty list.
  * @property relatedModels                              Returns all [Model] insurances that are in a
@@ -118,7 +118,7 @@ import kotlin.uuid.ExperimentalUuidApi
  *                                                      Note: Models that operate on bound states
  *                                                      share a single subscription list per element.
  *                                                      Note: Model Extension is only defined for
- *                                                      SIG Models. Currently it is not possible to
+ *                                                      SIG Models. Currently, it is not possible to
  *                                                      get relationships between Vendor Models, and
  *                                                      for those this method returns an empty list.
  * @constructor Creates a model object.
@@ -440,7 +440,7 @@ class Model internal constructor(
                 // Models can't extend Models on Elements with higher index.
                 ?.filter { it.index < parentElement.index }
                 // Sort in reverse order so that unifying the list will
-                // remove those on Elements with lowest indexes.
+                // remove those on Elements with the lowest indexes.
                 ?.sortedByDescending { it.index }
                 // Get a list of all models.
                 ?.flatMap { it.models }
@@ -547,6 +547,16 @@ class Model internal constructor(
     internal fun bind(index: KeyIndex) = when (bind.contains(element = index)) {
         true -> false
         else -> _bind.add(index)
+    }
+
+    /**
+     * Assigns the application keys bound to this Model. This is invoked when handling
+     * ConfigModelAppList messages
+     *
+     * @param indexes bound application key indexes
+     */
+    internal fun bind(indexes: List<KeyIndex>) {
+        _bind = indexes.toMutableList()
     }
 
     /**
@@ -683,7 +693,7 @@ class Model internal constructor(
      * Note: Models in Extend relationship share their Subscription List if they are on the same
      * Element.
      *
-     * Note: Model extension is only defined for SIG Models. Currently it is not possible to get
+     * Note: Model extension is only defined for SIG Models. Currently, it is not possible to get
      * relationships between Vendor Models and will always return false.
      *
      * @param model Model to check if this model extends.
@@ -711,7 +721,7 @@ class Model internal constructor(
      * Note: Models in Extend relationship share their Subscription List if they are ont eh same
      * Element.
      *
-     * Note: Model extension is only defined for SIG Models. Currently it is not possible ot get
+     * Note: Model extension is only defined for SIG Models. Currently, it is not possible ot get
      * relationships between Vendor Models and will always return false.
      *
      * @param model Model to check if this model extends.
@@ -1064,7 +1074,7 @@ class Model internal constructor(
                 groups.any { group -> group.address == address }
             }
 
-            // Copy the publish settings if
+            // Copy publish settings if
             // - it exists
             // - is configured to use one of the exported Application Keys
             // - The destination addresses is an exported Node, an exported Group or a special group

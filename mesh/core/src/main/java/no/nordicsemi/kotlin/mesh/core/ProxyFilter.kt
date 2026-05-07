@@ -394,7 +394,7 @@ class ProxyFilter internal constructor(
     override suspend fun onNewProxyConnected() {
         scope.launch {
             onNewNetworkCreated()
-            logger?.i(LogCategory.PROXY) { "New Proxy connected." }
+            logger?.i(LogCategory.PROXY) { "New Proxy connected" }
             manager.network?.localProvisioner?.let { provisioner ->
                 when (initializeState) {
                     ProxyFilterSetup.AUTOMATIC -> setup(provisioner = provisioner)

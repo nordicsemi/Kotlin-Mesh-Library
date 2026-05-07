@@ -20,7 +20,7 @@ class AddAddressesToFilter(
     override val parameters: ByteArray
         get() {
             var byteArray = ByteArray(0)
-            // Send addresses sorted. The primary element will be added as a the first one, in case
+            // Send addresses sorted. The primary element will be added as the first one, in case
             // the Proxy Filter supports only on address.
             addresses.sortedBy { it.address }.forEach {
                 byteArray += it.address.toByteArray()
@@ -28,8 +28,10 @@ class AddAddressesToFilter(
             return byteArray
         }
 
-    override fun toString() = "AddAddressesToFilter(opCode: $opCode, " +
-            "addresses:${addresses.joinToString(separator = ", ")})"
+    override fun toString() =
+        "AddAddressesToFilter(addresses: [${
+            addresses.joinToString { it.toHexString() }
+        }])"
 
     companion object Initializer : ProxyConfigurationMessageInitializer {
         override val opCode: UByte = 0x01u

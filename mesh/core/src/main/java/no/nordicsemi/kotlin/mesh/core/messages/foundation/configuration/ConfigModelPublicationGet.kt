@@ -21,18 +21,11 @@ data class ConfigModelPublicationGet(
     override val modelIdentifier: UShort,
     override val companyIdentifier: UShort?
 ) : AcknowledgedConfigMessage, ConfigAnyModelMessage {
-
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = ConfigModelPublicationStatus.opCode
-
-    override val parameters: ByteArray
-        get() {
-            var data = elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            data += companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-                ?.plus(modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
-                ?: modelIdentifier.toByteArray(ByteOrder.LITTLE_ENDIAN)
-            return data
-        }
+    override val parameters = elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            (companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN) ?: byteArrayOf()) +
+            modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     /**
      * Convenience constructor to create the ConfigModelPublicationGet message.
@@ -50,6 +43,32 @@ data class ConfigModelPublicationGet(
         },
         companyIdentifier = (model.modelId as? VendorModelId)?.companyIdentifier
     )
+
+    override fun toString() = "ConfigModelPublicationGet(" +
+            "elementAddress: ${elementAddress.address}, " +
+            "modelIdentifier: ${
+                modelIdentifier.toHexString(
+                    format = HexFormat {
+                        number {
+                            prefix = "0x"
+                            upperCase = true
+                        }
+                    }
+                )
+            }" +
+            if (companyIdentifier != null) {
+                ", companyIdentifier: ${
+                    companyIdentifier.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                upperCase = true
+                            }
+                        }
+                    )
+                }"
+            } else { "" } +
+            ")"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode: UInt = 0x8018u

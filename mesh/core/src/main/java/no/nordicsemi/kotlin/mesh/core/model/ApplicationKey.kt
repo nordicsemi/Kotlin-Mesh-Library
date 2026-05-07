@@ -39,7 +39,7 @@ data class ApplicationKey internal constructor(
     var name: String
         get() = _name
         set(value) {
-            require(value.isNotBlank()) { "Name cannot be empty." }
+            require(value.isNotBlank()) { "Name cannot be empty" }
             onChange(oldValue = _name, newValue = value) { network?.updateTimestamp() }
             _name = value
         }
@@ -51,7 +51,7 @@ data class ApplicationKey internal constructor(
     @SerialName("boundNetKey")
     internal var boundNetKeyIndex: KeyIndex = 0u
         set(value) {
-            require(value.isValidKeyIndex()) { "Key index must be in range from 0 to 4095." }
+            require(value.isValidKeyIndex()) { "Key index must be in range from 0 to 4095" }
             onChange(oldValue = field, newValue = value) { network?.updateTimestamp() }
             field = value
         }
@@ -59,7 +59,7 @@ data class ApplicationKey internal constructor(
     var key: ByteArray
         get() = _key
         internal set(value) {
-            require(value.size == 16) { "Key must be 16-bytes long." }
+            require(value.size == 16) { "Key must be 16-bytes long" }
             onChange(oldValue = _key, newValue = value) {
                 oldKey = _key
                 oldAid = aid
@@ -99,7 +99,7 @@ data class ApplicationKey internal constructor(
         } ?: false
 
     init {
-        require(index.isValidKeyIndex()) { "Key index must be in range from 0 to 4095." }
+        require(index.isValidKeyIndex()) { "Key index must be in range from 0 to 4095" }
         regenerateKeyDerivatives()
     }
 

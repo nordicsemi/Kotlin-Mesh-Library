@@ -27,7 +27,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,28 +52,28 @@ import kotlinx.coroutines.CoroutineScope
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemHexTextField
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
-import no.nordicsemi.android.nrfmesh.core.ui.MeshSingleLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.showSnackbar
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.provisioning.AuthenticationMethod
+import no.nordicsemi.kotlin.mesh.provisioning.ProvisioningCapabilities
 import no.nordicsemi.kotlin.mesh.provisioning.ProvisioningParameters
-import no.nordicsemi.kotlin.mesh.provisioning.ProvisioningState
 import no.nordicsemi.kotlin.mesh.provisioning.UnprovisionedDevice
 
 @Composable
 internal fun DeviceCapabilities(
-    state: ProvisioningState.CapabilitiesReceived,
+    capabilities: ProvisioningCapabilities,
+    networkKeys: List<NetworkKey>,
+    parameters: ProvisioningParameters,
     snackbarHostState: SnackbarHostState,
     unprovisionedDevice: UnprovisionedDevice,
-    networkKeys: List<NetworkKey>,
     showAuthenticationBottomSheet: Boolean,
     onAuthenticationBottomSheetDismissed: (Boolean) -> Unit,
     onNameChanged: (String) -> Unit,
-    onAddressChanged: (ProvisioningParameters, Int, Int) -> Unit,
-    isValidAddress: (UShort) -> Boolean,
+    onAddressChanged: (Address) -> Unit,
+    isValidAddress: (Address) -> Boolean,
     onNetworkKeyClicked: (NetworkKey) -> Unit,
     onAuthenticationMethodSelected: (AuthenticationMethod) -> Unit,
 ) {
@@ -101,9 +100,9 @@ internal fun DeviceCapabilities(
             scope = scope,
             snackbarHostState = snackbarHostState,
             keyboardController = keyboardController,
-            address = state.parameters.unicastAddress!!.address,
+            address = parameters.unicastAddress.address,
             onAddressChanged = {
-                onAddressChanged(state.parameters, state.capabilities.numberOfElements, it)
+                onAddressChanged(it)
             },
             isValidAddress = isValidAddress,
             isCurrentlyEditable = isCurrentlyEditable,
@@ -111,7 +110,7 @@ internal fun DeviceCapabilities(
         )
         NetworkKeyRow(
             networkKeys = networkKeys,
-            networkKey = state.parameters.networkKey,
+            networkKey = parameters.networkKey,
             onNetworkKeyClick = onNetworkKeyClicked
         )
         SectionTitle(
@@ -120,44 +119,44 @@ internal fun DeviceCapabilities(
         )
         ElementsRow(
             title = stringResource(R.string.label_element_count),
-            subtitle = "${state.capabilities.numberOfElements}"
+            subtitle = "${capabilities.numberOfElements}"
         )
         SupportedAlgorithmsRow(
             title = stringResource(R.string.label_supported_algorithms),
-            subtitle = state.capabilities.algorithms
+            subtitle = capabilities.algorithms
                 .joinToString(separator = "\n")
                 .ifEmpty { "None" }
         )
         PublicKeyTypeRow(
             title = stringResource(R.string.label_public_key_type),
-            subtitle = state.capabilities.publicKeyType
-                .joinToString(separator = ", ")
+            subtitle = capabilities.publicKeyType
+                .joinToString()
                 .ifEmpty { "None" }
         )
         StaticOobTypeRow(
             title = stringResource(R.string.label_static_oob_type),
-            subtitle = state.capabilities.oobTypes
-                .joinToString(separator = ", ")
+            subtitle = capabilities.oobTypes
+                .joinToString()
                 .ifEmpty { "None" }
         )
         OutputOobSizeRow(
             title = stringResource(R.string.label_output_oob_size),
-            subtitle = "${state.capabilities.outputOobSize}"
+            subtitle = "${capabilities.outputOobSize}"
         )
         OutputOobActionsRow(
             title = stringResource(R.string.label_output_oob_actions),
-            subtitle = state.capabilities.outputOobActions
-                .joinToString(separator = ", ")
+            subtitle = capabilities.outputOobActions
+                .joinToString()
                 .ifEmpty { "None" }
         )
         InputOobSizeRow(
             title = stringResource(R.string.label_input_oob_size),
-            subtitle = "${state.capabilities.inputOobSize}"
+            subtitle = "${capabilities.inputOobSize}"
         )
         InputOobActionsRow(
             title = stringResource(R.string.label_input_oob_actions),
-            subtitle = state.capabilities.inputOobActions
-                .joinToString(separator = ", ")
+            subtitle = capabilities.inputOobActions
+                .joinToString()
                 .ifBlank { "None" }
         )
         Spacer(modifier = Modifier.size(size = 16.dp))
@@ -165,7 +164,7 @@ internal fun DeviceCapabilities(
 
     if (showAuthenticationBottomSheet) {
         AuthSelectionBottomSheet(
-            capabilities = state.capabilities,
+            capabilities = capabilities,
             onConfirmClicked = { onAuthenticationMethodSelected(it) },
             onDismissRequest = { onAuthenticationBottomSheetDismissed(false) },
         )
@@ -199,7 +198,7 @@ private fun UnicastAddressRow(
     snackbarHostState: SnackbarHostState,
     keyboardController: SoftwareKeyboardController?,
     address: Address = UnicastAddress(1u).address,
-    onAddressChanged: (Int) -> Unit,
+    onAddressChanged: (Address) -> Unit,
     isValidAddress: (UShort) -> Boolean,
     isCurrentlyEditable: Boolean,
     onEditableStateChanged: () -> Unit,
@@ -217,7 +216,7 @@ private fun UnicastAddressRow(
             if (it.isNotEmpty()) {
                 runCatching {
                     isError = !isValidAddress(it.toUShort(16))
-                    onAddressChanged(it.toInt(radix = 16))
+                    onAddressChanged(it.toUShort(radix = 16))
                 }.onFailure { throwable ->
                     supportingErrorText = throwable.message ?: ""
                     isError = true
@@ -258,55 +257,54 @@ private fun NetworkKeyRow(
         modifier = Modifier.padding(horizontal = 16.dp),
         expanded = isExpanded,
         onExpandedChange = { isExpanded = it },
-        content = {
-            ElevatedCardItem(
-                modifier = Modifier
-                    .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-                imageVector = Icons.Outlined.VpnKey,
-                title = stringResource(R.string.label_network_key),
-                titleAction = {
-                    IconButton(
-                        modifier = Modifier.rotate(if (isExpanded) 180f else 0f),
-                        onClick = { isExpanded = true },
-                        content = {
-                            Icon(
-                                imageVector = Icons.Outlined.ArrowDropDown,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    )
-                },
-                subtitle = name
-            )
-            DropdownMenu(
-                modifier = Modifier.exposedDropdownSize(),
-                expanded = isExpanded,
-                onDismissRequest = { isExpanded = false }
-            ) {
-                networkKeys.forEachIndexed { index, key ->
-                    DropdownMenuItem(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                        text = {
-                            MeshSingleLineListItem(
-                                imageVector = Icons.Outlined.VpnKey,
-                                title = key.name
-                            )
-                        },
-                        onClick = {
-                            name = key.name
-                            onNetworkKeyClick(key)
-                            isExpanded = false
-                        }
-                    )
-                    if (index < networkKeys.size - 1) {
-                        HorizontalDivider()
+    ) {
+        ElevatedCardItem(
+            modifier = Modifier
+                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            imageVector = Icons.Outlined.VpnKey,
+            title = stringResource(R.string.label_network_key),
+            titleAction = {
+                IconButton(
+                    modifier = Modifier.rotate(if (isExpanded) 180f else 0f),
+                    onClick = { isExpanded = true },
+                    content = {
+                        Icon(
+                            imageVector = Icons.Outlined.ArrowDropDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
-                }
+                )
+            },
+            subtitle = name
+        )
+        DropdownMenu(
+            modifier = Modifier.exposedDropdownSize(),
+            expanded = isExpanded,
+            onDismissRequest = { isExpanded = false }
+        ) {
+            networkKeys.forEachIndexed { index, key ->
+                DropdownMenuItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.VpnKey,
+                            contentDescription = null
+                        )
+                    },
+                    text = {
+                        Text(text = key.name)
+                    },
+                    onClick = {
+                        name = key.name
+                        onNetworkKeyClick(key)
+                        isExpanded = false
+                    }
+                )
             }
         }
-    )
+    }
 }
 
 @Composable

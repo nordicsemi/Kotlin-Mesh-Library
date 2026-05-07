@@ -11,34 +11,31 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ActivityRetainedScoped
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
-
+import javax.inject.Singleton
 
 private const val USER_PREFERENCES = "user_preferences"
 
-@InstallIn(ActivityRetainedComponent::class)
+@InstallIn(SingletonComponent::class)
 @Module
 object DataStoreModule {
 
-    @ActivityRetainedScoped
+    @Singleton
     @Provides
     fun providePreferencesDataStore(
         @ApplicationContext appContext: Context,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-    ): DataStore<Preferences> {
-        return PreferenceDataStoreFactory.create(
-            corruptionHandler = ReplaceFileCorruptionHandler(
-                produceNewData = { emptyPreferences() }
-            ),
-            migrations = listOf(SharedPreferencesMigration(appContext, USER_PREFERENCES)),
-            scope = CoroutineScope(context = SupervisorJob() + ioDispatcher),
-            produceFile = { appContext.preferencesDataStoreFile(USER_PREFERENCES) }
-        )
-    }
+    ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+        corruptionHandler = ReplaceFileCorruptionHandler(
+            produceNewData = { emptyPreferences() }
+        ),
+        migrations = listOf(SharedPreferencesMigration(appContext, USER_PREFERENCES)),
+        scope = CoroutineScope(context = SupervisorJob() + ioDispatcher),
+        produceFile = { appContext.preferencesDataStoreFile(USER_PREFERENCES) }
+    )
 }

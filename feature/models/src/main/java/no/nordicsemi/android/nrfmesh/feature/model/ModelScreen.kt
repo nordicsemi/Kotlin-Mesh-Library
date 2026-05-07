@@ -8,18 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddLink
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -31,11 +21,9 @@ import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
-import no.nordicsemi.android.nrfmesh.core.data.models.ModelData
-import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
-import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.BindAppKeysScreen
+import no.nordicsemi.android.nrfmesh.feature.model.common.BoundApplicationKeys
 import no.nordicsemi.android.nrfmesh.feature.model.common.CommonInformation
 import no.nordicsemi.android.nrfmesh.feature.model.common.Publication
 import no.nordicsemi.android.nrfmesh.feature.model.common.Subscriptions
@@ -49,7 +37,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 @Composable
@@ -57,14 +44,13 @@ internal fun ModelScreen(
     snackbarHostState: SnackbarHostState,
     messageState: MessageState,
     nodeIdentityStates: List<NodeIdentityStatus>,
-    modelState: ModelState,
+    modelState: ModelState.Success,
     send: (AcknowledgedConfigMessage) -> Unit,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
     requestNodeIdentityStates: (Model) -> Unit,
     resetMessageState: () -> Unit,
     onAddGroupClicked: () -> Unit,
     navigateToGroups: () -> Unit,
-    navigateToConfigApplicationKeys: (Uuid) -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
     // to show up. This is a known issue and the workaround is to make the column focusable to
@@ -73,174 +59,100 @@ internal fun ModelScreen(
     // The reason for applying to the parent composable is to avoid scrolling directly to the
     // TextField when focused.
     // See issue: https://issuetracker.google.com/issues/445720462
-    when (modelState) {
-        is ModelState.Success -> {
-            val model = modelState.model
-            Column(
-                modifier = Modifier
-                    .verticalScroll(state = rememberScrollState())
-                    .focusable(),
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-            ) {
-                SectionTitle(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .padding(horizontal = 16.dp),
-                    title = stringResource(R.string.label_model)
-                )
-                CommonInformation(model = model)
-                if (model.isConfigurationServer) {
-                    ConfigurationServer(
-                        snackbarHostState = snackbarHostState,
-                        messageState = messageState,
-                        model = model,
-                        nodeIdentityStates = nodeIdentityStates,
-                        send = send,
-                        requestNodeIdentityStates = requestNodeIdentityStates,
-                        onAddGroupClicked = onAddGroupClicked,
-                    )
-                }
-                if (model.supportsModelPublication != false && model.supportsModelSubscription != false) {
-                    BoundApplicationKeys(
-                        model = model,
-                        navigateToConfigApplicationKeys = navigateToConfigApplicationKeys,
-                        send = send
-                    )
-                }
-                if (model.supportsModelPublication != false) {
-                    Publication(
-                        messageState = messageState,
-                        model = model,
-                        send = send
-                    )
-                }
-                if (model.supportsModelSubscription != false) {
-                    Subscriptions(
-                        snackbarHostState = snackbarHostState,
-                        messageState = messageState,
-                        model = model,
-                        navigateToGroups = navigateToGroups,
-                        send = send
-                    )
-                }
-                if (model.isGenericOnOffServer()) {
-                    GenericOnOffServer(
-                        model = model,
-                        messageState = messageState,
-                        sendApplicationMessage = sendApplicationMessage
-                    )
-                }
-                if (model.isGenericLevelServer()) {
-                    GenericLevelServer(
-                        model = model,
-                        messageState = messageState,
-                        sendApplicationMessage = sendApplicationMessage
-                    )
-                }
+    val model = modelState.model
+    Column(
+        modifier = Modifier
+            .verticalScroll(state = rememberScrollState())
+            .focusable(),
+        verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+    ) {
+        SectionTitle(
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .padding(horizontal = 16.dp),
+            title = stringResource(R.string.label_model)
+        )
+        CommonInformation(model = model)
+        if (model.isConfigurationServer) {
+            ConfigurationServer(
+                snackbarHostState = snackbarHostState,
+                messageState = messageState,
+                model = model,
+                nodeIdentityStates = nodeIdentityStates,
+                send = send,
+                requestNodeIdentityStates = requestNodeIdentityStates,
+                onAddGroupClicked = onAddGroupClicked,
+            )
+        }
+        if (model.supportsModelPublication != false && model.supportsModelSubscription != false) {
+            BoundApplicationKeys(
+                model = model,
+                messageState = messageState,
+                send = send
+            )
+        }
+        if (model.supportsModelPublication != false) {
+            Publication(
+                messageState = messageState,
+                model = model,
+                send = send
+            )
+        }
+        if (model.supportsModelSubscription != false) {
+            Subscriptions(
+                snackbarHostState = snackbarHostState,
+                messageState = messageState,
+                model = model,
+                navigateToGroups = navigateToGroups,
+                send = send
+            )
+        }
+        if (model.isGenericOnOffServer()) {
+            GenericOnOffServer(
+                model = model,
+                messageState = messageState,
+                sendApplicationMessage = sendApplicationMessage
+            )
+        }
+        if (model.isGenericLevelServer()) {
+            GenericLevelServer(
+                model = model,
+                messageState = messageState,
+                sendApplicationMessage = sendApplicationMessage
+            )
+        }
 
-                if (model.isVendorModel()) {
-                    VendorModelControls(
-                        model = model,
-                        messageState = messageState,
-                        sendApplicationMessage = sendApplicationMessage
-                    )
-                }
-                Spacer(modifier = Modifier.size(size = 8.dp))
-            }
+        if (model.isVendorModel()) {
+            VendorModelControls(
+                model = model,
+                messageState = messageState,
+                sendApplicationMessage = sendApplicationMessage
+            )
+        }
+        Spacer(modifier = Modifier.size(size = 8.dp))
+    }
 
-            when (messageState) {
-                is Failed -> MeshMessageStatusDialog(
-                    text = messageState.error.describe(),
-                    showDismissButton = !messageState.didFail(),
+    when (messageState) {
+        is Failed -> MeshMessageStatusDialog(
+            text = messageState.error.describe(),
+            showDismissButton = !messageState.didFail(),
+            onDismissRequest = resetMessageState,
+        )
+
+        is Completed -> {
+            messageState.response?.takeIf {
+                (it is ConfigStatusMessage && !it.isSuccess)
+            }?.let {
+                MeshMessageStatusDialog(
+                    text = (messageState.response as ConfigStatusMessage).message,
+                    showDismissButton = true,
                     onDismissRequest = resetMessageState,
                 )
-
-                is Completed -> {
-                    messageState.response?.takeIf {
-                        (it is ConfigStatusMessage && !it.isSuccess)
-                    }?.let {
-                        MeshMessageStatusDialog(
-                            text = (messageState.response as ConfigStatusMessage).message,
-                            showDismissButton = true,
-                            onDismissRequest = resetMessageState,
-                        )
-                    }
-                }
-
-                else -> {
-
-                }
             }
         }
 
-        else -> {}
-    }
-}
+        else -> {
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
-@Composable
-internal fun BoundApplicationKeys(
-    model: Model,
-    navigateToConfigApplicationKeys: (Uuid) -> Unit,
-    send: (AcknowledgedConfigMessage) -> Unit,
-) {
-    val bottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = model.boundApplicationKeys.isEmpty()
-    )
-    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.AddLink,
-        title = stringResource(R.string.label_bind_application_keys),
-        subtitle = "${model.boundApplicationKeys.size} key(s) are bound",
-        onClick = { showBottomSheet = !showBottomSheet }
-    )
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            containerColor = MaterialTheme.colorScheme.surface,
-            sheetState = bottomSheetState,
-            onDismissRequest = { showBottomSheet = !showBottomSheet },
-            content = {
-                BindAppKeysScreen(
-                    model = model,
-                    send = send,
-                    navigateToConfigApplicationKeys = navigateToConfigApplicationKeys
-                )
-            }
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
-@Composable
-internal fun BoundApplicationKeys(
-    model: Model,
-    modelData: ModelData,
-    navigateToConfigApplicationKeys: (Uuid) -> Unit,
-    send: (AcknowledgedConfigMessage) -> Unit,
-) {
-    val bottomSheetState =
-        rememberModalBottomSheetState(skipPartiallyExpanded = modelData.boundApplicationKeys.isEmpty())
-    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.AddLink,
-        title = stringResource(R.string.label_bind_application_keys),
-        subtitle = "${modelData.boundApplicationKeys.size} key(s) are bound",
-        onClick = { showBottomSheet = !showBottomSheet }
-    )
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            containerColor = MaterialTheme.colorScheme.surface,
-            sheetState = bottomSheetState,
-            onDismissRequest = { showBottomSheet = !showBottomSheet },
-            content = {
-                BindAppKeysScreen(
-                    model = model,
-                    send = send,
-                    navigateToConfigApplicationKeys = navigateToConfigApplicationKeys
-                )
-            }
-        )
+        }
     }
 }

@@ -7,6 +7,7 @@ import no.nordicsemi.kotlin.mesh.core.ModelError
 import no.nordicsemi.kotlin.mesh.core.ModelEvent
 import no.nordicsemi.kotlin.mesh.core.ModelEventHandler
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.ConfigModelAppList
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigModelSubscriptionList
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigNetKeyMessage
 import no.nordicsemi.kotlin.mesh.core.messages.HasInitializer
@@ -68,7 +69,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Relay
 import no.nordicsemi.kotlin.mesh.core.model.RelayRetransmit
 import no.nordicsemi.kotlin.mesh.core.model.SubscriptionAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
-import kotlin.run
 
 /**
  * ConfigurationClientHandler class handles the configuration messages sent from the provisioner
@@ -158,9 +158,9 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
             is ConfigNetKeyStatus -> if (response.isSuccess) {
                 node(address = source)?.apply {
                     when (request as ConfigNetKeyMessage) {
-                        is ConfigNetKeyAdd -> addNetKey(response.index)
-                        is ConfigNetKeyDelete -> removeNetKey(response.index)
-                        is ConfigNetKeyUpdate -> updateNetKey(response.index)
+                        is ConfigNetKeyAdd -> addNetKey(response.networkKeyIndex)
+                        is ConfigNetKeyDelete -> removeNetKey(response.networkKeyIndex)
+                        is ConfigNetKeyUpdate -> updateNetKey(response.networkKeyIndex)
                     }
                 }
             }
@@ -172,28 +172,37 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
             // Application Keys Management
             is ConfigAppKeyStatus -> if (response.isSuccess) node(address = source)?.apply {
                 when (request as ConfigNetKeyMessage) {
-                    is ConfigAppKeyAdd -> addAppKey(index = response.keyIndex)
-                    is ConfigAppKeyUpdate -> updateAppKey(index = response.keyIndex)
-                    is ConfigAppKeyDelete -> removeAppKey(response.keyIndex)
+                    is ConfigAppKeyAdd -> addAppKey(index = response.applicationKeyIndex)
+                    is ConfigAppKeyUpdate -> updateAppKey(index = response.applicationKeyIndex)
+                    is ConfigAppKeyDelete -> removeAppKey(response.applicationKeyIndex)
                 }
             }
 
             is ConfigAppKeyList -> node(address = source)?.apply {
                 setAppKeys(
                     appKeyIndexes = response.applicationKeyIndexes.toList(),
-                    netKeyIndex = response.index
+                    netKeyIndex = response.networkKeyIndex
                 )
             }
 
             is ConfigModelAppStatus -> if (response.isSuccess) {
                 node(address = source)
                     ?.element(address = response.elementAddress)
-                    ?.model(modelId = response.modelId)?.let {
+                    ?.model(modelId = response.modelId)
+                    ?.let {
                         when (request) {
-                            is ConfigModelAppBind -> it.bind(index = request.keyIndex)
-                            is ConfigModelAppUnbind -> it.unbind(index = request.keyIndex)
+                            is ConfigModelAppBind -> it.bind(index = request.applicationKeyIndex)
+                            is ConfigModelAppUnbind -> it.unbind(index = request.applicationKeyIndex)
                         }
                     }
+            }
+
+            is ConfigModelAppList -> if (response.isSuccess) {
+                node(address = source)
+                    ?.element(address = response.elementAddress)
+                    ?.model(modelId = response.modelId)
+                    ?.bind(indexes = response.applicationKeyIndexes)
+                    .also { updateTimestamp() }
             }
 
             is ConfigModelPublicationStatus -> if (response.isSuccess) {

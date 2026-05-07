@@ -7,7 +7,6 @@ import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.hasBitCleared
 import no.nordicsemi.kotlin.data.or
 import no.nordicsemi.kotlin.data.shl
-import no.nordicsemi.kotlin.data.toHexString
 import no.nordicsemi.kotlin.mesh.core.layers.uppertransport.UpperTransportPdu
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessageSecurity
@@ -49,14 +48,22 @@ internal data class AccessPdu(
         } ?: 0
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "Access PDU (opCode: " +
-            "${
+    override fun toString() = "Access PDU (" +
+            "opCode: ${
                 opCode.toHexString(format = HexFormat {
-                    number.prefix = "0x"
-                    upperCase = true
+                    number {
+                        prefix = "0x"
+                        minLength = 2
+                        removeLeadingZeros = true
+                        upperCase = true
+                    }
                 })
-            }, " +
-            "parameters: ${parameters.toHexString(prefixOx = true, format = HexFormat.UpperCase)})"
+            }" + (
+                parameters
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { ", parameters: 0x${parameters.toHexString(HexFormat.UpperCase)})"}
+                    ?: ")"
+            )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -193,7 +200,14 @@ internal data class AccessPdu(
 
                     else ->
                         throw IllegalArgumentException(
-                            "Invalid opCode: 0x${opCode.toHexString()}"
+                            "Invalid opCode: ${
+                                opCode.toHexString(
+                                    format = HexFormat {
+                                        number.prefix = "0x"
+                                        upperCase = true
+                                    }
+                                )
+                            }"
                         )
                 } + parameters
             )

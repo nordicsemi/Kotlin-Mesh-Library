@@ -3,7 +3,6 @@ package no.nordicsemi.android.nrfmesh.feature.nodes.node
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Badge
@@ -22,7 +23,6 @@ import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FormatListNumbered
-import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.QrCode
@@ -47,10 +47,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -80,14 +79,9 @@ import no.nordicsemi.android.nrfmesh.feature.nodes.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigDefaultTtlGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigDefaultTtlSet
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigGattProxyGet
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigGattProxySet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeReset
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeResetStatus
 import no.nordicsemi.kotlin.mesh.core.model.Address
-import no.nordicsemi.kotlin.mesh.core.model.FeatureState
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import no.nordicsemi.kotlin.mesh.core.model.Proxy
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 import java.util.Locale.ROOT
@@ -127,134 +121,91 @@ internal fun NodeScreen(
         onRefresh = onRefresh,
         isRefreshing = isRefreshing
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 8.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(state = rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(space = 8.dp),
         ) {
-            item {
-                SectionTitle(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .padding(horizontal = 16.dp),
-                    title = stringResource(R.string.label_node)
-                )
+            SectionTitle(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .padding(horizontal = 16.dp),
+                title = stringResource(R.string.label_node)
+            )
+            NodeNameRow(
+                name = nodeData.name,
+                onNameChanged = {
+                    node.name = it
+                    save()
+                }
+            )
+            AddressRow(address = nodeData.address)
+            SectionTitle(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = stringResource(id = R.string.title_keys)
+            )
+            DeviceKeyRow(deviceKey = nodeData.deviceKey ?: stringResource(R.string.unknown))
+            NetworkKeysRow(
+                count = nodeData.netKeys.size,
+                isSelected = selectedItem == ClickableNodeInfoItem.NetworkKeys
+                        && highlightSelectedItem,
+                onNetworkKeysClicked = { onNetworkKeysClicked(nodeData.uuid) }
+            )
+            ApplicationKeysRow(
+                count = nodeData.appKeys.size,
+                isSelected = selectedItem == ClickableNodeInfoItem.ApplicationKeys
+                        && highlightSelectedItem,
+                onApplicationKeysClicked = { onApplicationKeysClicked(nodeData.uuid) }
+            )
+            SectionTitle(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = stringResource(id = R.string.title_elements)
+            )
+            nodeData.elements.forEach { element ->
+                key(element.index) {
+                    ElementRow(
+                        element = element,
+                        isSelected = (selectedItem as? ClickableNodeInfoItem.Element)?.address
+                                == element.unicastAddress.address
+                                && highlightSelectedItem,
+                        onElementsClicked = { onElementClicked(element.unicastAddress.address) }
+                    )
+                }
             }
-            item {
-                NodeNameRow(
-                    name = nodeData.name,
-                    onNameChanged = {
-                        node.name = it
-                        save()
-                    }
-                )
-            }
-            item { AddressRow(address = nodeData.address) }
-            item {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(id = R.string.title_keys)
-                )
-            }
-            item {
-                DeviceKeyRow(
-                    deviceKey = nodeData.deviceKey ?: stringResource(R.string.unknown)
-                )
-            }
-            item {
-                NetworkKeysRow(
-                    count = nodeData.netKeys.size,
-                    isSelected = selectedItem == ClickableNodeInfoItem.NetworkKeys
-                            && highlightSelectedItem,
-                    onNetworkKeysClicked = { onNetworkKeysClicked(nodeData.uuid) }
-                )
-            }
-            item {
-                ApplicationKeysRow(
-                    count = nodeData.appKeys.size,
-                    isSelected = selectedItem == ClickableNodeInfoItem.ApplicationKeys
-                            && highlightSelectedItem,
-                    onApplicationKeysClicked = { onApplicationKeysClicked(nodeData.uuid) }
-                )
-            }
-            item {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(id = R.string.title_elements)
-                )
-            }
-            items(items = nodeData.elements, key = { it.index }) { element ->
-                ElementRow(
-                    element = element,
-                    isSelected = (selectedItem as? ClickableNodeInfoItem.Element)?.address
-                            == element.unicastAddress.address
-                            && highlightSelectedItem,
-                    onElementsClicked = { onElementClicked(element.unicastAddress.address) }
-                )
-            }
-            item {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(id = R.string.title_node_information)
-                )
-            }
-            item { CompanyIdentifier(companyIdentifier = nodeData.companyIdentifier) }
-            item { ProductIdentifier(productIdentifier = nodeData.productIdentifier) }
-            item { ProductVersion(productVersion = nodeData.versionIdentifier) }
-            item { ReplayProtectionCount(replayProtectionCount = nodeData.replayProtectionCount) }
-            item { Security(node = nodeData) }
-            item {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(id = R.string.title_time_to_live)
-                )
-            }
-            item {
-                DefaultTtlRow(
-                    ttl = nodeData.defaultTtl,
-                    messageState = messageState,
-                    send = send
-                )
-            }
-            item {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(id = R.string.title_proxy_state)
-                )
-            }
-            item {
-                ProxyStateRow(
-                    messageState = messageState,
-                    proxy = nodeData.features.proxy,
-                    send = send
-                )
-            }
-            item {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(id = R.string.title_exclusions)
-                )
-            }
-            item { ExclusionRow(isExcluded = nodeData.excluded, onExcluded = onExcluded) }
-            item {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(id = R.string.label_reset_node)
-                )
-            }
-            item { ResetRow(messageState = messageState, navigateBack = navigateBack, send = send) }
-            item {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(id = R.string.label_remove_node)
-                )
-            }
-            item {
-                RemoveNode(
-                    navigateBack = navigateBack,
-                    removeNode = removeNode
-                )
-            }
+            SectionTitle(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = stringResource(id = R.string.title_node_information)
+            )
+            CompanyIdentifier(companyIdentifier = nodeData.companyIdentifier)
+            ProductIdentifier(productIdentifier = nodeData.productIdentifier)
+            ProductVersion(productVersion = nodeData.versionIdentifier)
+            ReplayProtectionCount(replayProtectionCount = nodeData.replayProtectionCount)
+            Security(node = nodeData)
+            SectionTitle(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = stringResource(id = R.string.title_time_to_live)
+            )
+            DefaultTtlRow(
+                ttl = nodeData.defaultTtl,
+                messageState = messageState,
+                send = send
+            )
+            SectionTitle(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = stringResource(id = R.string.title_exclusions)
+            )
+            ExclusionRow(isExcluded = nodeData.excluded, onExcluded = onExcluded)
+            SectionTitle(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = stringResource(id = R.string.label_node_deletion)
+            )
+            ResetRow(messageState = messageState, navigateBack = navigateBack, send = send)
+            RemoveNode(
+                navigateBack = navigateBack,
+                removeNode = removeNode
+            )
+            Spacer(modifier = Modifier.size(size = 16.dp))
         }
         if (showConfigurationTasks) {
             ModalBottomSheet(
@@ -402,7 +353,6 @@ private fun ApplicationKeysRow(
             true -> CardDefaults.outlinedCardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
-
             else -> CardDefaults.outlinedCardColors()
         },
         onClick = onApplicationKeysClicked,
@@ -531,7 +481,7 @@ private fun DefaultTtlRow(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Timer,
         title = stringResource(R.string.label_default_time_to_live),
-        subtitle = if (ttl != null) "TTL set to $ttl" else "Unknown",
+        subtitle = if (ttl != null) "TTL set to $ttl." else "Unknown",
         supportingText = stringResource(R.string.label_default_ttl_rationale)
     ) {
         MeshOutlinedButton(
@@ -610,56 +560,6 @@ private fun DefaultTtlRow(
 }
 
 @Composable
-private fun ProxyStateRow(
-    proxy: Proxy?,
-    messageState: MessageState,
-    send: (AcknowledgedConfigMessage) -> Unit,
-) {
-    var showProxyStateDialog by rememberSaveable { mutableStateOf(false) }
-    val isEnabled = proxy?.state == FeatureState.Enabled
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Hub,
-        title = stringResource(R.string.label_gatt_proxy_state),
-        titleAction = {
-            Switch(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                checked = isEnabled,
-                onCheckedChange = {
-                    if (!it) showProxyStateDialog = true
-                    else send(ConfigGattProxySet(FeatureState.Enabled))
-                }
-            )
-        },
-        subtitle = "Proxy state is ${if (isEnabled) "enabled" else "disabled"}",
-        supportingText = stringResource(R.string.label_proxy_state_rationale)
-    ) {
-        MeshOutlinedButton(
-            onClick = { send(ConfigGattProxyGet()) },
-            text = stringResource(R.string.label_get_state),
-            buttonIcon = Icons.Outlined.Download,
-            enabled = !messageState.isInProgress(),
-            isOnClickActionInProgress = messageState.isInProgress()
-                    && messageState.message is ConfigGattProxyGet
-        )
-    }
-    if (showProxyStateDialog) {
-        MeshAlertDialog(
-            onDismissRequest = { showProxyStateDialog = !showProxyStateDialog },
-            icon = Icons.Outlined.Hub,
-            title = stringResource(R.string.label_disable_proxy_feature),
-            text = stringResource(R.string.label_are_you_sure_rationale),
-            iconColor = Color.Red,
-            onConfirmClick = {
-                send(ConfigGattProxySet(state = FeatureState.Disabled))
-                showProxyStateDialog = !showProxyStateDialog
-            },
-            onDismissClick = { showProxyStateDialog = !showProxyStateDialog }
-        )
-    }
-}
-
-@Composable
 private fun ExclusionRow(isExcluded: Boolean, onExcluded: (Boolean) -> Unit) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -715,11 +615,6 @@ private fun ResetRow(
                 send(ConfigNodeReset())
             }
         )
-    }
-    LaunchedEffect(messageState.didSucceed() && messageState.response is ConfigNodeResetStatus) {
-        if (messageState.didSucceed() && messageState.response is ConfigNodeResetStatus) {
-            navigateBack()
-        }
     }
 }
 

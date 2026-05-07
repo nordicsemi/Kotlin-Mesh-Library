@@ -28,24 +28,17 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 @Suppress("unused")
 class ConfigModelSubscriptionVirtualAddressOverwrite(
-    override val elementAddress: UnicastAddress,
     override val virtualLabel: Uuid,
+    override val elementAddress: UnicastAddress,
     override val modelIdentifier: UShort,
     override val companyIdentifier: UShort?,
 ) : AcknowledgedConfigMessage, ConfigVirtualLabelMessage, ConfigAnyModelMessage {
     override val opCode = Initializer.opCode
     override val responseOpCode = ConfigModelSubscriptionStatus.opCode
-
-    override val parameters: ByteArray
-        get() {
-            val data = byteArrayOf() +
-                    elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    virtualLabel.toByteArray()
-            return data.plus(elements = companyIdentifier?.let { companyIdentifier ->
-                companyIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                        modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            } ?: modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
-        }
+    override val parameters= elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            virtualLabel.toByteArray() +
+            (companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN) ?: byteArrayOf()) +
+            modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     /**
      * Convenience constructor to create a ConfigModelSubscriptionAdd message.
@@ -67,9 +60,34 @@ class ConfigModelSubscriptionVirtualAddressOverwrite(
         companyIdentifier = (model.modelId as? VendorModelId)?.companyIdentifier,
     )
 
-    override fun toString() = "ConfigModelSubscriptionVirtualAddressOverwrite(virtualLabel: " +
-            "$virtualLabel, elementAddress: $elementAddress, modelIdentifier: $modelIdentifier, " +
-            "companyIdentifier: $companyIdentifier)"
+    override fun toString() = "ConfigModelSubscriptionVirtualAddressOverwrite(" +
+            "virtualLabel: ${virtualLabel}, " +
+            "elementAddress: $elementAddress, " +
+            "modelIdentifier: ${
+                modelIdentifier.toHexString(
+                    format = HexFormat {
+                        number {
+                            prefix = "0x"
+                            minLength = 4
+                            upperCase = true
+                        }
+                    }
+                )
+            }" +
+            companyIdentifier?.let {
+                ", companyIdentifier: ${
+                    it.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                minLength = 4
+                                upperCase = true
+                            }
+                        }
+                    )
+                }"
+            } +
+            ")"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8022u

@@ -66,8 +66,8 @@ class ConfigLowPowerNodePollTimeoutStatus(
     )
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigLowPowerNodePollTimeoutStatus(opCode: " +
-            "0x${opCode.toHexString()}, address: ${address.toHexString()})"
+    override fun toString() =
+        "ConfigLowPowerNodePollTimeoutStatus(address: 0x${address.toHexString(HexFormat.UpperCase)})"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x802Eu

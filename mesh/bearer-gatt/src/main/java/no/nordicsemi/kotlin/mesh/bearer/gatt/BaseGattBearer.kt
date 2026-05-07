@@ -52,7 +52,7 @@ abstract class BaseGattBearer<
         EX : Peripheral.Executor<ID>,
         F : CentralManager.ScanFilterScope,
         SR : ScanResult<*, *>,
-        >(
+>(
     protected val centralManager: C,
     protected val peripheral: P,
     ioDispatcher: CoroutineDispatcher,
@@ -71,6 +71,8 @@ abstract class BaseGattBearer<
     override var isOpen: Boolean = false
         internal set
     protected var mtu: Int = DEFAULT_MTU
+    override val name: String?
+        get() = peripheral.name
 
     private val proxyProtocolHandler = ProxyProtocolHandler()
     protected var dataInCharacteristic: RemoteCharacteristic? = null

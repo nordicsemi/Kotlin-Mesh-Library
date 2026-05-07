@@ -2,33 +2,30 @@ package no.nordicsemi.android.nrfmesh.feature.scenes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.models.SceneData
+import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
+import no.nordicsemi.kotlin.mesh.core.exception.NoSceneNumberAvailable
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
+import javax.inject.Inject
 
-@HiltViewModel(assistedFactory = ScenesViewModel.Factory::class)
-internal class ScenesViewModel @AssistedInject internal constructor(
+@HiltViewModel
+internal class ScenesViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
     private lateinit var network: MeshNetwork
     private val _uiState = MutableStateFlow(ScenesScreenUiState())
-    val uiState: StateFlow<ScenesScreenUiState> = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ScenesScreenUiState()
-        )
+    val uiState: StateFlow<ScenesScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetwork()
@@ -40,24 +37,36 @@ internal class ScenesViewModel @AssistedInject internal constructor(
     }
 
     private fun observeNetwork() {
-        repository.network.onEach { network ->
-            this.network = network
-            _uiState.update { state ->
-                state.copy(
-                    scenes = network.scenes
-                        .map { SceneData(scene = it) }
-                        // Filter out the scenes that are marked for deletion.
-                        .filter { it !in state.scenesToBeRemoved }
-                )
-            }
-        }.launchIn(scope = viewModelScope)
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                _uiState.update { state ->
+                    state.copy(
+                        scenes = network.scenes
+                            .map { SceneData(scene = it) }
+                            // Filter out the scenes that are marked for deletion.
+                            .filter { it !in state.scenesToBeRemoved }
+                    )
+                }
+
+            }.launchIn(scope = viewModelScope)
     }
 
     /**
      * Adds a scene to the network.
      */
     internal fun addScene() = network
-        .add(name = "Scene ${network.scenes.size + 1}", provisioner = network.provisioners.first())
+        .add(
+            name = "Scene ${
+                network.nextAvailableScene(
+                    provisioner = network.provisioners
+                        .firstOrNull() ?: throw IllegalStateException()
+                ) ?: throw NoSceneNumberAvailable()
+            }",
+            provisioner = network.provisioners.firstOrNull() ?: throw IllegalStateException()
+        )
         .also { repository.save() }
 
     /**
@@ -97,7 +106,6 @@ internal class ScenesViewModel @AssistedInject internal constructor(
             )
         }
         network.remove(sceneNumber = scene.number)
-        // We don't remove other scenes that are queued as we do in app keys or net keys
         removeAllScenes()
     }
 
@@ -105,7 +113,7 @@ internal class ScenesViewModel @AssistedInject internal constructor(
      * Removes all the scenes that are queued for deletion.
      */
     private fun removeAllScenes() {
-        runCatching {
+        val _ = runCatching {
             _uiState.value.scenesToBeRemoved.forEach { scene ->
                 network.remove(sceneNumber = scene.number)
             }
@@ -113,15 +121,10 @@ internal class ScenesViewModel @AssistedInject internal constructor(
         repository.save()
     }
 
-    internal fun selectScene(number: SceneNumber) {
+    internal fun selectScene(number: SceneNumber?) {
         _uiState.update { state ->
             state.copy(selectedSceneNumber = number)
         }
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(): ScenesViewModel
     }
 }
 

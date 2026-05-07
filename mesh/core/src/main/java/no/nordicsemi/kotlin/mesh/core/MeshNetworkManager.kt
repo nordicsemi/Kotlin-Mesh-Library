@@ -5,7 +5,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -29,14 +28,13 @@ import no.nordicsemi.kotlin.mesh.core.layers.access.InvalidSource
 import no.nordicsemi.kotlin.mesh.core.layers.access.InvalidTtl
 import no.nordicsemi.kotlin.mesh.core.layers.access.ModelNotBoundToAppKey
 import no.nordicsemi.kotlin.mesh.core.layers.access.NoAppKeysBoundToModel
-import no.nordicsemi.kotlin.mesh.core.layers.lowertransport.AccessMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.BaseMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNetKeyDelete
+import no.nordicsemi.kotlin.mesh.core.messages.health.HealthAttentionTimer
 import no.nordicsemi.kotlin.mesh.core.messages.proxy.ProxyConfigurationMessage
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
@@ -67,6 +65,10 @@ import kotlin.uuid.Uuid
  * @param secureProperties            Custom storage option allowing users to save the sequence
  *                                    number.
  * @param scope                       The scope in which the mesh network will be created.
+ * @property network                  Currently loaded mesh network. It will be null if the network has not
+ * @property networkEvents            A shared flow of events related to the mesh network. The events
+ *                                    are emitted when the network is loaded, created, updated or
+ *                                    cleared.
  * @property meshBearer               Mesh bearer is responsible for sending and receiving mesh
  *                                    messages.
  * @property logger                   The logger is responsible for logging mesh messages.
@@ -75,8 +77,9 @@ import kotlin.uuid.Uuid
  *                                    proxy node.
  * @property localElements            List of local elements in the mesh network. The primary
  *                                    element is always the first element in the list.
- * @property incomingMeshMessages     Flow containing incoming access messages received by the local
  *                                    node.
+ * @property attentionTimer           Flow that notifies the client app about the health attention
+ *                                    timer start and stop events.
  */
 class MeshNetworkManager(
     private val storage: Storage,
@@ -85,13 +88,15 @@ class MeshNetworkManager(
 ) : Publisher {
     internal val scope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
     private val mutex by lazy { Mutex() }
-    private val _meshNetwork = MutableSharedFlow<MeshNetwork>(replay = 1, extraBufferCapacity = 10)
-    val meshNetwork = _meshNetwork.asSharedFlow()
     var networkParameters = NetworkParameters()
-    internal var network: MeshNetwork? = null
-        private set
 
-    internal var observeNetworkManagerEvents: Job? = null
+    /** The currently loaded mesh network. */
+    var network: MeshNetwork? = null
+        private set
+    private val _networkEvents = MutableSharedFlow<NetworkEvent>(replay = 1)
+    val networkEvents = _networkEvents.asSharedFlow()
+
+    internal var networkManagerEventObserver: Job? = null
     internal var observeMeshMessages: Job? = null
 
     internal var networkManager: NetworkManager? = null
@@ -100,12 +105,15 @@ class MeshNetworkManager(
             value?.let {
                 observeNetworkManagerEvents()
                 observeMeshMessages()
+            } ?: run {
+                // Cancel the observers when the network manager is set to null, which happens when
+                // the network is cleared.
+                networkManagerEventObserver?.cancel()
+                networkManagerEventObserver = null
+                observeMeshMessages?.cancel()
+                observeMeshMessages = null
             }
         }
-
-    private val _incomingMeshMessages = MutableSharedFlow<BaseMeshMessage>()
-    val incomingMeshMessages: SharedFlow<BaseMeshMessage>
-        get() = _incomingMeshMessages.asSharedFlow()
 
     var logger: Logger? = null
 
@@ -115,6 +123,9 @@ class MeshNetworkManager(
             networkManager?.bearer = value
         }
     val proxyFilter: ProxyFilter = ProxyFilter(scope = scope, manager = this)
+
+    private val _attentionTimer = MutableSharedFlow<HealthAttentionTimer>()
+    val attentionTimer = _attentionTimer.asSharedFlow()
 
     var localElements: List<Element>
         get() = network?.localElements ?: emptyList()
@@ -137,7 +148,12 @@ class MeshNetworkManager(
             // Add the required Models in the Primary Element.
             if (elements.isEmpty()) elements = elements + Element(location = Location.UNKNOWN)
 
-            elements.first().addPrimaryElementModels()
+            elements
+                .first()
+                .addPrimaryElementModels(
+                    triggerAttentionTimer = { _attentionTimer.tryEmit(value = it) },
+                    logger = logger
+                )
 
             elements.forEach { element ->
                 element.models.forEach { model ->
@@ -166,24 +182,23 @@ class MeshNetworkManager(
         .load()
         .takeIf { it.isNotEmpty() }
         ?.let {
-            val meshNetwork = deserialize(it)
-                // Load the IvIndex from the secure properties storage.
+            network = deserialize(it)
+                // Load the IvIndex from the secure properties' storage.
                 .apply { ivIndex = secureProperties.ivIndex(uuid = uuid) }
-            this@MeshNetworkManager.network = meshNetwork
-            _meshNetwork.emit(value = meshNetwork)
             networkManager = NetworkManager(manager = this)
             proxyFilter.onNewNetworkCreated()
+            _networkEvents.emit(NetworkEvent.NetworkUpdated)
             true
         } == true
 
     /**
      * Saves the network in the local storage provided by the user.
      */
+    @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
     suspend fun save() {
-        export()?.also {
+        export()?.let {
             mutex.withLock { storage.save(network = it) }
-            this@MeshNetworkManager.network
-                ?.let { network -> _meshNetwork.emit(value = network) }
+            _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
         }
     }
 
@@ -237,42 +252,41 @@ class MeshNetworkManager(
             }
         }
 
-        return MeshNetwork(uuid = uuid, _name = name).also {
+        return MeshNetwork(uuid = uuid, _name = name).also { network ->
             if (networkKeys.isNotEmpty()) {
                 networkKeys.forEachIndexed { index, key ->
-                    it.add(
+                    network.add(
                         name = if (index == 0) "Primary Network Key" else "Network Key $index",
                         key = key
                     )
                 }
             } else {
-                it.add(name = "Primary Network Key", index = 0u)
+                network.add(name = "Primary Network Key", index = 0u)
             }
-            it.add(provisioner)
-            network = it
+            network.add(provisioner)
+            this.network = network
             networkManager = NetworkManager(this)
             // Store the IvIndex of the newly created network.
             secureProperties.storeLocalProvisioner(
                 uuid = uuid,
-                localProvisionerUuid = it.provisioners.first().uuid
+                localProvisionerUuid = network.provisioners.first().uuid
             )
             secureProperties.storeIvIndex(
-                uuid = it.uuid,
-                ivIndex = it.ivIndex
+                uuid = network.uuid,
+                ivIndex = network.ivIndex
             )
-            _meshNetwork.emit(it)
+            _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
         }
     }
 
     /**
-     * Forgets the currently loaded mesh network and saves the state
+     * Forgets the currently loaded mesh network and saves the state.
      */
     suspend fun clear() {
-        network = null
         networkManager = null
-        mutex.withLock {
-            storage.save(network = byteArrayOf())
-        }
+        network = null
+        _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
+        mutex.withLock { storage.save(network = byteArrayOf()) }
     }
 
     /**
@@ -285,11 +299,11 @@ class MeshNetworkManager(
     @Throws(ImportError::class)
     suspend fun import(array: ByteArray) = runCatching {
         deserialize(array)
-            .also {
-                network = it
+            .also { network ->
+                this.network = network
                 networkManager = NetworkManager(this)
                 proxyFilter.onNewNetworkCreated()
-                _meshNetwork.emit(it)
+                _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
             }
     }.getOrElse {
         if (it is ImportError) throw it
@@ -303,21 +317,19 @@ class MeshNetworkManager(
      * @param configuration Specifies if the network should be fully exported or partially.
      * @return Bytearray containing the Mesh network configuration.
      */
-    fun export(configuration: NetworkConfiguration = NetworkConfiguration.Full) = network?.let {
-        serialize(
-            network = it,
-            configuration = configuration
-        ).toString().toByteArray()
-    }
+    fun export(configuration: NetworkConfiguration = NetworkConfiguration.Full) = network
+        ?.let { serialize(network = it, configuration = configuration) }
+        ?.toString()
+        ?.toByteArray()
 
     override fun publish(message: UnacknowledgedMeshMessage, model: Model) {
         networkManager?.let {
             model.let {
                 requireNotNull(it.parentElement) {
                     logger?.e(category = LogCategory.MODEL) {
-                        "Error: Model does not belong to an Element."
+                        "Model does not belong to an Element"
                     }
-                    throw IllegalStateException("Error: Model does not belong to an Element.")
+                    throw IllegalStateException("Model does not belong to an Element")
                 }
                 it.publish?.let { publish ->
                     network?.applicationKey(index = publish.index)?.let {
@@ -389,37 +401,37 @@ class MeshNetworkManager(
     ) {
         val networkManager = requireNotNull(networkManager) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
         val network = requireNotNull(network) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
         val localNode = requireNotNull(network.localProvisioner?.node) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Local Provisioner has no Unicast Address assigned."
+                "Local Provisioner has no Unicast Address assigned"
             }
             throw InvalidSource()
         }
         val source = localElement ?: localNode.elements.firstOrNull() ?: run {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Local Provisioner has no Unicast Address assigned."
+                "Local Provisioner has no Unicast Address assigned"
             }
             throw InvalidSource()
         }
         require(source.parentNode == localNode) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: The given Element does not belong to the local Node."
+                "The given Element does not belong to the local Node"
             }
             throw InvalidElement()
         }
         require(initialTtl == null || initialTtl <= 127u) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: TTL value $initialTtl is invalid."
+                "TTL value $initialTtl is invalid"
             }
             throw InvalidTtl()
         }
@@ -511,13 +523,13 @@ class MeshNetworkManager(
 
         val node = model.parentElement?.parentNode ?: run {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Element does not belong to a Node"
+                "Element does not belong to a Node"
             }
             throw InvalidDestination()
         }
         val destination = model.parentElement?.unicastAddress ?: run {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Element does not belong to a Node"
+                "Element does not belong to a Node"
             }
             throw InvalidDestination()
         }
@@ -526,7 +538,7 @@ class MeshNetworkManager(
         if (applicationKey != null) {
             if (!applicationKey.isBoundTo(model = model)) {
                 logger?.e(LogCategory.FOUNDATION_MODEL) {
-                    "Error: Model is not bound to this Application Key."
+                    "Model is not bound to this Application Key"
                 }
                 throw ModelNotBoundToAppKey()
             }
@@ -549,7 +561,7 @@ class MeshNetworkManager(
             }
         ?: run {
             logger?.e(LogCategory.PROXY) {
-                "Error: No GATT Proxy connected or no common Network Keys"
+                "No GATT Proxy connected or no common Network Keys"
             }
             throw CannotRelay()
         }
@@ -604,7 +616,7 @@ class MeshNetworkManager(
             )
         } ?: {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Source Model does not belong to an Element"
+                "Source Model does not belong to an Element"
             }
             throw InvalidSource()
         }
@@ -647,39 +659,39 @@ class MeshNetworkManager(
     ): MeshMessage? {
         val networkManager = requireNotNull(networkManager) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
         val network = requireNotNull(network) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
         val destination = requireNotNull(model.parentElement?.unicastAddress) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Model does not belong to an Element."
+                "Model does not belong to an Element"
             }
             throw InvalidDestination()
         }
         val node = model.parentElement?.parentNode ?: run {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Element does not belong to a Node"
+                "Element does not belong to a Node"
             }
             throw InvalidDestination()
         }
 
         if (applicationKey != null && !applicationKey.isBoundTo(model = model)) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Model is not bound to this Application Key."
+                "Model is not bound to this Application Key"
             }
             throw ModelNotBoundToAppKey()
         }
 
         if (applicationKey == null && model.boundApplicationKeys.isEmpty()) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Model is not bound to any Application Key."
+                "Model is not bound to any Application Key"
             }
             throw NoAppKeysBoundToModel()
         }
@@ -694,33 +706,33 @@ class MeshNetworkManager(
             }
         ?: run {
             logger?.e(LogCategory.PROXY) {
-                "Error: No GATT Proxy connected or no common Network Keys"
+                "No GATT Proxy connected or no common Network Keys"
             }
             throw CannotRelay()
         }
 
         val localNode = requireNotNull(network.localProvisioner?.node) {
             logger?.e(LogCategory.PROXY) {
-                "Error: Local Provisioner has no Unicast Address assigned."
+                "Local Provisioner has no Unicast Address assigned"
             }
             throw InvalidSource()
         }
         val source = requireNotNull(localElement ?: localNode.elements.firstOrNull()) {
             logger?.e(LogCategory.PROXY) {
-                "Error: Local Provisioner has no Unicast Address assigned."
+                "Local Provisioner has no Unicast Address assigned"
             }
             throw InvalidSource()
         }
 
         require(source.parentNode == localNode) {
             logger?.e(LogCategory.PROXY) {
-                "Error: The Element does not belong to the local Node."
+                "The Element does not belong to the local Node"
             }
             throw InvalidElement()
         }
         require(initialTtl == null || initialTtl <= 127u) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: TTL value $initialTtl is invalid."
+                "TTL value $initialTtl is invalid"
             }
             throw InvalidTtl()
         }
@@ -770,7 +782,7 @@ class MeshNetworkManager(
             send(message = message, localElement = it, model = model, initialTtl = initialTtl)
         } ?: run {
         logger?.e(LogCategory.FOUNDATION_MODEL) {
-            "Error: Source Model does not belong to an Element."
+            "Source Model does not belong to an Element"
         }
         throw InvalidSource()
     }
@@ -810,46 +822,45 @@ class MeshNetworkManager(
     ) {
         val networkManager = requireNotNull(networkManager) {
             logger?.e(LogCategory.PROXY) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
         val network = requireNotNull(network) {
             logger?.e(LogCategory.PROXY) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
         val element = requireNotNull(network.localProvisioner?.node?.primaryElement) {
             logger?.e(LogCategory.PROXY) {
-                "Error: Local Provisioner has no Unicast Address assigned."
+                "Local Provisioner has no Unicast Address assigned"
             }
             throw InvalidSource()
         }
         val dst = MeshAddress.create(address = destination)
         require(dst is UnicastAddress) {
             logger?.e(LogCategory.PROXY) {
-                "Error: Address ${destination.toHexString()} is not a Unicast Address."
+                "Address ${destination.toHexString()} is not a Unicast Address"
             }
             throw InvalidDestination()
         }
         val node = requireNotNull(value = network.node(address = dst)) {
             logger?.e(LogCategory.PROXY) {
-                "Error: Unknown destination Node"
+                "Unknown destination Node"
             }
             throw InvalidDestination()
         }
         require(node.netKeys.isNotEmpty()) {
             logger?.e(LogCategory.PROXY) {
-                "Fatal Error: The target Node does not have a Network Key."
+                "The target Node does not have a Network Key"
             }
             throw InvalidDestination()
         }
 
         if (networkKey != null && !node.knows(key = networkKey)) {
-
             logger?.e(LogCategory.PROXY) {
-                "Error: Node does not know the given Network Key."
+                "Node does not know the given Network Key"
             }
             throw InvalidKey()
         }
@@ -863,20 +874,20 @@ class MeshNetworkManager(
             }
         ?: run {
             logger?.e(LogCategory.PROXY) {
-                "Error: No GATT Proxy connected or no common Network Keys."
+                "No GATT Proxy connected or no common Network Keys"
             }
             throw CannotRelay()
         }
 
         requireNotNull(node.deviceKey) {
             logger?.e(LogCategory.PROXY) {
-                "Fatal Error: Node's device key is unknown."
+                "Node's device key is unknown"
             }
             throw InvalidDestination()
         }
         require(initialTtl == null || initialTtl <= 127u) {
             logger?.e(LogCategory.PROXY) {
-                "Error: TTL value $initialTtl is invalid."
+                "TTL value $initialTtl is invalid"
             }
             throw InvalidTtl()
         }
@@ -952,45 +963,65 @@ class MeshNetworkManager(
     ): MeshMessage? {
         val networkManager = requireNotNull(networkManager) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
         val network = requireNotNull(network) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
         val element = requireNotNull(network.localProvisioner?.node?.primaryElement) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Local Provisioner has no Unicast Address assigned."
+                "Local Provisioner has no Unicast Address assigned"
             }
             throw InvalidSource()
         }
         val dst = MeshAddress.create(address = destination)
         require(dst is UnicastAddress) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: ${destination.toHexString()} is not a Unicast Address."
+                "${
+                    destination.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                minLength = 4
+                                upperCase = true
+                            }
+                        }
+                    )
+                } is not a Unicast Address"
             }
             throw InvalidDestination()
         }
         val node = requireNotNull(value = network.node(address = dst)) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Unknown destination Node ${destination.toHexString()}."
+                "Unknown destination Node ${
+                    destination.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                minLength = 4
+                                upperCase = true
+                            }
+                        }
+                    )
+                }"
             }
             throw InvalidDestination()
         }
         require(node.netKeys.isNotEmpty()) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Fatal Error: The target Node does not have a Network Key."
+                "The target Node does not have a Network Key"
             }
             throw InvalidDestination()
         }
 
         if (networkKey != null && !node.knows(key = networkKey)) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Node does not know the given Network Key."
+                "Node does not know the given Network Key"
             }
             throw InvalidKey()
         }
@@ -998,42 +1029,39 @@ class MeshNetworkManager(
         val selectedNetworkKey = networkKey ?: node.networkKeys
             .firstOrNull { key ->
                 // A key that is being deleted cannot be used to send a message.
-                (message as? ConfigNetKeyDelete)?.index != key.index &&
+                (message as? ConfigNetKeyDelete)?.networkKeyIndex != key.index &&
                         // Unless the message is sent locally, take only keys known to the Proxy Node.
                         (node.isLocalProvisioner || proxyFilter.proxy?.knows(key = key) == true)
             }
         ?: run {
             if (message as? ConfigNetKeyDelete != null) {
                 logger?.e(LogCategory.FOUNDATION_MODEL) {
-                    "Error: Cannot delete the last Network Key or a key used to secure the message"
+                    "Cannot delete the last Network Key or a key used to secure the message"
                 }
                 throw CannotDelete()
             }
-            logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: No GATT Proxy connected or no common Network Keys"
+            logger?.e(LogCategory.PROXY) {
+                "No GATT Proxy connected or no common Network Keys"
             }
             throw CannotRelay()
         }
-
-
         requireNotNull(node.deviceKey) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Fatal Error: Node's device key is unknown."
+                "Node's device key is unknown"
             }
             throw InvalidDestination()
         }
         if (message is ConfigNetKeyDelete) {
             require(node.netKeys.size > 1) {
                 logger?.e(LogCategory.FOUNDATION_MODEL) {
-                    "Error: Cannot remove last Network Key."
+                    "Cannot remove last Network Key"
                 }
                 throw InvalidDestination()
             }
         }
         require(initialTtl == null || initialTtl <= 127u) {
-
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: TTL value $initialTtl is invalid."
+                "TTL value $initialTtl is invalid"
             }
             throw InvalidTtl()
         }
@@ -1082,14 +1110,14 @@ class MeshNetworkManager(
     suspend fun sendToLocalNode(message: AcknowledgedConfigMessage): MeshMessage? {
         val network = requireNotNull(network) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Mesh Network not created."
+                "Mesh Network not created"
             }
             throw NoNetwork()
         }
 
         val destination = requireNotNull(network.localProvisioner?.node?.primaryUnicastAddress) {
             logger?.e(LogCategory.FOUNDATION_MODEL) {
-                "Error: Local Provisioner has no Unicast Address assigned."
+                "Local Provisioner has no Unicast Address assigned"
             }
             throw InvalidSource()
         }
@@ -1109,7 +1137,7 @@ class MeshNetworkManager(
     @Throws(NoNetwork::class, IllegalStateException::class)
     suspend fun send(message: ProxyConfigurationMessage): ProxyConfigurationMessage =
         networkManager?.send(message) ?: run {
-            logger?.e(category = LogCategory.PROXY) { "Error: Mesh Network not created" }
+            logger?.e(category = LogCategory.PROXY) { "Mesh Network not created" }
             throw NoNetwork()
         }
 
@@ -1118,23 +1146,22 @@ class MeshNetworkManager(
      */
     @OptIn(ExperimentalUuidApi::class)
     private fun observeNetworkManagerEvents() {
-        if (observeNetworkManagerEvents == null || observeNetworkManagerEvents?.isActive == false) {
+        if (networkManagerEventObserver == null) {
             runCatching {
-                observeNetworkManagerEvents = scope.launch {
-                    networkManager?.networkManagerEventFlow?.onEach {
+                networkManagerEventObserver = networkManager?.networkManagerEventFlow
+                    ?.onEach {
                         when (it) {
                             NetworkManagerEvent.OnNetworkChanged -> save()
-                            NetworkManagerEvent.OnNetworkReset -> {
+                            NetworkManagerEvent.OnNetworkReset ->
                                 network?.localProvisioner?.let { provisioner ->
-                                    val localElements = this@MeshNetworkManager.localElements
-                                    provisioner.network = null
-                                    create(provisioner = provisioner)
-                                    this@MeshNetworkManager.localElements = localElements
+                                    clear()
+                                    // val localElements = this@MeshNetworkManager.localElements
+                                    // provisioner.network = null
+                                    // create(provisioner = provisioner)
+                                    // this@MeshNetworkManager.localElements = localElements
                                 }
-                            }
                         }
                     }?.launchIn(scope = scope)
-                }
             }.onFailure {
                 logger?.w(category = LogCategory.FOUNDATION_MODEL) {
                     "Error while observing network manager events: ${it.message}"
@@ -1144,16 +1171,22 @@ class MeshNetworkManager(
     }
 
     /**
-     * Observes incoming mesh messages.
+     * Observes incoming mesh messages and emits [NetworkEvent.MeshMessageReceived] when a message
+     * is received from the network.
      */
     private fun observeMeshMessages() {
-        if (observeMeshMessages == null || observeMeshMessages?.isActive == false) {
+        if (observeMeshMessages == null) {
             runCatching {
-                observeMeshMessages = networkManager?.incomingMeshMessages?.onEach {
-                    if (it.message is AccessMessage) {
-                        _incomingMeshMessages.emit(it.message)
-                    }
-                }?.launchIn(scope = scope)
+                observeMeshMessages = networkManager?.incomingMeshMessages
+                    ?.onEach {
+                        _networkEvents.emit(
+                            value = NetworkEvent.MeshMessageReceived(
+                                source = it.source.address,
+                                destination = it.destination,
+                                message = it.message as MeshMessage
+                            )
+                        )
+                    }?.launchIn(scope = scope)
             }.onFailure {
                 logger?.w(category = LogCategory.FOUNDATION_MODEL) {
                     "Error while observing incoming mesh messages: ${it.message}"

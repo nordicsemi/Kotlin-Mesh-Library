@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.ActivityRetainedLifecycle
 import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.CoroutineDispatcher
@@ -25,12 +26,15 @@ object CoreDataRepositoryModule {
         centralManager: CentralManager,
         meshNetworkManager: MeshNetworkManager,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
-        storage: SceneStatesDataStoreStorage
+        storage: SceneStatesDataStoreStorage,
+        lifecycle: ActivityRetainedLifecycle,
     ) = CoreDataRepository(
         preferences = preferences,
         centralManager = centralManager,
         meshNetworkManager = meshNetworkManager,
         storage = storage,
         ioDispatcher = ioDispatcher
-    )
+    ).also {
+        lifecycle.addOnClearedListener { it.close() }
+    }
 }

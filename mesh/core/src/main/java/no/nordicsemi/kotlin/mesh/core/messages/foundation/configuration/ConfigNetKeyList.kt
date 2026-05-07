@@ -9,37 +9,29 @@ import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 
 /**
- * This message returns the list of network key indexes added to the mesh node. This is a response
- * to the [ConfigNetKeyGet] message.
+ * This message returns the list of network key indexes added to the mesh node.
  *
- * @property networkKeyIndexes    List of network key indexes added to the mesh node.
- * @property opCode               Message op code.
- * @property parameters           Message parameters.
- * @constructor Constructs the ConfigNetKeyGet message.
+ * This is a response to the [ConfigNetKeyGet] message.
+ *
+ * @param networkKeyIndexes    List of network key indexes added to the mesh node.
  */
 class ConfigNetKeyList(
-    val networkKeyIndexes: Array<KeyIndex>,
+    val networkKeyIndexes: List<KeyIndex>
 ) : ConfigResponse {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
         get() = ConfigMessage.encode(indexes = networkKeyIndexes)
 
-    constructor(networkKeys: List<NetworkKey>) : this(
-        networkKeyIndexes = networkKeys.map {
-            it.index
-        }.toTypedArray()
-    )
-
     override fun toString() =
-        "ConfigNetKeyList(networkKeyIndexes: ${networkKeyIndexes.joinToString(separator = ", ")})"
+        "ConfigNetKeyList(networkKeyIndexes: $networkKeyIndexes)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8043u
 
-        override fun init(parameters: ByteArray?) = parameters?.takeIf {
-            it.isNotEmpty()
-        }?.let {
-            ConfigNetKeyList(ConfigMessage.decode(data = it, offset = 0))
-        }
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.isNotEmpty() }
+            ?.let {
+                ConfigNetKeyList(ConfigMessage.decode(data = it, offset = 0))
+            }
     }
 }

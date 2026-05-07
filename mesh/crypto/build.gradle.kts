@@ -9,10 +9,10 @@ nordicNexusPublishing {
     POM_ARTIFACT_ID = "crypto"
     POM_NAME = "Bluetooth Mesh Crypto Library"
     POM_DESCRIPTION = "Provides a set of cryptographic functions for the Kotlin Mesh Library."
-    POM_URL = "https://github.com/NordicSemiconductor/Kotlin-Mesh-Library"
-    POM_SCM_URL = "https://github.com/NordicSemiconductor/Kotlin-Mesh-Library"
-    POM_SCM_CONNECTION = "scm:git@github.com:NordicSemiconductor/Kotlin-Mesh-Library.git"
-    POM_SCM_DEV_CONNECTION = "scm:git@github.com:NordicSemiconductor/Kotlin-Mesh-Library.git"
+    POM_URL = "https://github.com/nordicsemi/Kotlin-Mesh-Library"
+    POM_SCM_URL = "https://github.com/nordicsemi/Kotlin-Mesh-Library"
+    POM_SCM_CONNECTION = "scm:git@github.com:nordicsemi/Kotlin-Mesh-Library.git"
+    POM_SCM_DEV_CONNECTION = "scm:git@github.com:nordicsemi/Kotlin-Mesh-Library.git"
 }
 
 dependencies {

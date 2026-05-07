@@ -12,14 +12,12 @@ import no.nordicsemi.kotlin.mesh.core.messages.ConfigMessageInitializer
  * @constructor Creates a ConfigHeartbeatPublicationGet message.
  */
 class ConfigHeartbeatPublicationGet : AcknowledgedConfigMessage {
-
     override val opCode: UInt = Initializer.opCode
-
     override val responseOpCode = ConfigHeartbeatPublicationStatus.opCode
     override val parameters: ByteArray? = null
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigHeartbeatPublicationGet opCode ${opCode.toHexString()}"
+    override fun toString() = "ConfigHeartbeatPublicationGet"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode: UInt = 0x8038u

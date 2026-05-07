@@ -15,13 +15,11 @@ import no.nordicsemi.kotlin.mesh.bearer.Pdu
 import no.nordicsemi.kotlin.mesh.bearer.PduType
 import no.nordicsemi.kotlin.mesh.bearer.provisioning.ProvisioningBearer
 import no.nordicsemi.kotlin.mesh.core.exception.NoLocalProvisioner
-import no.nordicsemi.kotlin.mesh.core.exception.NoNetworkKeysAdded
 import no.nordicsemi.kotlin.mesh.core.exception.NoUnicastRangeAllocated
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.UnicastRange
-import no.nordicsemi.kotlin.mesh.crypto.Algorithm.Companion.strongest
 import no.nordicsemi.kotlin.mesh.crypto.Algorithms
 import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
@@ -42,7 +40,7 @@ class ProvisioningManager(
     private val unprovisionedDevice: UnprovisionedDevice,
     private val meshNetwork: MeshNetwork,
     val bearer: ProvisioningBearer,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
     lateinit var configuration: ProvisioningParameters
@@ -118,20 +116,12 @@ class ProvisioningManager(
             val capabilities = awaitCapabilities(
                 invite = ProvisioningRequest.Invite(attentionTimer),
                 provisioningData = provisioningData
-            ).apply {
-                // Lets init based on the capabilities
-                configuration.unicastAddress = meshNetwork.run {
-                    nextAvailableUnicastAddress(
-                        elementCount = numberOfElements,
-                        provisioner = localProvisioner!!
-                    )!!
-                }
-                configuration.algorithm = algorithms.strongest()
-                configuration.publicKey = if (publicKeyType.isNotEmpty()) {
-                    PublicKey.OobPublicKey(ByteArray(16) { 0x00 })
-                } else PublicKey.NoOobPublicKey
-                configuration.authMethod = supportedAuthMethods.first()
-            }
+            )
+            configuration = ProvisioningParameters.defaultFrom(
+                capabilities = capabilities,
+                meshNetwork = meshNetwork,
+            )
+            suggestedUnicastAddress = configuration.unicastAddress
 
             // We use a mutex here to wait for the user to either start or cancel the provisioning.
             val mutex = Mutex(locked = true)
@@ -139,12 +129,12 @@ class ProvisioningManager(
             emit(
                 value = ProvisioningState.CapabilitiesReceived(
                     capabilities = capabilities,
-                    parameters = configuration,
+                    defaultParameters = configuration,
                     start = { configuration ->
                         this@ProvisioningManager.configuration = configuration
                         mutex.unlock()
                     },
-                    cancel = { mutex.unlock() }
+                    cancel = { mutex.unlock() },
                 )
             )
             mutex.lock()
@@ -154,13 +144,11 @@ class ProvisioningManager(
                 throw UnsupportedDevice()
             }
 
-            require(configuration.unicastAddress != null) { throw NoAddressAvailable() }
-
             // Is the Unicast address valid?
             require(
                 isUnicastAddressValid(
-                    unicastAddress = configuration.unicastAddress!!,
-                    numberOfElements = capabilities.numberOfElements
+                    unicastAddress = configuration.unicastAddress,
+                    numberOfElements = capabilities.numberOfElements,
                 )
             ) {
                 logger?.e(LogCategory.PROVISIONING) { "Unicast address is not valid" }
@@ -175,7 +163,7 @@ class ProvisioningManager(
             provisioningData.prepare(
                 networkKey = configuration.networkKey,
                 ivIndex = meshNetwork.ivIndex,
-                unicastAddress = configuration.unicastAddress!!
+                unicastAddress = configuration.unicastAddress,
             )
 
             ProvisioningRequest.Start(configuration = configuration).also { start ->
@@ -263,7 +251,7 @@ class ProvisioningManager(
                     name = unprovisionedDevice.name,
                     uuid = unprovisionedDevice.uuid,
                     deviceKey = provisioningData.deviceKey,
-                    unicastAddress = configuration.unicastAddress!!,
+                    unicastAddress = configuration.unicastAddress,
                     elementCount = capabilities.numberOfElements,
                     assignedNetworkKey = configuration.networkKey,
                     security = provisioningData.security
@@ -303,47 +291,6 @@ class ProvisioningManager(
                     throw InvalidPdu()
                 }
                 provisioningData.accumulate(data = pdu.sliceArray(indices = 1 until pdu.size))
-                configuration = ProvisioningParameters(
-                    capabilities = capabilities,
-                    unicastAddress = meshNetwork.localProvisioner?.let {
-                        // Calculates the unicast address automatically based ont he number of elements.
-                        meshNetwork.nextAvailableUnicastAddress(
-                            elementCount = capabilities.numberOfElements,
-                            provisioner = it
-                        )?.also { address -> suggestedUnicastAddress = address }
-                            ?: run {
-                                logger?.e(LogCategory.PROVISIONING) {
-                                    "Provisioning failed with error: ${NoAddressAvailable()}"
-                                }
-                                throw NoAddressAvailable()
-                            }
-                    } ?: run {
-                        logger?.e(LogCategory.PROVISIONING) {
-                            "Provisioning failed with error: ${NoLocalProvisioner()}"
-                        }
-                        throw NoLocalProvisioner()
-                    },
-                    networkKey = meshNetwork.networkKeys.firstOrNull()
-                        ?: throw NoNetworkKeysAdded()
-                )
-                meshNetwork.localProvisioner?.let {
-                    // Calculates the unicast address automatically based ont he number of elements.
-                    if (configuration.unicastAddress == null) {
-                        val count = capabilities.numberOfElements
-                        configuration.unicastAddress =
-                            meshNetwork.nextAvailableUnicastAddress(
-                                elementCount = count,
-                                provisioner = it
-                            )?.apply { suggestedUnicastAddress = this }
-                    }
-                }
-                require(configuration.unicastAddress != null) {
-                    logger?.e(LogCategory.PROVISIONING) {
-                        "Provisioning failed with error: ${NoAddressAvailable()}"
-                    }
-                    throw NoAddressAvailable()
-                }
-                suggestedUnicastAddress = configuration.unicastAddress
             } as ProvisioningResponse.Capabilities
         return response.capabilities
     }

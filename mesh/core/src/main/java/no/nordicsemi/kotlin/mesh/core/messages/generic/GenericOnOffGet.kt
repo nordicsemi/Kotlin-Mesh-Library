@@ -11,7 +11,7 @@ class GenericOnOffGet : AcknowledgedMeshMessage {
     override val responseOpCode = GenericOnOffStatus.opCode
     override val parameters = null
 
-    override fun toString() = "GenericOnOffGet()"
+    override fun toString() = "GenericOnOffGet"
 
     companion object Initializer : GenericMessageInitializer {
         override val opCode = 0x8201u

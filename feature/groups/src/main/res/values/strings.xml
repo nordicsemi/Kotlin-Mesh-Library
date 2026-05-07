@@ -19,9 +19,13 @@
     <string name="label_no_models_selected">Select Models to Control</string>
     <string name="label_select_model_rationale">Select a subscribed model from the list to control with bound Application key.</string>
     <string name="label_no_groups_currently_added_rationale">Create a Group and subscribe some model(s) to control them simultaneously.</string>
-    <string name="label_delete_group_rationale">Removes this group from the network</string>
-    <string name="label_delete">Delete</string>
-    <string name="label_models1">model(s)</string>
+    <string name="label_delete_group_rationale">Removes this group from the network.</string>
+    <string name="label_delete">Delete Group</string>
+    <plurals name="label_models_count">
+        <item quantity="zero">No models</item>
+        <item quantity="one">1 model</item>
+        <item quantity="other">%d models</item>
+    </plurals>
     <string name="label_invalid_group_address">Invalid group address</string>
     <string name="label_group_in_use">Group in use</string>
     <string name="label_group_already_exists">Group already exists</string>

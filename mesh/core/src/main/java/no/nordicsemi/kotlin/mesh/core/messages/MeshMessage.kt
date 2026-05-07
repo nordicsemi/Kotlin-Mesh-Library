@@ -53,7 +53,6 @@ sealed class MeshMessageSecurity {
  * A functional interface containing a decoder for a mesh message.
  */
 fun interface HasInitializer {
-
     /**
      * Initializes the mesh message based on the given parameters.
      *
@@ -61,23 +60,22 @@ fun interface HasInitializer {
      * @return the decoded [BaseMeshMessage].
      */
     fun init(parameters: ByteArray?): BaseMeshMessage?
-
 }
 
 /**
  * Defines the Op Code of a mesh message.
  */
 interface HasOpCode {
+    /** The Op Code of the message. */
     val opCode: UInt
 }
 
 /**
  * The base interface of every mesh message. Mesh messages can be sent to and received from a mesh
  * network.
- *
- * @property parameters Access layer payload, including the Op Code.
  */
 interface BaseMeshMessage {
+    /** Access layer payload, including the Op Code. */
     val parameters: ByteArray?
 }
 

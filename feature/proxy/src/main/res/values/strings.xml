@@ -4,9 +4,9 @@
     <string name="title_proxy">Proxy</string>
     <string name="label_no_device_connected">No device connected</string>
     <string name="label_scanning">Scanning…</string>
-    <string name="label_connecting_to">Connecting to %s…</string>
-    <string name="label_connected_to">Connected to %s</string>
-    <string name="label_proxy_disconnected">Disconnected</string>
+    <string name="label_connecting_to">Connecting to <b>%s</b>…</string>
+    <string name="label_connected_to">Connected to <b>%s</b>.</string>
+    <string name="label_proxy_disconnected">Disconnected.</string>
     <string name="label_disconnected_rationale">Connect to network manually</string>
     <string name="label_unknown">Unknown</string>
     <string name="label_empty" />
@@ -16,7 +16,7 @@
     <string name="label_disconnect">Disconnect</string>
     <string name="label_connect">Connect</string>
     <string name="label_proxies">Proxies</string>
-    <string name="label_filter_type">Filter Type</string>
+    <string name="label_proxy_filter">Proxy Filter</string>
     <string name="label_proxy_filter_limit_reached">Proxy filter limit reached</string>
     <string name="label_add_address">Add Address</string>
     <string name="label_elements">Elements</string>

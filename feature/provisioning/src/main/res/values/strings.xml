@@ -54,6 +54,7 @@
     <string name="label_unknown_device">Unknown Device</string>
     <string name="label_warning">Warning</string>
     <string name="label_warning_provisioning_rationale">"A node with the same UUID already exists in the network.\n\nDo you want to reprovision it and apply the same configuration?\n\nNote that, the node will be provisioned with a new unicast address. All nodes that were configured to publish to any of the unicast addresses assigned to the old node will be reconfigured.\n\n\nEnabling the "Always Reconfigure" option in the Developer Options will skip this popup in the future.</string>
-    <string name="label_reprovision_configure"><![CDATA[Reprovisiong & Reconfigure]]></string>
+    <string name="label_reprovision_configure">Reprovision &amp; Reconfigure</string>
     <string name="label_reprovision">Reprovision</string>
+    <string name="label_reprovision_as_new_device">Reprovision as a new node</string>
 </resources>

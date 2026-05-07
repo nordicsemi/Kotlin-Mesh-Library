@@ -6,12 +6,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
-import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import javax.inject.Inject
 
@@ -26,20 +26,20 @@ internal class NodesViewModel @Inject internal constructor(
         initialValue = NodesScreenUiState()
     )
 
-    private lateinit var network: MeshNetwork
-
     init {
         observerNetworkChanges()
     }
 
     internal fun observerNetworkChanges() {
-        repository.network.onEach { network ->
-            this.network = network
-            _uiState.value = NodesScreenUiState(
-                nodes = network.nodes.toList()
-            )
-        }.launchIn(scope = viewModelScope)
-
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach { network ->
+                _uiState.value = NodesScreenUiState(
+                    nodes = network.nodes.toList()
+                )
+            }
+            .launchIn(scope = viewModelScope)
     }
 }
 

@@ -62,9 +62,20 @@ class ConfigVendorModelSubscriptionList(
     )
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigVendorModelSubscriptionList(status: $status " +
-            "elementAddress: ${elementAddress.toHexString()} modelId: ${modelId.toHex()} " +
-            "addresses: ${addresses.joinToString { it.toHexString(format = HexFormat.UpperCase) }})"
+    override fun toString() = "ConfigVendorModelSubscriptionList(" +
+            "status: $status, " +
+            "elementAddress: $elementAddress, " +
+            "modelId: $modelId, " +
+            "addresses: ${addresses.joinToString { 
+                it.toHexString(
+                    format = HexFormat {
+                        number {
+                            prefix = "0x"
+                            upperCase = true
+                        }
+                    }
+                ) 
+            }})"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x802Cu

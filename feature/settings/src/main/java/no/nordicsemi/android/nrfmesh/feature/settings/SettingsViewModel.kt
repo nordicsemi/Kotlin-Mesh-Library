@@ -7,11 +7,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.navigation.ClickableSetting
@@ -20,16 +21,11 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 @HiltViewModel(assistedFactory = SettingsViewModel.Factory::class)
 class SettingsViewModel @AssistedInject constructor(
     private val repository: CoreDataRepository,
-    @Assisted clickableSetting: ClickableSetting?
+    @Assisted clickableSetting: ClickableSetting?,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(SettingsScreenUiState())
-    val uiState: StateFlow<SettingsScreenUiState> = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SettingsScreenUiState(selectedSetting = clickableSetting)
-        )
-    private lateinit var network: MeshNetwork
+    private lateinit var meshNetwork: MeshNetwork
+    private val _uiState = MutableStateFlow(value = SettingsScreenUiState(selectedSetting = clickableSetting))
+    val uiState: StateFlow<SettingsScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetworkState()
@@ -39,18 +35,21 @@ class SettingsViewModel @AssistedInject constructor(
      * Observes the network state and updates the UI state with the current network data.
      */
     private fun observeNetworkState() {
-        repository.network.onEach {
-            _uiState.update { state ->
-                state.copy(
-                    networkState = MeshNetworkState.Success(
-                        network = it,
-                        settingsListData = SettingsListData(it)
-                    ),
-                    selectedSetting = state.selectedSetting
-                )
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                meshNetwork = it
+                _uiState.update { state ->
+                    state.copy(
+                        networkState = MeshNetworkState.Success(
+                            settings = SettingsListData(network = meshNetwork)
+                        ),
+                        selectedSetting = state.selectedSetting
+                    )
+                }
             }
-            network = it
-        }.launchIn(scope = viewModelScope)
+            .launchIn(scope = viewModelScope)
     }
 
     /**
@@ -75,7 +74,7 @@ class SettingsViewModel @AssistedInject constructor(
      * @param name Name of the network.
      */
     fun onNameChanged(name: String) {
-        network.name = name
+        meshNetwork.name = name
         save()
     }
 
@@ -90,11 +89,7 @@ class SettingsViewModel @AssistedInject constructor(
 }
 
 sealed interface MeshNetworkState {
-    data class Success(
-        val network: MeshNetwork,
-        val settingsListData: SettingsListData,
-    ) : MeshNetworkState
-
+    data class Success(val settings: SettingsListData) : MeshNetworkState
     data object Loading : MeshNetworkState
 }
 

@@ -29,14 +29,12 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigMo
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 @Composable
 fun BindAppKeysScreen(
     model: Model,
     addedKeys: List<ApplicationKey> = model.parentElement?.parentNode?.applicationKeys.orEmpty(),
-    navigateToConfigApplicationKeys: (Uuid) -> Unit,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
     Column(
@@ -59,37 +57,16 @@ fun BindAppKeysScreen(
                 }
             }
 
-            false -> {
-                model.parentElement?.parentNode?.network?.takeIf {
-                    it.applicationKeys.isNotEmpty()
-                }?.let {
+            false -> model.parentElement?.parentNode?.applicationKeys
+                ?.takeIf { it.isEmpty() }
+                ?.let {
                     MeshNoItemsAvailable(
                         modifier = Modifier.fillMaxSize(),
                         imageVector = Icons.Outlined.VpnKey,
                         title = stringResource(R.string.label_no_bound_app_keys),
                         rationale = stringResource(R.string.label_bind_an_app_key_rationale),
-                        onClickText = stringResource(R.string.label_add_app_key),
-                        onClick = {
-                            navigateToConfigApplicationKeys(
-                                model.parentElement?.parentNode?.uuid
-                                    ?: throw IllegalArgumentException("Parent node UUID is null")
-                            )
-                        }
                     )
-                } ?: MeshNoItemsAvailable(
-                    modifier = Modifier.fillMaxSize(),
-                    imageVector = Icons.Outlined.VpnKey,
-                    title = stringResource(R.string.label_no_added_app_keys),
-                    rationale = stringResource(R.string.label_add_an_app_key_rationale),
-                    onClickText = stringResource(R.string.label_add_app_key),
-                    onClick = {
-                        navigateToConfigApplicationKeys(
-                            model.parentElement?.parentNode?.uuid
-                                ?: throw IllegalArgumentException("Parent node UUID is null")
-                        )
-                    }
-                )
-            }
+                }
         }
     }
 }

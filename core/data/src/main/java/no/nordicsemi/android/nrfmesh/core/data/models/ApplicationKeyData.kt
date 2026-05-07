@@ -49,26 +49,27 @@ data class ApplicationKeyData(
 
         other as ApplicationKeyData
 
+        if (isInUse != other.isInUse) return false
+        if (id != other.id) return false
         if (name != other.name) return false
         if (index != other.index) return false
         if (!key.contentEquals(other.key)) return false
-        if (oldKey != null) {
-            if (other.oldKey == null) return false
-            if (!oldKey.contentEquals(other.oldKey)) return false
-        } else if (other.oldKey != null) return false
+        if (!oldKey.contentEquals(other.oldKey)) return false
         if (boundNetKeyIndex != other.boundNetKeyIndex) return false
-        if (isInUse != other.isInUse) return false
+        if (boundNetworkKeyName != other.boundNetworkKeyName) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
+        var result = isInUse.hashCode()
+        result = 31 * result + id.hashCode()
+        result = 31 * result + name.hashCode()
         result = 31 * result + index.hashCode()
         result = 31 * result + key.contentHashCode()
         result = 31 * result + (oldKey?.contentHashCode() ?: 0)
         result = 31 * result + boundNetKeyIndex.hashCode()
-        result = 31 * result + isInUse.hashCode()
+        result = 31 * result + boundNetworkKeyName.hashCode()
         return result
     }
 }

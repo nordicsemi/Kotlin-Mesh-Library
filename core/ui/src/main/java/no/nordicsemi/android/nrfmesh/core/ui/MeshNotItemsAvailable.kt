@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -38,12 +39,14 @@ fun MeshNoItemsAvailable(
         )
         Text(
             modifier = Modifier.padding(all = 16.dp),
-            text = title
+            textAlign = TextAlign.Center,
+            text = title,
         )
         if (!rationale.isNullOrEmpty())
             Text(
                 modifier = Modifier.padding(all = 16.dp),
-                text = rationale
+                textAlign = TextAlign.Center,
+                text = rationale,
             )
         if (onClickText != null && onClick != null) {
             Row(

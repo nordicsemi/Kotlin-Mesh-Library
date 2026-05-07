@@ -12,8 +12,7 @@ class ConfigNetworkTransmitGet : AcknowledgedConfigMessage {
     override val responseOpCode = ConfigNetworkTransmitStatus.opCode
     override val parameters = null
 
-    @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigNetworkTransmitGet(opCode: 0x${opCode.toHexString()})"
+    override fun toString() = "ConfigNetworkTransmitGet"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8023u

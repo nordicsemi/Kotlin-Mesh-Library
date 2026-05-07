@@ -16,7 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.SportsScore
 import androidx.compose.material.icons.outlined.Start
 import androidx.compose.material.icons.outlined.Timer
@@ -89,7 +89,7 @@ internal fun HeartBeatSubscriptionContent(
 
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Forum,
+        imageVector = Icons.Outlined.MonitorHeart,
         title = stringResource(R.string.label_subscriptions),
         titleAction = {
             AnimatedVisibility(visible = subscription != null) {
@@ -343,7 +343,7 @@ private fun SourceRow(
                     expanded = expanded
                 )
             },
-            subtitle = source?.let { "0x${it.toHexString()}" } ?: "",
+            subtitle = source?.toHexString()
         )
         HeartbeatSubscriptionSourcesDropdownMenu(
             network = network,
@@ -401,7 +401,7 @@ private fun DestinationRow(
                     expanded = expanded
                 )
             },
-            subtitle = destination?.let { "0x${it.toHexString()}" } ?: "",
+            subtitle = destination?.toHexString()
         )
         HeartbeatSubscriptionDestinationsDropdownMenu(
             network = network,

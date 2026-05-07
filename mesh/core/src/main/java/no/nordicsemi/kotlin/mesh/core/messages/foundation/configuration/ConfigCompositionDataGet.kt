@@ -11,12 +11,12 @@ import no.nordicsemi.kotlin.mesh.core.messages.ConfigMessageInitializer
  * @property page          Page number of the Composition Data.
  * @constructor Creates a ConfigHeartbeatPublicationGet message.
  */
-data class ConfigCompositionDataGet(val page: UByte) : AcknowledgedConfigMessage {
-
+class ConfigCompositionDataGet(val page: UByte) : AcknowledgedConfigMessage {
     override val opCode: UInt = Initializer.opCode
-
     override val responseOpCode = ConfigCompositionDataStatus.opCode
     override val parameters = byteArrayOf(page.toByte())
+
+    override fun toString() = "ConfigCompositionDataGet(page: $page)"
     
     companion object Initializer : ConfigMessageInitializer {
         override val opCode: UInt = 0x8008u

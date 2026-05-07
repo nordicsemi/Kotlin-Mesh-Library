@@ -3,6 +3,7 @@
 package no.nordicsemi.kotlin.mesh.core.model
 
 import kotlinx.serialization.Serializable
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelPublicationSet
 
 /**
  * The publish object represents parameters that define how the messages are published by a mesh
@@ -59,7 +60,7 @@ data class Publish(
         get() = credentials == FriendshipSecurity
 
     /**
-     * Publish constructor to be used when sending a ConfigModelPublicationSet to disable
+     * Publish constructor to be used when sending a [ConfigModelPublicationSet] to disable
      * publications.
      */
     constructor() : this(
@@ -70,4 +71,11 @@ data class Publish(
         credentials = MasterSecurity,
         retransmit = Retransmit.disabled
     )
+
+    override fun toString() = when (address) {
+        is UnassignedAddress -> "Disabled"
+        else -> "Publish(address: ${address.toHexString()}, applicationKeyIndex: $index, " +
+                "ttl: $ttl, period: $period, " +
+                "credentials: $credentials, retransmit: $retransmit)"
+    }
 }

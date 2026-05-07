@@ -86,7 +86,7 @@ fun ApplicationKey.Row(
         imageVector = imageVector,
         title = name,
         titleAction = titleAction,
-        subtitle = "Bound to: ${boundNetworkKey.name}",
+        subtitle = "Bound to ${boundNetworkKey.name}",
     )
 }
 

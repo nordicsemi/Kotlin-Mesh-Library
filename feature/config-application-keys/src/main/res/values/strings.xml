@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="label_no_app_keys_available">No Application Keys available</string>
-    <string name="label_no_app_keys_to_add_rationale">Go to settings and add an application key to
-        the network.</string>
+    <string name="label_no_app_keys_to_add_rationale">Generate a key or go to settings add an application key manually.</string>
     <string name="action_undo">Undo</string>
     <string name="label_app_key_in_use">Cannot delete, %1$s is in use.</string>
     <string name="label_add_key">Add Key</string>
@@ -29,4 +28,5 @@
     <string name="label_application_key_added">Application Key added</string>
     <string name="label_remove_key">Remove Key</string>
     <string name="label_remove_key_confirmation">The selected key is bound to one or more models in the Node. When removed, it will be unbound automatically, and the models may stop working. \n\nDo you wish to continue?</string>
+    <string name="label_available_application_keys">Available Application Keys</string>
 </resources>

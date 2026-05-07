@@ -22,8 +22,9 @@ data class SceneData(
     val number: SceneNumber,
     val addresses: List<UnicastAddress>,
     val isInUse: Boolean,
-    val id: Long = KeyIdGenerator.nextId(),
 ) {
+    internal val id: Long = KeyIdGenerator.nextId()
+
     constructor(scene: Scene) : this(
         name = scene.name,
         number = scene.number,

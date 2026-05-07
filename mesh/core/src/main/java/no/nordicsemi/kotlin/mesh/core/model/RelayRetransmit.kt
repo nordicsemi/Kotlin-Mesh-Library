@@ -1,11 +1,9 @@
 package no.nordicsemi.kotlin.mesh.core.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigRelaySet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigRelayStatus
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 /**
  * The relay retransmit object represents the parameters of the retransmissions of network layer
@@ -15,39 +13,24 @@ import kotlin.time.toDuration
  *                           relay messages.
  * @property interval        An integer from 10 to 320 that represents the interval in milliseconds
  *                           between the transmissions.
- * @property steps           Number of steps between each retransmission (10 to 320 ms in 10ms steps).
- * @property timeInterval    The time interval between each transmissions in seconds.
  */
+@ConsistentCopyVisibility
 @Serializable
-data class RelayRetransmit(val count: Int, val interval: Int) {
-
-    val steps: UByte
-        get() = ((interval / 10) - 1).toUByte()
-
-    val timeInterval: Duration
-        get() = interval.toDuration(DurationUnit.SECONDS)
+data class RelayRetransmit internal constructor(val count: Int, val interval: Int) {
+    /**
+     * Interval in milliseconds.
+     */
+    @Transient
+    val intervalAsMilliseconds : Long = interval.toLong()
 
     init {
-        require(count in MIN_COUNT..MAX_COUNT) {
-            "Error while creating RelayRetransmit: count value was $count. Count must range from " +
-                    "$MIN_COUNT to $MAX_COUNT"
+        require(count in COUNT_RANGE) {
+            "Relay Retransmit count must be in range $COUNT_RANGE"
         }
-        require(interval in MIN_INTERVAL..MAX_INTERVAL) {
-            "Error while creating RelayRetransmit: interval value was $interval. Interval must range" +
-                    " from $MIN_INTERVAL to $MAX_INTERVAL"
+        require(interval in INTERVAL_RANGE) {
+            "Relay Retransmit interval must be in range $INTERVAL_RANGE milliseconds"
         }
     }
-
-    /**
-     * Convenience constructor
-     *
-     * @param incorrectRetransmit incorrect relay retransmit
-     */
-    @Suppress("unused")
-    internal constructor(incorrectRetransmit: RelayRetransmit) : this(
-        count = incorrectRetransmit.count,
-        interval = incorrectRetransmit.interval
-    )
 
     /**
      * Convenience constructor to be invoked upon receiving a [ConfigRelaySet] message.
@@ -56,7 +39,7 @@ data class RelayRetransmit(val count: Int, val interval: Int) {
      */
     @Suppress("unused")
     internal constructor(request: ConfigRelaySet) : this(
-        count = request.count + 1,
+        count = request.count.toInt() + 1,
         interval = (request.steps.toInt() + 1) * 10
     )
 
@@ -66,7 +49,7 @@ data class RelayRetransmit(val count: Int, val interval: Int) {
      * @param status [ConfigRelayStatus] message.
      */
     internal constructor(status: ConfigRelayStatus) : this(
-        count = status.count + 1,
+        count = status.count.toInt() + 1,
         interval = (status.steps.toInt() + 1) * 10
     )
 

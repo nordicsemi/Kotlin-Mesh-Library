@@ -44,16 +44,11 @@ class ConfigModelSubscriptionStatus(
     override val companyIdentifier: UShort?,
 ) : ConfigResponse, ConfigStatusMessage, ConfigAnyModelAddressMessage {
     override val opCode = Initializer.opCode
-    override val parameters: ByteArray
-        get() {
-            val data = status.value.toByteArray() +
-                    elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    address.toByteArray(ByteOrder.LITTLE_ENDIAN)
-            return data.plus(elements = companyIdentifier?.let { companyIdentifier ->
-                companyIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                        modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            } ?: modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
-        }
+    override val parameters= status.value.toByteArray() +
+            elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            (companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN) ?: byteArrayOf()) +
+            modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     /**
      * Convenience constructor to create a ConfigModelSubscriptionStatus message.
@@ -176,39 +171,43 @@ class ConfigModelSubscriptionStatus(
     )
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigModelSubscriptionStatus(status: $status, " +
-            "elementAddress: ${
-                elementAddress.address.toHexString(
-                    format = HexFormat {
-                        number.prefix = "0x"
-                        upperCase = true
-                    }
-                )
-            }, " +
+    override fun toString() = "ConfigModelSubscriptionStatus(" +
+            "status: $status, " +
             "address: ${
                 address.toHexString(
                     format = HexFormat {
-                        number.prefix = "0x"
-                        upperCase = true
+                        number {
+                            prefix = "0x"
+                            minLength = 4
+                            upperCase = true
+                        }
                     }
                 )
             }, " +
+            "elementAddress: $elementAddress, " +
             "modelIdentifier: ${
                 modelIdentifier.toHexString(
                     format = HexFormat {
-                        number.prefix = "0x"
-                        upperCase = true
+                        number {
+                            prefix = "0x"
+                            upperCase = true
+                        }
                     }
                 )
-            }, " +
-            "companyIdentifier: ${
-                companyIdentifier?.toHexString(
-                    format = HexFormat {
-                        number.prefix = "0x"
-                        upperCase = true
-                    }
-                )
-            })"
+            }" +
+            if (companyIdentifier != null) {
+                ", companyIdentifier: ${
+                    companyIdentifier.toHexString(
+                        format = HexFormat {
+                            number {
+                                prefix = "0x"
+                                upperCase = true
+                            }
+                        }
+                    )
+                }"
+            } else { "" } +
+            ")"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x801Fu

@@ -14,6 +14,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import no.nordicsemi.android.nrfmesh.core.navigation.AppState
+import no.nordicsemi.android.nrfmesh.core.navigation.GroupsListDetailSceneKey
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.ui.PlaceHolder
 import no.nordicsemi.android.nrfmesh.feature.groups.R
@@ -21,17 +22,17 @@ import no.nordicsemi.android.nrfmesh.feature.groups.group.GroupScreen
 import no.nordicsemi.android.nrfmesh.feature.groups.group.GroupViewModel
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.GroupControlsKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.groupControlsEntry
-import no.nordicsemi.kotlin.data.HexString
+import no.nordicsemi.kotlin.mesh.core.model.Address
 import kotlin.uuid.ExperimentalUuidApi
 
 @Serializable
-data class GroupKey(val address: HexString) : NavKey
+data class GroupKey(val address: Address) : NavKey
 
 @OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.groupEntry(appState: AppState, navigator: Navigator) {
     entry<GroupKey>(
         metadata = ListDetailSceneStrategy.listPane(
-            sceneKey = GroupKey,
+            sceneKey = GroupsListDetailSceneKey,
             detailPlaceholder = {
                 PlaceHolder(
                     modifier = Modifier.fillMaxSize(),
@@ -42,10 +43,9 @@ fun EntryProviderScope<NavKey>.groupEntry(appState: AppState, navigator: Navigat
         )
     ) { key ->
         val address = key.address
-        val viewModel =
-            hiltViewModel<GroupViewModel, GroupViewModel.Factory>(key = address) {
-                it.create(address = address)
-            }
+        val viewModel = hiltViewModel<GroupViewModel, GroupViewModel.Factory> {
+            it.create(address = address.toInt())
+        }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         GroupScreen(
             uiState = uiState,
@@ -55,7 +55,7 @@ fun EntryProviderScope<NavKey>.groupEntry(appState: AppState, navigator: Navigat
                 navigator.navigate(
                     key = GroupControlsKey(
                         address = address,
-                        modelId = modelId.id.toHexString()
+                        modelId = modelId.id
                     )
                 )
             },
@@ -68,5 +68,5 @@ fun EntryProviderScope<NavKey>.groupEntry(appState: AppState, navigator: Navigat
             save = viewModel::save
         )
     }
-    groupControlsEntry(appState = appState, navigator = navigator)
+    groupControlsEntry()
 }

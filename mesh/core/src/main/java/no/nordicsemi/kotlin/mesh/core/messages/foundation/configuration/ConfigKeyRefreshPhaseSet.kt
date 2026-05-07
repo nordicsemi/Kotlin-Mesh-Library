@@ -17,7 +17,7 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
  * @property transition New Key Refresh Phase Transition to be set.
  */
 class ConfigKeyRefreshPhaseSet(
-    override val index: KeyIndex,
+    override val networkKeyIndex: KeyIndex,
     val transition: KeyRefreshPhaseTransition,
 ) : AcknowledgedConfigMessage, ConfigNetKeyMessage {
     override val opCode: UInt = Initializer.opCode
@@ -37,10 +37,10 @@ class ConfigKeyRefreshPhaseSet(
     constructor(
         networkKey: NetworkKey,
         transition: KeyRefreshPhaseTransition,
-    ) : this(index = networkKey.index, transition = transition)
+    ) : this(networkKeyIndex = networkKey.index, transition = transition)
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigKeyRefreshPhaseSet(opCode: 0x${opCode.toHexString()}, " +
+    override fun toString() = "ConfigKeyRefreshPhaseSet(networkKeyIndex: ${networkKeyIndex}, " +
             "transition: $transition)"
 
     companion object Initializer : ConfigMessageInitializer {
@@ -56,7 +56,7 @@ class ConfigKeyRefreshPhaseSet(
             ?.takeIf { it.size == 3 }
             ?.let {
                 ConfigKeyRefreshPhaseSet(
-                    index = decodeNetKeyIndex(data = it, offset = 0),
+                    networkKeyIndex = decodeNetKeyIndex(data = it, offset = 0),
                     transition = KeyRefreshPhaseTransition.init(it[2].toInt())
                 )
             }

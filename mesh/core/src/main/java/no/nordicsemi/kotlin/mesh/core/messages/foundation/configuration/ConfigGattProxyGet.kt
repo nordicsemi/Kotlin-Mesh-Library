@@ -13,26 +13,13 @@ class ConfigGattProxyGet : AcknowledgedConfigMessage {
     override val responseOpCode: UInt = ConfigGattProxyStatus.opCode
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString(): String =
-        "ConfigGattProxyGet(opCode: ${opCode.toHexString(
-            format = HexFormat { 
-                number.prefix = "0x"
-                upperCase = true
-            }
-        )}, parameters: ${parameters?.toHexString(
-            format = HexFormat {
-                number.prefix = "0x"
-                upperCase = true
-            }
-        ) ?: "null"}))"
+    override fun toString(): String = "ConfigGattProxyGet"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8012u
 
-        override fun init(parameters: ByteArray?) = parameters?.takeIf {
-            it.isEmpty()
-        }?.let {
-            ConfigGattProxyGet()
-        }
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.isEmpty() }
+            ?.let { ConfigGattProxyGet() }
     }
 }

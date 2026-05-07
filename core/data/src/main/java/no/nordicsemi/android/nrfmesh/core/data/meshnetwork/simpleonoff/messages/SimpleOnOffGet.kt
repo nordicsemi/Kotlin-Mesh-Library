@@ -19,7 +19,7 @@ class SimpleOnOffGet : AcknowledgedVendorMessage {
     override val responseOpCode = SimpleOnOffStatus.opCode
     override val parameters = null
 
-    override fun toString() = "SimpleOnOffGet()"
+    override fun toString() = "SimpleOnOffGet"
 
     companion object Initializer : VendorMessageInitializer {
         override val opCode = 0xC25900u

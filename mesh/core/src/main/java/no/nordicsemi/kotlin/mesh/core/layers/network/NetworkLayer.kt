@@ -3,7 +3,6 @@
 package no.nordicsemi.kotlin.mesh.core.layers.network
 
 import kotlinx.coroutines.sync.Mutex
-import kotlin.time.Clock
 import no.nordicsemi.kotlin.mesh.bearer.BearerError
 import no.nordicsemi.kotlin.mesh.bearer.PduType
 import no.nordicsemi.kotlin.mesh.bearer.gatt.GattBearer
@@ -29,6 +28,7 @@ import no.nordicsemi.kotlin.mesh.core.model.maxUnicastAddress
 import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
 import kotlin.concurrent.timer
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -40,7 +40,6 @@ import kotlin.uuid.ExperimentalUuidApi
  * @constructor Constructs the network layer.
  */
 internal class NetworkLayer(private val networkManager: NetworkManager) {
-
     private val meshNetwork: MeshNetwork
         get() = networkManager.meshNetwork
     private val logger: Logger?
@@ -65,7 +64,7 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
         if (type != PduType.MESH_BEACON) {
             // Ensure the PDU has not been handled already.
             require(networkMessageCache[incomingPdu] == null) {
-                logger?.d(LogCategory.NETWORK) { "PDU already handled." }
+                logger?.d(LogCategory.NETWORK) { "PDU already handled" }
                 return null
             }
             networkMessageCache[incomingPdu] = null
@@ -80,12 +79,16 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
                     meshNetwork = meshNetwork
                 )
                 return if (networkPdu != null) {
-                    logger?.i(LogCategory.NETWORK) { "$networkPdu received." }
+                    logger?.i(LogCategory.NETWORK) { "$networkPdu received" }
                     networkManager.lowerTransportLayer.handle(networkPdu = networkPdu)?.let {
-                        ReceivedMessage(address = networkPdu.source, message = it)
+                        ReceivedMessage(
+                            source = networkPdu.source,
+                            destination = networkPdu.destination,
+                            message = it
+                        )
                     }
                 } else {
-                    logger?.w(LogCategory.NETWORK) { "Failed to decrypt network pdu." }
+                    logger?.w(LogCategory.NETWORK) { "Failed to decrypt network pdu" }
                     null
                 }
             }
@@ -105,11 +108,11 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
                     return null
                 }
                 UnprovisionedDeviceBeaconDecoder.decode(pdu = incomingPdu)?.let {
-                    logger?.i(LogCategory.NETWORK) { "$it received." }
+                    logger?.i(LogCategory.NETWORK) { "$it received" }
                     handle(beacon = it)
                     return null
                 }
-                logger?.w(LogCategory.NETWORK) { "Failed to decrypt mesh beacon pdu." }
+                logger?.w(LogCategory.NETWORK) { "Failed to decrypt mesh beacon pdu" }
                 return null
             }
 
@@ -119,10 +122,10 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
                     pduType = type,
                     meshNetwork = meshNetwork
                 )?.let {
-                    logger?.i(LogCategory.NETWORK) { "$it received." }
+                    logger?.i(LogCategory.NETWORK) { "$it received" }
                     handle(proxyPdu = it)
                 } ?: run {
-                    logger?.w(LogCategory.NETWORK) { "Unable to decode network pdu." }
+                    logger?.w(LogCategory.NETWORK) { "Unable to decode network pdu" }
                     null
                 }
             }
@@ -158,7 +161,7 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
             ttl = ttl
         )
         logger?.i(LogCategory.NETWORK) {
-            "Sending $networkPdu encrypted using ${networkPdu.key.name}."
+            "Sending $networkPdu (encrypted using ${networkPdu.key.name})"
         }
         // Loopback interface
         if (shouldLoopback(networkPdu = networkPdu)) {
@@ -192,17 +195,17 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
         // Unless a GATT Bearer is used, the Network PDUs should be sent multiple times if
         // Network Transmit has been set for the local Provisioner's Node
         if (type == PduType.NETWORK_PDU && networkManager.bearer is GattBearer) {
-            meshNetwork.localProvisioner?.node?.networkTransmit?.takeIf {
-                it.count > 1u
-            }?.let { networkTransmit ->
-                var count = networkTransmit.count.toInt()
-                timer(period = networkTransmit.intervalAsMilliseconds) {
-                    // networkManager.transmitter?.send(pdu = networkPdu.pdu, type = type)
-                    count -= 1
-                    if (count == 0)
-                        cancel()
+            meshNetwork.localProvisioner?.node?.networkTransmit
+                ?.takeIf { it.count > 1 }
+                ?.let { networkTransmit ->
+                    var count = networkTransmit.count
+                    timer(period = networkTransmit.intervalAsMilliseconds) {
+                        // networkManager.transmitter?.send(pdu = networkPdu.pdu, type = type)
+                        count -= 1
+                        if (count == 0)
+                            cancel()
+                    }
                 }
-            }
         }
     }
 
@@ -406,7 +409,7 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
             return null
         }
         logger?.i(LogCategory.NETWORK) {
-            "$controlMessage received (decrypted using key: ${controlMessage.networkKey.name})."
+            "$controlMessage received (decrypted using key: ${controlMessage.networkKey.name})"
         }
 
         return when (controlMessage.opCode) {
@@ -431,12 +434,25 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
                     // Look for the proxy Node.
                     val proxyNode = meshNetwork.node(proxyPdu.source as UnicastAddress)
                     networkManager.proxy.handle(message = message, proxy = proxyNode)
-                    ReceivedMessage(address = proxyPdu.source, message = message)
+                    ReceivedMessage(
+                        source = proxyPdu.source,
+                        destination = proxyPdu.destination,
+                        message = message
+                    )
                 }
             }
 
             else -> {
-                logger?.w(LogCategory.PROXY) { "Unknown Proxy Configuration message (opCode: ${controlMessage.opCode})" }
+                logger?.w(LogCategory.PROXY) {
+                    "Unknown Proxy Configuration message (opCode: ${
+                        controlMessage.opCode.toHexString(
+                            format = HexFormat {
+                                number.prefix = "0x"
+                                upperCase = true
+                            }
+                        )
+                    })"
+                }
                 null
             }
         }

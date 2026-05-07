@@ -29,6 +29,7 @@ class GenericLevelSet(
     override val opCode = Initializer.opCode
     override val responseOpCode = GenericLevelStatus.opCode
     override val transitionTime = transitionParams?.transitionTime
+    override val continueTransaction = true
     override val delay = transitionParams?.delay
     override val parameters: ByteArray
         get() = when (transitionTime != null && delay != null) {
@@ -87,9 +88,9 @@ class GenericLevelSet(
     @Suppress("unused")
     constructor(level: Short, tid: UByte) : this(level = level, tid = tid, transitionParams = null)
 
-    override fun toString() = "GenericLevelSet(tid: $tid, level: $level, " +
+    override fun toString() = "GenericLevelSet(tid: $tid, level: $level" +
             if (transitionTime != null && delay != null) {
-                "transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
+                ", transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
             } else ")"
 
     companion object Initializer : GenericMessageInitializer {

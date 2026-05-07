@@ -7,46 +7,46 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
-import no.nordicsemi.kotlin.data.HexString
+import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Scene
 
 @HiltViewModel(assistedFactory = SceneViewModel.Factory::class)
 internal class SceneViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
-    @Assisted number: HexString,
+    @Assisted number: Int,
 ) : ViewModel() {
-    private val sceneNumber = number.toUShort(radix = 16)
+    private val sceneNumber = number.toUShort()
     private lateinit var network: MeshNetwork
     private val _uiState = MutableStateFlow(SceneScreenUiState())
-    internal val uiState: StateFlow<SceneScreenUiState> = _uiState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SceneScreenUiState()
-        )
+    internal val uiState: StateFlow<SceneScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetwork()
     }
 
     private fun observeNetwork() {
-        repository.network.onEach { network ->
-            this.network = network
-            val sceneState = network.scene(number = sceneNumber)?.let { scene ->
-                SceneState.Success(scene = scene)
-            } ?: SceneState.Error(throwable = IllegalStateException("Scene not found."))
-            _uiState.update { state ->
-                state.copy(sceneState = sceneState)
+        repository.networkEvents
+            .map { repository.meshNetwork }
+            .filterNotNull()
+            .onEach {
+                network = it
+                val sceneState = network.scene(number = sceneNumber)
+                    ?.let { SceneState.Success(scene = it) }
+                    ?: SceneState.Error(throwable = IllegalStateException("Scene not found."))
+                _uiState.update { state ->
+                    state.copy(sceneState = sceneState)
+                }
             }
-        }.launchIn(scope = viewModelScope)
+            .launchIn(viewModelScope)
     }
 
     /**
@@ -58,7 +58,7 @@ internal class SceneViewModel @AssistedInject internal constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(number: HexString): SceneViewModel
+        fun create(number: Int): SceneViewModel
     }
 }
 

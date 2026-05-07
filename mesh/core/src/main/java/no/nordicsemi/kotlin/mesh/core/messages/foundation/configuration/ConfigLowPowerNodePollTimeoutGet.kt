@@ -32,8 +32,8 @@ class ConfigLowPowerNodePollTimeoutGet(val address: Address) : AcknowledgedConfi
     constructor(address: MeshAddress) : this(address = address.address)
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigLowPowerNodePollTimeoutGet(opCode: " +
-            "0x${opCode.toHexString()}, address: ${address.toHexString()})"
+    override fun toString() =
+        "ConfigLowPowerNodePollTimeoutGet(address: 0x${address.toHexString(HexFormat.UpperCase)})"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x802Du

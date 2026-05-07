@@ -30,7 +30,6 @@ import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,7 +57,6 @@ import no.nordicsemi.android.nrfmesh.core.ui.Row
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyDelete
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyGet
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
@@ -67,20 +65,16 @@ import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 @Composable
 internal fun ConfigAppKeysScreen(
     snackbarHostState: SnackbarHostState,
-    isLocalProvisionerNode: Boolean,
     addedApplicationKeys: List<ApplicationKey>,
     messageState: MessageState,
-    availableApplicationKeys: List<ApplicationKey>,
     onAddAppKeyClicked: () -> Unit,
-    navigateToApplicationKeys: () -> Unit,
     readApplicationKeys: () -> Unit,
-    isKeyInUse:(ApplicationKey) -> Boolean,
+    isKeyInUse: (ApplicationKey) -> Boolean,
     send: (AcknowledgedConfigMessage) -> Unit,
     resetMessageState: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState()
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
     var keyToDelete by remember { mutableStateOf<ApplicationKey?>(null) }
@@ -91,58 +85,62 @@ internal fun ConfigAppKeysScreen(
             onRefresh = { readApplicationKeys() },
             isRefreshing = messageState.isInProgress() && messageState.message is ConfigAppKeyGet
         ) {
-            when (addedApplicationKeys.isNotEmpty()) {
-                true -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-                ) {
-                    item {
-                        SectionTitle(
-                            modifier = Modifier.padding(top = 8.dp),
-                            title = stringResource(R.string.label_added_application_keys)
-                        )
-                    }
-                    items(
-                        items = addedApplicationKeys,
-                        key = { KeyIdGenerator.nextId() }
-                    ) { key ->
-                        // Hold the current state from the Swipe to Dismiss composable
-                        val dismissState = rememberSwipeToDismissBoxState()
-                        val isInUse = isKeyInUse(key)
-                        SwipeToDismissKey(
-                            isInUse = isInUse,
-                            dismissState = dismissState,
-                            key = key,
-                            onSwiped = {
-                                if (isInUse) {
-                                    keyToDelete = it
-                                    showDeleteConfirmationDialog = true
-                                    scope.launch { dismissState.reset() }
-                                } else {
-                                    if (!messageState.isInProgress()) {
-                                        send(ConfigAppKeyDelete(key = key))
-                                        snackbarHostState.currentSnackbarData?.dismiss()
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                message = context.getString(R.string.label_application_key_deleting),
-                                                duration = SnackbarDuration.Short,
-                                            )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+            ) {
+                when (addedApplicationKeys.isNotEmpty()) {
+                    true -> {
+                        item {
+                            SectionTitle(
+                                modifier = Modifier.padding(top = 8.dp),
+                                title = stringResource(R.string.label_added_application_keys)
+                            )
+                        }
+                        items(
+                            items = addedApplicationKeys,
+                            key = { KeyIdGenerator.nextId() }
+                        ) { key ->
+                            // Hold the current state from the Swipe to Dismiss composable
+                            val dismissState = rememberSwipeToDismissBoxState()
+                            val isInUse = isKeyInUse(key)
+                            SwipeToDismissKey(
+                                isInUse = isInUse,
+                                dismissState = dismissState,
+                                key = key,
+                                onSwiped = {
+                                    if (isInUse) {
+                                        keyToDelete = it
+                                        showDeleteConfirmationDialog = true
+                                        scope.launch { dismissState.reset() }
+                                    } else {
+                                        if (!messageState.isInProgress()) {
+                                            send(ConfigAppKeyDelete(key = key))
+                                            snackbarHostState.currentSnackbarData?.dismiss()
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    message = context.getString(R.string.label_application_key_deleting),
+                                                    duration = SnackbarDuration.Short,
+                                                )
+                                            }
                                         }
                                     }
                                 }
-                            }
+                            )
+                        }
+                        item { Spacer(modifier = Modifier.size(size = 16.dp)) }
+                    }
+
+                    false -> item {
+                        MeshNoItemsAvailable(
+                            modifier = Modifier.fillParentMaxSize(),
+                            imageVector = Icons.Outlined.VpnKey,
+                            title = stringResource(R.string.label_no_app_keys_added),
+                            rationale = stringResource(R.string.label_no_app_keys_added_rationale)
                         )
                     }
-                    item { Spacer(modifier = Modifier.size(size = 16.dp)) }
                 }
-
-                false -> MeshNoItemsAvailable(
-                    modifier = Modifier.fillMaxSize(),
-                    imageVector = Icons.Outlined.VpnKey,
-                    title = stringResource(R.string.label_no_app_keys_added),
-                    rationale = stringResource(R.string.label_no_app_keys_added_rationale)
-                )
             }
         }
 
@@ -156,53 +154,10 @@ internal fun ConfigAppKeysScreen(
                 modifier = Modifier.defaultMinSize(minWidth = 150.dp),
                 text = { Text(text = stringResource(R.string.label_add_key)) },
                 icon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
-                onClick = { showBottomSheet = true },
+                onClick = onAddAppKeyClicked,
                 expanded = true
             )
         }
-    }
-
-    if (showBottomSheet) {
-        BottomSheetApplicationKeys(
-            bottomSheetState = bottomSheetState,
-            messageState = messageState,
-            keys = availableApplicationKeys,
-            onAppKeyClicked = { key ->
-                scope
-                    .launch { bottomSheetState.hide() }
-                    .invokeOnCompletion {
-                        send(ConfigAppKeyAdd(key = key))
-                        if (!bottomSheetState.isVisible) showBottomSheet = !showBottomSheet
-                    }
-            },
-            onAddApplicationKeyClicked = {
-                runCatching {
-                    onAddAppKeyClicked()
-                    if(isLocalProvisionerNode) {
-                        scope
-                            .launch { bottomSheetState.hide() }
-                            .invokeOnCompletion {
-                                if (!bottomSheetState.isVisible) showBottomSheet = !showBottomSheet
-                            }
-                    }
-                }.onFailure {
-                    scope.launch { snackbarHostState.showSnackbar(message = it.describe()) }
-                }
-            },
-            navigateToApplicationKeys = {
-                scope
-                    .launch { bottomSheetState.hide() }
-                    .invokeOnCompletion {
-                        navigateToApplicationKeys()
-                        if (!bottomSheetState.isVisible) showBottomSheet = !showBottomSheet
-                    }
-            },
-            onDismissClick = {
-                scope
-                    .launch { bottomSheetState.hide() }
-                    .invokeOnCompletion { if (!bottomSheetState.isVisible) showBottomSheet = !showBottomSheet }
-            }
-        )
     }
 
     if (showDeleteConfirmationDialog) {
@@ -259,21 +214,6 @@ internal fun ConfigAppKeysScreen(
                                 }
                             }
                         }
-                    } else if (messageState.message is ConfigAppKeyAdd) {
-                        snackbarHostState
-                            .run {
-                                currentSnackbarData?.dismiss()
-                                showSnackbar(
-                                    message = context.getString(R.string.label_application_key_added),
-                                    duration = SnackbarDuration.Short,
-                                ).also { result ->
-                                    when (result) {
-                                        SnackbarResult.Dismissed,
-                                        SnackbarResult.ActionPerformed,
-                                            -> resetMessageState()
-                                    }
-                                }
-                            }
                     }
                 }
             }

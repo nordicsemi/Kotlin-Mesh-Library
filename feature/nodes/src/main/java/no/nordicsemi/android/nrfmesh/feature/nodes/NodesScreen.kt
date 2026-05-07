@@ -45,32 +45,19 @@ internal fun NodesScreen(
     navigateToNode: (Uuid) -> Unit,
     addNode: () -> Unit,
 ) {
-    when (uiState.nodes.isEmpty()) {
-        true -> MeshNoItemsAvailable(
-            imageVector = Icons.Outlined.AutoAwesome,
-            title = stringResource(R.string.no_nodes_currently_added)
-        )
-
-        false -> Nodes(
-            nodes = uiState.nodes,
-            navigateToNode = navigateToNode,
-            addNode = addNode
-        )
-    }
-}
-
-@OptIn(ExperimentalUuidApi::class)
-@Composable
-private fun Nodes(
-    nodes: List<Node>,
-    navigateToNode: (Uuid) -> Unit,
-    addNode: () -> Unit,
-) {
     Box(modifier = Modifier.fillMaxSize()) {
-        NodesList(
-            nodes = nodes,
-            navigateToNode = navigateToNode
-        )
+        when (uiState.nodes.isEmpty()) {
+            true -> MeshNoItemsAvailable(
+                modifier = Modifier.fillMaxSize(),
+                imageVector = Icons.Outlined.AutoAwesome,
+                title = stringResource(R.string.no_nodes_currently_added)
+            )
+
+            false -> NodesList(
+                nodes = uiState.nodes,
+                navigateToNode = navigateToNode
+            )
+        }
         ExtendedFloatingActionButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -95,7 +82,6 @@ private fun NodesList(
     nodes: List<Node>,
     navigateToNode: (Uuid) -> Unit,
 ) {
-
     if (isCompactWidth()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

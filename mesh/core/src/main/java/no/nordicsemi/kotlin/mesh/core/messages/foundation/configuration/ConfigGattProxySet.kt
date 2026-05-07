@@ -24,13 +24,15 @@ data class ConfigGattProxySet(val state: FeatureState) : AcknowledgedConfigMessa
             this(state = if (enable) FeatureState.Enabled else FeatureState.Disabled)
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toString() = "ConfigGattProxySet(opCode: 0x${opCode.toHexString()}, state: $state)"
+    override fun toString() = "ConfigGattProxySet(state: $state)"
 
     companion object Initializer : ConfigMessageInitializer {
         override val opCode = 0x8013u
 
-        override fun init(parameters: ByteArray?) = parameters?.takeIf { it.size == 1 }?.let {
-            ConfigGattProxySet(FeatureState.from(it[0].toUByte().toInt()))
-        }
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.size == 1 }
+            ?.let {
+                ConfigGattProxySet(FeatureState.from(it[0].toUByte().toInt()))
+            }
     }
 }

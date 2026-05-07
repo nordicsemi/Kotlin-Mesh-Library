@@ -24,7 +24,7 @@ import java.nio.ByteOrder
  * @constructor Constructs the ConfigAppKeyAdd message.
  */
 class ConfigModelAppUnbind(
-    override val keyIndex: KeyIndex,
+    override val applicationKeyIndex: KeyIndex,
     override val elementAddress: UnicastAddress,
     override val modelId: ModelId,
 ) : AcknowledgedConfigMessage, ConfigAnyAppKeyModelMessage, ConfigAnyModelMessage {
@@ -34,7 +34,7 @@ class ConfigModelAppUnbind(
     override val parameters : ByteArray
         get() {
             var data = elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    encodeAppKeyIndex(applicationKeyIndex = keyIndex)
+                    encodeAppKeyIndex(applicationKeyIndex = applicationKeyIndex)
             data += companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
                 ?.plus(modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
                 ?: modelIdentifier.toByteArray(ByteOrder.LITTLE_ENDIAN)
@@ -56,13 +56,13 @@ class ConfigModelAppUnbind(
      * @constructor Constructs the ConfigModelAppUnbind message.
      */
     constructor(model: Model, applicationKey: ApplicationKey) : this(
-        keyIndex = applicationKey.index,
+        applicationKeyIndex = applicationKey.index,
         elementAddress = model.parentElement?.unicastAddress
             ?: throw IllegalArgumentException("Parent element address is null"),
         modelId = model.modelId
     )
 
-    override fun toString() = "ConfigModelAppUnbind(applicationKeyIndex: $keyIndex, " +
+    override fun toString() = "ConfigModelAppUnbind(applicationKeyIndex: $applicationKeyIndex, " +
             "elementAddress: ${elementAddress.address.toHexString(
                 format = HexFormat {
                     number.prefix = "0x"
@@ -115,7 +115,7 @@ class ConfigModelAppUnbind(
                 )
             }
             ConfigModelAppUnbind(
-                keyIndex = appKeyIndex,
+                applicationKeyIndex = appKeyIndex,
                 elementAddress = UnicastAddress(elementAddress),
                 modelId = modelId
             )

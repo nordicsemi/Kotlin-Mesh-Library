@@ -11,7 +11,7 @@ class GenericLevelGet : AcknowledgedMeshMessage {
     override val responseOpCode = GenericLevelStatus.opCode
     override val parameters = null
 
-    override fun toString() = "GenericLevelGet()"
+    override fun toString() = "GenericLevelGet"
 
     companion object Initializer : GenericMessageInitializer {
         override val opCode = 0x8205u
