@@ -348,6 +348,17 @@ enum class FirmwareUpdatePhase(val value: UByte) {
     /** Indicates whether the firmware update can be applied. */
     val canApply: Boolean
         get() = this == VERIFICATION_SUCCEEDED || this == APPLYING_UPDATE
+
+    internal companion object {
+
+        /**
+         * Returns the [FirmwareUpdatePhase] for the given [value].
+         *
+         * @param value The phase value.
+         * @return The [FirmwareUpdatePhase] for the given [value].
+         */
+        fun from(value: UByte) = entries.firstOrNull { it.value == value }
+    }
 }
 
 /**
@@ -494,6 +505,17 @@ enum class FirmwareUpdateAdditionalInformation(internal val value: UByte) {
             COMPOSITION_DATA_CHANGED_AND_RPR_SUPPORTED -> "Composition Data Changed and Remote Provisioning Unsupported"
             DEVICE_UNPROVISIONED -> "Device Unprovisioned"
         }
+
+    internal companion object {
+
+        /**
+         * Returns the [FirmwareUpdateAdditionalInformation] for the given [value].
+         *
+         * @param value The status value.
+         * @return The [FirmwareUpdateAdditionalInformation] for the given [value].
+         */
+        fun from(value: UByte) = entries.firstOrNull { it.value == value }
+    }
 }
 
 /**
