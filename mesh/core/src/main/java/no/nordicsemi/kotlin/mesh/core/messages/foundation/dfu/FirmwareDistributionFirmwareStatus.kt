@@ -32,8 +32,8 @@ class FirmwareDistributionFirmwareStatus(
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
         get() = status.value.toByteArray() +
-                entryCount.toByteArray(order = java.nio.ByteOrder.LITTLE_ENDIAN) +
-                (imageIndex ?: 0xFFFFu).toByteArray(order = java.nio.ByteOrder.LITTLE_ENDIAN) +
+                entryCount.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                (imageIndex ?: 0xFFFFu).toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
                 (firmwareId?.bytes ?: byteArrayOf())
 
     /**
