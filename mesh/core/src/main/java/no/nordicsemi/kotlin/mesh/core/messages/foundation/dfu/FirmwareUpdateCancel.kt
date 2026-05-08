@@ -5,19 +5,20 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
 
 
 /**
- * Firmware Update Apply message is an acknowledged message used to apply a firmware image that the
- * has been transferred to a Firmware Update Server
+ * The Firmware Update Cancel message is an acknowledged message used to
+ * cancel a firmware update and delete any stored information about the update
+ * on a Firmware Update Server.
  */
-class FirmwareUpdateApply : AcknowledgedMeshMessage {
+class FirmwareUpdateCancel : AcknowledgedMeshMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareUpdateStatus.opCode
     override val parameters = null
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
-        override val opCode: UInt = 0x830Fu
+        override val opCode: UInt = 0x830Eu
 
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.isEmpty() }
-            ?.let { FirmwareUpdateApply() }
+            ?.let { FirmwareUpdateCancel() }
     }
 }
