@@ -18,8 +18,8 @@ import java.nio.ByteOrder
  * The Firmware Update Status message is an unacknowledged message sent by a Firmware Update Server
  * to report the status of a firmware update.
  *
- * Firmware Updates Status message is sent in response to [FirmwareUpdateGet] message,
- * a [FirmwareUpdateStart] message, [FirmwareUpdateCancel] message, or [FirmwareUpdateApply]
+ * Firmware Updates Status message is sent in response to a [FirmwareUpdateGet] message,
+ * a [FirmwareUpdateStart] message, a [FirmwareUpdateCancel] message, or a [FirmwareUpdateApply]
  * message.
  *
  * @property status                Status for the requesting message.
@@ -80,14 +80,6 @@ class FirmwareUpdateStatus(
         blobId = null,
         imageIndex = null
     )
-
-    override fun toString() = "FirmwareUpdateStatus(status: $status, " +
-            "updatePhase: $updatePhase, " +
-            "updateTtl: ${updateTtl ?: "N/A"}, " +
-            "additionalInformation: ${additionalInformation ?: "N/A"}, " +
-            "updateTimeoutBase: ${updateTimeoutBase ?: "N/A"}, " +
-            "blobId: ${blobId ?: "N/A"}, " +
-            "imageIndex: ${imageIndex ?: "N/A"})"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8310u
