@@ -264,8 +264,8 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
         }
 
         logger?.i(LogCategory.MODEL) {
-            "Sending $msg from: ${element.unicastAddress.toHexString()}, " +
-                    "to: ${destination.toHexString()})"
+            "Sending $msg from: ${element.unicastAddress.toHexString()} " +
+                    "to: ${destination.toHexString()}"
         }
 
         val pdu = AccessPdu.init(
