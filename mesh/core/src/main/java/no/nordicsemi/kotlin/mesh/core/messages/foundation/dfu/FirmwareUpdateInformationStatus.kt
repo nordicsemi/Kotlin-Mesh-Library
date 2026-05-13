@@ -29,8 +29,10 @@ class FirmwareUpdateInformationStatus(
             var data = totalCount.toByteArray() + firstIndex.toByteArray()
             list.forEach {
                 val idLength = (it.currentFirmwareId.version.size + 2).toByteArray()
-                val uriLength = it.updateUri?.toString()?.toByteArray(charset = Charsets.UTF_8)?.size?.toByteArray() ?: 0.toByteArray()
-                val udiData = it.updateUri?.toString()?.toByteArray(charset = Charsets.UTF_8) ?: byteArrayOf()
+                val uriLength = it.updateUri?.toString()
+                    ?.toByteArray(charset = Charsets.UTF_8)?.size?.toByteArray() ?: 0.toByteArray()
+                val udiData =
+                    it.updateUri?.toString()?.toByteArray(charset = Charsets.UTF_8) ?: byteArrayOf()
                 data += idLength + it.currentFirmwareId.version + uriLength + udiData
 
             }
@@ -50,6 +52,10 @@ class FirmwareUpdateInformationStatus(
         firstIndex = request.firstIndex,
         totalCount = list.size.toUByte()
     )
+
+    override fun toString() = "FirmwareUpdateInformationStatus(firstIndex: $firstIndex, " +
+            "Total Count: $totalCount, " +
+            "Firmware Update Information List: ${list.joinToString(separator = ", ")})"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8309u

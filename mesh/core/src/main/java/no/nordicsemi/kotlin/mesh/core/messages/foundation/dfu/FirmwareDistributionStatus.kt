@@ -16,11 +16,11 @@ import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.DistributionMulticastAddress
-import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
-import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
+import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
+import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import java.nio.ByteOrder
 
 /**
@@ -154,6 +154,15 @@ class FirmwareDistributionStatus internal constructor(
                 "Invalid multicast address: 0x${multicastAddress.toHexString(format = HexFormat.UpperCase)}"
             }
         }
+    }
+
+    override fun toString(): String {
+        return "FirmwareDistributionStatus(status: $status, phase: $phase, " +
+                "Multicast Address: $multicastAddress, " +
+                "Application Key Index: $applicationKeyIndex, " +
+                "ttl: $ttl, Distribution Timeout Base: $distributionTimeoutBase, " +
+                "Distribution TransferMode: $distributionTransferMode, " +
+                "Update Policy: $updatePolicy, Firmware Image Index: $firmwareImageIndex)"
     }
 
     companion object Initializer : BLOBMessageInitializer {

@@ -14,6 +14,8 @@ class FirmwareUpdateCancel : AcknowledgedMeshMessage {
     override val responseOpCode = FirmwareUpdateStatus.opCode
     override val parameters = null
 
+    override fun toString() = "FirmwareUpdateCancel()"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x830Eu
 

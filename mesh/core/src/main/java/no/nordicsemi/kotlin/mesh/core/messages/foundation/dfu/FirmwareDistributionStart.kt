@@ -227,6 +227,24 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase = distributionTimeoutBase
     )
 
+    constructor(status: FirmwareDistributionStatus) : this(
+        applicationKeyIndex = status.applicationKeyIndex
+            ?: throw IllegalArgumentException("Missing application key index"),
+        ttl = status.ttl ?: throw IllegalArgumentException("Missing TTL"),
+        distributionTimeoutBase = status.distributionTimeoutBase
+            ?: throw IllegalArgumentException("Missing distribution timeout base"),
+        distributionTransferMode = status.distributionTransferMode
+            ?: throw IllegalArgumentException("Missing distribution transfer mode"),
+        updatePolicy = status.updatePolicy
+            ?: throw IllegalArgumentException("Missing update policy"),
+        firmwareImageIndex = status.firmwareImageIndex
+            ?: throw IllegalArgumentException("Missing firmware image index"),
+        multicastAddress = status.multicastAddress?.let {
+            DistributionMulticastAddress.create(address = it)
+        } ?: throw IllegalArgumentException("Missing multicast address")
+
+    )
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8319u
 
