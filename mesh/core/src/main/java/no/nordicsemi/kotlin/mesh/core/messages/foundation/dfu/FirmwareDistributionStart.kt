@@ -257,31 +257,6 @@ class FirmwareDistributionStart internal constructor(
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 10 || it.size == 24 }
             ?.let { params ->
-                FirmwareDistributionStart(
-                    applicationKeyIndex = params.getUShort(
-                        offset = 0,
-                        order = ByteOrder.LITTLE_ENDIAN
-                    ),
-                    ttl = params[2].toUByte(),
-                    distributionTimeoutBase = params.getUShort(
-                        offset = 3,
-                        order = ByteOrder.LITTLE_ENDIAN
-                    ),
-                    distributionTransferMode = TransferMode.from(
-                        value = (params[5] shr 6).toUByte()
-                    ) ?: return@let null,
-                    updatePolicy = FirmwareUpdatePolicy.from(
-                        value = ((params[5] shr 5) and 0x01).toUByte()
-                    ) ?: return@let null,
-                    firmwareImageIndex = params.getUShort(
-                        offset = 6,
-                        order = ByteOrder.LITTLE_ENDIAN
-                    ),
-                    multicastAddress = when (params.size == 24) {
-                        true -> VirtualAddress(Uuid.fromByteArray(params.sliceArray(indices = 8 until 24)))
-                        false -> UnassignedAddress
-                    }
-                )
                 if (params.size == 24) {
                     FirmwareDistributionStart(
                         applicationKeyIndex = params.getUShort(
