@@ -38,3 +38,6 @@ fun isSupportedGroupItem(model: Model) = model.isGenericOnOffServer() ||
         model.isLightLCServer() ||
         model.isSceneServer() ||
         model.isSceneSetupServer()
+
+fun Model.isFirmwareDistributionServer() = isBluetoothSigAssigned
+        && (modelId as SigModelId).modelIdentifier == Model.FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID
