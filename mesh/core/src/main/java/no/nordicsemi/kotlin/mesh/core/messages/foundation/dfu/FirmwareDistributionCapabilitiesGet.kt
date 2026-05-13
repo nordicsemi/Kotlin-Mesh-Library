@@ -12,6 +12,8 @@ class FirmwareDistributionCapabilitiesGet : AcknowledgedMeshMessage {
     override val responseOpCode = FirmwareDistributionCapabilitiesStatus.opCode
     override val parameters = null
 
+    override fun toString() = "FirmwareDistributionCapabilitiesGet()"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode = 0x8316u
 

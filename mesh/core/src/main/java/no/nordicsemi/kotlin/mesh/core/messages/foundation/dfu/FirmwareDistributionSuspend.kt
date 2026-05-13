@@ -12,6 +12,8 @@ class FirmwareDistributionSuspend : AcknowledgedMeshMessage {
     override val responseOpCode = FirmwareDistributionStatus.opCode
     override val parameters = null
 
+    override fun toString() = "FirmwareDistributionSuspend()"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode = 0x831Au
 
