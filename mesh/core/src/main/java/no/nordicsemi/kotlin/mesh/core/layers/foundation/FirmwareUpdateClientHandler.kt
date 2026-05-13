@@ -9,6 +9,10 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateFirm
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateInformationStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateStatus
 
+/**
+ * Firmware Update Client Model Handler is responsible for handling the incoming messages for
+ * the Firmware Update Client Model.
+ */
 class FirmwareUpdateClientHandler : ModelEventHandler() {
     override val messageTypes: Map<UInt, HasInitializer> = mapOf(
         FirmwareUpdateInformationStatus.opCode to FirmwareUpdateInformationStatus,
