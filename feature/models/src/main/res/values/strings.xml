@@ -144,6 +144,16 @@
     <string name="label_invalid_vendor_op_code_range">Invalid Op Code. Valid range 0x00 – 0x3F</string>
     <string name="label_no_network">No Network</string>
     <string name="label_no_network_rationale">This network has been reset by a remote Node.</string>
+    <string name="label_max_receivers_list_size">Max Receivers List Size</string>
+    <string name="label_max_firmware_images_list_size">Max Firmware Image List Size</string>
+    <string name="label_max_firmware_image_size">Max Firmware Image List Size</string>
+    <string name="label_max_upload_space">Max Upload Space</string>
+    <string name="label_remaining_upload_space">Remaining Upload Space</string>
+    <string name="label_supported_uri_schemes">Supported URI Schemes</string>
+    <string name="label_capabilities">Capabilities</string>
+    <string name="label_transfer_mode">Transfer Mode</string>
+    <string name="label_ttl">TTL</string>
+    <string name="label_phase">Phase</string>
     <string name="label_base_models">Base Models</string>
     <string name="label_extending_models">Extending Models</string>
     <string name="label_related_models">Related Models</string>
