@@ -45,6 +45,10 @@ class FirmwareUpdateStart(
                 imageIndex.toByteArray() +
                 (metaData ?: byteArrayOf())
 
+    override fun toString() = "FirmwareUpdateStart(updateTtl: $updateTtl, " +
+            "updateTimeoutBase: $updateTimeoutBase, blobId: $blobId, imageIndex: $imageIndex, " +
+            "metaData: ${metaData?.contentToString() ?: "null"})"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x830Du
 

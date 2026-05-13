@@ -13,6 +13,8 @@ class FirmwareUpdateGet : AcknowledgedMeshMessage {
     override val responseOpCode = FirmwareUpdateStatus.opCode
     override val parameters = null
 
+    override fun toString() = "FirmwareUpdateGet()"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x830Cu
 

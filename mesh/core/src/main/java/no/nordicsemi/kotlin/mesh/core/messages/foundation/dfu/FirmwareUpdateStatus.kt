@@ -18,8 +18,8 @@ import java.nio.ByteOrder
  * The Firmware Update Status message is an unacknowledged message sent by a Firmware Update Server
  * to report the status of a firmware update.
  *
- * Firmware Updates Status message is sent in response to a [FirmwareUpdateGet] message,
- * a [FirmwareUpdateStart] message, a [FirmwareUpdateCancel] message, or a [FirmwareUpdateApply]
+ * Firmware Updates Status message is sent in response to [FirmwareUpdateGet] message,
+ * a [FirmwareUpdateStart] message, [FirmwareUpdateCancel] message, or [FirmwareUpdateApply]
  * message.
  *
  * @property status                Status for the requesting message.

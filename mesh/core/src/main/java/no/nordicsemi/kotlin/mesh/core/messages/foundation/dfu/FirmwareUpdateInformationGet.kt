@@ -31,6 +31,9 @@ class FirmwareUpdateInformationGet(
     @Suppress("unused")
     constructor() : this(firstIndex = 0u, entriesLimit = 0u)
 
+    override fun toString() =
+        "FirmwareUpdateInformationGet(firstIndex: $firstIndex, entriesLimit: $entriesLimit)"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8308u
 

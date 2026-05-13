@@ -7,7 +7,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
 import no.nordicsemi.kotlin.mesh.core.model.UriScheme
 import java.nio.ByteOrder
-import kotlin.collections.emptyList
 
 /**
  * Firmware Distribution Capabilities Status message is an unacknowledged message sent by a Firmware
@@ -49,6 +48,14 @@ class FirmwareDistributionCapabilitiesStatus(
                 }
             }
         }
+
+    override fun toString() = "FirmwareDistributionCapabilitiesStatus(" +
+            "maxReceiversCount: $maxReceiversCount, " +
+            "maxFirmwareImagesListSize: $maxFirmwareImagesListSize, " +
+            "maxFirmwareImageSize: $maxFirmwareImageSize, " +
+            "maxUploadSpace: $maxUploadSpace, " +
+            "remainingUploadSpace: $remainingUploadSpace, " +
+            "supportedUriSchemes: ${supportedUriSchemes.joinToString(separator = ", ")})"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8317u
