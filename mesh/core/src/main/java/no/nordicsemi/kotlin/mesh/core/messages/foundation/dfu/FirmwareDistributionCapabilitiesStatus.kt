@@ -20,14 +20,15 @@ import java.nio.ByteOrder
  * @property maxFirmwareImageSize       Maximum size of a firmware image in octets.
  * @property maxUploadSpace             Total space dedicated to storage of firmware images in
  *                                      octets.
- * @property remainingUploadSpace       Remaining available space in firmware image storage in octets.
- * @property supportedUriSchemes        Supported Out-of-Band URI schemes. An empty array means,
- *                                      OOB Retrieval is not supported.
+ * @property remainingUploadSpace       Remaining available space in firmware image storage in
+ *                                      octets.
+ * @property supportedUriSchemes        Supported Out-of-Band URI schemes. An empty array means, OOB
+ *                                      Retrieval is not supported.
  */
 class FirmwareDistributionCapabilitiesStatus(
     val maxReceiversCount: UShort,
     val maxFirmwareImagesListSize: UShort,
-    val maxFirmwareImageSize: UShort,
+    val maxFirmwareImageSize: UInt,
     val maxUploadSpace: UInt,
     val remainingUploadSpace: UInt,
     val supportedUriSchemes: List<UriScheme>,
@@ -50,41 +51,47 @@ class FirmwareDistributionCapabilitiesStatus(
         }
 
     override fun toString() = "FirmwareDistributionCapabilitiesStatus(" +
-            "maxReceiversCount: $maxReceiversCount, " +
-            "maxFirmwareImagesListSize: $maxFirmwareImagesListSize, " +
-            "maxFirmwareImageSize: $maxFirmwareImageSize, " +
-            "maxUploadSpace: $maxUploadSpace, " +
-            "remainingUploadSpace: $remainingUploadSpace, " +
-            "supportedUriSchemes: ${supportedUriSchemes.joinToString(separator = ", ")})"
+            "Max Receivers Count: $maxReceiversCount, " +
+            "Max Firmware Images List Size: $maxFirmwareImagesListSize, " +
+            "Max Firmware Image Size: $maxFirmwareImageSize, " +
+            "Max Upload Space: $maxUploadSpace, " +
+            "Remaining Upload Space: $remainingUploadSpace, " +
+            "Supported URI Schemes: ${supportedUriSchemes.joinToString(separator = ", ")})"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8317u
 
-        override fun init(parameters: ByteArray?) = parameters?.takeIf {
-            it.size >= 17
-        }?.let { params ->
-            FirmwareDistributionCapabilitiesStatus(
-                maxReceiversCount = params.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN),
-                maxFirmwareImagesListSize = params.getUShort(
-                    offset = 2,
-                    order = ByteOrder.LITTLE_ENDIAN
-                ),
-                maxFirmwareImageSize = params.getUShort(
-                    offset = 4,
-                    order = ByteOrder.LITTLE_ENDIAN
-                ),
-                maxUploadSpace = params.getUInt(offset = 8, order = ByteOrder.LITTLE_ENDIAN),
-                remainingUploadSpace = params.getUInt(offset = 12, order = ByteOrder.LITTLE_ENDIAN),
-                supportedUriSchemes = when (params[16].toUByte() == 0x01.toUByte()) {
-                    true -> if (params.size >= 18) {
-                        params
-                            .slice(indices = 17 until parameters.size)
-                            .mapNotNull { UriScheme.from(rawValue = it.toUByte()) }
-                    } else return@let null
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.size >= 17 }
+            ?.let { params ->
+                FirmwareDistributionCapabilitiesStatus(
+                    maxReceiversCount = params.getUShort(
+                        offset = 0,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    ),
+                    maxFirmwareImagesListSize = params.getUShort(
+                        offset = 2,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    ),
+                    maxFirmwareImageSize = params.getUInt(
+                        offset = 4,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    ),
+                    maxUploadSpace = params.getUInt(offset = 8, order = ByteOrder.LITTLE_ENDIAN),
+                    remainingUploadSpace = params.getUInt(
+                        offset = 12,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    ),
+                    supportedUriSchemes = when (params[16].toUByte() == 0x01.toUByte()) {
+                        true -> if (params.size >= 18) {
+                            params
+                                .slice(indices = 17 until parameters.size)
+                                .mapNotNull { UriScheme.from(rawValue = it.toUByte()) }
+                        } else return@let null
 
-                    else -> emptyList()
-                }
-            )
-        }
+                        else -> emptyList()
+                    }
+                )
+            }
     }
 }
