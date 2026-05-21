@@ -138,7 +138,7 @@ class Model internal constructor(
             // A model may be additionally subscribed to any special address
             // except from All Nodes and Models on the primary Element are always subscribed to the
             // All Nodes address.
-            return _subscribe.takeIf{
+            return _subscribe.takeIf {
                 !it.contains(element = AllNodes) && parentElement?.isPrimary == true
             }?.let {
                 _subscribe + AllNodes as SubscriptionAddress
@@ -334,6 +334,16 @@ class Model internal constructor(
             LIGHT_LC_SETUP_SERVER_MODEL_ID,
             LIGHT_LC_CLIENT_MODEL_ID,
                 -> true
+            // BLOB Transfer
+            BLOB_TRANSFER_SERVER_MODEL_ID,
+            BLOB_TRANSFER_CLIENT_MODEL_ID,
+                -> false
+            // Device Firmware Update
+            FIRMWARE_UPDATE_SERVER_MODEL_ID,
+            FIRMWARE_UPDATE_CLIENT_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID,
+                -> false
 
             else -> null
         }
