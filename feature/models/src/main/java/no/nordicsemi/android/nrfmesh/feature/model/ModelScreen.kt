@@ -35,6 +35,7 @@ import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.feature.model.vendor.VendorModelControls
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.Model
@@ -49,6 +50,7 @@ internal fun ModelScreen(
     modelState: ModelState.Success,
     send: (AcknowledgedConfigMessage) -> Unit,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
+    sendAcknowledgedMessage: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
     requestNodeIdentityStates: (Model) -> Unit,
     resetMessageState: () -> Unit,
     onAddGroupClicked: () -> Unit,
@@ -86,7 +88,7 @@ internal fun ModelScreen(
                 onAddGroupClicked = onAddGroupClicked,
             )
         }
-        if (model.supportsModelPublication != false && model.supportsModelSubscription != false) {
+        if (model.supportsApplicationKeyBinding) {
             BoundApplicationKeys(
                 model = model,
                 messageState = messageState,
@@ -135,8 +137,8 @@ internal fun ModelScreen(
         if (model.isFirmwareDistributionServer()) {
             FirmwareDistributionServer(
                 model = model,
-                messageState = messageState,
-                send = sendApplicationMessage
+                isInProgress = messageState.isInProgress(),
+                send = sendAcknowledgedMessage,
             )
         }
 

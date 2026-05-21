@@ -201,6 +201,13 @@ internal class ModelViewModel @AssistedInject internal constructor(
         }
     }
 
+    internal suspend fun send(
+        model: Model,
+        message: AcknowledgedMeshMessage,
+    ): MeshMessage? {
+        return repository.send(model = model, ackedMessage = message)
+    }
+
     internal fun resetMessageState() {
         _uiState.value = _uiState.value.copy(messageState = NotStarted)
     }
@@ -228,5 +235,5 @@ internal data class ModelScreenUiState(
     val messageState: MessageState = NotStarted,
     val isRefreshing: Boolean = false,
     val nodeIdentityStates: List<NodeIdentityStatus> = emptyList(),
-    val wasNetworkRemoved: Boolean = false
+    val wasNetworkRemoved: Boolean = false,
 )

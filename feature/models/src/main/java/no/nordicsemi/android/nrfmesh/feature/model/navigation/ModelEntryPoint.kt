@@ -54,7 +54,8 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     resetMessageState = viewModel::resetMessageState,
                     navigateToGroups = { navigator.navigate(key = GroupsKey) },
                     send = viewModel::send,
-                    sendApplicationMessage = viewModel::sendApplicationMessage
+                    sendApplicationMessage = viewModel::sendApplicationMessage,
+                    sendAcknowledgedMessage = viewModel::send
                 )
                 var showNoNetworkDialog by remember { mutableStateOf(uiState.wasNetworkRemoved) }
                 if (showNoNetworkDialog) {
