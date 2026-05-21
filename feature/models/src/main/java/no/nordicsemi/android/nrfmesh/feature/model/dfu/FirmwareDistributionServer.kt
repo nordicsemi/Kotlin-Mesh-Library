@@ -14,43 +14,69 @@ import androidx.compose.material.icons.outlined.Schema
 import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.icons.outlined.SdStorage
 import androidx.compose.material.icons.outlined.SecurityUpdate
+import androidx.compose.material.icons.outlined.SpaceDashboard
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.nrfmesh.core.common.MessageState
+import androidx.lifecycle.compose.dropUnlessResumed
+import kotlinx.coroutines.launch
+import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
+import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.models.R
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
-import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePhase
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionApply
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCancel
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesGet
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesStatus
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareGetByIndex
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionGet
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionStatus
 import no.nordicsemi.kotlin.mesh.core.model.Model
+import no.nordicsemi.kotlin.mesh.core.model.UriScheme
 
 @Composable
 internal fun FirmwareDistributionServer(
     model: Model,
-    messageState: MessageState,
-    send: (Model, MeshMessage) -> Unit,
+    isInProgress: Boolean,
+    send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
     Column(
         modifier = Modifier.padding(vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Controls(messageState = messageState, model = model, send = send)
-        Capabilities(messageState = messageState, model = model, send = send)
+        Controls(model = model, isInProgress = isInProgress, send = send)
+        Capabilities(model = model, isInProgress = isInProgress, send = send)
+        FirmwareDistributionSlots(model = model, isInProgress = isInProgress, send = send)
     }
 }
 
 @Composable
-private fun Controls(model: Model, messageState: MessageState, send: (Model, MeshMessage) -> Unit) {
+private fun Controls(
+    model: Model,
+    isInProgress: Boolean,
+    send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
+) {
+    val scope = rememberCoroutineScope()
+    var status by remember { mutableStateOf<FirmwareDistributionStatus?>(null) }
+    var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
+    var shouldShowProgressIcon by rememberSaveable { mutableStateOf(false) }
     Row(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -62,28 +88,91 @@ private fun Controls(model: Model, messageState: MessageState, send: (Model, Mes
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Check,
-            onClick = { send(model, FirmwareDistributionApply()) }
+            onClick = dropUnlessResumed {
+                try {
+                    shouldShowProgressIcon = true
+                    scope.launch {
+                        status =
+                            send(model, FirmwareDistributionApply()) as? FirmwareDistributionStatus
+                    }
+                } catch (e: Exception) {
+                    error = e
+                } finally {
+                    shouldShowProgressIcon = false
+                }
+            },
+            enabled = !isInProgress,
+            isOnClickActionInProgress = shouldShowProgressIcon
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.PlayArrow,
-            onClick = { /*send(model, FirmwareDistributionStart(status = ))*/ }
+            onClick = {
+                try {
+                    shouldShowProgressIcon = true
+                    scope.launch {
+                        /*status = send(model, FirmwareDistributionStart(status = ))*/
+                    }
+                } catch (e: Exception) {
+                    error = e
+                } finally {
+                    shouldShowProgressIcon = false
+                }
+            },
+            enabled = !isInProgress,
+            isOnClickActionInProgress = shouldShowProgressIcon
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Cancel,
-            onClick = { send(model, FirmwareDistributionCancel()) }
+            onClick = dropUnlessResumed {
+                try {
+                    shouldShowProgressIcon = true
+                    scope.launch {
+                        status =
+                            send(model, FirmwareDistributionCancel()) as? FirmwareDistributionStatus
+                    }
+                } catch (e: Exception) {
+                    error = e
+                } finally {
+                    shouldShowProgressIcon = false
+                }
+            },
+            enabled = !isInProgress,
+            isOnClickActionInProgress = shouldShowProgressIcon
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Refresh,
-            onClick = { send(model, FirmwareDistributionGet()) }
+            onClick = dropUnlessResumed {
+                try {
+                    shouldShowProgressIcon = true
+                    scope.launch {
+                        status =
+                            send(model, FirmwareDistributionGet()) as? FirmwareDistributionStatus
+                    }
+                } catch (e: Exception) {
+                    error = e
+                } finally {
+                    shouldShowProgressIcon = false
+                }
+            },
+            enabled = !isInProgress,
+            isOnClickActionInProgress = shouldShowProgressIcon
         )
     }
-    Status(status = null)
-    Phase(phase = null)
-    Ttl(ttl = null)
-    TimeoutBase(transferMode = null)
-    TransferMode(transferMode = null)
-    UpdatePolicy(updatePolicy = null)
-    DistributionFirmwareImageIndex(imageIndex = null)
+    Status(status = status?.status)
+    Phase(phase = status?.phase)
+    Ttl(ttl = status?.ttl)
+    DistributionTimeoutBase(distributionTimeoutBase = status?.distributionTimeoutBase)
+    DistributionTransferMode(distributionTransferMode = status?.distributionTransferMode)
+    UpdatePolicy(updatePolicy = status?.updatePolicy)
+    DistributionFirmwareImageIndex(index = status?.firmwareImageIndex)
+
+    error?.let {
+        MeshMessageStatusDialog(
+            text = it.describe(),
+            showDismissButton = true,
+            onDismissRequest = { error = null },
+        )
+    }
 }
 
 @Composable
@@ -92,17 +181,17 @@ private fun Status(status: FirmwareDistributionMessageStatus?) {
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
         title = stringResource(R.string.label_status),
-        subtitle = status?.toString() ?: stringResource(R.string.label_unknown)
+        subtitle = status?.debugDescription ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun Phase(phase: FirmwareUpdatePhase?) {
+private fun Phase(phase: FirmwareDistributionPhase?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
         title = stringResource(R.string.label_phase),
-        subtitle = phase?.toString() ?: stringResource(R.string.label_unknown)
+        subtitle = phase?.debugDescription ?: stringResource(R.string.label_unknown)
     )
 }
 
@@ -112,56 +201,67 @@ private fun Ttl(ttl: UByte?) {
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
         title = stringResource(R.string.label_ttl),
-        subtitle = ttl?.toInt()?.toString() ?: stringResource(R.string.label_unknown)
+        subtitle = ttl?.toString() ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun TimeoutBase(transferMode: TransferMode?) {
+private fun DistributionTimeoutBase(distributionTimeoutBase: UShort?) {
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageVector = Icons.Outlined.Numbers,
+        title = stringResource(R.string.label_timeout_base),
+        subtitle = distributionTimeoutBase?.toHexString() ?: stringResource(R.string.label_unknown)
+    )
+}
+
+@Composable
+private fun DistributionTransferMode(distributionTransferMode: TransferMode?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
         title = stringResource(R.string.label_transfer_mode),
-        subtitle = transferMode?.name ?: stringResource(R.string.label_unknown)
+        subtitle = distributionTransferMode?.debugDescription ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun TransferMode(transferMode: TransferMode?) {
+private fun UpdatePolicy(updatePolicy: FirmwareUpdatePolicy?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
-        title = stringResource(R.string.label_transfer_mode),
-        subtitle = transferMode?.name ?: stringResource(R.string.label_unknown)
+        title = stringResource(R.string.label_update_policy),
+        subtitle = updatePolicy?.debugDescription ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun UpdatePolicy(updatePolicy: String?) {
+private fun DistributionFirmwareImageIndex(index: UShort?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
-        title = stringResource(R.string.label_max_receivers_list_size),
-        subtitle = updatePolicy ?: stringResource(R.string.label_unknown)
-    )
-}
-
-@Composable
-private fun DistributionFirmwareImageIndex(imageIndex: UByte?) {
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
-        title = stringResource(R.string.label_max_receivers_list_size),
-        subtitle = imageIndex?.toInt().toString() ?: stringResource(R.string.label_unknown)
+        title = stringResource(R.string.label_distribution_firmware_image_index),
+        subtitle = index?.toString() ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
 private fun Capabilities(
     model: Model,
-    messageState: MessageState,
-    send: (Model, MeshMessage) -> Unit,
+    isInProgress: Boolean,
+    send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
+    val scope = rememberCoroutineScope()
+    var status by remember { mutableStateOf<FirmwareDistributionCapabilitiesStatus?>(null) }
+    var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
+    var shouldShowProgressIcon by rememberSaveable { mutableStateOf(false) }
+
+    var maxReceiversCount by rememberSaveable(status) { mutableStateOf(status?.maxReceiversCount?.toInt()) }
+    var maxFirmwareImagesListSize by rememberSaveable(status) { mutableStateOf(status?.maxFirmwareImagesListSize?.toInt()) }
+    var maxFirmwareImageSize by rememberSaveable(status) { mutableStateOf(status?.maxFirmwareImageSize?.toInt()) }
+    var maxUploadSpace by rememberSaveable(status) { mutableStateOf(status?.maxUploadSpace?.toInt()) }
+    var remainingUploadSpace by rememberSaveable(status) { mutableStateOf(status?.remainingUploadSpace?.toInt()) }
+    var supportedUriSchemes by rememberSaveable(status) { mutableStateOf(status?.supportedUriSchemes) }
     Row(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -173,73 +273,168 @@ private fun Capabilities(
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Refresh,
-            onClick = { send(model, FirmwareDistributionCapabilitiesGet()) }
+            onClick = {
+                try {
+                    shouldShowProgressIcon = true
+                    scope.launch {
+                        status = send(
+                            model,
+                            FirmwareDistributionCapabilitiesGet()
+                        ) as? FirmwareDistributionCapabilitiesStatus
+                    }
+                } catch (e: Exception) {
+                    error = e
+                } finally {
+                    shouldShowProgressIcon = false
+                }
+            },
+            enabled = !isInProgress,
+            isOnClickActionInProgress = shouldShowProgressIcon
         )
     }
-    MaxReceiversListSize(receiversListSize = null)
-    MaxFirmwareImagesListSize(firmwareImagesListSize = null)
-    MaxFirmwareImageSize(firmwareImageSize = null)
-    MaxUploadSpace(maxUploadSpace = null)
-    RemainingUploadSpace(remaining = null)
-    SupportedUriSchemes(uriScheme = stringResource(R.string.label_unknown))
+    MaxReceiversListSize(receiversSize = maxReceiversCount)
+    MaxFirmwareImagesListSize(imageListSize = maxFirmwareImagesListSize)
+    MaxFirmwareImageSize(firmwareImageSize = maxFirmwareImageSize)
+    MaxUploadSpace(uploadSpace = maxUploadSpace)
+    RemainingUploadSpace(remainingUploadSpace = remainingUploadSpace)
+    SupportedUriSchemes(uriSchemes = supportedUriSchemes)
+
+
+    error?.let {
+        MeshMessageStatusDialog(
+            text = it.describe(),
+            showDismissButton = true,
+            onDismissRequest = { error = null },
+        )
+    }
 }
 
 @Composable
-private fun MaxReceiversListSize(receiversListSize: UShort?) {
+private fun MaxReceiversListSize(receiversSize: Int?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
         title = stringResource(R.string.label_max_receivers_list_size),
-        subtitle = receiversListSize?.toHexString() ?: stringResource(R.string.label_unknown)
+        subtitle = receiversSize?.toString() ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun MaxFirmwareImagesListSize(firmwareImagesListSize: UShort?) {
+private fun MaxFirmwareImagesListSize(imageListSize: Int?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.SecurityUpdate,
-        title = stringResource(R.string.label_max_receivers_list_size),
-        subtitle = firmwareImagesListSize?.toHexString() ?: stringResource(R.string.label_unknown)
+        title = stringResource(R.string.label_max_firmware_images_list_size),
+        subtitle = imageListSize?.toString() ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun MaxFirmwareImageSize(firmwareImageSize: UShort?) {
+private fun MaxFirmwareImageSize(firmwareImageSize: Int?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.SecurityUpdate,
-        title = stringResource(R.string.label_max_receivers_list_size),
-        subtitle = firmwareImageSize?.toHexString() ?: stringResource(R.string.label_unknown)
+        title = stringResource(R.string.label_max_firmware_image_size),
+        subtitle = firmwareImageSize
+            ?.let { stringResource(R.string.label_value_in_bytes, it) }
+            ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun MaxUploadSpace(maxUploadSpace: UShort?) {
+private fun MaxUploadSpace(uploadSpace: Int?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.SdCard,
         title = stringResource(R.string.label_max_upload_space),
-        subtitle = maxUploadSpace?.toHexString() ?: stringResource(R.string.label_unknown)
+        subtitle = uploadSpace
+            ?.let { stringResource(R.string.label_value_in_bytes, it) }
+            ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun RemainingUploadSpace(remaining: UShort?) {
+private fun RemainingUploadSpace(remainingUploadSpace: Int?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.SdStorage,
         title = stringResource(R.string.label_remaining_upload_space),
-        subtitle = remaining?.toHexString() ?: stringResource(R.string.label_unknown)
+        subtitle = remainingUploadSpace
+            ?.let { stringResource(R.string.label_value_in_bytes, it) }
+            ?: stringResource(R.string.label_unknown)
     )
 }
 
 @Composable
-private fun SupportedUriSchemes(uriScheme: String) {
+private fun SupportedUriSchemes(uriSchemes: List<UriScheme>?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Schema,
         title = stringResource(R.string.label_supported_uri_schemes),
-        subtitle = uriScheme
+        subtitle = uriSchemes
+            ?.let {
+                it.takeIf { schemes -> schemes.isNotEmpty() }
+                    ?.joinToString(separator = ", ")
+                    ?: stringResource(R.string.label_none)
+            } ?: stringResource(R.string.label_unknown)
     )
+}
+
+@Composable
+private fun FirmwareDistributionSlots(
+    model: Model,
+    isInProgress: Boolean,
+    send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
+) {
+    val scope = rememberCoroutineScope()
+    var status by remember { mutableStateOf<FirmwareDistributionFirmwareStatus?>(null) }
+    var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
+    var shouldShowProgressIcon by rememberSaveable { mutableStateOf(false) }
+    Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        SectionTitle(
+            modifier = Modifier.weight(weight = 1f),
+            title = stringResource(R.string.label_firmware_distribution_slots)
+        )
+        MeshIconButton(
+            buttonIcon = Icons.Outlined.Refresh,
+            onClick = dropUnlessResumed {
+                try {
+                    shouldShowProgressIcon = true
+                    scope.launch {
+                        status = send(
+                            model,
+                            FirmwareDistributionFirmwareGetByIndex(imageIndex = 0u)
+                        ) as FirmwareDistributionFirmwareStatus?
+                    }
+                } catch (e: Exception) {
+                    error = e
+                } finally {
+                    shouldShowProgressIcon = false
+                }
+            },
+            enabled = !isInProgress,
+            isOnClickActionInProgress = shouldShowProgressIcon
+        )
+    }
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageVector = Icons.Outlined.SpaceDashboard,
+        title = stringResource(R.string.label_slots),
+        subtitle = status
+            ?.entryCount
+            ?.toString(radix = 16)
+            ?: stringResource(R.string.label_unknown)
+    )
+
+    error?.let {
+        MeshMessageStatusDialog(
+            text = it.describe(),
+            showDismissButton = true,
+            onDismissRequest = { error = null },
+        )
+    }
 }

@@ -211,6 +211,13 @@ internal class ModelViewModel @AssistedInject internal constructor(
         }
     }
 
+    internal suspend fun send(
+        model: Model,
+        message: AcknowledgedMeshMessage,
+    ): MeshMessage? {
+        return repository.send(model = model, ackedMessage = message)
+    }
+
     internal fun resetMessageState() {
         _uiState.update { state -> state.copy(messageState = NotStarted) }
     }

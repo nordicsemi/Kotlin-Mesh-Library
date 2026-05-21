@@ -49,13 +49,15 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     messageState = uiState.messageState,
                     nodeIdentityStates = uiState.nodeIdentityStates,
                     modelState = modelState,
-                    send = viewModel::send,
                     sendApplicationMessage = viewModel::sendApplicationMessage,
                     requestNodeIdentityStates = viewModel::requestNodeIdentityStates,
                     resetMessageState = viewModel::resetMessageState,
                     onAddGroupClicked = { navigator.navigate(GroupsKey) },
                     navigateToGroups = { navigator.navigate(GroupsKey) },
-                    onRelatedModelsClicked = { navigator.navigate(key = RelatedModelsKey(model = it)) }
+                    onRelatedModelsClicked = { navigator.navigate(key = RelatedModelsKey(model = it)) },
+                    send = viewModel::send,
+                    sendApplicationMessage = viewModel::sendApplicationMessage,
+                    sendAcknowledgedMessage = viewModel::send
                 )
                 var showNoNetworkDialog by remember { mutableStateOf(uiState.wasNetworkRemoved) }
                 if (showNoNetworkDialog) {
