@@ -167,9 +167,6 @@ class Model internal constructor(
             ?.filter { it.isBoundTo(this) }
             ?: emptyList()
 
-    val supportsApplicationKeyBinding: Boolean
-        get() = !requiresDeviceKey
-
     val supportsDeviceKey: Boolean
         get() = requiresDeviceKey || isOpcodesAggregatorServer || isOpcodesAggregatorClient
 
@@ -228,6 +225,9 @@ class Model internal constructor(
 
     @Transient
     var eventHandler: ModelEventHandler? = null
+
+    val supportsApplicationKeyBinding: Boolean
+        get() = !requiresDeviceKey
 
     val supportsModelPublication: Boolean?
         get() = when ((modelId as? SigModelId)?.modelIdentifier) {
@@ -345,7 +345,7 @@ class Model internal constructor(
             FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID,
                 -> false
 
-            else -> null
+            else -> false
         }
 
     val supportsModelSubscription: Boolean?
@@ -439,7 +439,7 @@ class Model internal constructor(
             LIGHT_LC_CLIENT_MODEL_ID,
                 -> true
 
-            else -> null
+            else -> false
         }
 
     val directBaseModels: List<Model>
