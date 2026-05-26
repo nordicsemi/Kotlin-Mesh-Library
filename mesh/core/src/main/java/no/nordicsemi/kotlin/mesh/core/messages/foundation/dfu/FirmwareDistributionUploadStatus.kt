@@ -9,7 +9,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
-import kotlin.experimental.and
 
 /**
  * Firmware Distribution Upload Status message is an unacknowledged message sent by a Firmware

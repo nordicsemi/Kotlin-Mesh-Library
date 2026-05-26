@@ -19,7 +19,7 @@ import java.nio.ByteOrder
  */
 class FirmwareDistributionReceiversStatus(
     override val status: FirmwareDistributionMessageStatus,
-    val totalCount: UShort
+    val totalCount: UShort,
 ) : MeshResponse, FirmwareDistributionStatusMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters = status.value.toByteArray() +
