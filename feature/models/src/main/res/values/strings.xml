@@ -161,4 +161,5 @@
     <string name="label_firmware_distribution_slots">Firmware Distribution Slots</string>
     <string name="label_slots">Slots</string>
     <string name="label_value_in_bytes">%d bytes</string>
+    <string name="label_multicast_address">Multicast Address</string>
 </resources>
