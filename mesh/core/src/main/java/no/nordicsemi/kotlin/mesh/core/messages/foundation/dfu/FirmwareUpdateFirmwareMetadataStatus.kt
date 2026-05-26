@@ -52,6 +52,10 @@ class FirmwareUpdateFirmwareMetadataStatus(
         imageIndex = request.imageIndex
     )
 
+    override fun toString() = "FirmwareUpdateFirmwareMetadataStatus(status: $status, " +
+            "additionalInformation: $additionalInformation, " +
+            "imageIndex: $imageIndex)"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x830Bu
 

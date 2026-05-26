@@ -19,11 +19,14 @@ import java.nio.ByteOrder
  */
 class FirmwareDistributionReceiversStatus(
     override val status: FirmwareDistributionMessageStatus,
-    val totalCount: UShort
+    val totalCount: UShort,
 ) : MeshResponse, FirmwareDistributionStatusMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters = status.value.toByteArray() +
             totalCount.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+
+    override fun toString() =
+        "FirmwareDistributionReceiversStatus(status: $status, totalCount: $totalCount)"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8313u
@@ -34,14 +37,14 @@ class FirmwareDistributionReceiversStatus(
                 FirmwareDistributionMessageStatus
                     .from(value = params[0].toUByte())
                     ?.let { status ->
-                    FirmwareDistributionReceiversStatus(
-                        status = status,
-                        totalCount = params.getUShort(
-                            offset = 1,
-                            order = ByteOrder.LITTLE_ENDIAN
+                        FirmwareDistributionReceiversStatus(
+                            status = status,
+                            totalCount = params.getUShort(
+                                offset = 1,
+                                order = ByteOrder.LITTLE_ENDIAN
+                            )
                         )
-                    )
-                }
+                    }
             }
     }
 }
