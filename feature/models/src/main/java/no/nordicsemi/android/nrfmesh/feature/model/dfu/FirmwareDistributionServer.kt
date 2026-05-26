@@ -5,16 +5,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Numbers
+import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Schema
 import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.icons.outlined.SdStorage
 import androidx.compose.material.icons.outlined.SecurityUpdate
 import androidx.compose.material.icons.outlined.SpaceDashboard
+import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,11 +28,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
+import no.nordicsemi.android.nrfmesh.core.common.name
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
@@ -47,9 +53,17 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributi
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareGetByIndex
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionGet
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionStart
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionStatus
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionSuspend
+import no.nordicsemi.kotlin.mesh.core.model.Address
+import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
+import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
+import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
+import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.UriScheme
+import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 
 @Composable
 internal fun FirmwareDistributionServer(
@@ -75,8 +89,12 @@ private fun Controls(
 ) {
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf<FirmwareDistributionStatus?>(null) }
+    val isTransferSuspended by rememberSaveable {
+        mutableStateOf(status?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED)
+    }
     var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
     var shouldShowProgressIcon by rememberSaveable { mutableStateOf(false) }
+    var opCode by rememberSaveable { mutableStateOf<Int?>(null) }
     Row(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -89,77 +107,103 @@ private fun Controls(
         MeshIconButton(
             buttonIcon = Icons.Outlined.Check,
             onClick = dropUnlessResumed {
-                try {
-                    shouldShowProgressIcon = true
-                    scope.launch {
+                scope.launch {
+                    try {
+                        shouldShowProgressIcon = true
+                        opCode = FirmwareDistributionApply.opCode.toInt()
                         status =
                             send(model, FirmwareDistributionApply()) as? FirmwareDistributionStatus
+                    } catch (e: Exception) {
+                        error = e
+                    } finally {
+                        shouldShowProgressIcon = false
                     }
-                } catch (e: Exception) {
-                    error = e
-                } finally {
-                    shouldShowProgressIcon = false
                 }
             },
-            enabled = !isInProgress,
+            enabled = !isInProgress && status != null,
             isOnClickActionInProgress = shouldShowProgressIcon
+                    && opCode == FirmwareDistributionApply.opCode.toInt()
         )
         MeshIconButton(
-            buttonIcon = Icons.Outlined.PlayArrow,
-            onClick = {
-                try {
+            buttonIcon = when (isTransferSuspended) {
+                true -> Icons.Outlined.PlayArrow
+                else -> Icons.Outlined.Pause
+            },
+            onClick = dropUnlessResumed {
+                scope.launch {
                     shouldShowProgressIcon = true
-                    scope.launch {
-                        /*status = send(model, FirmwareDistributionStart(status = ))*/
+                    try {
+                        status = if (isTransferSuspended) {
+                            status?.let { resume ->
+                                opCode = FirmwareDistributionStart.opCode.toInt()
+                                send(
+                                    model,
+                                    FirmwareDistributionStart(resumeWithStatus = resume)
+                                ) as? FirmwareDistributionStatus
+                            }
+                        } else {
+                            opCode = FirmwareDistributionSuspend.opCode.toInt()
+                            send(
+                                model,
+                                FirmwareDistributionSuspend()
+                            ) as? FirmwareDistributionStatus
+                        }
+                    } catch (e: Exception) {
+                        error = e
+                    } finally {
+                        shouldShowProgressIcon = false
                     }
-                } catch (e: Exception) {
-                    error = e
-                } finally {
-                    shouldShowProgressIcon = false
                 }
             },
-            enabled = !isInProgress,
-            isOnClickActionInProgress = shouldShowProgressIcon
+            enabled = !isInProgress && status != null,
+            isOnClickActionInProgress = shouldShowProgressIcon &&
+                    (opCode == FirmwareDistributionStart.opCode.toInt() ||
+                            opCode == FirmwareDistributionSuspend.opCode.toInt())
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Cancel,
+            buttonIconTint = Color.Red,
             onClick = dropUnlessResumed {
-                try {
-                    shouldShowProgressIcon = true
-                    scope.launch {
+                scope.launch {
+                    try {
+                        shouldShowProgressIcon = true
+                        opCode = FirmwareDistributionCancel.opCode.toInt()
                         status =
                             send(model, FirmwareDistributionCancel()) as? FirmwareDistributionStatus
+                    } catch (e: Exception) {
+                        error = e
+                    } finally {
+                        shouldShowProgressIcon = false
                     }
-                } catch (e: Exception) {
-                    error = e
-                } finally {
-                    shouldShowProgressIcon = false
                 }
             },
             enabled = !isInProgress,
-            isOnClickActionInProgress = shouldShowProgressIcon
+            isOnClickActionInProgress = shouldShowProgressIcon && opCode == FirmwareDistributionCancel.opCode.toInt()
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Refresh,
             onClick = dropUnlessResumed {
-                try {
+                scope.launch {
                     shouldShowProgressIcon = true
-                    scope.launch {
+                    try {
+                        opCode = FirmwareDistributionGet.opCode.toInt()
                         status =
                             send(model, FirmwareDistributionGet()) as? FirmwareDistributionStatus
+                    } catch (e: Exception) {
+                        error = e
+                    } finally {
+                        shouldShowProgressIcon = false
                     }
-                } catch (e: Exception) {
-                    error = e
-                } finally {
-                    shouldShowProgressIcon = false
                 }
             },
             enabled = !isInProgress,
-            isOnClickActionInProgress = shouldShowProgressIcon
+            isOnClickActionInProgress = shouldShowProgressIcon && opCode == FirmwareDistributionGet.opCode.toInt()
         )
     }
     Status(status = status?.status)
     Phase(phase = status?.phase)
+    MulticastAddress(model = model, address = status?.multicastAddress)
+    ApplicationKeyIndex(key = status?.applicationKeyIndex?.let { model.boundApplicationKey(index = it) })
     Ttl(ttl = status?.ttl)
     DistributionTimeoutBase(distributionTimeoutBase = status?.distributionTimeoutBase)
     DistributionTransferMode(distributionTransferMode = status?.distributionTransferMode)
@@ -186,12 +230,60 @@ private fun Status(status: FirmwareDistributionMessageStatus?) {
 }
 
 @Composable
+private fun ApplicationKeyIndex(model: Model, index: KeyIndex?) {
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageVector = Icons.Outlined.Numbers,
+        title = stringResource(R.string.label_phase),
+        subtitle = index?.let {
+            model.boundApplicationKey(index = it)?.name ?: stringResource(R.string.label_unknown)
+        } ?: stringResource(R.string.label_unknown)
+    )
+}
+
+@Composable
 private fun Phase(phase: FirmwareDistributionPhase?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
         title = stringResource(R.string.label_phase),
         subtitle = phase?.debugDescription ?: stringResource(R.string.label_unknown)
+    )
+}
+
+@Composable
+private fun MulticastAddress(model: Model, address: Address?) {
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageVector = Icons.Outlined.Campaign,
+        title = stringResource(R.string.label_ttl),
+        subtitle = address?.let {
+            when {
+                GroupAddress.isValid(address = address) ||
+                        VirtualAddress.isValid(address = address) -> model
+                    .parentElement
+                    ?.parentNode
+                    ?.network
+                    ?.group(address = address)
+                    ?.name ?: address.toHexString()
+
+                FixedGroupAddress.isValid(address = address) -> FixedGroupAddress
+                    .create(address = address)
+                    .name()
+
+                else -> address.toHexString()
+            }
+        } ?: stringResource(R.string.label_unknown)
+    )
+}
+
+@Composable
+private fun ApplicationKeyIndex(key: ApplicationKey?) {
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageVector = Icons.Outlined.VpnKey,
+        title = stringResource(R.string.label_application_key),
+        subtitle = key?.name ?: stringResource(R.string.label_unknown)
     )
 }
 
@@ -221,7 +313,8 @@ private fun DistributionTransferMode(distributionTransferMode: TransferMode?) {
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
         title = stringResource(R.string.label_transfer_mode),
-        subtitle = distributionTransferMode?.debugDescription ?: stringResource(R.string.label_unknown)
+        subtitle = distributionTransferMode?.debugDescription
+            ?: stringResource(R.string.label_unknown)
     )
 }
 
@@ -229,7 +322,7 @@ private fun DistributionTransferMode(distributionTransferMode: TransferMode?) {
 private fun UpdatePolicy(updatePolicy: FirmwareUpdatePolicy?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
+        imageVector = Icons.Outlined.Policy,
         title = stringResource(R.string.label_update_policy),
         subtitle = updatePolicy?.debugDescription ?: stringResource(R.string.label_unknown)
     )
@@ -274,18 +367,18 @@ private fun Capabilities(
         MeshIconButton(
             buttonIcon = Icons.Outlined.Refresh,
             onClick = {
-                try {
+                scope.launch {
                     shouldShowProgressIcon = true
-                    scope.launch {
+                    try {
                         status = send(
                             model,
                             FirmwareDistributionCapabilitiesGet()
                         ) as? FirmwareDistributionCapabilitiesStatus
+                    } catch (e: Exception) {
+                        error = e
+                    } finally {
+                        shouldShowProgressIcon = false
                     }
-                } catch (e: Exception) {
-                    error = e
-                } finally {
-                    shouldShowProgressIcon = false
                 }
             },
             enabled = !isInProgress,
@@ -402,18 +495,18 @@ private fun FirmwareDistributionSlots(
         MeshIconButton(
             buttonIcon = Icons.Outlined.Refresh,
             onClick = dropUnlessResumed {
-                try {
+                scope.launch {
                     shouldShowProgressIcon = true
-                    scope.launch {
+                    try {
                         status = send(
                             model,
                             FirmwareDistributionFirmwareGetByIndex(imageIndex = 0u)
                         ) as FirmwareDistributionFirmwareStatus?
+                    } catch (e: Exception) {
+                        error = e
+                    } finally {
+                        shouldShowProgressIcon = false
                     }
-                } catch (e: Exception) {
-                    error = e
-                } finally {
-                    shouldShowProgressIcon = false
                 }
             },
             enabled = !isInProgress,
