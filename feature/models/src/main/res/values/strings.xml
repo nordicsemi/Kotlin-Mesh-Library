@@ -162,4 +162,6 @@
     <string name="label_slots">Slots</string>
     <string name="label_value_in_bytes">%d bytes</string>
     <string name="label_multicast_address">Multicast Address</string>
+    <string name="label_additional_information">Additional Information</string>
+    <string name="label_firmware_information">Firmware Information</string>
 </resources>

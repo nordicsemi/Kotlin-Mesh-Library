@@ -19,6 +19,7 @@ import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.NodeIdentityStatus
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.common.isFirmwareDistributionServer
+import no.nordicsemi.android.nrfmesh.core.common.isFirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
@@ -30,6 +31,7 @@ import no.nordicsemi.android.nrfmesh.feature.model.common.Publication
 import no.nordicsemi.android.nrfmesh.feature.model.common.Subscriptions
 import no.nordicsemi.android.nrfmesh.feature.model.configurationserver.ConfigurationServer
 import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareDistributionServer
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.feature.model.vendor.VendorModelControls
@@ -102,7 +104,7 @@ internal fun ModelScreen(
                 send = send
             )
         }
-        if (model.supportsModelSubscription != false) {
+        if (model.supportsModelSubscription) {
             Subscriptions(
                 snackbarHostState = snackbarHostState,
                 messageState = messageState,
@@ -136,6 +138,14 @@ internal fun ModelScreen(
 
         if (model.isFirmwareDistributionServer()) {
             FirmwareDistributionServer(
+                model = model,
+                isInProgress = messageState.isInProgress(),
+                send = sendAcknowledgedMessage,
+            )
+        }
+
+        if (model.isFirmwareUpdateServer()) {
+            FirmwareUpdateServer(
                 model = model,
                 isInProgress = messageState.isInProgress(),
                 send = sendAcknowledgedMessage,
