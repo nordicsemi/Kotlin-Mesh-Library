@@ -8,9 +8,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.PlaylistAddCheckCircle
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Schema
@@ -18,6 +21,9 @@ import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.icons.outlined.SdStorage
 import androidx.compose.material.icons.outlined.SecurityUpdate
 import androidx.compose.material.icons.outlined.SpaceDashboard
+import androidx.compose.material.icons.outlined.SyncAlt
+import androidx.compose.material.icons.outlined.Timelapse
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -60,7 +66,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
-import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.UriScheme
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
@@ -155,7 +160,7 @@ private fun Controls(
                     }
                 }
             },
-            enabled = !isInProgress && status != null,
+            enabled = !isInProgress && status != null && !isTransferSuspended,
             isOnClickActionInProgress = shouldShowProgressIcon &&
                     (opCode == FirmwareDistributionStart.opCode.toInt() ||
                             opCode == FirmwareDistributionSuspend.opCode.toInt())
@@ -177,7 +182,7 @@ private fun Controls(
                     }
                 }
             },
-            enabled = !isInProgress,
+            enabled = !isInProgress && status != null,
             isOnClickActionInProgress = shouldShowProgressIcon && opCode == FirmwareDistributionCancel.opCode.toInt()
         )
         MeshIconButton(
@@ -223,21 +228,9 @@ private fun Controls(
 private fun Status(status: FirmwareDistributionMessageStatus?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
+        imageVector = Icons.Outlined.PlaylistAddCheckCircle,
         title = stringResource(R.string.label_status),
         subtitle = status?.debugDescription ?: stringResource(R.string.label_unknown)
-    )
-}
-
-@Composable
-private fun ApplicationKeyIndex(model: Model, index: KeyIndex?) {
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
-        title = stringResource(R.string.label_phase),
-        subtitle = index?.let {
-            model.boundApplicationKey(index = it)?.name ?: stringResource(R.string.label_unknown)
-        } ?: stringResource(R.string.label_unknown)
     )
 }
 
@@ -245,7 +238,7 @@ private fun ApplicationKeyIndex(model: Model, index: KeyIndex?) {
 private fun Phase(phase: FirmwareDistributionPhase?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
+        imageVector = Icons.Outlined.Checklist,
         title = stringResource(R.string.label_phase),
         subtitle = phase?.debugDescription ?: stringResource(R.string.label_unknown)
     )
@@ -256,7 +249,7 @@ private fun MulticastAddress(model: Model, address: Address?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Campaign,
-        title = stringResource(R.string.label_ttl),
+        title = stringResource(R.string.label_multicast_address),
         subtitle = address?.let {
             when {
                 GroupAddress.isValid(address = address) ||
@@ -291,7 +284,7 @@ private fun ApplicationKeyIndex(key: ApplicationKey?) {
 private fun Ttl(ttl: UByte?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
+        imageVector = Icons.Outlined.Timer,
         title = stringResource(R.string.label_ttl),
         subtitle = ttl?.toString() ?: stringResource(R.string.label_unknown)
     )
@@ -301,7 +294,7 @@ private fun Ttl(ttl: UByte?) {
 private fun DistributionTimeoutBase(distributionTimeoutBase: UShort?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
+        imageVector = Icons.Outlined.Timelapse,
         title = stringResource(R.string.label_timeout_base),
         subtitle = distributionTimeoutBase?.toHexString() ?: stringResource(R.string.label_unknown)
     )
@@ -311,7 +304,7 @@ private fun DistributionTimeoutBase(distributionTimeoutBase: UShort?) {
 private fun DistributionTransferMode(distributionTransferMode: TransferMode?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
+        imageVector = Icons.Outlined.SyncAlt,
         title = stringResource(R.string.label_transfer_mode),
         subtitle = distributionTransferMode?.debugDescription
             ?: stringResource(R.string.label_unknown)
@@ -406,7 +399,7 @@ private fun Capabilities(
 private fun MaxReceiversListSize(receiversSize: Int?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Numbers,
+        imageVector = Icons.Outlined.Download,
         title = stringResource(R.string.label_max_receivers_list_size),
         subtitle = receiversSize?.toString() ?: stringResource(R.string.label_unknown)
     )
