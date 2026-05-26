@@ -585,6 +585,15 @@ class Model internal constructor(
     }
 
     /**
+     * Returns the bound application key for a given key index
+     *
+     * @param index Application key index.
+     * @return Bound application key or null if the key index is not bound to the model
+     */
+    fun boundApplicationKey(index: KeyIndex) = boundApplicationKeys.find { it.index == index }
+
+
+    /**
      * Sets the [Publish] settings for this model.
      *
      * @param publish Publish settings.
