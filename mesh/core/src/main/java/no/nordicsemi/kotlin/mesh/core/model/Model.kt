@@ -592,7 +592,6 @@ class Model internal constructor(
      */
     fun boundApplicationKey(index: KeyIndex) = boundApplicationKeys.find { it.index == index }
 
-
     /**
      * Sets the [Publish] settings for this model.
      *
