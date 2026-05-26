@@ -21,7 +21,7 @@ class FirmwareUpdateInformationGet(
     val entriesLimit: UByte,
 ) : AcknowledgedMeshMessage {
     override val opCode: UInt = Initializer.opCode
-    override val responseOpCode = FirmwareUpdateStatus.opCode
+    override val responseOpCode = FirmwareUpdateInformationStatus.opCode
     override val parameters = firstIndex.toByteArray() + entriesLimit.toByteArray()
 
     /**

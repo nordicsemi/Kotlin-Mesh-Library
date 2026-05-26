@@ -28,3 +28,12 @@ fun isSupportedGroupItem(model: Model) = model.isGenericOnOffServer() ||
 
 fun Model.isFirmwareDistributionServer() = isBluetoothSigAssigned
         && (modelId as SigModelId).modelIdentifier == Model.FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID
+
+fun Model.isFirmwareDistributionClient() = isBluetoothSigAssigned
+        && (modelId as SigModelId).modelIdentifier == Model.FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID
+
+fun Model.isFirmwareUpdateServer() = isBluetoothSigAssigned
+        && (modelId as SigModelId).modelIdentifier == Model.FIRMWARE_UPDATE_SERVER_MODEL_ID
+
+fun Model.isFirmwareUpdateClient() = isBluetoothSigAssigned
+        && (modelId as SigModelId).modelIdentifier == Model.FIRMWARE_UPDATE_CLIENT_MODEL_ID
