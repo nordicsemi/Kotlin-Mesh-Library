@@ -171,6 +171,14 @@ internal fun ModelScreen(
                 )
         }
 
+        if (model.isFirmwareUpdateServer()) {
+            FirmwareUpdateServer(
+                model = model,
+                isInProgress = messageState.isInProgress(),
+                send = sendAcknowledgedMessage,
+            )
+        }
+
         Spacer(modifier = Modifier.size(size = 8.dp))
     }
 
