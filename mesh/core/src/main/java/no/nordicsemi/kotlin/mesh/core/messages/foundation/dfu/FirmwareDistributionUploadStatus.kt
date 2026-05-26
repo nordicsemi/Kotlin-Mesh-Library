@@ -9,7 +9,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
-import kotlin.experimental.and
 
 /**
  * Firmware Distribution Upload Status message is an unacknowledged message sent by a Firmware
@@ -78,6 +77,12 @@ class FirmwareDistributionUploadStatus(
         isOob = isOob,
         firmwareId = firmwareId
     )
+
+    override fun toString() = "FirmwareDistributionUploadStatus(status: $status, " +
+            "phase: $phase, " +
+            "progress: ${progress ?: "N/A"}, " +
+            "isOob: ${isOob ?: "N/A"}, " +
+            "firmwareId: ${firmwareId ?: "N/A"})"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8322u

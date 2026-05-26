@@ -81,6 +81,14 @@ class FirmwareUpdateStatus(
         imageIndex = null
     )
 
+    override fun toString() = "FirmwareUpdateStatus(status: $status, " +
+            "updatePhase: $updatePhase, " +
+            "updateTtl: ${updateTtl ?: "N/A"}, " +
+            "additionalInformation: ${additionalInformation ?: "N/A"}, " +
+            "updateTimeoutBase: ${updateTimeoutBase ?: "N/A"}, " +
+            "blobId: ${blobId ?: "N/A"}, " +
+            "imageIndex: ${imageIndex ?: "N/A"})"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8310u
 

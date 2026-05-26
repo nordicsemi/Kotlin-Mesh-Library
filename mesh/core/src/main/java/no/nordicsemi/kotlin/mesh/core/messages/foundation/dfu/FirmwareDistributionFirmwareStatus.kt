@@ -124,6 +124,11 @@ class FirmwareDistributionFirmwareStatus(
         firmwareId = null
     )
 
+    override fun toString() = "FirmwareDistributionFirmwareStatus(status: $status, " +
+            "entryCount: $entryCount, " +
+            "imageIndex: ${imageIndex ?: "N/A"}, " +
+            "firmwareId: ${firmwareId ?: "N/A"})"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8327u
 
