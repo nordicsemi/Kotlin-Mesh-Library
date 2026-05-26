@@ -308,6 +308,16 @@ sealed class FixedGroupAddress(
                 address == allRelays ||
                 address == allNodes
 
+        fun create(address: Address): FixedGroupAddress = when (address) {
+            allProxies -> AllProxies
+            allFriends -> AllFriends
+            allRelays -> AllRelays
+            allNodes -> AllNodes
+            else -> throw IllegalArgumentException(
+                "Unable to create a Fixed Group Address with the given address value!"
+            )
+        }
+
     }
 }
 
