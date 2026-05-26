@@ -5,6 +5,7 @@ package no.nordicsemi.kotlin.mesh.core.messages
 import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateCancel
 import java.net.URL
 import java.nio.ByteOrder
 
@@ -348,6 +349,17 @@ enum class FirmwareUpdatePhase(val value: UByte) {
     /** Indicates whether the firmware update can be applied. */
     val canApply: Boolean
         get() = this == VERIFICATION_SUCCEEDED || this == APPLYING_UPDATE
+
+    val debugDescription: String
+        get() = when (this) {
+            IDLE -> "Idle"
+            TRANSFER_ERROR -> "Transfer Error"
+            TRANSFER_ACTIVE -> "Transfer Active"
+            VERIFYING_UPDATE -> "Verifying Update"
+            VERIFICATION_SUCCEEDED -> "Verification Succeeded"
+            VERIFICATION_FAILED -> "Verification Failed"
+            APPLYING_UPDATE -> "Applying Update"
+        }
 
     internal companion object {
 
