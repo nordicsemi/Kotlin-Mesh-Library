@@ -348,7 +348,7 @@ class Model internal constructor(
             else -> false
         }
 
-    val supportsModelSubscription: Boolean?
+    val supportsModelSubscription: Boolean
         get() = when ((modelId as? SigModelId)?.modelIdentifier) {
             // Foundation
             CONFIGURATION_SERVER_MODEL_ID,
@@ -437,6 +437,11 @@ class Model internal constructor(
             LIGHT_LC_SERVER_MODEL_ID,
             LIGHT_LC_SETUP_SERVER_MODEL_ID,
             LIGHT_LC_CLIENT_MODEL_ID,
+                // Device Firmware Update
+            FIRMWARE_UPDATE_SERVER_MODEL_ID,
+            FIRMWARE_UPDATE_CLIENT_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID,
                 -> true
 
             else -> false
