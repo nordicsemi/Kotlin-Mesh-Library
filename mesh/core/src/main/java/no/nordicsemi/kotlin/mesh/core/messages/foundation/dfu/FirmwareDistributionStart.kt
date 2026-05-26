@@ -11,7 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
-import no.nordicsemi.kotlin.mesh.core.model.DistributionMulticastAddress
+import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
@@ -47,14 +47,16 @@ import kotlin.uuid.Uuid
  *                                    Timeout = (10,000 × (Timeout Base + 2)) + (100 × Transfer TTL)
  *                                    milliseconds.
  */
-class FirmwareDistributionStart internal constructor(
+class FirmwareDistributionStart @OptIn(ExperimentalUuidApi::class)
+internal constructor(
     val applicationKeyIndex: KeyIndex,
     val ttl: UByte = 0xFF.toUByte(),
     val distributionTimeoutBase: UShort = 118u, // 20 minutes
     val distributionTransferMode: TransferMode = TransferMode.PUSH,
     val updatePolicy: FirmwareUpdatePolicy = FirmwareUpdatePolicy.VERIFY_AND_APPLY,
     val firmwareImageIndex: UShort,
-    val multicastAddress: DistributionMulticastAddress,
+    val address: Address? = null,
+    val labelUuid: Uuid? = null,
 ) : AcknowledgedMeshMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionStatus.opCode
@@ -68,8 +70,8 @@ class FirmwareDistributionStart internal constructor(
                     ((distributionTransferMode.value) or (updatePolicy.value shl 2)).toByteArray() +
                     firmwareImageIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
             return when {
-                multicastAddress is VirtualAddress -> data + multicastAddress.uuid.toByteArray()
-                else -> data + UnassignedAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+                labelUuid != null -> data + labelUuid.toByteArray()
+                else -> data + address!!.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
             }
         }
 
@@ -107,7 +109,7 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = groupAddress,
+        address = groupAddress.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -137,7 +139,7 @@ class FirmwareDistributionStart internal constructor(
     @OptIn(ExperimentalUuidApi::class)
     constructor(
         firmwareImageIndex: UShort,
-        labelUuid: Uuid,
+        virtualAddress: VirtualAddress,
         applicationKeyIndex: KeyIndex,
         ttl: UByte = 0xFF.toUByte(),
         distributionTransferMode: TransferMode = TransferMode.PUSH,
@@ -145,7 +147,7 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = VirtualAddress(uuid = labelUuid),
+        labelUuid = virtualAddress.uuid,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -182,7 +184,7 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = fixedGroupAddress,
+        address = fixedGroupAddress.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -219,7 +221,7 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = unassignedAddress,
+        address = UnassignedAddress.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -227,21 +229,26 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase = distributionTimeoutBase
     )
 
-    constructor(status: FirmwareDistributionStatus) : this(
-        applicationKeyIndex = status.applicationKeyIndex
+    /**
+     * Convenience constructor to create a FirmwareDistributionStart message to resume a Firmware
+     * Distribution Process using a given [FirmwareDistributionStatus] message.
+     *
+     * @param resumeWithStatus [FirmwareDistributionStatus] message used to resume with.
+     */
+    constructor(resumeWithStatus: FirmwareDistributionStatus) : this(
+        applicationKeyIndex = resumeWithStatus.applicationKeyIndex
             ?: throw IllegalArgumentException("Missing application key index"),
-        ttl = status.ttl ?: throw IllegalArgumentException("Missing TTL"),
-        distributionTimeoutBase = status.distributionTimeoutBase
+        ttl = resumeWithStatus.ttl ?: throw IllegalArgumentException("Missing TTL"),
+        distributionTimeoutBase = resumeWithStatus.distributionTimeoutBase
             ?: throw IllegalArgumentException("Missing distribution timeout base"),
-        distributionTransferMode = status.distributionTransferMode
+        distributionTransferMode = resumeWithStatus.distributionTransferMode
             ?: throw IllegalArgumentException("Missing distribution transfer mode"),
-        updatePolicy = status.updatePolicy
+        updatePolicy = resumeWithStatus.updatePolicy
             ?: throw IllegalArgumentException("Missing update policy"),
-        firmwareImageIndex = status.firmwareImageIndex
+        firmwareImageIndex = resumeWithStatus.firmwareImageIndex
             ?: throw IllegalArgumentException("Missing firmware image index"),
-        multicastAddress = status.multicastAddress?.let {
-            DistributionMulticastAddress.create(address = it)
-        } ?: throw IllegalArgumentException("Missing multicast address")
+        address = resumeWithStatus.multicastAddress
+            ?: throw IllegalArgumentException("Missing multicast address")
 
     )
 
@@ -252,31 +259,56 @@ class FirmwareDistributionStart internal constructor(
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 10 || it.size == 24 }
             ?.let { params ->
-                FirmwareDistributionStart(
-                    applicationKeyIndex = params.getUShort(
-                        offset = 0,
-                        order = ByteOrder.LITTLE_ENDIAN
-                    ),
-                    ttl = params[2].toUByte(),
-                    distributionTimeoutBase = params.getUShort(
-                        offset = 3,
-                        order = ByteOrder.LITTLE_ENDIAN
-                    ),
-                    distributionTransferMode = TransferMode.from(
-                        value = (params[5] shr 6).toUByte()
-                    ) ?: return@let null,
-                    updatePolicy = FirmwareUpdatePolicy.from(
-                        value = ((params[5] shr 5) and 0x01).toUByte()
-                    ) ?: return@let null,
-                    firmwareImageIndex = params.getUShort(
-                        offset = 6,
-                        order = ByteOrder.LITTLE_ENDIAN
-                    ),
-                    multicastAddress = when (params.size == 24) {
-                        true -> VirtualAddress(Uuid.fromByteArray(params.sliceArray(indices = 8 until 24)))
-                        false -> UnassignedAddress
-                    }
-                )
+                if (params.size == 24) {
+                    FirmwareDistributionStart(
+                        applicationKeyIndex = params.getUShort(
+                            offset = 0,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        ),
+                        ttl = params[2].toUByte(),
+                        distributionTimeoutBase = params.getUShort(
+                            offset = 3,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        ),
+                        distributionTransferMode = TransferMode.from(
+                            value = (params[5] shr 6).toUByte()
+                        ) ?: return@let null,
+                        updatePolicy = FirmwareUpdatePolicy.from(
+                            value = ((params[5] shr 5) and 0x01).toUByte()
+                        ) ?: return@let null,
+                        firmwareImageIndex = params.getUShort(
+                            offset = 6,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        ),
+                        virtualAddress = VirtualAddress(Uuid.fromByteArray(params.sliceArray(indices = 8 until 24)))
+                    )
+                } else {
+                    FirmwareDistributionStart(
+                        applicationKeyIndex = params.getUShort(
+                            offset = 0,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        ),
+                        ttl = params[2].toUByte(),
+                        distributionTimeoutBase = params.getUShort(
+                            offset = 3,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        ),
+                        distributionTransferMode = TransferMode.from(
+                            value = (params[5] shr 6).toUByte()
+                        ) ?: return@let null,
+                        updatePolicy = FirmwareUpdatePolicy.from(
+                            value = ((params[5] shr 5) and 0x01).toUByte()
+                        ) ?: return@let null,
+                        firmwareImageIndex = params.getUShort(
+                            offset = 6,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        ),
+                        address = params.getUShort(
+                            offset = 6,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        )
+                    )
+                }
             }
     }
 }
