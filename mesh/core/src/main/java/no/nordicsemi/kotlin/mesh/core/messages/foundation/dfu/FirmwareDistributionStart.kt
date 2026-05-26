@@ -11,7 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
-import no.nordicsemi.kotlin.mesh.core.model.DistributionMulticastAddress
+import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
@@ -47,14 +47,16 @@ import kotlin.uuid.Uuid
  *                                    Timeout = (10,000 × (Timeout Base + 2)) + (100 × Transfer TTL)
  *                                    milliseconds.
  */
-class FirmwareDistributionStart internal constructor(
+class FirmwareDistributionStart @OptIn(ExperimentalUuidApi::class)
+internal constructor(
     val applicationKeyIndex: KeyIndex,
     val ttl: UByte = 0xFF.toUByte(),
     val distributionTimeoutBase: UShort = 118u, // 20 minutes
     val distributionTransferMode: TransferMode = TransferMode.PUSH,
     val updatePolicy: FirmwareUpdatePolicy = FirmwareUpdatePolicy.VERIFY_AND_APPLY,
     val firmwareImageIndex: UShort,
-    val multicastAddress: DistributionMulticastAddress,
+    val address: Address? = null,
+    val labelUuid: Uuid? = null,
 ) : AcknowledgedMeshMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionStatus.opCode
@@ -68,8 +70,8 @@ class FirmwareDistributionStart internal constructor(
                     ((distributionTransferMode.value) or (updatePolicy.value shl 2)).toByteArray() +
                     firmwareImageIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
             return when {
-                multicastAddress is VirtualAddress -> data + multicastAddress.uuid.toByteArray()
-                else -> data + UnassignedAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+                labelUuid != null -> data + labelUuid.toByteArray()
+                else -> data + address!!.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
             }
         }
 
@@ -107,7 +109,7 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = groupAddress,
+        address = groupAddress.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -137,7 +139,7 @@ class FirmwareDistributionStart internal constructor(
     @OptIn(ExperimentalUuidApi::class)
     constructor(
         firmwareImageIndex: UShort,
-        labelUuid: Uuid,
+        virtualAddress: VirtualAddress,
         applicationKeyIndex: KeyIndex,
         ttl: UByte = 0xFF.toUByte(),
         distributionTransferMode: TransferMode = TransferMode.PUSH,
@@ -145,7 +147,7 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = VirtualAddress(uuid = labelUuid),
+        labelUuid = virtualAddress.uuid,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -182,7 +184,7 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = fixedGroupAddress,
+        address = fixedGroupAddress.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
@@ -219,7 +221,7 @@ class FirmwareDistributionStart internal constructor(
         distributionTimeoutBase: UShort = 118u, // 20 minutes
     ) : this(
         firmwareImageIndex = firmwareImageIndex,
-        multicastAddress = unassignedAddress,
+        address = UnassignedAddress.address,
         applicationKeyIndex = applicationKeyIndex,
         ttl = ttl,
         distributionTransferMode = distributionTransferMode,
