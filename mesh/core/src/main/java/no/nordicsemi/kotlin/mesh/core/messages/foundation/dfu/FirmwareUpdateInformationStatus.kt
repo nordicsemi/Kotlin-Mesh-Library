@@ -13,15 +13,16 @@ import java.nio.ByteOrder
 /**
  * Firmware Update Information Get message is an acknowledged message used to get information about
  * the firmware images installed on a Node.
- * @property list         Total number of entries in the Firmware Information List state.
- * @property firstIndex   Index of the first requested entry from the Firmware Information List
- *                         state.
+ *
  * @property totalCount   Total number of entries in the Firmware Information List State.
+ * @property firstIndex   Index of the first requested entry from the Firmware Information List
+ *                        state.
+ * @property list         Total number of entries in the Firmware Information List state.
  */
 class FirmwareUpdateInformationStatus(
-    val list: List<FirmwareInformation>,
-    val firstIndex: UByte,
     val totalCount: UByte,
+    val firstIndex: UByte,
+    val list: List<FirmwareInformation>,
 ) : MeshResponse {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
@@ -64,15 +65,11 @@ class FirmwareUpdateInformationStatus(
             ?.takeIf { it.size >= 2 }
             ?.let { params ->
                 val firmwareList = mutableListOf<FirmwareInformation>()
-
                 var offset = 2
-
                 while (offset < params.size) {
-
                     // Decode Firmware ID
                     val currentFirmwareIdLength = params[offset].toInt()
                     offset += 1
-
                     require(
                         currentFirmwareIdLength >= 2 &&
                                 currentFirmwareIdLength <= 2 + 106 &&
@@ -82,28 +79,21 @@ class FirmwareUpdateInformationStatus(
                     }
 
                     val cid = params.getUShort(offset = offset, order = ByteOrder.LITTLE_ENDIAN)
-
                     val version = params.copyOfRange(
                         fromIndex = offset + 2,
                         toIndex = offset + currentFirmwareIdLength
                     )
-
                     val currentFirmwareId = FirmwareId(companyIdentifier = cid, version = version)
-
                     offset += currentFirmwareIdLength
-
                     // Decode Update URI
                     require(params.size >= offset + 1)
-
                     val updateUriLength = params[offset].toInt() and 0xFF
                     offset += 1
-
                     require(updateUriLength >= 0 && params.size >= offset + updateUriLength) {
                         return@let null
                     }
 
                     var updateUri: String? = null
-
                     if (updateUriLength > 0) {
                         updateUri = params
                             .copyOfRange(fromIndex = offset, toIndex = offset + updateUriLength)
@@ -111,7 +101,6 @@ class FirmwareUpdateInformationStatus(
                     }
 
                     offset += updateUriLength
-
                     val entry = FirmwareInformation(
                         currentFirmwareId = currentFirmwareId,
                         updateUri = updateUri
@@ -120,8 +109,8 @@ class FirmwareUpdateInformationStatus(
                     firmwareList.add(entry)
                 }
                 FirmwareUpdateInformationStatus(
-                    firstIndex = params[0].toUByte(),
-                    totalCount = params[1].toUByte(),
+                    totalCount = params[0].toUByte(),
+                    firstIndex = params[1].toUByte(),
                     list = firmwareList.toList(),
                 )
             }
