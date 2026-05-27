@@ -48,6 +48,9 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.Provisioner
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
+import no.nordicsemi.kotlin.mesh.core.model.allGroupAddressesRange
+import no.nordicsemi.kotlin.mesh.core.model.allScenesRange
+import no.nordicsemi.kotlin.mesh.core.model.allUnicastAddressesRange
 import no.nordicsemi.kotlin.mesh.core.model.serialization.MeshNetworkSerializer.deserialize
 import no.nordicsemi.kotlin.mesh.core.model.serialization.MeshNetworkSerializer.serialize
 import no.nordicsemi.kotlin.mesh.core.model.serialization.config.NetworkConfiguration
@@ -221,7 +224,12 @@ class MeshNetworkManager(
     ) = create(
         name = name,
         uuid = uuid,
-        provisioner = Provisioner(name = provisionerName),
+        provisioner = Provisioner(
+            name = provisionerName,
+            allocatedUnicastRanges = mutableListOf(allUnicastAddressesRange),
+            allocatedGroupRanges = mutableListOf(allGroupAddressesRange),
+            allocatedSceneRanges = mutableListOf(allScenesRange)
+        ),
         networkKeys = networkKeys
     )
 
