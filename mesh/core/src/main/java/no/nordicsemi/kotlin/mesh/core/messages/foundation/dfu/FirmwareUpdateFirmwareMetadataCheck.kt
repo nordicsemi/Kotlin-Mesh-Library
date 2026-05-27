@@ -26,7 +26,7 @@ class FirmwareUpdateFirmwareMetadataCheck(
     val metaData: ByteArray?,
 ) : AcknowledgedMeshMessage {
     override val opCode: UInt = Initializer.opCode
-    override val responseOpCode = FirmwareUpdateStatus.opCode
+    override val responseOpCode = FirmwareUpdateFirmwareMetadataStatus.opCode
     override val parameters = imageIndex.toByteArray() + (metaData ?: byteArrayOf())
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
