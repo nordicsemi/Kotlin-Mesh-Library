@@ -8,11 +8,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.DataObject
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.PlaylistAddCheckCircle
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.SpaceDashboard
-import androidx.compose.material.icons.outlined.SyncAlt
+import androidx.compose.material.icons.outlined.SdCard
+import androidx.compose.material.icons.outlined.SdCardAlert
+import androidx.compose.material.icons.outlined.SimCardAlert
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
@@ -200,7 +202,7 @@ private fun Ttl(ttl: UByte?) {
 private fun AdditionalInformation(information: FirmwareUpdateAdditionalInformation?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Timer,
+        imageVector = Icons.Outlined.SdCardAlert,
         title = stringResource(R.string.label_additional_information),
         subtitle = information?.debugDescription ?: stringResource(R.string.label_unknown)
     )
@@ -220,8 +222,8 @@ private fun UpdateTimeoutBase(updateTimeoutBase: UShort?) {
 private fun BlobId(blobId: ULong?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.SyncAlt,
-        title = stringResource(R.string.label_transfer_mode),
+        imageVector = Icons.Outlined.DataObject,
+        title = stringResource(R.string.label_blob_id),
         subtitle = blobId?.toString() ?: stringResource(R.string.label_unknown)
     )
 }
@@ -231,7 +233,7 @@ private fun ImageIndex(index: UByte?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Numbers,
-        title = stringResource(R.string.label_distribution_firmware_image_index),
+        title = stringResource(R.string.label_image_index),
         subtitle = index?.toString() ?: stringResource(R.string.label_unknown)
     )
 }
@@ -263,7 +265,10 @@ private fun FirmwareInformationGet(
                     try {
                         status = send(
                             model,
-                            FirmwareUpdateInformationGet()
+                            FirmwareUpdateInformationGet(
+                                firstIndex = 0u,
+                                entriesLimit = 10u
+                            )
                         ) as FirmwareUpdateInformationStatus?
                     } catch (e: Exception) {
                         error = e
@@ -278,20 +283,25 @@ private fun FirmwareInformationGet(
     }
     status?.list?.takeIf {
         it.isNotEmpty()
-    }?.forEach {
+    }?.forEachIndexed { index, information ->
         key(KeyIdGenerator.nextId()) {
+            println("AAA: ${information.debugDescription}")
             ElevatedCardItem(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                imageVector = Icons.Outlined.SpaceDashboard,
-                title = it.debugDescription,
-                subtitle = it.currentFirmwareId.versionString
-                    ?: stringResource(R.string.label_unknown)
+                imageVector = Icons.Outlined.SdCard,
+                title = stringResource(
+                    R.string.label_image_value,
+                    (status!!.firstIndex + index.toUByte()).toInt()
+                ),
+                subtitle = information.currentFirmwareId.versionString?.let { versionString ->
+                    stringResource(R.string.label_version_value, versionString)
+                } ?: stringResource(R.string.label_unknown)
             )
         }
     } ?: run {
         ElevatedCardItem(
             modifier = Modifier.padding(horizontal = 16.dp),
-            imageVector = Icons.Outlined.SpaceDashboard,
+            imageVector = Icons.Outlined.SimCardAlert,
             title = stringResource(R.string.label_unknown),
         )
     }

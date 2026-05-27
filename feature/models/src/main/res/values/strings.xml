@@ -164,4 +164,8 @@
     <string name="label_multicast_address">Multicast Address</string>
     <string name="label_additional_information">Additional Information</string>
     <string name="label_firmware_information">Firmware Information</string>
+    <string name="label_version_value">Version: %s</string>
+    <string name="label_image_value">Image %d</string>
+    <string name="label_image_index">Image Index</string>
+    <string name="label_blob_id">BLOB ID</string>
 </resources>
