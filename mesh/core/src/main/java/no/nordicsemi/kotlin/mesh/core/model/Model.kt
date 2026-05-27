@@ -705,7 +705,7 @@ class Model internal constructor(
         val otherParentElement = model.parentElement ?: return false
         val node = parentElement.parentNode ?: return false
         val otherNode = otherParentElement.parentNode ?: return false
-        if (node.uuid == otherNode.uuid) return false
+        if (node.uuid != otherNode.uuid) return false
         return baseModels.contains(model)
     }
 
@@ -734,7 +734,7 @@ class Model internal constructor(
         val otherParentElement = model.parentElement ?: return false
         val node = parentElement.parentNode ?: return false
         val otherNode = otherParentElement.parentNode ?: return false
-        if (node.uuid == otherNode.uuid) return false
+        if (node.uuid != otherNode.uuid) return false
 
         // Ensure model does not extend itself or any other instance of the same model
         if (model.modelId == modelId) return false
