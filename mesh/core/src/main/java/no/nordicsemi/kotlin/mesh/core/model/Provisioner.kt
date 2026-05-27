@@ -47,11 +47,11 @@ data class Provisioner internal constructor(
     @SerialName(value = "provisionerName")
     private var _name: String = "nRF Mesh Provisioner",
     @SerialName(value = "allocatedUnicastRange")
-    internal val _allocatedUnicastRanges: MutableList<UnicastRange>,
+    internal val _allocatedUnicastRanges: MutableList<UnicastRange> = mutableListOf(),
     @SerialName(value = "allocatedGroupRange")
-    internal val _allocatedGroupRanges: MutableList<GroupRange>,
+    internal val _allocatedGroupRanges: MutableList<GroupRange> = mutableListOf(),
     @SerialName(value = "allocatedSceneRange")
-    internal val _allocatedSceneRanges: MutableList<SceneRange>,
+    internal val _allocatedSceneRanges: MutableList<SceneRange> = mutableListOf(),
 ) {
     var name: String
         get() = _name
@@ -103,37 +103,42 @@ data class Provisioner internal constructor(
     internal var network: MeshNetwork? = null
 
     /**
+     * Creates a Provisioner with the given UUID.
+     *
+     * @param uuid Provisioner UUID.
+     */
+    constructor(uuid: Uuid = Uuid.random()) : this(
+        uuid = uuid,
+        _allocatedUnicastRanges = mutableListOf(),
+        _allocatedGroupRanges = mutableListOf(),
+        _allocatedSceneRanges = mutableListOf(),
+        _name = "nRF Mesh Provisioner"
+    )
+
+    /**
      * Creates a Provisioner with the given name.
      *
      * @param name Provisioner name.
      */
     constructor(name: String) : this(
         uuid = Uuid.random(),
-        name = name
+        _allocatedUnicastRanges = mutableListOf(),
+        _allocatedGroupRanges = mutableListOf(),
+        _allocatedSceneRanges = mutableListOf(),
+        _name = name
     )
-
-    /**
-     * Creates a Provisioner with the given UUID.
-     *
-     * @param uuid Provisioner UUID.
-     */
-    constructor(uuid: Uuid) : this(
-        uuid = uuid,
-        name = "nRF Mesh Provisioner"
-    )
-
     /**
      * Creates a Provisioner with the given UUID and name.
      *
      * @param uuid Provisioner UUID.
      * @param name Provisioner name.
      */
-    constructor(uuid: Uuid, name: String) : this(
+    constructor(uuid: Uuid = Uuid.random(), name: String) : this(
         uuid = uuid,
-        _name = name,
-        _allocatedUnicastRanges = mutableListOf(allUnicastAddressesRange),
-        _allocatedGroupRanges = mutableListOf(allGroupAddressesRange),
-        _allocatedSceneRanges = mutableListOf(allScenesRange)
+        _allocatedUnicastRanges = mutableListOf(),
+        _allocatedGroupRanges = mutableListOf(),
+        _allocatedSceneRanges = mutableListOf(),
+        _name = name
     )
 
 
@@ -153,10 +158,10 @@ data class Provisioner internal constructor(
         allocatedSceneRanges: List<SceneRange> = mutableListOf(),
     ) : this(
         uuid = Uuid.random(),
-        _name = name,
         _allocatedUnicastRanges = allocatedUnicastRanges.toMutableList(),
         _allocatedGroupRanges = allocatedGroupRanges.toMutableList(),
         _allocatedSceneRanges = allocatedSceneRanges.toMutableList(),
+        _name = name
     )
 
     /**
