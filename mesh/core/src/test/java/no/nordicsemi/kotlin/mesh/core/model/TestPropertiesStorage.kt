@@ -38,7 +38,7 @@ internal class TestPropertiesStorage : SecurePropertiesStorage {
         TODO("Not yet implemented")
     }
 
-    override suspend fun storeLastSeqAuthValue(
+    override fun storeLastSeqAuthValue(
         uuid: Uuid,
         source: UnicastAddress,
         lastSeqAuth: ULong
@@ -50,7 +50,7 @@ internal class TestPropertiesStorage : SecurePropertiesStorage {
         TODO("Not yet implemented")
     }
 
-    override suspend fun storePreviousSeqAuthValue(
+    override fun storePreviousSeqAuthValue(
         uuid: Uuid,
         source: UnicastAddress,
         seqAuth: ULong
