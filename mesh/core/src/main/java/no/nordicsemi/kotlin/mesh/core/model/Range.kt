@@ -273,20 +273,39 @@ data class UnicastRange(
     /**
      * Convenience constructor to create a Unicast Range for tests.
      *
-     * @property start        Start address.
-     * @property end          End address.
-     * @constructor Creates a Unicast Range.
+     * @param address Low address for a given range.
+     * @param elementsCount Number of elements in the range.
+     * @constructor constructs Unicast Range
      */
-    internal constructor(
-        start: Int, end: Int,
-    ) : this(lowAddress = UnicastAddress(start), highAddress = UnicastAddress(end))
-
     constructor(
         address: UnicastAddress, elementsCount: Int,
     ) : this(
         lowAddress = address,
         highAddress = address + if (elementsCount > 0) elementsCount - 1 else 0
     )
+
+    /**
+     * Convenience constructor to create a Unicast Range for tests.
+     *
+     * @param range Range to be converted to Unicast Range.
+     * @constructor constructs Unicast Range
+     */
+    constructor(
+        range: UIntRange,
+    ) : this(start = range.first.toInt(), end = range.last.toInt())
+
+    /**
+     * Convenience constructor to create a Unicast Range for tests.
+     *
+     * @property start        Start address.
+     * @property end          End address.
+     * @constructor Creates a Unicast Range.
+     */
+    internal constructor(
+        start: Int,
+        end: Int,
+    ) : this(lowAddress = UnicastAddress(start), highAddress = UnicastAddress(end))
+
 }
 
 /**
@@ -306,9 +325,38 @@ data class GroupRange(
     override val highAddress: GroupAddress,
 ) : AddressRange() {
 
+    /**
+     * Convenience constructor to create a Group Range.
+     *
+     * @param address Low address for a given range.
+     * @param size Number of addresses in the range.
+     */
     constructor(
-        address: GroupAddress, size: Int,
+        address: GroupAddress,
+        size: Int,
     ) : this(lowAddress = address, highAddress = address + size)
+
+    /**
+     * Convenience constructor to create a Group Range.
+     *
+     * @param range Range to be converted to Group Range.
+     * @constructor constructs Group Range
+     */
+    constructor(
+        range: UIntRange,
+    ) : this(start = range.first.toInt(), end = range.last.toInt())
+
+    /**
+     * Convenience constructor to create a Group Range.
+     *
+     * @property start        Start address.
+     * @property end          End address.
+     * @constructor Creates a Group Range.
+     */
+    internal constructor(
+        start: Int,
+        end: Int,
+    ) : this(lowAddress = GroupAddress(start), highAddress = GroupAddress(end))
 }
 
 /**
@@ -328,9 +376,26 @@ data class SceneRange(
     @Serializable(with = UShortAsStringSerializer::class) val lastScene: SceneNumber,
 ) : Range() {
 
+    /**
+     * Convenience constructor to create a Scene Range.
+     *
+     * @param firstScene First scene for a given range.
+     * @param lastScene  Number of scenes in the range.
+     */
     internal constructor(firstScene: Int, lastScene: Int) : this(
         firstScene = firstScene.toUShort(),
         lastScene = lastScene.toUShort()
+    )
+
+    /**
+     * Convenience constructor to create a Scene Range.
+     *
+     * @param range Range to be converted to Scene Range.
+     * @constructor constructs Scene Range
+     */
+    constructor(range: UIntRange) : this(
+        firstScene = range.first.toUShort(),
+        lastScene = range.last.toUShort()
     )
 
     @Transient
