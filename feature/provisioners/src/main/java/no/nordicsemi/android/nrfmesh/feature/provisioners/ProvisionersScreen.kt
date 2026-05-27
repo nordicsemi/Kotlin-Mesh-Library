@@ -137,6 +137,12 @@ internal fun ProvisionersScreen(
                     onAddProvisionerClicked()
                 }.onSuccess {
                     navigateToProvisioner(it.uuid)
+                }.onFailure {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = it.message ?: context.getString(R.string.error_while_adding_provisioner)
+                        )
+                    }
                 }
             },
             expanded = true

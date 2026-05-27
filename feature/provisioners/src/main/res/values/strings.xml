@@ -58,4 +58,5 @@
     <string name="label_save">Save</string>
     <string name="label_allocate">Allocate</string>
     <string name="label_failed_to_allocate_ranges">Failed to allocate ranges</string>
+    <string name="error_while_adding_provisioner">Error while adding a new provisioner</string>
 </resources>
