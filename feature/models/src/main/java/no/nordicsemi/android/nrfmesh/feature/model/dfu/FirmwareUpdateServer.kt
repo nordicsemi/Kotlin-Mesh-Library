@@ -77,9 +77,6 @@ private fun Controls(
 ) {
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf<FirmwareUpdateStatus?>(null) }
-    val isTransferSuspended by rememberSaveable {
-        mutableStateOf(status?.updatePhase == FirmwareUpdatePhase.IDLE)
-    }
     var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
     var shouldShowProgressIcon by rememberSaveable { mutableStateOf(false) }
     var opCode by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -108,7 +105,7 @@ private fun Controls(
                     }
                 }
             },
-            enabled = !isInProgress && status != null,
+            enabled = !isInProgress && status?.updatePhase == FirmwareUpdatePhase.IDLE,
             isOnClickActionInProgress = shouldShowProgressIcon
                     && opCode == FirmwareUpdateApply.opCode.toInt()
         )
@@ -129,7 +126,7 @@ private fun Controls(
                     }
                 }
             },
-            enabled = !isInProgress && status != null,
+            enabled = !isInProgress && status?.updatePhase == FirmwareUpdatePhase.IDLE,
             isOnClickActionInProgress = shouldShowProgressIcon && opCode == FirmwareDistributionCancel.opCode.toInt()
         )
         MeshIconButton(
