@@ -52,8 +52,8 @@ class FirmwareUpdateFirmwareMetadataStatus(
         imageIndex = request.imageIndex
     )
 
-    override fun toString() = "FirmwareUpdateFirmwareMetadataStatus(status: $status, " +
-            "additionalInformation: $additionalInformation, " +
+    override fun toString() = "FirmwareUpdateFirmwareMetadataStatus(status: ${status.debugDescription}, " +
+            "additionalInformation: ${additionalInformation.debugDescription}, " +
             "imageIndex: $imageIndex)"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
