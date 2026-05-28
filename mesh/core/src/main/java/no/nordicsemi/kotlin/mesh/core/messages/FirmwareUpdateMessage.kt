@@ -2,10 +2,12 @@
 
 package no.nordicsemi.kotlin.mesh.core.messages
 
+import kotlinx.serialization.Serializable
 import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateCancel
+import no.nordicsemi.kotlin.mesh.core.model.serialization.URLSerializer
 import java.net.URL
 import java.nio.ByteOrder
 
@@ -34,6 +36,7 @@ import java.nio.ByteOrder
  *
  *
  */
+@Serializable
 data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = byteArrayOf()) {
     /**
      * Returns the Firmware ID as a byte array. This array can be used to check and obtain updated
@@ -109,7 +112,12 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
  * @property currentFirmwareId The Firmware ID of the current firmware image on the Node.
  * @property updateUri         URI used to retrieve a new firmware image (optional).
  */
-data class FirmwareInformation(val currentFirmwareId: FirmwareId, val updateUri: URL?) {
+@Serializable
+data class FirmwareInformation(
+    val currentFirmwareId: FirmwareId,
+    @Serializable(with = URLSerializer::class)
+    val updateUri: URL?,
+) {
     val debugDescription: String
         get() {
             val companyId = "0x${currentFirmwareId.companyIdentifier.toString(16)}"
