@@ -14,7 +14,6 @@ import androidx.compose.material.icons.outlined.PlaylistAddCheckCircle
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.icons.outlined.SdCardAlert
-import androidx.compose.material.icons.outlined.SimCardAlert
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.runtime.Composable
@@ -40,6 +39,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareInformation
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateAdditionalInformation
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePhase
@@ -58,6 +58,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 internal fun FirmwareUpdateServer(
     model: Model,
     isInProgress: Boolean,
+    onFirmwareInformationPressed: (Model, FirmwareInformation) -> Unit,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
     Column(
@@ -65,7 +66,12 @@ internal fun FirmwareUpdateServer(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Controls(model = model, isInProgress = isInProgress, send = send)
-        FirmwareInformationGet(model = model, isInProgress = isInProgress, send = send)
+        FirmwareInformationGet(
+            model = model,
+            isInProgress = isInProgress,
+            onFirmwareInformationPressed = onFirmwareInformationPressed,
+            send = send
+        )
     }
 }
 
@@ -240,6 +246,7 @@ private fun FirmwareInformationGet(
     model: Model,
     isInProgress: Boolean,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
+    onFirmwareInformationPressed: (Model, FirmwareInformation) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf<FirmwareUpdateInformationStatus?>(null) }
@@ -282,7 +289,10 @@ private fun FirmwareInformationGet(
         it.isNotEmpty()
     }?.forEachIndexed { index, information ->
         key(KeyIdGenerator.nextId()) {
-            println("AAA: ${information.debugDescription}")
+            val title = stringResource(
+                R.string.label_image_value,
+                (status!!.firstIndex + index.toUByte()).toInt()
+            )
             ElevatedCardItem(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 imageVector = Icons.Outlined.SdCard,
@@ -292,13 +302,14 @@ private fun FirmwareInformationGet(
                 ),
                 subtitle = information.currentFirmwareId.versionString?.let { versionString ->
                     stringResource(R.string.label_version_value, versionString)
-                } ?: stringResource(R.string.label_unknown)
+                } ?: stringResource(R.string.label_unknown),
+                onClick = dropUnlessResumed { onFirmwareInformationPressed(model, information) }
             )
         }
     } ?: run {
         ElevatedCardItem(
             modifier = Modifier.padding(horizontal = 16.dp),
-            imageVector = Icons.Outlined.SimCardAlert,
+            imageVector = Icons.Outlined.SdCard,
             title = stringResource(R.string.label_unknown),
         )
     }
