@@ -115,7 +115,6 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
         result = 31 * result + version.contentHashCode()
         result = 31 * result + bytes.contentHashCode()
         result = 31 * result + (versionString?.hashCode() ?: 0)
-        result = 31 * result + debugDescription.hashCode()
         return result
     }
 }
