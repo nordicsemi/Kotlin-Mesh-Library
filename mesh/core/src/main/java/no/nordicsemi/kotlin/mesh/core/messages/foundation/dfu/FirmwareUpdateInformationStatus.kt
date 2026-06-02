@@ -56,7 +56,7 @@ class FirmwareUpdateInformationStatus(
 
     override fun toString() = "FirmwareUpdateInformationStatus(firstIndex: $firstIndex, " +
             "Total Count: $totalCount, " +
-            "Firmware Update Information List: ${list.joinToString(separator = ", ")})"
+            "List: [${list.joinToString(separator = ", ")}])"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8309u
