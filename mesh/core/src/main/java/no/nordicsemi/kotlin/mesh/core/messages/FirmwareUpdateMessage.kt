@@ -48,10 +48,14 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
     constructor(companyIdentifier: UShort) : this(companyIdentifier, byteArrayOf())
 
     constructor(data: ByteArray) : this(
-        companyIdentifier = if (data.size >= 2)
-            ((data[1].toInt() shl 8) or (data[0].toInt() and 0xFF)).toUShort()
-        else 0u,
-        version = if (data.size > 2) data.copyOfRange(2, data.size) else byteArrayOf()
+        companyIdentifier = when (data.size >= 2) {
+            true -> data.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
+            else -> 0u
+        },
+        version = when (data.size > 2) {
+            true -> data.copyOfRange(fromIndex = 2, toIndex = data.size)
+            else -> byteArrayOf()
+        }
     )
 
     /**
