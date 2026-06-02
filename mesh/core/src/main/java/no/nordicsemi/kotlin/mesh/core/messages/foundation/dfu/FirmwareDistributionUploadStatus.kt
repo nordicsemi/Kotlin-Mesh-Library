@@ -91,13 +91,15 @@ class FirmwareDistributionUploadStatus(
             it.size == 2 || parameters.size >= 5
         }?.let { params ->
             FirmwareDistributionMessageStatus.from(value = params[0].toUByte())?.let { status ->
-                val phase =
-                    FirmwareDistributionPhase.from(value = params[1].toUByte()) ?: return null
+                val phase = FirmwareDistributionPhase
+                    .from(value = params[1].toUByte()) ?: return@let null
                 if (params.size >= 5) {
                     val progress = params[2].toUByte() and 0x7Fu
                     val isOob = (params[2].toInt() and 0x80) != 0
-                    val firmwareId = params.copyOfRange(4, params.size).takeIf { it.isNotEmpty() }
-                        ?.let { FirmwareId(it) }
+                    val firmwareId = params
+                        .copyOfRange(fromIndex = 3, toIndex = params.size)
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { FirmwareId(data = it) }
                     FirmwareDistributionUploadStatus(
                         status = status,
                         phase = phase,
