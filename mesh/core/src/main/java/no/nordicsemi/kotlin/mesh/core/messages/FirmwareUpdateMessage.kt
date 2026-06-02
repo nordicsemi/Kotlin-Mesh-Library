@@ -87,6 +87,17 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
             companyIdentifier.toString(16)
         }, version: 0x${version.toHexString(HexFormat.UpperCase)}"
 
+    override fun toString() = "FirmwareId(companyId: ${
+        companyIdentifier.toHexString(
+            format = HexFormat {
+                number {
+                    prefix = "0x"
+                    minLength = 4
+                }
+            }
+        )
+    }, version: ${versionString ?: "0x${version.toHexString(HexFormat.UpperCase)}"})"
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -133,6 +144,9 @@ data class FirmwareInformation(
                 }")
             return "FirmwareInformation(companyId: $companyId, version: $versionStr, updateUri: ${updateUri?.toString() ?: "nil"})"
         }
+
+    override fun toString() =
+        "FirmwareInformation(currentFirmwareId: $currentFirmwareId, updateUri: ${updateUri?.toString() ?: "nil"})"
 }
 
 /**
