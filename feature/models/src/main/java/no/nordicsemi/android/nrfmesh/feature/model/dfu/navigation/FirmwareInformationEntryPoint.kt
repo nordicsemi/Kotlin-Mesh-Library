@@ -5,6 +5,7 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
+import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareInformationScreen
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
@@ -14,11 +15,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 import kotlin.uuid.ExperimentalUuidApi
 
 @Serializable
-data class FirmwareInformationKey(
-    val title: String,
-    val model: Model,
-    val information: FirmwareInformation,
-) : NavKey
+data class FirmwareInformationKey(val model: Model, val information: FirmwareInformation) : NavKey
 
 @OptIn(
     ExperimentalMaterial3AdaptiveApi::class,
@@ -33,7 +30,7 @@ internal fun EntryProviderScope<NavKey>.firmwareInformationEntryPoint(
     metadata = BottomSheetSceneStrategy.bottomSheet()
 ) { key ->
     FirmwareInformationScreen(
-        title = key.title,
+        title = key.model.name(),
         information = key.information,
         isInProgress = isInProgress,
         send = { send(key.model, it) }

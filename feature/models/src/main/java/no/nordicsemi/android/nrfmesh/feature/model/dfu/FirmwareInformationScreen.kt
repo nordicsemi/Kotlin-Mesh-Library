@@ -1,6 +1,7 @@
 package no.nordicsemi.android.nrfmesh.feature.model.dfu
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,7 +43,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
@@ -61,6 +63,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateAppl
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateFirmwareMetadataCheck
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateFirmwareMetadataStatus
 import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
+import java.net.HttpURLConnection
 import java.net.URL
 import androidx.core.net.toUri
 
@@ -112,7 +115,7 @@ private fun CompanyIdentifier(companyIdentifier: UShort) {
         imageVector = Icons.Outlined.WorkOutline,
         title = stringResource(id = R.string.label_company),
         subtitle = CompanyIdentifier.name(id = companyIdentifier)
-            ?: stringResource(id = R.string.label_unknown)
+            ?: stringResource(id = R.string.unknown)
     )
 }
 
@@ -122,7 +125,7 @@ private fun Version(version: String?) {
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.QrCode,
         title = stringResource(id = R.string.label_version),
-        subtitle = version ?: stringResource(id = R.string.label_unknown)
+        subtitle = version ?: stringResource(id = R.string.unknown)
     )
 }
 
@@ -134,8 +137,8 @@ private fun FirmwareUpdate(
     isInProgress: Boolean,
 ) {
     val context = LocalContext.current
-    var updatedFirmwareInformation by rememberSaveable(stateSaver = firmwareSaver) {
-        mutableStateOf(null)
+    var updatedFirmwareInformation by remember {
+        mutableStateOf<UpdatedFirmwareInformation?>(null)
     }
     val updateUrl = url?.toString()
         ?.replace(oldValue = "192.168.0.173", newValue = "10.0.0.22")
@@ -148,8 +151,7 @@ private fun FirmwareUpdate(
         ?: stringResource(id = R.string.label_unknown)
     val scope = rememberCoroutineScope()
     var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
-    var isCheckingForUpdates by rememberSaveable { mutableStateOf(false) }
-    var isDownloadInProgress by rememberSaveable { mutableStateOf(false) }
+    var shouldShowProgressIcon by rememberSaveable { mutableStateOf(false) }
     Row(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -162,44 +164,37 @@ private fun FirmwareUpdate(
         MeshIconButton(
             buttonIcon = Icons.Outlined.CloudDownload,
             onClick = dropUnlessResumed {
-                scope.launch {
-                    try {
-                        isDownloadInProgress = true
-                        url?.let {
-                            val file = downloadFirmware(
-                                context = context,
-                                url = it,
-                                firmwareId = firmwareId
-                            )
-                            saveToDownloads(context = context, zipFile = file)
-                        }
-                    } catch (e: Exception) {
-                        error = e
-                    } finally {
-                        isDownloadInProgress = false
+                try {
+                    shouldShowProgressIcon = true
+                    scope.launch {
+                        updatedFirmwareInformation = checkForUpdates(url = updateUrl as URL)
                     }
+                } catch (e: Exception) {
+                    error = e
+                } finally {
+                    shouldShowProgressIcon = false
                 }
             },
             enabled = !isInProgress && updatedFirmwareInformation != null,
-            isOnClickActionInProgress = isDownloadInProgress
+            isOnClickActionInProgress = shouldShowProgressIcon
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Refresh,
             onClick = dropUnlessResumed {
-                scope.launch {
-                    try {
-                        isCheckingForUpdates = true
-                        updatedFirmwareInformation = null
-                        updatedFirmwareInformation = checkForUpdates(url = updateUrl as URL)
-                    } catch (e: Exception) {
-                        error = e
-                    } finally {
-                        isCheckingForUpdates = false
+                try {
+                    shouldShowProgressIcon = true
+                    scope.launch {
+                        val t = checkForUpdates(url = updateUrl as URL)
+                        println(t.toString())
                     }
+                } catch (e: Exception) {
+                    error = e
+                } finally {
+                    shouldShowProgressIcon = false
                 }
             },
             enabled = !isInProgress && url != null,
-            isOnClickActionInProgress = isCheckingForUpdates
+            isOnClickActionInProgress = shouldShowProgressIcon
         )
     }
     ElevatedCardItem(
@@ -211,7 +206,8 @@ private fun FirmwareUpdate(
     LaunchedEffect(key1 = error) {
         error?.let { error ->
             snackbarHostState.showSnackbar(
-                message = error.message ?: context.getString(R.string.label_failed_to_check_for_updates),
+                message = error.message
+                    ?: context.getString(R.string.label_failed_to_check_for_updates),
             )
         }
     }
@@ -338,10 +334,36 @@ private fun FirmwareUpdateAdditionalInformation.rationale(context: Context) = wh
         context.getString(R.string.label_composition_data_will_change_remote_provisioning_will_not_be_supported_rationale)
 }
 
-/**
- * Firmware information saver to be used with rememberSaveable.
- */
-private val firmwareSaver = Saver<UpdatedFirmwareInformation?, String>(
-    save = { it?.let { Json.encodeToString(it) } ?: "" },
-    restore = { if (it.isEmpty()) null else Json.decodeFromString(it) }
-)
+private suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
+    withContext(Dispatchers.IO) {
+        val connection = (URL(url.toString()).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10000
+            readTimeout = 10000
+        }
+
+        try {
+            when (val statusCode = connection.responseCode) {
+                404 -> {
+                    // Success - no update available.
+                    return@withContext null
+                }
+                !in 200..299 -> {
+                    throw Exception("Server returned error code: $statusCode")
+                }
+            }
+
+            val data = connection.inputStream.bufferedReader().use { it.readText() }
+
+            Json.decodeFromString<UpdatedFirmwareInformation>(data)
+        } finally {
+            connection.disconnect()
+        }
+    }
+} catch (e: Exception) {
+    Log.d(
+        "Firmware",
+        "Failed to decode firmware information: ${e.localizedMessage}"
+    )
+    null
+}
