@@ -41,6 +41,7 @@ import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareInformation
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import kotlin.uuid.ExperimentalUuidApi
@@ -59,6 +60,7 @@ internal fun ModelScreen(
     resetMessageState: () -> Unit,
     onAddGroupClicked: () -> Unit,
     navigateToGroups: () -> Unit,
+    navigateToFirmwareInformation: (Model, FirmwareInformation) -> Unit,
     onRelatedModelsClicked: (Model) -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
@@ -158,6 +160,7 @@ internal fun ModelScreen(
             FirmwareUpdateServer(
                 model = model,
                 isInProgress = messageState.isInProgress(),
+                onFirmwareInformationPressed = navigateToFirmwareInformation,
                 send = sendAcknowledgedMessage,
             )
         }
