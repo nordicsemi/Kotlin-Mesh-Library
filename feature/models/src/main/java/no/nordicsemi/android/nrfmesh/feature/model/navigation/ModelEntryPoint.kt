@@ -24,6 +24,8 @@ import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.feature.model.ModelScreen
 import no.nordicsemi.android.nrfmesh.feature.model.ModelState
 import no.nordicsemi.android.nrfmesh.feature.model.ModelViewModel
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.FirmwareInformationKey
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.firmwareInformationEntryPoint
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import kotlin.uuid.ExperimentalUuidApi
@@ -33,12 +35,13 @@ data class ModelKey(val address: Address, val modelId: UInt) : NavKey
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class)
 fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigator) {
+    var viewModel: ModelViewModel? = null
     entry<ModelKey>(
         metadata = ListDetailSceneStrategy.extraPane(
             sceneKey = NodeListDetailSceneKey
         )
     ) { key ->
-        val viewModel = hiltViewModel<ModelViewModel, ModelViewModel.Factory> {
+        viewModel = hiltViewModel<ModelViewModel, ModelViewModel.Factory> {
             it.create(key.address.toInt(), key.modelId.toInt())
         }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -53,6 +56,14 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     onAddGroupClicked = { navigator.navigate(GroupsKey) },
                     resetMessageState = viewModel::resetMessageState,
                     navigateToGroups = { navigator.navigate(key = GroupsKey) },
+                    navigateToFirmwareInformation = { model, information ->
+                        navigator.navigate(
+                            key = FirmwareInformationKey(
+                                model = model,
+                                information = information
+                            )
+                        )
+                    },
                     send = viewModel::send,
                     sendApplicationMessage = viewModel::sendApplicationMessage,
                     sendAcknowledgedMessage = viewModel::send
@@ -77,4 +88,10 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
             ModelState.Loading -> {}
         }
     }
+    firmwareInformationEntryPoint(
+        isInProgress = false,
+        send = { model, message ->
+            viewModel?.send(model, message)
+        }
+    )
 }

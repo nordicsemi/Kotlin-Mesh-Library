@@ -168,4 +168,17 @@
     <string name="label_image_value">Image %d</string>
     <string name="label_image_index">Image Index</string>
     <string name="label_blob_id">BLOB ID</string>
+    <string name="label_version">Version</string>
+    <string name="label_uri">URI</string>
+    <string name="label_metadata">Metadata</string>
+    <string name="label_compatibility">Compatibility</string>
+    <string name="label_firmware_update">Firmware Update</string>
+    <string name="label_ok">Ok</string>
+    <string name="label_device_unprovisioned_rationale">device will be unprovisioned and will need to be provisioned again.</string>
+    <string name="label_composition_data_will_not_change_rationale">Composition data will not change.</string>
+    <string name="label_composition_data_will_change_remote_provisioning_will_be_supported_rationale">Composition data will change and Remote Provisioning will be supported.</string>
+    <string name="label_composition_data_will_change_remote_provisioning_will_not_be_supported_rationale">Composition data will change.\nRemote Provisioning will not be supported.</string>
+    <string name="label_firmware_compatibility_rationale">Firmware is compatible. After a successful update, %s</string>
+    <string name="label_firmware_compatibility_check_failed_rationale">Firmware compatibility check failed.</string>
+    <string name="label_failed_to_check_for_updates">Failed to check for updates.</string>
 </resources>
