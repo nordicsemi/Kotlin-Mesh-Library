@@ -37,6 +37,43 @@ CONFIG_MBEDTLS_HEAP_SIZE=2048
 A Node can provide an Update URI in its Firmware Information. A Distributor or an Initiator can use this URI to check and download the firmware update.
 
 The firmware is compiled so that the Update URI on selected firmware is set to https://192.168.0.173:8000. Check out *server.py* to start a local HTTPS server.
+If you need to change the Update URI to a different domain or an IP address for testing purposes, change the server configuration file *server.cnf* and generate 
+a new certificate using the following openssl commands.
+
+1. Create your own CA.
+```console
+openssl genrsa -out ca.key 2048
+openssl req -x509 -new -nodes -key ca.key \
+  -sha256 -days 3650 \
+  -out ca.crt
+```
+2. Create your own server key.
+```console
+openssl genrsa -out server.key 2048
+```
+3. Create your own server CSR (Certificate Signing Request) based on the Server Configuration File *server.cnf*.
+```console
+openssl req -new -key server.key -out server.csr -config server.cnf
+```
+4. Sign your own server CSR with the CA.
+```console
+openssl x509 -req \
+ -in server.csr \
+ -CA ca.crt \
+ -CAkey ca.key \
+ -CAcreateserial \
+ -out server.crt \
+ -days 365 \
+ -sha256 \
+ -extfile server.cnf \
+ -extensions req_ext
+```
+5. Create combined PEM for Python server.
+```console
+cat server.key server.crt > server.pem
+```
+6. Make Android trust your server by update the domain in your your network_security_config.xml file and inlcuding the *ca.crt* in res/raw/ca.crt.
+
 
 ### Local HTTPS Server
 
