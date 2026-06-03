@@ -78,6 +78,8 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
             when (version.size) {
                 8 -> build = version.getUInt(offset = 4, order = ByteOrder.LITTLE_ENDIAN)
                 4 -> revision = version.getUShort(offset = 2, order = ByteOrder.LITTLE_ENDIAN)
+                2,1 -> {} // major and minor are already set
+                else -> return "0x${version.toHexString(HexFormat.UpperCase)}"
             }
             return if (build == 0u) "$major.$minor.$revision" else "$major.$minor.$revision+$build"
         }
