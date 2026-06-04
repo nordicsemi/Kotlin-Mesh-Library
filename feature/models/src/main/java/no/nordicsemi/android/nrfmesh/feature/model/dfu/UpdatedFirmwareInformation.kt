@@ -36,7 +36,7 @@ data class UpdatedFirmwareInformation(val manifest: Manifest) {
             @SerialName("dfu_chain_size")
             val dfuChainSize: Int,
             @SerialName("firmware_image_file_size")
-            val firmwareImageFileSize: Int
+            val firmwareImageFileSize: Int,
         ) {
 
             /**
@@ -47,6 +47,16 @@ data class UpdatedFirmwareInformation(val manifest: Manifest) {
                     val data = firmwareIdString.hexToByteArray()
                     return FirmwareId(data)
                 }
+
+            override fun toString() = "Firmware(firmwareId: $firmwareId, " +
+                    "dfuChainSize: $dfuChainSize, firmwareImageFileSize: $firmwareImageFileSize)"
+
         }
+
+        override fun toString() = "Manifest(firmware: $firmware)"
+
     }
+
+    override fun toString() = "UpdatedFirmwareInformation(manifest: $manifest)"
+
 }
