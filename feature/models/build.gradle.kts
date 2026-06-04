@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.runtime.saveable)
     implementation(nordic.kotlin.data)
     implementation(libs.kotlinx.serialization.json)
 
