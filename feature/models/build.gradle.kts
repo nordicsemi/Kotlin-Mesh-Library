@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.runtime.saveable)
     implementation(nordic.kotlin.data)
     implementation(nordic.mcumgr.ble)
     implementation(nordic.permissions.ble)
