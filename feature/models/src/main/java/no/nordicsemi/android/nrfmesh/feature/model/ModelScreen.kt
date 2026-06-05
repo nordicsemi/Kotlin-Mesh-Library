@@ -58,7 +58,7 @@ internal fun ModelScreen(
     resetMessageState: () -> Unit,
     onAddGroupClicked: () -> Unit,
     navigateToGroups: () -> Unit,
-    navigateToFirmwareInformation: (Model, FirmwareInformation) -> Unit,
+    navigateToFirmwareInformation: (String, Model, FirmwareInformation) -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
     // to show up. This is a known issue and the workaround is to make the column focusable to

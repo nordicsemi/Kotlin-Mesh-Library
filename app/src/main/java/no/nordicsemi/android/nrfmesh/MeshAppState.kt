@@ -19,6 +19,7 @@ import no.nordicsemi.android.nrfmesh.feature.developer.navigation.DeveloperSetti
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.GroupControlsKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.navigation.GroupKey
 import no.nordicsemi.android.nrfmesh.feature.ivindex.navigation.IvIndexContentKey
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.FirmwareInformationKey
 import no.nordicsemi.android.nrfmesh.feature.model.navigation.ModelKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.key.navigation.NetworkKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.navigation.NetworkKeysContentKey
@@ -79,6 +80,7 @@ class MeshAppState(
             is AddAppKeysKey,
             is ElementKey,
             is ModelKey,
+            is FirmwareInformationKey,
             is ProvisioningKey,
                 -> true
 

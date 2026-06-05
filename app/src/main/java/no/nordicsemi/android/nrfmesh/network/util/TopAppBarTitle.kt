@@ -19,6 +19,7 @@ import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.GroupControlsKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.navigation.GroupKey
 import no.nordicsemi.android.nrfmesh.feature.ivindex.navigation.IvIndexContentKey
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.FirmwareInformationKey
 import no.nordicsemi.android.nrfmesh.feature.model.navigation.ModelKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.key.navigation.NetworkKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.navigation.NetworkKeysContentKey
@@ -92,16 +93,20 @@ internal fun title(
     is ModelKey -> {
         val address = key.address
         if (isCompactWidth) {
-            val node =
-                network.node(address = address) ?: return context.getString(R.string.label_unknown)
-            val element =
-                node.element(address = address) ?: return context.getString(R.string.label_unknown)
-            val modelId =
-                element.model(key.modelId) ?: return context.getString(R.string.label_unknown)
+            val node = network.node(address = address)
+                ?: return context.getString(R.string.label_unknown)
+            val element = node.element(address = address)
+                ?: return context.getString(R.string.label_unknown)
+            val modelId = element.model(key.modelId)
+                ?: return context.getString(R.string.label_unknown)
             modelId.name ?: context.getString(R.string.label_unknown)
         } else network.element(elementAddress = address)?.name
             ?: context.getString(R.string.label_unknown)
     }
+
+    is FirmwareInformationKey -> if (isCompactWidth) {
+        key.model.name ?: context.getString(R.string.label_unknown)
+    } else context.getString(R.string.label_unknown)
 
     is GroupsKey -> context.getString(R.string.label_groups)
     is GroupKey -> network.group(address = key.address)?.name
