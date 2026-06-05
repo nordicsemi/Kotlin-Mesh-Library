@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.convertToString
-import no.nordicsemi.android.nrfmesh.core.data.models.ProvisionerData
+import no.nordicsemi.android.nrfmesh.core.data.ui.ProvisionerData
 import no.nordicsemi.android.nrfmesh.core.ui.AddressRangeLegendsForProvisioner
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField

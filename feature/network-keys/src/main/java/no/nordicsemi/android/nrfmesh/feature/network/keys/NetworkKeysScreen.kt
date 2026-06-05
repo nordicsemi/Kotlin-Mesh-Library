@@ -42,7 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import no.nordicsemi.android.nrfmesh.core.data.models.NetworkKeyData
+import no.nordicsemi.android.nrfmesh.core.data.ui.NetworkKeyData
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.NetworkKeyRow
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
