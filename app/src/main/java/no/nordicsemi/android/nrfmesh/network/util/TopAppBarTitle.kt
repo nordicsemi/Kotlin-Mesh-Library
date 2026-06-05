@@ -123,6 +123,10 @@ internal fun title(
         key.model.name ?: context.getString(R.string.label_unknown)
     } else context.getString(R.string.label_unknown)
 
+    is FirmwareInformationKey -> if (isCompactWidth) {
+        key.model.name ?: context.getString(R.string.label_unknown)
+    } else context.getString(R.string.label_unknown)
+
     is GroupsKey -> context.getString(R.string.label_groups)
     is GroupKey -> network.group(address = key.address)?.name
         ?: context.getString(R.string.label_unknown)
