@@ -16,7 +16,7 @@ import no.nordicsemi.android.nrfmesh.core.data.GenericOnOffState
 import no.nordicsemi.android.nrfmesh.core.data.ProtoSceneStatesDataStore
 import no.nordicsemi.android.nrfmesh.core.data.SceneState
 import no.nordicsemi.android.nrfmesh.core.data.SceneStates
-import no.nordicsemi.android.nrfmesh.core.data.models.SceneNumber
+import no.nordicsemi.android.nrfmesh.core.data.ui.SceneNumber
 import java.io.InputStream
 import java.io.OutputStream
 import kotlin.uuid.ExperimentalUuidApi
