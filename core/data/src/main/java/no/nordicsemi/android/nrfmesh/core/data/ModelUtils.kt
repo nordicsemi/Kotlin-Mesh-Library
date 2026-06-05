@@ -5,9 +5,9 @@ import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 
 
 /**
- * Returns a human readable name for the Model.
+ * Returns a human-readable name for the Model.
  *
- * @return String odel name
+ * @return String model name
  */
 fun Model.name(): String {
     val vendorModelId = modelId as? VendorModelId

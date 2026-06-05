@@ -58,7 +58,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 internal fun FirmwareUpdateServer(
     model: Model,
     isInProgress: Boolean,
-    onFirmwareInformationPressed: (Model, FirmwareInformation) -> Unit,
+    onFirmwareInformationPressed: (String, Model, FirmwareInformation) -> Unit,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
     Column(
@@ -246,7 +246,7 @@ private fun FirmwareInformationGet(
     model: Model,
     isInProgress: Boolean,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
-    onFirmwareInformationPressed: (Model, FirmwareInformation) -> Unit,
+    onFirmwareInformationPressed: (String, Model, FirmwareInformation) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf<FirmwareUpdateInformationStatus?>(null) }
@@ -296,14 +296,11 @@ private fun FirmwareInformationGet(
             ElevatedCardItem(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 imageVector = Icons.Outlined.SdCard,
-                title = stringResource(
-                    R.string.label_image_value,
-                    (status!!.firstIndex + index.toUByte()).toInt()
-                ),
+                title = title,
                 subtitle = information.currentFirmwareId.versionString?.let { versionString ->
                     stringResource(R.string.label_version_value, versionString)
                 } ?: stringResource(R.string.label_unknown),
-                onClick = dropUnlessResumed { onFirmwareInformationPressed(model, information) }
+                onClick = dropUnlessResumed { onFirmwareInformationPressed(title, model, information) }
             )
         }
     } ?: run {
