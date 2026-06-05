@@ -33,10 +33,10 @@ import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
 import no.nordicsemi.android.nrfmesh.core.data.VendorModelIds.LE_PAIRING_INITIATOR
 import no.nordicsemi.android.nrfmesh.core.data.bearer.AndroidGattBearer
 import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
-import no.nordicsemi.android.nrfmesh.core.data.meshnetwork.simpleonoff.SimpleOnOffClientHandler
-import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericDefaultTransitionTimeServer
-import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericOnOffClientEventHandler
-import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.SimpleOnOffClient
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.data.storage.SceneStatesDataStoreStorage
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.Peripheral
@@ -292,7 +292,7 @@ class CoreDataRepository @Inject constructor(
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_LEVEL_SERVER_MODEL_ID)),
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.GENERIC_ON_OFF_CLIENT_MODEL_ID),
-                    handler = GenericOnOffClientEventHandler()
+                    handler = GenericOnOffClient()
                 ),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_LEVEL_CLIENT_MODEL_ID)),
                 Model(modelId = SigModelId(modelIdentifier = Model.LIGHT_LC_CLIENT_MODEL_ID)),
@@ -309,7 +309,7 @@ class CoreDataRepository @Inject constructor(
                         modelIdentifier = VendorModelIds.SIMPLE_ON_OFF_CLIENT_MODEL_ID,
                         companyIdentifier = NORDIC_SEMICONDUCTOR_COMPANY_ID
                     ),
-                    handler = SimpleOnOffClientHandler(this)
+                    handler = SimpleOnOffClient(this)
                 )
             )
         )
