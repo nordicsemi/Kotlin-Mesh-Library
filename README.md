@@ -64,8 +64,7 @@ The app is not yet published to Playstore but is available on this repo.
 6. UI for local models, which include: 
    - Generic OnOff Client and Server,
    - Generic Level Client and Server,
-   - Simple OnOff vendor model by Nordic not supported yet.
-   - Mesh vendor model by Nordic not supported yet.
+   - Simple OnOff Client Server,
 7. Support for some server models:
    - Generic OnOff,
 8. Scenes, both as client and server.
