@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.core.data
+package no.nordicsemi.android.nrfmesh.core.common
 
 
 /**
