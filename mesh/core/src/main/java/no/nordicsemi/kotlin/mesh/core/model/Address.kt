@@ -17,6 +17,10 @@ typealias Address = UShort
 
 const val minUnicastAddress: Address = 0x0001u
 const val maxUnicastAddress: Address = 0x7FFFu
+val allUnicastAddressesRange = UnicastRange(
+    lowAddress = UnicastAddress(minUnicastAddress),
+    highAddress = UnicastAddress(maxUnicastAddress)
+)
 
 //TODO is this really needed?
 private const val minVirtualAddress: Address = 0x8000u
@@ -24,6 +28,10 @@ private const val maxVirtualAddress: Address = 0xBFFFu
 
 const val minGroupAddress: Address = 0xC000u
 const val maxGroupAddress: Address = 0xFEFFu
+val allGroupAddressesRange = GroupRange(
+    lowAddress = GroupAddress(minGroupAddress),
+    highAddress = GroupAddress(maxGroupAddress)
+)
 
 //TODO is this really needed?
 internal const val unassignedAddress: Address = 0x0000u

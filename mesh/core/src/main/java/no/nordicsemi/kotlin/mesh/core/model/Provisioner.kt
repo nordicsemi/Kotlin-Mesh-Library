@@ -116,6 +116,18 @@ data class Provisioner internal constructor(
     )
 
     /**
+     * Creates a Provisioner with the given name.
+     *
+     * @param name Provisioner name.
+     */
+    constructor(name: String) : this(
+        uuid = Uuid.random(),
+        _allocatedUnicastRanges = mutableListOf(),
+        _allocatedGroupRanges = mutableListOf(),
+        _allocatedSceneRanges = mutableListOf(),
+        _name = name
+    )
+    /**
      * Creates a Provisioner with the given UUID and name.
      *
      * @param uuid Provisioner UUID.
@@ -129,18 +141,6 @@ data class Provisioner internal constructor(
         _name = name
     )
 
-    /**
-     * Creates a Provisioner with the given name.
-     *
-     * @param name Provisioner name.
-     */
-    constructor(name: String) : this(
-        uuid = Uuid.random(),
-        _allocatedUnicastRanges = mutableListOf(),
-        _allocatedGroupRanges = mutableListOf(),
-        _allocatedSceneRanges = mutableListOf(),
-        _name = name
-    )
 
     /**
      * Convenience constructor for tests

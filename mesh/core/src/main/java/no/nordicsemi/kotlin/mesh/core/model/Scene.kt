@@ -138,5 +138,5 @@ data class Scene internal constructor(
 }
 
 const val minSceneNumber: SceneNumber = 0x0001u
-
 const val maxSceneNumber: SceneNumber = 0xFFFFu
+val allScenesRange = SceneRange(minSceneNumber, maxSceneNumber)

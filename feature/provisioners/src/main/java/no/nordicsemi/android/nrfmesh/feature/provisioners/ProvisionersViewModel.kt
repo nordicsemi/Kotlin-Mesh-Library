@@ -79,7 +79,6 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
         }
     }
 
-
     /**
      * Invoked when a provisioner is swiped to be deleted. The given provisioner is added to a list
      * of provisioners to be deleted.
