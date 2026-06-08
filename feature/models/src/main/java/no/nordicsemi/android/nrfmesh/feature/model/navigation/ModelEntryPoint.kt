@@ -70,7 +70,8 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     },
                     send = viewModel::send,
                     sendApplicationMessage = viewModel::sendApplicationMessage,
-                    sendAcknowledgedMessage = viewModel::send
+                    sendAcknowledgedMessage = viewModel::send,
+                    startPairing = viewModel::startPairing
                 )
                 var showNoNetworkDialog by remember { mutableStateOf(uiState.wasNetworkRemoved) }
                 if (showNoNetworkDialog) {

@@ -23,6 +23,8 @@ import no.nordicsemi.android.nrfmesh.core.common.isFirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isSensorServer
+import no.nordicsemi.android.nrfmesh.core.common.isLePairingResponderServer
+import no.nordicsemi.android.nrfmesh.feature.model.lepairing.LePairingResponder
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -62,6 +64,7 @@ internal fun ModelScreen(
     navigateToGroups: () -> Unit,
     navigateToFirmwareInformation: (Model, FirmwareInformation) -> Unit,
     onRelatedModelsClicked: (Model) -> Unit,
+    startPairing: () -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
     // to show up. This is a known issue and the workaround is to make the column focusable to
