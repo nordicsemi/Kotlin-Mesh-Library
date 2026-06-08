@@ -24,4 +24,8 @@ dependencies {
     testImplementation(libs.kotlin.junit)
     testImplementation(libs.androidx.test.ext)
     testImplementation(libs.androidx.test.rules)
+
+    implementation("androidx.compose.material3:material3:1.4.0")
+
+    implementation(project(":mesh:core"))
 }
