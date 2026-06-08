@@ -23,11 +23,6 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.datastore:datastore-preferences-proto:1.2.1")
 
-    testImplementation(libs.junit4)
-    testImplementation(libs.kotlin.junit)
-    testImplementation(libs.androidx.test.ext)
-    testImplementation(libs.androidx.test.rules)
-
     androidTestImplementation(libs.junit4)
     androidTestImplementation(libs.kotlin.junit)
     androidTestImplementation(libs.androidx.test.ext)
