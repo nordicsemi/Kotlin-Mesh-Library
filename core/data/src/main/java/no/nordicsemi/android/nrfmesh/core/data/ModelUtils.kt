@@ -1,5 +1,7 @@
 package no.nordicsemi.android.nrfmesh.core.data
 
+import no.nordicsemi.android.nrfmesh.core.common.NORDIC_SEMICONDUCTOR_COMPANY_ID
+import no.nordicsemi.android.nrfmesh.core.common.VendorModelIds
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 

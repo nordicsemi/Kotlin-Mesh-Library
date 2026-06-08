@@ -19,6 +19,8 @@ class PairingRequest : AcknowledgedVendorMessage {
         get() = byteArrayOf(0x00)
     override val responseOpCode = PairingResponse.opCode
 
+    override fun toString() = "PairingRequest()"
+
     companion object Initializer : VendorMessageInitializer {
         override val opCode: UInt = 0xD15900u
 

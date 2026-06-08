@@ -22,6 +22,7 @@ import no.nordicsemi.android.nrfmesh.core.common.isFirmwareDistributionServer
 import no.nordicsemi.android.nrfmesh.core.common.isFirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.common.isLePairingResponderServer
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -34,6 +35,7 @@ import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareDistributionServe
 import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.feature.model.lepairing.LePairingResponder
 import no.nordicsemi.android.nrfmesh.feature.model.vendor.VendorModelControls
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
@@ -60,6 +62,7 @@ internal fun ModelScreen(
     navigateToGroups: () -> Unit,
     navigateToFirmwareInformation: (Model, FirmwareInformation) -> Unit,
     onRelatedModelsClicked: (Model) -> Unit,
+    startPairing: () -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
     // to show up. This is a known issue and the workaround is to make the column focusable to
@@ -116,44 +119,45 @@ internal fun ModelScreen(
                 send = send
             )
         }
-        if (model.isGenericOnOffServer()) {
-            GenericOnOffServer(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-        if (model.isGenericLevelServer()) {
-            GenericLevelServer(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-
-        if (model.isVendorModel()) {
-            VendorModelControls(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-
-        if (model.isFirmwareDistributionServer()) {
-            FirmwareDistributionServer(
-                model = model,
-                isInProgress = messageState.isInProgress(),
-                send = sendAcknowledgedMessage,
-            )
-        }
-
-        if (model.isFirmwareUpdateServer()) {
-            FirmwareUpdateServer(
-                model = model,
-                isInProgress = messageState.isInProgress(),
-                onFirmwareInformationPressed = navigateToFirmwareInformation,
-                send = sendAcknowledgedMessage,
-            )
+        when {
+            model.isGenericOnOffServer() ->
+                GenericOnOffServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+            model.isGenericLevelServer() ->
+                GenericLevelServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+            model.isFirmwareDistributionServer() ->
+                FirmwareDistributionServer(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    send = sendAcknowledgedMessage,
+                )
+            model.isFirmwareUpdateServer() ->
+                FirmwareUpdateServer(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    onFirmwareInformationPressed = navigateToFirmwareInformation,
+                    send = sendAcknowledgedMessage,
+                )
+            model.isLePairingResponderServer() ->
+                LePairingResponder(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    send = sendAcknowledgedMessage,
+                    startPairing = startPairing,
+                )
+            model.isVendorModel() ->
+                VendorModelControls(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
         }
 
         Spacer(modifier = Modifier.size(size = 8.dp))
