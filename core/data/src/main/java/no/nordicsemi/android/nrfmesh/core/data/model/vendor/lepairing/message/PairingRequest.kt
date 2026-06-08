@@ -13,11 +13,13 @@ import no.nordicsemi.kotlin.mesh.core.messages.VendorMessageInitializer
  *                              here:
  *                              https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers/
  */
-class PairingRequest : AcknowledgedVendorMessage{
+class PairingRequest : AcknowledgedVendorMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
         get() = byteArrayOf(0x00)
     override val responseOpCode = PairingResponse.opCode
+
+    override fun toString() = "PairingRequest()"
 
     companion object Initializer : VendorMessageInitializer {
         override val opCode: UInt = 0xD15900u

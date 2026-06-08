@@ -28,15 +28,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import no.nordicsemi.android.nrfmesh.core.common.Configuration
+import no.nordicsemi.android.nrfmesh.core.common.NORDIC_SEMICONDUCTOR_COMPANY_ID
 import no.nordicsemi.android.nrfmesh.core.common.Utils.toAndroidLogLevel
+import no.nordicsemi.android.nrfmesh.core.common.VendorModelIds
 import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
-import no.nordicsemi.android.nrfmesh.core.data.VendorModelIds.LE_PAIRING_INITIATOR
 import no.nordicsemi.android.nrfmesh.core.data.bearer.AndroidGattBearer
 import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
-import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.SimpleOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.PairingInitiatorClient
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.SimpleOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.storage.SceneStatesDataStoreStorage
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.Peripheral
@@ -299,9 +301,10 @@ class CoreDataRepository @Inject constructor(
                 // Nordic Pairing Initiator model
                 Model(
                     modelId = VendorModelId(
-                        modelIdentifier = LE_PAIRING_INITIATOR,
+                        modelIdentifier = VendorModelIds.LE_PAIRING_INITIATOR,
                         companyIdentifier = NORDIC_SEMICONDUCTOR_COMPANY_ID
-                    )
+                    ),
+                    handler = PairingInitiatorClient()
                 ),
                 // A simple vendor model
                 Model(

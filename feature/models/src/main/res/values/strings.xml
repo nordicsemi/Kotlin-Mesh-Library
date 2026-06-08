@@ -181,4 +181,5 @@
     <string name="label_firmware_compatibility_rationale">Firmware is compatible. After a successful update, %s</string>
     <string name="label_firmware_compatibility_check_failed_rationale">Firmware compatibility check failed.</string>
     <string name="label_failed_to_check_for_updates">Failed to check for updates.</string>
+    <string name="label_pass_key">Passkey</string>
 </resources>

@@ -5,6 +5,7 @@ import no.nordicsemi.kotlin.data.getInt
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.VendorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.VendorResponse
+import java.nio.ByteOrder
 
 /**
  * This message is used to respond to a Pairing Request message.
@@ -21,11 +22,12 @@ import no.nordicsemi.kotlin.mesh.core.messages.VendorResponse
  */
 class PairingResponse(val status: UByte, val passKey: Int) : VendorResponse {
     override val opCode = Initializer.opCode
-    override val parameters = byteArrayOf(0x01, status.toByte()) + passKey.toByteArray()
+    override val parameters = byteArrayOf(0x01, status.toByte()) + passKey.toByteArray(
+        order = ByteOrder.LITTLE_ENDIAN,
+        length = 3
+    )
 
-    override fun toString(): String {
-        return "PairingResponse(status: $status, passKey: $passKey)"
-    }
+    override fun toString() = "PairingResponse(status: $status, passKey: $passKey)"
 
     companion object Initializer : VendorMessageInitializer {
         override val opCode: UInt = 0xD15900u // The same Op Code as PairingRequest!
@@ -35,7 +37,11 @@ class PairingResponse(val status: UByte, val passKey: Int) : VendorResponse {
             ?.let { params ->
                 PairingResponse(
                     status = params[1].toUByte(),
-                    passKey = params.getInt(offset = 2, format = IntFormat.INT24)
+                    passKey = params.getInt(
+                        offset = 2,
+                        order = ByteOrder.LITTLE_ENDIAN,
+                        format = IntFormat.INT24
+                    )
                 )
             }
     }
