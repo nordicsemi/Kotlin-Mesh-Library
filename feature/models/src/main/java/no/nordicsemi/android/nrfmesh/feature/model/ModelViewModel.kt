@@ -1,11 +1,16 @@
 package no.nordicsemi.android.nrfmesh.feature.model
 
+import android.bluetooth.BluetoothManager
+import android.content.Context
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.runtime.mcumgr.McuMgrTransport
+import io.runtime.mcumgr.ble.McuMgrBleTransport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +37,8 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNo
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
+import no.nordicsemi.kotlin.mesh.logger.LogCategory
+import no.nordicsemi.kotlin.mesh.logger.LogLevel
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
@@ -40,16 +47,41 @@ internal class ModelViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
     @Assisted("address") private val address: Int,
     @Assisted("modelId") private val modelId: Int,
-) : ViewModel() {
+) : ViewModel(), McuMgrTransport.ConnectionCallback {
     private lateinit var meshNetwork: MeshNetwork
     private lateinit var selectedNode: Node
     private lateinit var selectedModel: Model
+    private var transport: McuMgrBleTransport? = null
 
     private val _uiState = MutableStateFlow(ModelScreenUiState())
     val uiState: StateFlow<ModelScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetworkChanges()
+    }
+
+    override fun onConnected() {
+        repository.logger.log(
+            message = { "McuManagerTransport connected" },
+            category = LogCategory.MODEL,
+            level = LogLevel.APPLICATION
+        )
+    }
+
+    override fun onDeferred() {
+        repository.logger.log(
+            message = { "McuManagerTransport deferred" },
+            category = LogCategory.MODEL,
+            level = LogLevel.APPLICATION
+        )
+    }
+
+    override fun onError(throwable: Throwable) {
+        repository.logger.log(
+            message = { "Error in McuManagerTransport in LePairingResponser: ${throwable.message}" },
+            category = LogCategory.MODEL,
+            level = LogLevel.APPLICATION
+        )
     }
 
     private fun observeNetworkChanges() {
@@ -205,8 +237,18 @@ internal class ModelViewModel @AssistedInject internal constructor(
         message: AcknowledgedMeshMessage,
     ) = repository.send(model = model, ackedMessage = message)
 
-    internal fun startPairing() {
-        // TODO
+    internal fun startPairing(context: Context) {
+        val identifier = repository.identifier ?: return
+        val manager = ContextCompat.getSystemService(
+            context,
+            BluetoothManager::class.java
+        ) as BluetoothManager
+        val device = manager.adapter.getRemoteDevice(identifier)
+        if (transport == null || transport?.isConnected == false) {
+            val transport = McuMgrBleTransport(context, device)
+                .also { transport = it }
+            transport.connect(this)
+        }
     }
 
     internal fun resetMessageState() {
