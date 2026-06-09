@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model
 
+import android.content.Context
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -61,7 +62,7 @@ internal fun ModelScreen(
     onAddGroupClicked: () -> Unit,
     navigateToGroups: () -> Unit,
     navigateToFirmwareInformation: (String, Model, FirmwareInformation) -> Unit,
-    startPairing: () -> Unit,
+    startPairing: (Context) -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
     // to show up. This is a known issue and the workaround is to make the column focusable to
@@ -125,18 +126,21 @@ internal fun ModelScreen(
                     messageState = messageState,
                     sendApplicationMessage = sendApplicationMessage
                 )
+
             model.isGenericLevelServer() ->
                 GenericLevelServer(
                     model = model,
                     messageState = messageState,
                     sendApplicationMessage = sendApplicationMessage
                 )
+
             model.isFirmwareDistributionServer() ->
                 FirmwareDistributionServer(
                     model = model,
                     isInProgress = messageState.isInProgress(),
                     send = sendAcknowledgedMessage,
                 )
+
             model.isFirmwareUpdateServer() ->
                 FirmwareUpdateServer(
                     model = model,
@@ -144,6 +148,7 @@ internal fun ModelScreen(
                     onFirmwareInformationPressed = navigateToFirmwareInformation,
                     send = sendAcknowledgedMessage,
                 )
+
             model.isLePairingResponderServer() ->
                 LePairingResponder(
                     model = model,
@@ -151,6 +156,7 @@ internal fun ModelScreen(
                     send = sendAcknowledgedMessage,
                     startPairing = startPairing,
                 )
+
             model.isVendorModel() ->
                 VendorModelControls(
                     model = model,
@@ -169,20 +175,16 @@ internal fun ModelScreen(
             onDismissRequest = resetMessageState,
         )
 
-        is Completed -> {
-            messageState.response?.takeIf {
-                (it is ConfigStatusMessage && !it.isSuccess)
-            }?.let {
+        is Completed -> messageState.response
+            ?.takeIf { (it is ConfigStatusMessage && !it.isSuccess) }
+            ?.let {
                 MeshMessageStatusDialog(
                     text = (messageState.response as ConfigStatusMessage).message,
                     showDismissButton = true,
                     onDismissRequest = resetMessageState,
                 )
             }
-        }
 
-        else -> {
-
-        }
+        else -> {}
     }
 }

@@ -117,6 +117,8 @@ class CoreDataRepository @Inject constructor(
 
     private var meshBearer: MeshBearer? = null
     private var bearerStateObserverJob: Job? = null
+    val identifier: String?
+        get() = (meshBearer as? AndroidGattBearer)?.identifier
 
     val proxyFilter: ProxyFilter
         get() = meshNetworkManager.proxyFilter
@@ -653,7 +655,7 @@ class CoreDataRepository @Inject constructor(
         try {
             // This will suspend until the bearer is open.
             bearer.open()
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             logger.log(
                 message = { "Failed to open bearer: ${e.message}" },
                 category = LogCategory.BEARER,
