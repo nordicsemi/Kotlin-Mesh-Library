@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model.lepairing
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -36,8 +38,9 @@ internal fun LePairingResponder(
     model: Model,
     isInProgress: Boolean,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
-    startPairing: () -> Unit
+    startPairing: (Context) -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf<PairingResponse?>(null) }
     var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
@@ -67,7 +70,7 @@ internal fun LePairingResponder(
                             ?.takeIf { it.status == 0.toUByte() }
                             ?.let {
                                 passKey = it.passKey
-                                startPairing()
+                                startPairing(context)
                             }
                     } catch (e: Exception) {
                         error = e

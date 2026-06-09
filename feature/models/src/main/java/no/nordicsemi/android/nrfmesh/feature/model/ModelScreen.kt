@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model
 
+import android.content.Context
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -122,50 +123,50 @@ internal fun ModelScreen(
                 send = send
             )
         }
-        if (model.isGenericOnOffServer()) {
-            GenericOnOffServer(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-        if (model.isGenericLevelServer()) {
-            GenericLevelServer(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-        if(model.isSensorServer()) {
-            SensorServer(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-        if (model.isVendorModel()) {
-            VendorModelControls(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
+        when {
+            model.isGenericOnOffServer() ->
+                GenericOnOffServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
 
-        if (model.isFirmwareDistributionServer()) {
-            FirmwareDistributionServer(
-                model = model,
-                isInProgress = messageState.isInProgress(),
-                send = sendAcknowledgedMessage,
-            )
-        }
+            model.isGenericLevelServer() ->
+                GenericLevelServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
 
-        if (model.isFirmwareUpdateServer()) {
-            FirmwareUpdateServer(
-                model = model,
-                isInProgress = messageState.isInProgress(),
-                onFirmwareInformationPressed = navigateToFirmwareInformation,
-                send = sendAcknowledgedMessage,
-            )
+            model.isFirmwareDistributionServer() ->
+                FirmwareDistributionServer(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    send = sendAcknowledgedMessage,
+                )
+
+            model.isFirmwareUpdateServer() ->
+                FirmwareUpdateServer(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    onFirmwareInformationPressed = navigateToFirmwareInformation,
+                    send = sendAcknowledgedMessage,
+                )
+
+            model.isLePairingResponderServer() ->
+                LePairingResponder(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    send = sendAcknowledgedMessage,
+                    startPairing = startPairing,
+                )
+
+            model.isVendorModel() ->
+                VendorModelControls(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
         }
 
         Spacer(modifier = Modifier.size(size = 8.dp))
@@ -178,20 +179,16 @@ internal fun ModelScreen(
             onDismissRequest = resetMessageState,
         )
 
-        is Completed -> {
-            messageState.response?.takeIf {
-                (it is ConfigStatusMessage && !it.isSuccess)
-            }?.let {
+        is Completed -> messageState.response
+            ?.takeIf { (it is ConfigStatusMessage && !it.isSuccess) }
+            ?.let {
                 MeshMessageStatusDialog(
                     text = (messageState.response as ConfigStatusMessage).message,
                     showDismissButton = true,
                     onDismissRequest = resetMessageState,
                 )
             }
-        }
 
-        else -> {
-
-        }
+        else -> {}
     }
 }
