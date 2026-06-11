@@ -112,7 +112,7 @@ private fun CompanyIdentifier(companyIdentifier: UShort) {
         imageVector = Icons.Outlined.WorkOutline,
         title = stringResource(id = R.string.label_company),
         subtitle = CompanyIdentifier.name(id = companyIdentifier)
-            ?: stringResource(id = R.string.unknown)
+            ?: stringResource(id = R.string.label_unknown)
     )
 }
 
@@ -122,7 +122,7 @@ private fun Version(version: String?) {
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.QrCode,
         title = stringResource(id = R.string.label_version),
-        subtitle = version ?: stringResource(id = R.string.unknown)
+        subtitle = version ?: stringResource(id = R.string.label_unknown)
     )
 }
 
