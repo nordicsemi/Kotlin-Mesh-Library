@@ -145,7 +145,7 @@ internal fun NodeScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 title = stringResource(id = R.string.title_keys)
             )
-            DeviceKeyRow(deviceKey = nodeData.deviceKey ?: stringResource(R.string.unknown))
+            DeviceKeyRow(deviceKey = nodeData.deviceKey ?: stringResource(R.string.label_unknown))
             NetworkKeysRow(
                 count = nodeData.netKeys.size,
                 isSelected = selectedItem == ClickableNodeInfoItem.NetworkKeys
@@ -353,6 +353,7 @@ private fun ApplicationKeysRow(
             true -> CardDefaults.outlinedCardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
+
             else -> CardDefaults.outlinedCardColors()
         },
         onClick = onApplicationKeysClicked,
@@ -400,8 +401,7 @@ private fun CompanyIdentifier(companyIdentifier: UShort?) {
                             upperCase = true
                         }
                     ).uppercase()
-            }
-            ?: stringResource(R.string.unknown),
+            } ?: stringResource(R.string.label_unknown)
     )
 }
 
@@ -417,7 +417,7 @@ private fun ProductIdentifier(productIdentifier: UShort?) {
                 number.prefix = "0x"
                 upperCase = true
             }
-        ) ?: stringResource(R.string.unknown),
+        ) ?: stringResource(R.string.label_unknown)
     )
 }
 
@@ -433,7 +433,7 @@ private fun ProductVersion(productVersion: UShort?) {
                 number.prefix = "0x"
                 upperCase = true
             }
-        ) ?: stringResource(R.string.unknown),
+        ) ?: stringResource(R.string.label_unknown,)
     )
 }
 
@@ -444,7 +444,7 @@ private fun ReplayProtectionCount(replayProtectionCount: UShort?) {
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.SafetyCheck,
         title = stringResource(R.string.label_replay_protection_count),
-        subtitle = "${replayProtectionCount ?: stringResource(R.string.unknown)}",
+        subtitle = "${replayProtectionCount ?: stringResource(R.string.label_unknown)}",
     )
 }
 

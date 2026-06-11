@@ -136,7 +136,6 @@
     <string name="label_6_bit_response_op_code">6-bit Response Opcode</string>
     <string name="label_64_bit_transmic">64-bit TransMIC</string>
     <string name="label_force_segmentation">Force segmentation</string>
-    <string name="unknown">Unknown</string>
     <string name="label_unicast_destinations">Unicast Destinations</string>
     <string name="label_unicast_sources">Unicast Sources</string>
     <string name="label_error_incorrect_hex_value">Incorrect hex value</string>
