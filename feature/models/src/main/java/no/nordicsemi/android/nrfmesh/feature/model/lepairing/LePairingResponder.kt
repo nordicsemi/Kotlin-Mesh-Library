@@ -87,6 +87,7 @@ internal fun LePairingResponder(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Password,
         title = stringResource(R.string.label_pass_key),
+        subtitle = passKey?.toString() ?: stringResource(R.string.label_unknown),
         enabled = !isInProgress
     )
 
