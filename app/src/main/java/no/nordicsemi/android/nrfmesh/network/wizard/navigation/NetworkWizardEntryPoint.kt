@@ -23,9 +23,7 @@ fun EntryProviderScope<NavKey>.networkWizardEntry(
         onConfigurationSelected = viewModel::onConfigurationSelected,
         add = viewModel::increment,
         remove = viewModel::decrement,
-        onContinuePressed = {
-            viewModel.onContinuePressed()
-        },
+        onContinuePressed = viewModel::onContinuePressed,
         importState = uiState.importState,
         importNetwork = { uri, contentResolver ->
             viewModel.importNetwork(uri = uri, contentResolver = contentResolver)
