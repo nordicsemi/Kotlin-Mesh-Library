@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="label_gatt_proxy">Gatt Proxy</string>
+    <string name="label_name">Name</string>
+    <string name="label_unicast_name">Unicast Address</string>
+    <string name="label_unicast_address">Unicast Address\n</string>
+    <string name="label_smp_dfu_rationale">An active connection to a GATT Proxy node with Firmware Distribution Server model and SMP Service enabled is required.</string>
+    <string name="label_firmware_update">Firmware Update</string>
+    <string name="label_smp_service">SMP Service</string>
+    <string name="label_access">Access</string>
+    <string name="label_firmware_distributor">Firmware Distributor</string>
+    <string name="label_firmware_distributor_model">Firmware Distributor Server Model</string>
+    <string name="label_found">Found</string>
+    <string name="label_not_found">Not found</string>
+    <string name="label_unknown">Unknown</string>
+    <string name="label_read_more">Read More</string>
+    <string name="label_device_firmware_">Device Firmware Update</string>
+    <string name="label_device_firmware_update">Device Firmware Update</string>
+    <string name="label_dfu_over_bluetooth_mesh">DFU over Bluetooth Mesh</string>
+    <string name="label_sample_distributor">Sample Distributor</string>
+    <string name="label_device_management_smp"><![CDATA[Device Management & Simple Management Protocol (SMP)]]></string>
+    <string name="label_device_firmware_update_link">https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/connectivity/bluetooth/api/mesh/dfu.html#firmware_images</string>
+    <string name="label_dfu_over_bluetooth_mesh_link">https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/bt/bt_mesh/dfu_over_bt_mesh.html</string>
+    <string name="label_sample_distributor_link">https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/samples/bluetooth/mesh/dfu/distributor/README.html</string>
+    <string name="label_device_management_smp_link">https://docs.nordicsemi.com/bundle/ncs-latest/page/zephyr/services/device_mgmt/index.html</string>
+    <string name="label_dfu_over_blob_rationale">In this mode the firmware image is transferred to the Distributor node using BLOB Transfer models.\n\nThis method is not supported due to bandwidth limitations</string>
+    <string name="label_dfu_over_https_rationale">This Out of Band (OOB) method assumes, that the Distributor can retrieve the firmware image from the Internet based on the HTTPS URIs provided by target nodes.\n\nThis method is not supported.</string>
+    <string name="label_dfu_over_smp_rationale">DFU over Simple Management Protocol (SMP) service uses active GATT connection to quickly transfer the firmware image to the connected Firmware Distributor node. The image is then slowly distributed to target nodes using BLOB messages, but user presence is no longer required.</string>
+    ">
+</resources>
