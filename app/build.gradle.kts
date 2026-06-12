@@ -48,6 +48,7 @@ dependencies {
     implementation(project(":feature:scenes"))
     implementation(project(":feature:provisioners"))
     implementation(project(":feature:export"))
+    implementation(project(":feature:dfu"))
     implementation(project(":mesh:core"))
     implementation(project(":mesh:provisioning"))
 

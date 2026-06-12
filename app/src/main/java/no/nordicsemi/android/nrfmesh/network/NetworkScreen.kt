@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
@@ -56,11 +57,14 @@ import no.nordicsemi.android.nrfmesh.R
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
+import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.toEntries
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
+import no.nordicsemi.android.nrfmesh.feature.dfu.navigation.FirmwareUpdateKey
+import no.nordicsemi.android.nrfmesh.feature.dfu.navigation.firmwareUpdateEntry
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.exportEntry
 import no.nordicsemi.android.nrfmesh.feature.groups.navigation.groupsEntry
@@ -210,6 +214,7 @@ private fun NetworkContent(
             settingsEntry(appState = appState, navigator = navigator)
             exportEntry(appState = appState, navigator = navigator)
             provisionerSelectorEntry(navigator = navigator)
+            firmwareUpdateEntry()
         }
         val entries = appState.navigationState.toEntries(entryProvider = entryProvider)
         val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy)
@@ -234,6 +239,18 @@ private fun NetworkContent(
                         repeat(entries.size - scene.previousEntries.size) { navigator.goBack() }
                     },
                     actions = {
+                        if (appState.navigationState.currentKey is NodesKey) {
+                            IconButton(
+                                onClick = dropUnlessResumed {
+                                    navigator.navigate(key = FirmwareUpdateKey)
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(no.nordicsemi.android.nrfmesh.feature.dfu.R.drawable.update_dfu),
+                                    contentDescription = null
+                                )
+                            }
+                        }
                         // We have to consider two conditions when displaying the dropdown in the settings screen
                         // 1. Current key destination is settings key
                         // 2. For non-compact width devices the dropdown must be displayed irrespective of where you
