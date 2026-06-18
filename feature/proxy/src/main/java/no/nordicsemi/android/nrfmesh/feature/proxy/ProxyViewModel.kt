@@ -110,9 +110,6 @@ internal class ProxyViewModel @Inject internal constructor(
     internal fun onAutoConnectToggled(enabled: Boolean) {
         viewModelScope.launch {
             repository.toggleAutomaticConnection(enabled = enabled)
-            // if (enabled) {
-            //     repository.startAutomaticConnectivity(meshNetwork)
-            // }
         }
     }
 
