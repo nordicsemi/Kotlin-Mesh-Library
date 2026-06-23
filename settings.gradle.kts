@@ -47,6 +47,7 @@ include(":feature:scenes")
 include(":feature:ivindex")
 include(":feature:developer-settings")
 include(":feature:dfu")
+ include(":feature:scanner")
 
 include(":mesh:core")
 include(":mesh:crypto")
