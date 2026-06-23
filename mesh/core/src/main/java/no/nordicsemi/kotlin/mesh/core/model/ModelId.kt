@@ -63,9 +63,7 @@ sealed class ModelId {
  * @property modelIdentifier 16-bit model identifier.
  */
 @Serializable
-class SigModelId(
-    val modelIdentifier: UShort,
-) : ModelId() {
+class SigModelId(val modelIdentifier: UShort) : ModelId() {
     @SerialName(value = "modelId")
     override val id: UInt = modelIdentifier.toUInt()
 
