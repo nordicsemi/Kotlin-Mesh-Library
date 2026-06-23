@@ -71,6 +71,7 @@ import no.nordicsemi.android.nrfmesh.feature.groups.navigation.groupsEntry
 import no.nordicsemi.android.nrfmesh.feature.nodes.navigation.nodesEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.provisioningEntry
 import no.nordicsemi.android.nrfmesh.feature.proxy.navigation.proxyEntry
+import no.nordicsemi.android.nrfmesh.feature.scanner.navigation.scannerEntry
 import no.nordicsemi.android.nrfmesh.feature.settings.navigation.settingsEntry
 import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.ProvisionerSelectorKey
 import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.provisionerSelectorEntry
@@ -210,7 +211,7 @@ private fun NetworkContent(
             )
             provisioningEntry(appState = appState, navigator = navigator)
             groupsEntry(appState = appState, navigator = navigator)
-            proxyEntry()
+            proxyEntry(navigator = navigator)
             settingsEntry(appState = appState, navigator = navigator)
             exportEntry(appState = appState, navigator = navigator)
             provisionerSelectorEntry(navigator = navigator)
