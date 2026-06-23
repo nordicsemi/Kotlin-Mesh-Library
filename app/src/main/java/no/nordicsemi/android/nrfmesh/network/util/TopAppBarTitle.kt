@@ -4,11 +4,13 @@ import android.content.Context
 import no.nordicsemi.android.feature.config.networkkeys.navigation.AddNetKeysKey
 import no.nordicsemi.android.feature.config.networkkeys.navigation.ConfigNetKeysKey
 import no.nordicsemi.android.nrfmesh.R
+import no.nordicsemi.android.nrfmesh.core.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.core.navigation.GroupsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NavigationState
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.ProxyKey
+import no.nordicsemi.android.nrfmesh.core.navigation.ScannerKey
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.key.navigation.ApplicationKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.navigation.ApplicationKeysContentKey
@@ -117,6 +119,14 @@ internal fun title(
     } else context.getString(R.string.label_groups)
 
     is ProxyKey -> context.getString(R.string.label_proxy)
+    is ScannerKey -> context.getString(
+        when (navigationState.previousKey) {
+            ProxyKey -> R.string.label_proxy
+            FirmwareUpdateKey -> R.string.label_proxy
+            else -> R.string.label_unknown
+        }
+    )
+
     is SettingsKey,
     is ExportKey,
     is ProvisionerSelectorKey,
