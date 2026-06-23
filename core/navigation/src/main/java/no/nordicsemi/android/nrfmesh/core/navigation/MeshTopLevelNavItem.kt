@@ -94,6 +94,13 @@ object ProxyKey : NavKey
 @Serializable
 data class SettingsKey(val setting: ClickableSetting? = null) : NavKey
 
+@Serializable
+data object FirmwareUpdateKey : NavKey
+
+@OptIn(ExperimentalUuidApi::class)
+@Serializable
+data class ScannerKey(val uuid: Uuid) : NavKey
+
 /**
  * Map of top level navigation items.
  */
