@@ -58,11 +58,7 @@ internal fun BoundApplicationKeys(
             modifier = Modifier
                 .weight(weight = 1f)
                 .padding(horizontal = 16.dp),
-            title = pluralStringResource(
-                R.plurals.label_bound_application_keys_count,
-                model.bind.size,
-                model.bind.size
-            )
+            title = stringResource(R.string.label_bound_application_keys)
         )
         MeshIconButton(
             onClick = {
