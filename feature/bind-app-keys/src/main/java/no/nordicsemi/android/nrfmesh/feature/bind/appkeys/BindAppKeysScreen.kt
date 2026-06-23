@@ -19,9 +19,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.Row
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
@@ -79,10 +79,8 @@ private fun AddedKeyRow(
 ) {
     var isBound by rememberSaveable { mutableStateOf(key.isBoundTo(model = model)) }
     var displayWarningDialog by rememberSaveable { mutableStateOf(false) }
-    ElevatedCardItem(
+    key.Row(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.VpnKey,
-        title = key.name,
         titleAction = {
             Checkbox(
                 checked = isBound,
