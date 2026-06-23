@@ -51,6 +51,7 @@ dependencies {
     implementation(project(":feature:dfu"))
     implementation(project(":mesh:core"))
     implementation(project(":mesh:provisioning"))
+    implementation(project(":feature:scanner"))
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlin.junit)

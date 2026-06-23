@@ -214,7 +214,8 @@ private fun NetworkContent(
             settingsEntry(appState = appState, navigator = navigator)
             exportEntry(appState = appState, navigator = navigator)
             provisionerSelectorEntry(navigator = navigator)
-            firmwareUpdateEntry()
+            firmwareUpdateEntry(navigator = navigator)
+            scannerEntry(navigator = navigator )
         }
         val entries = appState.navigationState.toEntries(entryProvider = entryProvider)
         val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy)
