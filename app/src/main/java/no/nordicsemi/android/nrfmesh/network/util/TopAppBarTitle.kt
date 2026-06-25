@@ -14,6 +14,7 @@ import no.nordicsemi.android.nrfmesh.core.navigation.ScannerKey
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.key.navigation.ApplicationKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.navigation.ApplicationKeysContentKey
+import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.BindAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.AddAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.ConfigAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.developer.navigation.DeveloperSettingsContentKey
@@ -105,6 +106,8 @@ internal fun title(
         } else network.element(elementAddress = address)?.name
             ?: context.getString(R.string.label_unknown)
     }
+
+    is BindAppKeysKey -> key.model.name ?: context.getString(R.string.label_unknown)
 
     is FirmwareInformationKey -> if (isCompactWidth) {
         key.model.name ?: context.getString(R.string.label_unknown)

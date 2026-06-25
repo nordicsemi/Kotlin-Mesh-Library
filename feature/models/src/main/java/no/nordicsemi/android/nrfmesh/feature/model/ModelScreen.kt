@@ -62,6 +62,7 @@ internal fun ModelScreen(
     onAddGroupClicked: () -> Unit,
     navigateToGroups: () -> Unit,
     navigateToFirmwareInformation: (String, Model, FirmwareInformation) -> Unit,
+    navigateToBindApplicationKeys: (Model) -> Unit,
     startPairing: (Context) -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
@@ -100,7 +101,8 @@ internal fun ModelScreen(
             BoundApplicationKeys(
                 model = model,
                 messageState = messageState,
-                send = send
+                send = send,
+                navigateToBindApplicationKeys = navigateToBindApplicationKeys
             )
         }
         if (model.supportsModelPublication != false) {

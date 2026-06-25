@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -74,6 +75,7 @@ private fun AddedKeyRow(
     key: ApplicationKey,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
     var isBound by rememberSaveable { mutableStateOf(key.isBoundTo(model = model)) }
     var displayWarningDialog by rememberSaveable { mutableStateOf(false) }
     key.Row(

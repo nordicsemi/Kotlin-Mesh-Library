@@ -21,6 +21,8 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeListDetailSceneKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
+import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.BindAppKeysKey
+import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.bindAppKeysEntry
 import no.nordicsemi.android.nrfmesh.feature.model.ModelScreen
 import no.nordicsemi.android.nrfmesh.feature.model.ModelState
 import no.nordicsemi.android.nrfmesh.feature.model.ModelViewModel
@@ -56,6 +58,13 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     onAddGroupClicked = { navigator.navigate(GroupsKey) },
                     resetMessageState = viewModel::resetMessageState,
                     navigateToGroups = { navigator.navigate(key = GroupsKey) },
+                    navigateToBindApplicationKeys = { model ->
+                        model.parentElement?.let {
+                            navigator.navigate(
+                                key = BindAppKeysKey(model = model)
+                            )
+                        }
+                    },
                     navigateToFirmwareInformation = { title, model, information ->
                         navigator.navigate(
                             key = FirmwareInformationKey(
@@ -90,6 +99,7 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
             ModelState.Loading -> {}
         }
     }
+    bindAppKeysEntry(send = { message -> viewModel?.send(message) })
     firmwareInformationEntryPoint(
         isInProgress = false,
         send = { model, message ->
