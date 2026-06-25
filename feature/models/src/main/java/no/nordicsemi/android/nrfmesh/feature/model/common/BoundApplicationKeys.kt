@@ -89,7 +89,7 @@ internal fun BoundApplicationKeys(
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.AddLink,
-        title = stringResource(R.string.label_bind_application_keys),
+        title = stringResource(R.string.label_application_keys),
         subtitle = pluralStringResource(
             R.plurals.label_bound_application_keys_count,
             model.boundApplicationKeys.size,
