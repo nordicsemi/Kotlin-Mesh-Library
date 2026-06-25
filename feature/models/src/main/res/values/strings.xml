@@ -181,6 +181,7 @@
     <string name="label_firmware_compatibility_check_failed_rationale">Firmware compatibility check failed.</string>
     <string name="label_failed_to_check_for_updates">Failed to check for updates.</string>
     <string name="label_pass_key">Passkey</string>
+    <string name="label_pass_key">Passkey</string>
     <string name="label_base_models">Base Models</string>
     <string name="label_extending_models">Extending Models</string>
     <string name="label_related_models">Related Models</string>
@@ -193,4 +194,5 @@
     <string name="label_bluetooth_sig">Bluetooth SIG</string>
     <string name="vendor_model">Vendor Specific</string>
     <string name="label_unknown_vendor">Unknown vendor</string>
+    <string name="label_application_keys">Application Keys</string>
 </resources>

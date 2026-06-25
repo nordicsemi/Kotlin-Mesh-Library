@@ -10,6 +10,8 @@ android {
 
 dependencies {
     implementation(nordic.kotlin.data)
+    implementation(nordic.permissions.ble)
+    implementation(nordic.scanner.ble)
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit4)
@@ -26,8 +28,7 @@ dependencies {
     implementation(project(":feature:application-keys"))
     implementation(project(":feature:models"))
     implementation(project(":feature:network-keys"))
-    implementation(project(":feature:provisioning"))
-    implementation(project(":feature:settings"))
-    implementation(project(":feature:groups"))
+    implementation(project(":feature:scanner"))
     implementation(project(":mesh:core"))
+    implementation(project(":mesh:bearer-gatt"))
 }

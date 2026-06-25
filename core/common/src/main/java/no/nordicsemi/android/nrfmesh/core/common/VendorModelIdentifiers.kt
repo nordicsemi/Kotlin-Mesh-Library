@@ -1,5 +1,9 @@
 package no.nordicsemi.android.nrfmesh.core.common
 
+import no.nordicsemi.kotlin.mesh.core.model.Model
+import no.nordicsemi.kotlin.mesh.core.model.SigModelId
+import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
+
 
 /**
  * Nordic Semiconductor Company ID.
@@ -43,3 +47,10 @@ object VendorModelIds {
      */
     const val LE_PAIRING_RESPONDER: UShort = 0x000Eu
 }
+
+val lePairingResponder = VendorModelId(
+    modelIdentifier = VendorModelIds.LE_PAIRING_RESPONDER,
+    companyIdentifier = NORDIC_SEMICONDUCTOR_COMPANY_ID
+)
+
+val firmwareDistributionServer = SigModelId(modelIdentifier = Model.FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID)

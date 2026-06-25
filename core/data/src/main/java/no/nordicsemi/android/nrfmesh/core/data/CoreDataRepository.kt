@@ -779,6 +779,18 @@ class CoreDataRepository @Inject constructor(
     fun toggleIvUpdateTestMode(flag: Boolean) {
         meshNetworkManager.networkParameters.ivUpdateTestMode = flag
     }
+
+    /**
+     * Gets the peripheral with the given identifier.
+     */
+    fun getPeripheral(): Peripheral? = identifier?.let {
+        centralManager.getPeripheralById(id = it)
+    }
+
+    companion object {
+        @OptIn(ExperimentalUuidApi::class)
+        val SMP_SERVICE = Uuid.parse("8D53DC1D-1DB7-4CD3-868B-8A527460AA84")
+    }
 }
 
 sealed class NetworkConnectionState {

@@ -29,12 +29,13 @@ class AndroidGattBearer(
         Peripheral.Executor,
         ConjunctionFilterScope,
         ScanResult
->(
+        >(
     centralManager = centralManager,
     peripheral = peripheral,
     ioDispatcher = ioDispatcher
 ) {
-    val identifier = peripheral.identifier
+    val identifier
+        get() = peripheral.identifier
 
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun configurePeripheral(peripheral: Peripheral) {
