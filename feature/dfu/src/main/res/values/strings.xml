@@ -26,5 +26,17 @@
     <string name="label_dfu_over_blob_rationale">In this mode the firmware image is transferred to the Distributor node using BLOB Transfer models.\n\nThis method is not supported due to bandwidth limitations</string>
     <string name="label_dfu_over_https_rationale">This Out of Band (OOB) method assumes, that the Distributor can retrieve the firmware image from the Internet based on the HTTPS URIs provided by target nodes.\n\nThis method is not supported.</string>
     <string name="label_dfu_over_smp_rationale">DFU over Simple Management Protocol (SMP) service uses active GATT connection to quickly transfer the firmware image to the connected Firmware Distributor node. The image is then slowly distributed to target nodes using BLOB messages, but user presence is no longer required.</string>
+    <string name="label_device_management">Device Management</string>
+    <string name="label_na">N/A</string>
+    <string name="label_supported">Supported</string>
+    <string name="label_not_supported">Unsupported</string>
+    <string name="label_secure">Secure</string>
+    <string name="label_unsecure">Unsecure</string>
+    <string name="label_application_key">Application Key</string>
+    <string name="label_app_key_selection_rationale">Selected Application Key will be used for Firmware Distribution</string>
+    <string name="label_distributor_status">Distributor Status</string>
+    <string name="label_phase">Phase</string>
+    <string name="label_no_distribution_server_model">Node does not have a firmware distribution server model</string>
+    <string name="label_no_app_keys_bound">No applicationkeys bound</string>
     ">
 </resources>

@@ -42,11 +42,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.launch
@@ -54,6 +54,7 @@ import no.nordicsemi.android.common.theme.nordicSun
 import no.nordicsemi.android.common.ui.view.NordicAppBar
 import no.nordicsemi.android.nrfmesh.MeshAppState
 import no.nordicsemi.android.nrfmesh.R
+import no.nordicsemi.android.nrfmesh.core.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
@@ -63,7 +64,6 @@ import no.nordicsemi.android.nrfmesh.core.navigation.toEntries
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
-import no.nordicsemi.android.nrfmesh.feature.dfu.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.feature.dfu.navigation.firmwareUpdateEntry
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.exportEntry
@@ -198,6 +198,7 @@ private fun NetworkContent(
             }
         }
     ) {
+        val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
         val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
         val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
         val entryProvider = entryProvider {
@@ -219,7 +220,7 @@ private fun NetworkContent(
             scannerEntry(navigator = navigator )
         }
         val entries = appState.navigationState.toEntries(entryProvider = entryProvider)
-        val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy)
+        val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy, dialogStrategy)
         val sceneState = rememberSceneState(
             entries = entries, sceneStrategies = sceneStrategies, onBack = navigator::goBack
         )
@@ -248,7 +249,7 @@ private fun NetworkContent(
                                 }
                             ) {
                                 Icon(
-                                    painter = painterResource(no.nordicsemi.android.nrfmesh.feature.dfu.R.drawable.update_dfu),
+                                    imageVector = Icons.Outlined.Download,
                                     contentDescription = null
                                 )
                             }

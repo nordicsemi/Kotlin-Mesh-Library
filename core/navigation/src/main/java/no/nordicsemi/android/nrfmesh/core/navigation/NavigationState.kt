@@ -72,6 +72,9 @@ class NavigationState(
             ?: error("Sub stack for $currentTopLevelKey does not exist")
 
     val currentKey: NavKey by derivedStateOf { currentSubStack.last() }
+
+    val previousKey: NavKey
+        get() = currentSubStack[currentSubStack.lastIndex - 1]
 }
 
 /**
