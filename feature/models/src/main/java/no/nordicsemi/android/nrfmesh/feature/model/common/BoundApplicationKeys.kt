@@ -8,24 +8,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddLink
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.dropUnlessResumed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
-import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.BindAppKeysScreen
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigSigModelAppGet
@@ -42,11 +35,8 @@ internal fun BoundApplicationKeys(
     model: Model,
     messageState: MessageState,
     send: (AcknowledgedConfigMessage) -> Unit,
+    navigateToBindApplicationKeys: (Model) -> Unit,
 ) {
-    val bottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = model.parentElement?.parentNode?.applicationKeys?.isEmpty() ?: false
-    )
-    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,15 +83,8 @@ internal fun BoundApplicationKeys(
         subtitle = pluralStringResource(
             R.plurals.label_bound_application_keys_count,
             model.boundApplicationKeys.size,
-            model.boundApplicationKeys.size),
-        onClick = { showBottomSheet = true }
+            model.boundApplicationKeys.size
+        ),
+        onClick = dropUnlessResumed { navigateToBindApplicationKeys(model) }
     )
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            containerColor = MaterialTheme.colorScheme.surface,
-            sheetState = bottomSheetState,
-            onDismissRequest = { showBottomSheet = !showBottomSheet },
-            content = { BindAppKeysScreen(model = model, send = send) }
-        )
-    }
 }

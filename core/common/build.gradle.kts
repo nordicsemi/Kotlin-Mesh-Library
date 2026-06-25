@@ -10,7 +10,6 @@ android {
 }
 
 dependencies {
-
     implementation(project(":mesh:core"))
     implementation(project(":mesh:provisioning"))
     implementation(project(":mesh:logger"))
@@ -18,4 +17,5 @@ dependencies {
     implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
 
     api(nordic.blek.client.android)
+    api(nordic.kotlin.data)
 }

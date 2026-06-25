@@ -44,9 +44,11 @@ import kotlin.uuid.ExperimentalUuidApi
 @HiltViewModel(assistedFactory = ModelViewModel.Factory::class)
 internal class ModelViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
-    @Assisted("address") private val address: Int,
-    @Assisted("modelId") private val modelId: Int,
+    @Assisted("address") address: Int,
+    @Assisted("modelId") modelId: Int,
 ) : ViewModel(), McuMgrTransport.ConnectionCallback {
+    private val unicastAddress = address.toUShort()
+    private val modelIdentifier = modelId.toUInt()
     private lateinit var meshNetwork: MeshNetwork
     private lateinit var selectedNode: Node
     private lateinit var selectedModel: Model
@@ -87,15 +89,17 @@ internal class ModelViewModel @AssistedInject internal constructor(
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
             .onEach { network ->
-                val modelState = network
-                    .element(elementAddress = address.toUShort())
-                    ?.model(modelId = modelId.toUInt())
-                    ?.let { model ->
-                        selectedNode = model.parentElement!!.parentNode!!
-                        ModelState.Success(model = model)
-                    } ?: ModelState.Error(Throwable("Element containing node not found"))
+                selectedModel = network.element(elementAddress = unicastAddress)
+                    ?.model(modelId = modelIdentifier)
+                    ?: throw IllegalStateException("Model not found")
+                selectedNode = selectedModel.parentElement?.parentNode
+                    ?: throw IllegalStateException("Node not found")
                 _uiState.update { state ->
-                    state.copy(modelState = modelState)
+                    state.copy(
+                        modelState = ModelState.Success(
+                            model = selectedModel
+                        )
+                    )
                 }
                 meshNetwork = network // update the local network instance
             }
