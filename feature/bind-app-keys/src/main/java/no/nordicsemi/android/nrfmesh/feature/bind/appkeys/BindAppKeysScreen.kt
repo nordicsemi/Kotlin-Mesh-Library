@@ -57,16 +57,13 @@ fun BindAppKeysScreen(
                 }
             }
 
-            false -> model.parentElement?.parentNode?.applicationKeys
-                ?.takeIf { it.isEmpty() }
-                ?.let {
-                    MeshNoItemsAvailable(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Outlined.VpnKey,
-                        title = stringResource(R.string.label_no_bound_app_keys),
-                        rationale = stringResource(R.string.label_bind_an_app_key_rationale),
-                    )
-                }
+            false ->
+                MeshNoItemsAvailable(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.Outlined.VpnKey,
+                    title = stringResource(R.string.label_no_bound_app_keys),
+                    rationale = stringResource(R.string.label_bind_an_app_key_rationale),
+                )
         }
     }
 }
