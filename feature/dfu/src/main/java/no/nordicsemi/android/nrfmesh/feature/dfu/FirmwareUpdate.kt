@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -25,10 +24,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -41,36 +43,19 @@ import no.nordicsemi.android.common.ui.view.NordicAppBar
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
 import no.nordicsemi.android.nrfmesh.feature.dfu.smp.SmpContent
 import no.nordicsemi.android.nrfmesh.feature.dfu.smp.SmpViewModel
-import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
+import no.nordicsemi.kotlin.mesh.core.model.Model
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FirmwareUpdateScreen(
     uiState: FirmwareUpdateScreenUiState,
     onGattProxyClicked: () -> Unit,
-    onBindAppKeysClicked: () -> Unit,
-    onBackClick: () -> Unit,
-) {
-    when (uiState.meshNetworkState) {
-        MeshNetworkState.Loading -> {}
-        is MeshNetworkState.Success -> FirmwareUpdate(
-            network = uiState.meshNetworkState.network,
-            onGattProxyClicked = onGattProxyClicked,
-            onBindAppKeysClicked = onBindAppKeysClicked,
-            onBackClick = onBackClick
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
-@Composable
-private fun FirmwareUpdate(
-    network: MeshNetwork,
-    onGattProxyClicked: () -> Unit,
-    onBindAppKeysClicked: () -> Unit,
+    onBindAppKeysClicked: (Model) -> Unit,
     onBackClick: () -> Unit,
 ) {
     var option by rememberSaveable { mutableStateOf(FirmwareUpdateOptions.SMP) }
+    val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -78,9 +63,13 @@ private fun FirmwareUpdate(
                 title = { Text(text = stringResource(R.string.label_firmware_update)) },
                 showBackButton = true,
                 backButtonIcon = Icons.Outlined.Close,
-                onNavigationButtonClick = onBackClick
+                onNavigationButtonClick = onBackClick,
+                actions = {
+
+                }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) {
         Row(
             modifier = Modifier
@@ -138,6 +127,7 @@ private fun FirmwareUpdate(
                         val viewModel = hiltViewModel<SmpViewModel>()
                         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                         SmpContent(
+                            snackbarHostState = snackbarHostState,
                             connectionState = uiState.proxyConnectionState.connectionState,
                             node = uiState.node,
                             name = uiState.name,

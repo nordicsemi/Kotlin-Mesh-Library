@@ -24,6 +24,7 @@ import kotlin.uuid.ExperimentalUuidApi
     ExperimentalUuidApi::class
 )
 fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
+    var viewModel: FirmwareUpdateViewModel? = null
     entry<FirmwareUpdateKey>(
         metadata = DialogSceneStrategy.dialog(
             dialogProperties = DialogProperties(
@@ -34,17 +35,20 @@ fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
             )
         )
     ) {
-        val viewModel = hiltViewModel<FirmwareUpdateViewModel>()
+        viewModel = hiltViewModel<FirmwareUpdateViewModel>()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         FirmwareUpdateScreen(
             uiState = uiState,
             onGattProxyClicked = {
                 navigator.navigate(key = ScannerKey(uuid = MeshProxyService.uuid))
             },
-            onBindAppKeysClicked = {
-                navigator.navigate()
-            },
+            onBindAppKeysClicked = { navigator.navigate(key = DfuBindAppKeysKey(model = it)) },
             onBackClick = { navigator.navigate(key = NodesKey) }
         )
     }
+    dfuBindAppKeysEntry(
+        send = { model, message ->
+            viewModel?.send(model = model, message = message)
+        }
+    )
 }

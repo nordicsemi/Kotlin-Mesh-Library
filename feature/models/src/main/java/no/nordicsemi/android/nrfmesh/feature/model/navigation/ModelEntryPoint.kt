@@ -99,11 +99,11 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
             ModelState.Loading -> {}
         }
     }
-    bindAppKeysEntry(send = { message -> viewModel?.send(message) })
+    bindAppKeysEntry(send = { message -> viewModel?.send(message = message) })
     firmwareInformationEntryPoint(
         isInProgress = false,
         send = { model, message ->
-            viewModel?.send(model, message)
+            viewModel?.send(model = model, message = message)
         }
     )
 }

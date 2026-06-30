@@ -23,6 +23,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:ui"))
     implementation(project(":core:navigation"))
+    implementation(project(":feature:bind-app-keys"))
     implementation(project(":feature:config-network-keys"))
     implementation(project(":feature:config-application-keys"))
     implementation(project(":feature:application-keys"))
