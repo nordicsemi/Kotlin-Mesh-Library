@@ -47,7 +47,7 @@ sealed interface HasAddress {
      *
      * @return The hex string representation of the address.
      */
-    fun toHexString(): HexString
+    fun toHexString(addPrefix: Boolean = true): HexString
 }
 
 /**
@@ -60,10 +60,12 @@ sealed class MeshAddress : HasAddress {
     override fun toString(): String = toHexString()
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toHexString(): HexString = address.toHexString(
+    override fun toHexString(addPrefix: Boolean): HexString = address.toHexString(
         HexFormat {
             number {
-                prefix = "0x"
+                if (addPrefix) {
+                    prefix = "0x"
+                }
                 minLength = 4
                 upperCase = true
             }
