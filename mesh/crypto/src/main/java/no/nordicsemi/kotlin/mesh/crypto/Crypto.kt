@@ -94,11 +94,18 @@ object Crypto {
      * @param algorithm Algorithm to use.
      * @return KeyPair
      */
-    fun generateKeyPair(algorithm: Algorithm): KeyPair = KeyPairGeneratorSpi
-        .ECDH()
+    fun generateKeyPair(algorithm: Algorithm): KeyPair = KeyPairGeneratorSpi.ECDH()
         .run {
-            initialize(algorithm.length)
-            generateKeyPair()
+            @Suppress("DEPRECATION")
+            when (algorithm) {
+                Algorithm.FIPS_P256_ELLIPTIC_CURVE,
+                Algorithm.BTM_ECDH_P256_CMAC_AES128_AES_CCM,
+                Algorithm.BTM_ECDH_P256_HMAC_SHA256_AES_CCM
+                    -> {
+                    initialize(256)
+                    generateKeyPair()
+                }
+            }
         }
 
 
