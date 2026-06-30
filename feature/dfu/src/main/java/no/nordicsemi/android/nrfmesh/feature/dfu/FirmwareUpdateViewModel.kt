@@ -5,38 +5,56 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import no.nordicsemi.android.nrfmesh.core.common.Completed
+import no.nordicsemi.android.nrfmesh.core.common.Failed
+import no.nordicsemi.android.nrfmesh.core.common.MessageState
+import no.nordicsemi.android.nrfmesh.core.common.NotStarted
+import no.nordicsemi.android.nrfmesh.core.common.Sending
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
+import no.nordicsemi.kotlin.mesh.core.messages.ConfigResponse
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
+import no.nordicsemi.kotlin.mesh.core.model.Model
 import javax.inject.Inject
 
 @HiltViewModel
 internal class FirmwareUpdateViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
-    private lateinit var meshNetwork: MeshNetwork
     private val _uiState = MutableStateFlow(FirmwareUpdateScreenUiState())
     internal val uiState = _uiState.asStateFlow()
 
-    init {
-        observeNetwork()
-    }
-
-    private fun observeNetwork() {
-        repository.networkEvents
-            .mapNotNull { repository.meshNetwork }
-            .onEach { network ->
-                meshNetwork = network
-                _uiState.update {
-                    it.copy(meshNetworkState = MeshNetworkState.Success(network = network))
+    internal fun send(model: Model, message: AcknowledgedConfigMessage) {
+        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+        val node = model.parentElement?.parentNode ?: return
+        viewModelScope.launch {
+            try {
+                repository.send(node = node, message = message)?.let { response ->
+                    _uiState.value = _uiState.value.copy(
+                        messageState = Completed(
+                            message = message,
+                            response = response as ConfigResponse
+                        ),
+                        isRefreshing = false
+                    )
+                } ?: run {
+                    _uiState.value = _uiState.value.copy(
+                        messageState = Failed(
+                            message = message,
+                            error = IllegalStateException("No response received")
+                        ),
+                        isRefreshing = false
+                    )
                 }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    messageState = Failed(message = message, error = e),
+                    isRefreshing = false
+                )
             }
-            .launchIn(scope = viewModelScope)
+        }
     }
-
 }
 
 
@@ -49,5 +67,6 @@ internal sealed interface MeshNetworkState {
 }
 
 internal data class FirmwareUpdateScreenUiState(
-    val meshNetworkState: MeshNetworkState = MeshNetworkState.Loading,
+    val messageState: MessageState = NotStarted,
+    val isRefreshing: Boolean = false,
 )

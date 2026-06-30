@@ -19,6 +19,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -47,6 +48,7 @@ import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 
 @Composable
 internal fun SmpContent(
+    snackbarHostState: SnackbarHostState,
     connectionState: NetworkConnectionState,
     node: Node?,
     name: String?,
@@ -57,7 +59,7 @@ internal fun SmpContent(
     onGattProxyClicked: () -> Unit,
     selectedKey: ApplicationKey?,
     onApplicationKeyClicked: (ApplicationKey) -> Unit,
-    onBindAppKeysClicked: () -> Unit,
+    onBindAppKeysClicked: (Model) -> Unit,
     phase: FirmwareDistributionPhase?,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
@@ -81,7 +83,7 @@ internal fun SmpContent(
         connectionState = connectionState,
         isDistributorServerModelSupported = isDistributorServerModelSupported
     )
-    if(isSmpServiceSupported != null && isDistributorServerModelSupported != null && isLePairingSupported != null) {
+    if (isSmpServiceSupported != null && isDistributorServerModelSupported != null && isLePairingSupported != null) {
         if (!isSmpServiceSupported || !isDistributorServerModelSupported || !isLePairingSupported) {
             ReadMore()
         } else {
@@ -387,7 +389,7 @@ private fun ReadMore() {
 private fun BoundApplicationKeys(
     node: Node?,
     selectedKey: ApplicationKey?,
-    onBindAppKeyClicked: () -> Unit,
+    onBindAppKeyClicked: (Model) -> Unit,
     onApplicationKeyClicked: (ApplicationKey) -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -396,7 +398,11 @@ private fun BoundApplicationKeys(
             title = stringResource(R.string.label_application_key)
         )
         MeshIconButton(
-            onClick = onBindAppKeyClicked,
+            onClick = dropUnlessResumed {
+                node?.model(modelId = firmwareDistributionServer)?.let {
+                    onBindAppKeyClicked(it)
+                }
+            },
             buttonIcon = Icons.Outlined.Link,
         )
     }
@@ -434,7 +440,6 @@ private fun BoundApplicationKeys(
                     )
                 }
             )
-
         }
     Text(
         modifier = Modifier.padding(horizontal = 8.dp),
@@ -446,7 +451,7 @@ private fun BoundApplicationKeys(
 @Composable
 private fun DistributorStatus(
     connectionState: NetworkConnectionState,
-    phase: FirmwareDistributionPhase?,
+    phase: FirmwareDistributionPhase?
 ) {
     SectionTitle(title = stringResource(R.string.label_distributor_status))
     ElevatedCardItem(

@@ -53,7 +53,18 @@ internal class SmpViewModel @Inject internal constructor(
     private fun observeNetwork() {
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
-            .onEach { network = it }
+            .onEach {
+                network = it
+                _uiState.update { state ->
+                    state.copy(
+                        selectedKey = state.selectedKey
+                            ?: repository.proxyFilter.proxy
+                                ?.model(modelId = firmwareDistributionServer)
+                                ?.boundApplicationKeys
+                                ?.firstOrNull()
+                    )
+                }
+            }
             .launchIn(scope = viewModelScope)
     }
 
@@ -99,6 +110,13 @@ internal class SmpViewModel @Inject internal constructor(
                             // Proxy is connected but not ready until proxy filter messages are acknowledged.
                             is NetworkConnectionState.Connected -> false
                             else -> null
+                        },
+                        isBonded = when (state) {
+                            is NetworkConnectionState.Connected -> centralManager
+                                .getBondedPeripherals()
+                                .any { p -> p.identifier == repository.identifier }
+
+                            else -> null
                         }
                     )
                 }
@@ -118,7 +136,8 @@ internal class SmpViewModel @Inject internal constructor(
                 // connected and ready to send messages
                 when (filterState) {
                     is ProxyFilterState.ProxyFilterUpdateAcknowledged,
-                    is ProxyFilterState.ProxyFilterLimitReached-> {
+                    is ProxyFilterState.ProxyFilterLimitReached,
+                        -> {
                         _uiState.update { state ->
                             state.copy(
                                 node = repository.proxyFilter.proxy,
@@ -132,16 +151,19 @@ internal class SmpViewModel @Inject internal constructor(
                                     ?.model(modelId = firmwareDistributionServer)
                                     ?.boundApplicationKeys
                                     ?.firstOrNull(),
-                                isProxyReady = true
+                                isProxyReady = true,
                             )
                         }
 
-                        if(_uiState.value.phase == null) {
+                        if (_uiState.value.phase == null) {
                             repository.proxyFilter.proxy
                                 ?.model(modelId = firmwareDistributionServer)
                                 ?.let {
-                                    if(it.boundApplicationKeys.isNotEmpty()) {
-                                        val status = send(it, FirmwareDistributionGet()) as? FirmwareDistributionStatus
+                                    if (it.boundApplicationKeys.isNotEmpty()) {
+                                        val status = send(
+                                            model = it,
+                                            message = FirmwareDistributionGet()
+                                        ) as? FirmwareDistributionStatus
                                         _uiState.update { state -> state.copy(phase = status?.phase) }
                                     }
                                 }
@@ -185,5 +207,6 @@ internal data class SmpScreenUiState(
     val node: Node? = null,
     val selectedKey: ApplicationKey? = null,
     val isProxyReady: Boolean? = null,
-    val phase: FirmwareDistributionPhase? = null
+    val phase: FirmwareDistributionPhase? = null,
+    val isBonded: Boolean? = null,
 )
