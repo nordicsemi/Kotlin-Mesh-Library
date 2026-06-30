@@ -152,7 +152,7 @@ private fun Request(
                             )
                         }
                     },
-                    regex = Regex(pattern = "^[0-9A-Fa-f]?$"),
+                    regex = Regex(pattern = "^([0-3]?|[0-3][0-9A-Fa-f])$"),
                 )
             }
             MeshOutlinedHexTextField(
@@ -271,7 +271,7 @@ private fun Request(
                             )
                         }
                     },
-                    regex = Regex("^[0-9A-Fa-f]?$"),
+                    regex = Regex(pattern = "^([0-3]?|[0-3][0-9A-Fa-f])$"),
                 )
             }
             MeshSingleLineListItem(
