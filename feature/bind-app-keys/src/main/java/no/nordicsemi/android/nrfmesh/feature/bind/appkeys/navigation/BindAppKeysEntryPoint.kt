@@ -13,9 +13,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 data class BindAppKeysKey(val model: Model) : NavKey
 
 @OptIn(ExperimentalMaterial3Api::class)
-fun EntryProviderScope<NavKey>.bindAppKeysEntry(
-    send: (AcknowledgedConfigMessage) -> Unit,
-) {
+fun EntryProviderScope<NavKey>.bindAppKeysEntry(send: (AcknowledgedConfigMessage) -> Unit) {
     entry<BindAppKeysKey>(metadata = BottomSheetSceneStrategy.bottomSheet()) { key ->
         BindAppKeysScreen(
             model = key.model,
