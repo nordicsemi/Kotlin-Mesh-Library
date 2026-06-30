@@ -94,11 +94,18 @@ object Crypto {
      * @param algorithm Algorithm to use.
      * @return KeyPair
      */
-    fun generateKeyPair(algorithm: Algorithm): KeyPair = KeyPairGeneratorSpi
-        .ECDH()
+    fun generateKeyPair(algorithm: Algorithm): KeyPair = KeyPairGeneratorSpi.ECDH()
         .run {
-            initialize(algorithm.length)
-            generateKeyPair()
+            @Suppress("DEPRECATION")
+            when (algorithm) {
+                Algorithm.FIPS_P256_ELLIPTIC_CURVE,
+                Algorithm.BTM_ECDH_P256_CMAC_AES128_AES_CCM,
+                Algorithm.BTM_ECDH_P256_HMAC_SHA256_AES_CCM
+                    -> {
+                    initialize(256)
+                    generateKeyPair()
+                }
+            }
         }
 
 
@@ -177,8 +184,9 @@ object Crypto {
         deviceRandom: ByteArray,
         authValue: ByteArray,
         algorithm: Algorithm,
-    ): ByteArray {
-        return when (algorithm) {
+    ) =
+        @Suppress("DEPRECATION")
+        when (algorithm) {
             Algorithm.FIPS_P256_ELLIPTIC_CURVE,
             Algorithm.BTM_ECDH_P256_CMAC_AES128_AES_CCM,
                 -> {
@@ -193,7 +201,6 @@ object Crypto {
                 calculateHmac256(deviceRandom, confirmationKey)
             }
         }
-    }
 
     /**
      * Creates a 16-bit virtual address for a given UUID.
@@ -217,9 +224,8 @@ object Crypto {
      * @param credentials Security credentials.
      * @return Key Derivatives.
      */
-    fun calculateKeyDerivatives(N: ByteArray, credentials: SecurityCredentials): KeyDerivatives {
-        return calculateKeyDerivatives(N = N, P = credentials.P)
-    }
+    fun calculateKeyDerivatives(N: ByteArray, credentials: SecurityCredentials) =
+        calculateKeyDerivatives(N = N, P = credentials.P)
 
     /**
      * /**
