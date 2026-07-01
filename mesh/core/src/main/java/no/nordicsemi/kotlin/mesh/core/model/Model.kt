@@ -138,7 +138,7 @@ class Model internal constructor(
             // A model may be additionally subscribed to any special address
             // except from All Nodes and Models on the primary Element are always subscribed to the
             // All Nodes address.
-            return _subscribe.takeIf{
+            return _subscribe.takeIf {
                 !it.contains(element = AllNodes) && parentElement?.isPrimary == true
             }?.let {
                 _subscribe + AllNodes as SubscriptionAddress
@@ -438,43 +438,49 @@ class Model internal constructor(
             parentElement.parentNode?.elements
                 // Look only on that and previous Elements.
                 // Models can't extend Models on Elements with higher index.
-                ?.filter { it.index < parentElement.index }
+                ?.filter { it.index <= parentElement.index }
                 // Sort in reverse order so that unifying the list will
                 // remove those on Elements with the lowest indexes.
                 ?.sortedByDescending { it.index }
                 // Get a list of all models.
                 ?.flatMap { it.models }
                 // Remove duplicates.
-                ?.distinctBy { it.modelId }
+                ?.distinct()
                 // Get all direct base models of this Model.
                 ?.filter { extendsDirectly(model = it) }
                 ?: emptyList()
         } ?: emptyList()
 
     val baseModels: List<Model>
-        get() = directBaseModels.let { models ->
-            models + models.flatMap { it.baseModels }
+        get() {
+            val models = directBaseModels
+            // Return the direct base Models and all models that they  extend.
+            return models + models.flatMap { it.baseModels }
         }
 
     val directExtendingModels: List<Model>
-        get() = parentElement?.let { parentElement ->
+        get() {
+            // The Model must be on an Element on a Node.
+            val parentElement = parentElement ?: return emptyList()
+            val node = parentElement.parentNode ?: return emptyList()
+
             // Get all models directly extending this Model.
-            parentElement.parentNode?.elements
+            return node.elements
                 // Look only on that and next Elements.
                 // Models can't be extended by Models on Elements with lower index.
-                ?.filter { it.index > parentElement.index }
+                .filter { it.index >= parentElement.index }
                 // Get a list of all models.
-                ?.flatMap { it.models }
+                .flatMap { it.models }
                 // Remove duplicates.
-                ?.distinctBy { it.modelId }
+                .distinct()
                 // Get all models directly extending this Model.
-                ?.filter { it.extendsDirectly(model = this) }
-                ?: emptyList()
-        } ?: emptyList()
+                .filter { it.extendsDirectly(model = this) }
+        }
 
     val extendingModels: List<Model>
-        get() = directExtendingModels.let { models ->
-            models + models.flatMap { it.extendingModels }
+        get() {
+            val models = directExtendingModels
+            return models + models.flatMap { it.extendingModels }
         }
 
     val relatedModels: List<Model>
@@ -497,19 +503,18 @@ class Model internal constructor(
                         result.add(currentModel)
                     }
                     // Models that directly extend currentModel
-                    val directlyExtendedModels = models.filter { it.extendsDirectly(currentModel) }
-                    queue.addAll(directlyExtendedModels)
+                    val directlyExtendedModels = models
+                        .filter { it.extendsDirectly(model = currentModel) }
+                    queue.addAll(elements = directlyExtendedModels)
                     // Models that are directly extended by currentModel
-                    val extendedByModels = models.filter { currentModel.extendsDirectly(it) }
-                    queue.addAll(extendedByModels)
+                    val extendedByModels = models
+                        .filter { currentModel.extendsDirectly(model = it) }
+                    queue.addAll(elements = extendedByModels)
                 }
             }
 
             return result.sortedWith(
-                compareBy(
-                    { it.parentElement!!.index },
-                    { it.modelId.id }
-                )
+                compareBy({ it.parentElement!!.index }, { it.modelId.id })
             )
         }
 
@@ -705,7 +710,7 @@ class Model internal constructor(
         val otherParentElement = model.parentElement ?: return false
         val node = parentElement.parentNode ?: return false
         val otherNode = otherParentElement.parentNode ?: return false
-        if (node.uuid == otherNode.uuid) return false
+        if (node !== otherNode) return false
         return baseModels.contains(model)
     }
 
@@ -734,7 +739,7 @@ class Model internal constructor(
         val otherParentElement = model.parentElement ?: return false
         val node = parentElement.parentNode ?: return false
         val otherNode = otherParentElement.parentNode ?: return false
-        if (node.uuid == otherNode.uuid) return false
+        if (node !== otherNode) return false
 
         // Ensure model does not extend itself or any other instance of the same model
         if (model.modelId == modelId) return false
@@ -837,17 +842,14 @@ class Model internal constructor(
                 // Light LC Server Model extends Light Lightness Server Model that cannot be on the
                 // same Element. Search for a Model on an Element with lower index
                 LIGHT_LC_SERVER_MODEL_ID -> {
-                    val lightLightnessServerModelId = SigModelId(
-                        modelIdentifier = LIGHT_LIGHTNESS_SERVER_MODEL_ID
-                    )
                     val lightLightnessServer = node.elements
                         .filter { it.index < parentElement.index }
-                        .sortedWith { first, second -> first.index.compareTo(second.index) }
+                        .sortedByDescending { it.index }
                         .firstOrNull {
-                            it.contains(sigModelId = lightLightnessServerModelId)
-                        }?.model(modelId = lightLightnessServerModelId)
+                            it.contains(modelId = LIGHT_LIGHTNESS_SERVER_MODEL_ID.toUInt())
+                        }?.model(modelId = LIGHT_LIGHTNESS_SERVER_MODEL_ID.toUInt())
 
-                    model == lightLightnessServer
+                    model === lightLightnessServer
                 }
 
                 else -> false
