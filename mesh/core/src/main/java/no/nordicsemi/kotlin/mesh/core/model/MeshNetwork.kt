@@ -86,7 +86,7 @@ data class MeshNetwork internal constructor(
     @SerialName("provisioners")
     internal var _provisioners: MutableList<Provisioner> = mutableListOf(),
     @SerialName("netKeys")
-    internal var _networkKeys: MutableList<NetworkKey> = mutableListOf(),
+    internal var _networkKeys: MutableList<NetworkKey> = mutableListOf(NetworkKey()),
     @SerialName("appKeys")
     internal var _applicationKeys: MutableList<ApplicationKey> = mutableListOf(),
     @SerialName("nodes")
