@@ -1,7 +1,6 @@
 package no.nordicsemi.kotlin.mesh.core.model
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestScope
 import no.nordicsemi.kotlin.mesh.core.MeshNetworkManager
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -11,21 +10,18 @@ class GroupTest {
     private val networkManager = MeshNetworkManager(
         storage = TestStorage(),
         secureProperties = TestPropertiesStorage(),
-        scope = TestScope()
+        ioDispatcher = kotlinx.coroutines.Dispatchers.IO
     )
-    private lateinit var meshNetwork: MeshNetwork
+    private var meshNetwork: MeshNetwork
+    private var jsonBytes = this.javaClass.classLoader.getResourceAsStream("cdb_json.json")?.readAllBytes()
 
-    private fun setup() {
-        val jsonBytes =
-            this.javaClass.classLoader.getResourceAsStream("cdb_json.json")?.readAllBytes()
-        runBlocking {
-            meshNetwork = networkManager.import(jsonBytes!!)
-        }
+    init {
+        runBlocking { meshNetwork = networkManager.import(jsonBytes!!) }
     }
 
     @Test
     fun isUsed() {
-        setup()
+        // setup()
         val parentGroup = meshNetwork._groups.find {
             it.address == GroupAddress(0xC023u)
         }!!
@@ -34,7 +30,7 @@ class GroupTest {
 
     @Test
     fun testIsDirectChildOf() {
-        setup()
+        // setup()
         val parentGroup = meshNetwork._groups.find {
             it.address == GroupAddress(0xC023u)
         }!!
@@ -46,7 +42,7 @@ class GroupTest {
 
     @Test
     fun testIsDirectParentOf() {
-        setup()
+        // setup()
         val parentGroup = meshNetwork._groups.find {
             it.address == GroupAddress(0xC023u)
         }!!
@@ -58,7 +54,7 @@ class GroupTest {
 
     @Test
     fun testIsChildOf() {
-        setup()
+        // setup()
         val parentGroup = meshNetwork._groups.find {
             it.address == GroupAddress(0xC023u)
         }!!
@@ -70,7 +66,7 @@ class GroupTest {
 
     @Test
     fun testIsParentOf() {
-        setup()
+        // setup()
         val parentGroup = meshNetwork._groups.find {
             it.address == GroupAddress(0xC023u)
         }!!
@@ -82,7 +78,7 @@ class GroupTest {
 
     @Test
     fun testSetAsChildOf() {
-        setup()
+        // setup()
         val parentGroup = meshNetwork._groups.find {
             it.address == GroupAddress(0xC023u)
         }!!
@@ -95,7 +91,7 @@ class GroupTest {
 
     @Test
     fun testSetAsParentOf() {
-        setup()
+        // setup()
         val parentGroup = meshNetwork._groups.find {
             it.address is VirtualAddress
         }!!
