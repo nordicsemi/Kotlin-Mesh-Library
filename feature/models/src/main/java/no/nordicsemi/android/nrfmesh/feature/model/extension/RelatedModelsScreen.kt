@@ -87,19 +87,15 @@ private fun LazyListScope.directExtendingModels(
     model: Model,
     directExtendingModels: List<Model>,
 ) {
-
     // Directs Extending Models section
     val directExtendingModelsOnTheSameElement =
-        directExtendingModels.filter { it.parentElement?.unicastAddress == model.parentElement?.unicastAddress }
+        directExtendingModels.filter { it.parentElement == model.parentElement }
     item { SectionTitle(title = stringResource(R.string.label_extending_models)) }
     if (directExtendingModelsOnTheSameElement.isNotEmpty()) {
         items(
             items = directExtendingModelsOnTheSameElement,
             key = { KeyIdGenerator.nextId() }) {
-            ElevatedCardItem(
-                imageVector = Icons.Outlined.Widgets,
-                title = it.name ?: it.name()
-            )
+            it.Row()
         }
     } else {
         item {
@@ -141,10 +137,7 @@ private fun LazyListScope.directExtendingModelsFromOtherElements(
             )
         }
         items(items = pair.second, key = { KeyIdGenerator.nextId() }) {
-            ElevatedCardItem(
-                imageVector = Icons.Outlined.Widgets,
-                title = it.name ?: it.name()
-            )
+            it.Row()
         }
     }
 }
@@ -155,7 +148,7 @@ private fun LazyListScope.otherRelatedModelsPerElement(
     directExtendingModels: List<Model>,
 ) {
     val relatedModels = model.relatedModels
-        .filter { directBaseModels.contains(it) && !directExtendingModels.contains(it) }
+        .filter { !directBaseModels.contains(it) && !directExtendingModels.contains(it) }
     val relatedModelsPerElement = relatedModels.groupedByElement()
     relatedModelsPerElement.forEach { pair ->
         item {
@@ -169,10 +162,7 @@ private fun LazyListScope.otherRelatedModelsPerElement(
             )
         }
         items(items = pair.second, key = { KeyIdGenerator.nextId() }) {
-            ElevatedCardItem(
-                imageVector = Icons.Outlined.Widgets,
-                title = it.name ?: it.name()
-            )
+            it.Row()
         }
     }
 }
