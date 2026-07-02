@@ -83,43 +83,6 @@ private fun LazyListScope.directBaseModels(directBaseModelsOnTheSameElement: Lis
         }
 }
 
-private fun LazyListScope.rootModel(
-    directBaseModelsOnTheSameElement: List<Model>,
-    directBaseModelsOnOtherElements: List<Model>,
-) {
-    if (directBaseModelsOnTheSameElement.isEmpty() && directBaseModelsOnOtherElements.isEmpty()) {
-        item {
-            ElevatedCardItem(
-                imageVector = Icons.Outlined.Info,
-                title = stringResource(R.string.label_root_model_rationale),
-            )
-        }
-    }
-}
-
-private fun LazyListScope.directBaseModelsOnOtherElements(
-    directBaseModelsOnOtherElements: List<Model>,
-) {
-    directBaseModelsOnOtherElements
-        .groupedByElement()
-        .forEach { pair ->
-            item {
-                SectionTitle(
-                    title = stringResource(
-                        R.string.label_base_models_from_other_elements,
-                        pair.first.name ?: stringResource(
-                            R.string.label_unknown_element_with_name,
-                            pair.first.index + 1
-                        )
-                    )
-                )
-            }
-            items(items = pair.second, key = { KeyIdGenerator.nextId() }) {
-                it.Row()
-            }
-        }
-}
-
 private fun LazyListScope.directExtendingModels(
     model: Model,
     directExtendingModels: List<Model>,
