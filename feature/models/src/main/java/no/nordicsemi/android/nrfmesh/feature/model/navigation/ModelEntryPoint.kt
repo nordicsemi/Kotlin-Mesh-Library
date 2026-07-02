@@ -46,15 +46,16 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
             is ModelState.Success -> {
                 ModelScreen(
                     snackbarHostState = appState.snackbarHostState,
-                    modelState = modelState,
                     messageState = uiState.messageState,
                     nodeIdentityStates = uiState.nodeIdentityStates,
-                    requestNodeIdentityStates = viewModel::requestNodeIdentityStates,
-                    onAddGroupClicked = { navigator.navigate(GroupsKey) },
-                    resetMessageState = viewModel::resetMessageState,
-                    navigateToGroups = { navigator.navigate(key = GroupsKey) },
+                    modelState = modelState,
                     send = viewModel::send,
-                    sendApplicationMessage = viewModel::sendApplicationMessage
+                    sendApplicationMessage = viewModel::sendApplicationMessage,
+                    requestNodeIdentityStates = viewModel::requestNodeIdentityStates,
+                    resetMessageState = viewModel::resetMessageState,
+                    onAddGroupClicked = { navigator.navigate(GroupsKey) },
+                    navigateToGroups = { navigator.navigate(GroupsKey) },
+                    onRelatedModelsClicked = { navigator.navigate(key = RelatedModelsKey(model = it)) }
                 )
                 var showNoNetworkDialog by remember { mutableStateOf(uiState.wasNetworkRemoved) }
                 if (showNoNetworkDialog) {
@@ -76,4 +77,5 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
             ModelState.Loading -> {}
         }
     }
+    relatedModelsEntry()
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import no.nordicsemi.android.feature.config.networkkeys.navigation.AddNetKeysKey
 import no.nordicsemi.android.feature.config.networkkeys.navigation.ConfigNetKeysKey
 import no.nordicsemi.android.nrfmesh.R
+import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.android.nrfmesh.core.navigation.GroupsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NavigationState
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
@@ -20,6 +21,7 @@ import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.Gr
 import no.nordicsemi.android.nrfmesh.feature.groups.group.navigation.GroupKey
 import no.nordicsemi.android.nrfmesh.feature.ivindex.navigation.IvIndexContentKey
 import no.nordicsemi.android.nrfmesh.feature.model.navigation.ModelKey
+import no.nordicsemi.android.nrfmesh.feature.model.navigation.RelatedModelsKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.key.navigation.NetworkKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.navigation.NetworkKeysContentKey
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.ElementKey
@@ -101,6 +103,14 @@ internal fun title(
             modelId.name ?: context.getString(R.string.label_unknown)
         } else network.element(elementAddress = address)?.name
             ?: context.getString(R.string.label_unknown)
+    }
+    is RelatedModelsKey -> {
+        val model = key.model
+        if(isCompactWidth){
+            model.name ?: model.name()
+        } else {
+            model.parentElement?.name ?: context.getString(R.string.label_unknown)
+        }
     }
 
     is GroupsKey -> context.getString(R.string.label_groups)
