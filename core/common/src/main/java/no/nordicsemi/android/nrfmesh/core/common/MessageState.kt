@@ -1,14 +1,14 @@
 package no.nordicsemi.android.nrfmesh.core.common
 
 import no.nordicsemi.kotlin.mesh.core.messages.BaseMeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 
 /**
  * Defines the message state of a mesh message.
  */
 sealed class MessageState(
     open val message: BaseMeshMessage? = null,
-    open val response: MeshResponse? = null,
+    open val response: MeshMessage? = null,
     open val error: Throwable? = null,
 ) {
 
@@ -39,7 +39,7 @@ data class Sending(override val message: BaseMeshMessage) : MessageState()
  */
 data class Completed(
     override val message: BaseMeshMessage,
-    override val response: MeshResponse? = null,
+    override val response: MeshMessage? = null,
 ) : MessageState(message = message, response = response)
 
 /**

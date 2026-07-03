@@ -26,7 +26,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigResponse
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeIdentityGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeIdentityStatus
@@ -181,7 +180,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
                     _uiState.value = _uiState.value.copy(
                         messageState = Completed(
                             message = message,
-                            response = response as? MeshResponse
+                            response = response //as? MeshResponse
                         )
                     )
                 } else {
