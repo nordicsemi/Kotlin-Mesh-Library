@@ -167,7 +167,6 @@ internal fun ModelScreen(
                     sendApplicationMessage = sendApplicationMessage
                 )
         }
-
         Spacer(modifier = Modifier.size(size = 8.dp))
     }
 

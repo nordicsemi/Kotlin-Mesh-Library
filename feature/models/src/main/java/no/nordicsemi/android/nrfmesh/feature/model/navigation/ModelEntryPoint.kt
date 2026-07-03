@@ -57,8 +57,8 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     modelState = modelState,
                     sendApplicationMessage = viewModel::sendApplicationMessage,
                     requestNodeIdentityStates = viewModel::requestNodeIdentityStates,
-                    resetMessageState = viewModel::resetMessageState,
                     onAddGroupClicked = { navigator.navigate(GroupsKey) },
+                    resetMessageState = viewModel::resetMessageState,
                     navigateToGroups = { navigator.navigate(GroupsKey) },
                     onRelatedModelsClicked = { navigator.navigate(key = RelatedModelsKey(model = it)) },
                     navigateToBindApplicationKeys = { model ->
@@ -68,7 +68,7 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                             )
                         }
                     },
-                    navigateToFirmwareInformation = { model, information ->
+                    navigateToFirmwareInformation = { title, model, information ->
                         navigator.navigate(
                             key = FirmwareInformationKey(
                                 title = title,
