@@ -77,5 +77,5 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
             ModelState.Loading -> {}
         }
     }
-    relatedModelsEntry()
+    relatedModelsEntry(navigator = navigator)
 }

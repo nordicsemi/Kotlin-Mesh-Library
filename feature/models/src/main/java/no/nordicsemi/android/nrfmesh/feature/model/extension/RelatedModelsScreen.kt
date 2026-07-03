@@ -25,7 +25,7 @@ import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 
 @Composable
-internal fun RelatedModelsScreen(model: Model) {
+internal fun RelatedModelsScreen(model: Model, onModelClicked: (Model) -> Unit) {
     val directBaseModels = model.directBaseModels
     val directExtendingModels = model.directExtendingModels
     val directBaseModelsOnTheSameElement = directBaseModels
@@ -35,24 +35,37 @@ internal fun RelatedModelsScreen(model: Model) {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         directBaseModels(
             directBaseModelsOnTheSameElement = directBaseModelsOnTheSameElement,
-            directBaseModelsOnOtherElements = directBaseModelsOnOtherElements
+            directBaseModelsOnOtherElements = directBaseModelsOnOtherElements,
+            onModelClicked = onModelClicked
         )
-        directExtendingModels(model = model, directExtendingModels = directExtendingModels)
+        directExtendingModels(
+            model = model,
+            directExtendingModels = directExtendingModels,
+            onModelClicked = onModelClicked
+        )
     }
 }
 
-private fun LazyListScope.directBaseModels(directBaseModelsOnTheSameElement: List<Model>, directBaseModelsOnOtherElements: List<Model>) {
+private fun LazyListScope.directBaseModels(
+    directBaseModelsOnTheSameElement: List<Model>,
+    directBaseModelsOnOtherElements: List<Model>,
+    onModelClicked: (Model) -> Unit,
+) {
     item { SectionTitle(title = stringResource(R.string.label_base_models)) }
     // Direct Base Models section.
     if (directBaseModelsOnTheSameElement.isNotEmpty()) {
-        items(items = directBaseModelsOnTheSameElement, key = { KeyIdGenerator.nextId() }) {
-            it.Row()
-        }
+        items(
+            items = directBaseModelsOnTheSameElement,
+            key = { KeyIdGenerator.nextId() },
+            itemContent = {
+                it.Row(onClick = onModelClicked)
+            }
+        )
     }
     if (directBaseModelsOnTheSameElement.isEmpty() && directBaseModelsOnOtherElements.isEmpty()) {
         item {
@@ -77,15 +90,20 @@ private fun LazyListScope.directBaseModels(directBaseModelsOnTheSameElement: Lis
                     )
                 )
             }
-            items(items = pair.second, key = { KeyIdGenerator.nextId() }) {
-                it.Row()
-            }
+            items(
+                items = pair.second,
+                key = { KeyIdGenerator.nextId() },
+                itemContent = {
+                    it.Row(onClick = onModelClicked)
+                }
+            )
         }
 }
 
 private fun LazyListScope.directExtendingModels(
     model: Model,
     directExtendingModels: List<Model>,
+    onModelClicked: (Model) -> Unit,
 ) {
     // Directs Extending Models section
     val directExtendingModelsOnTheSameElement =
@@ -94,9 +112,9 @@ private fun LazyListScope.directExtendingModels(
     if (directExtendingModelsOnTheSameElement.isNotEmpty()) {
         items(
             items = directExtendingModelsOnTheSameElement,
-            key = { KeyIdGenerator.nextId() }) {
-            it.Row()
-        }
+            key = { KeyIdGenerator.nextId() },
+            itemContent = { it.Row(onClick = onModelClicked) }
+        )
     } else {
         item {
             ElevatedCardItem(
@@ -108,19 +126,22 @@ private fun LazyListScope.directExtendingModels(
     // Direct Extending Models from other Elements.
     directExtendingModelsFromOtherElements(
         model = model,
-        directExtendingModels = directExtendingModels
+        directExtendingModels = directExtendingModels,
+        onModelClicked = onModelClicked
     )
     // Other related models per element.
     otherRelatedModelsPerElement(
         model = model,
         directBaseModels = model.directBaseModels,
-        directExtendingModels = directExtendingModels
+        directExtendingModels = directExtendingModels,
+        onModelClicked = onModelClicked
     )
 }
 
 private fun LazyListScope.directExtendingModelsFromOtherElements(
     model: Model,
     directExtendingModels: List<Model>,
+    onModelClicked: (Model) -> Unit,
 ) {
     val directExtendingModelsOnOtherElements =
         directExtendingModels.filter { it.parentElement != model.parentElement }
@@ -136,9 +157,10 @@ private fun LazyListScope.directExtendingModelsFromOtherElements(
                 )
             )
         }
-        items(items = pair.second, key = { KeyIdGenerator.nextId() }) {
-            it.Row()
-        }
+        items(
+            items = pair.second,
+            key = { KeyIdGenerator.nextId() },
+            itemContent = { it.Row(onClick = onModelClicked) })
     }
 }
 
@@ -146,6 +168,7 @@ private fun LazyListScope.otherRelatedModelsPerElement(
     model: Model,
     directBaseModels: List<Model>,
     directExtendingModels: List<Model>,
+    onModelClicked: (Model) -> Unit,
 ) {
     val relatedModels = model.relatedModels
         .filter { !directBaseModels.contains(it) && !directExtendingModels.contains(it) }
@@ -161,9 +184,11 @@ private fun LazyListScope.otherRelatedModelsPerElement(
                 )
             )
         }
-        items(items = pair.second, key = { KeyIdGenerator.nextId() }) {
-            it.Row()
-        }
+        items(
+            items = pair.second,
+            key = { KeyIdGenerator.nextId() },
+            itemContent = { it.Row(onClick = onModelClicked) }
+        )
     }
 }
 
@@ -183,7 +208,7 @@ private fun List<Model>.groupedByElement(): List<Pair<Element, List<Model>>> {
 }
 
 @Composable
-fun Model.Row(){
+fun Model.Row(onClick: ((Model) -> Unit)? = null) {
     ElevatedCardItem(
         imageVector = Icons.Outlined.Widgets,
         title = name ?: name(),
@@ -192,6 +217,10 @@ fun Model.Row(){
             is VendorModelId -> CompanyIdentifier.name(
                 id = (modelId as VendorModelId).companyIdentifier
             ) ?: stringResource(R.string.label_unknown_vendor)
-        }
+        },
+        // TODO should look in to navigating in to the element screen in large screen devices
+        //onClick = dropUnlessResumed {
+        //    onClick?.invoke(this)
+        //}
     )
 }
