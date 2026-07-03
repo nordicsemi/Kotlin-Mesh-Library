@@ -88,6 +88,7 @@ fun MeshTwoLineListItem(
                 .padding(vertical = 16.dp)
         ) {
             Text(
+                modifier = Modifier.padding(end = 16.dp),
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,

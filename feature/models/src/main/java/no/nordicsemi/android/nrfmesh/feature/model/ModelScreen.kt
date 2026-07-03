@@ -51,6 +51,7 @@ internal fun ModelScreen(
     resetMessageState: () -> Unit,
     onAddGroupClicked: () -> Unit,
     navigateToGroups: () -> Unit,
+    onRelatedModelsClicked: (Model) -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
     // to show up. This is a known issue and the workaround is to make the column focusable to
@@ -72,7 +73,7 @@ internal fun ModelScreen(
                 .padding(horizontal = 16.dp),
             title = stringResource(R.string.label_model)
         )
-        CommonInformation(model = model)
+        CommonInformation(model = model,  onRelatedModelsClicked = onRelatedModelsClicked)
         if (model.isConfigurationServer) {
             ConfigurationServer(
                 snackbarHostState = snackbarHostState,

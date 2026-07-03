@@ -23,19 +23,14 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.datastore:datastore-preferences-proto:1.2.1")
 
-    testImplementation(libs.junit4)
-    testImplementation(libs.kotlin.junit)
-    testImplementation(libs.androidx.test.ext)
-    testImplementation(libs.androidx.test.rules)
-
-    androidTestImplementation(libs.junit4)
-    androidTestImplementation(libs.kotlin.junit)
-    androidTestImplementation(libs.androidx.test.ext)
-    androidTestImplementation(libs.androidx.test.rules)
-
     implementation(project(":core:ui"))
     api(project(":core:common"))
     implementation(project(":mesh:core"))
     implementation(project(":mesh:bearer-pbgatt"))
     implementation(project(":mesh:bearer-gatt"))
+
+    testImplementation(libs.junit4)
+    testImplementation(libs.kotlin.junit)
+    testImplementation(libs.androidx.test.ext)
+    testImplementation(libs.androidx.test.rules)
 }

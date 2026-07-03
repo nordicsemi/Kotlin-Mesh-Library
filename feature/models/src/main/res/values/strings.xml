@@ -144,4 +144,16 @@
     <string name="label_invalid_vendor_op_code_range">Invalid Op Code. Valid range 0x00 – 0x3F</string>
     <string name="label_no_network">No Network</string>
     <string name="label_no_network_rationale">This network has been reset by a remote Node.</string>
+    <string name="label_base_models">Base Models</string>
+    <string name="label_extending_models">Extending Models</string>
+    <string name="label_related_models">Related Models</string>
+    <string name="label_root_model_rationale">This model is a root model.</string>
+    <string name="label_base_models_from_other_elements">Base Models on %1$s</string>
+    <string name="label_unknown_element_with_name">Unknown Element %1$s</string>
+    <string name="label_no_extending_models_rationale">This model is not extended by other Models</string>
+    <string name="label_extending_models_from_other_elements">Extending Models on %1$s</string>
+    <string name="label_related_models_on_element">Related Models on %1$s</string>
+    <string name="label_bluetooth_sig">Bluetooth SIG</string>
+    <string name="vendor_model">Vendor Specific</string>
+    <string name="label_unknown_vendor">Unknown vendor</string>
 </resources>

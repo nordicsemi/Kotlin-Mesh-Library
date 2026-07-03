@@ -12,16 +12,6 @@ dependencies {
     implementation(nordic.kotlin.data)
     implementation(libs.kotlinx.serialization.json)
 
-    testImplementation(libs.junit4)
-    testImplementation(libs.kotlin.junit)
-    testImplementation(libs.androidx.test.ext)
-    testImplementation(libs.androidx.test.rules)
-
-    androidTestImplementation(libs.junit4)
-    androidTestImplementation(libs.kotlin.junit)
-    androidTestImplementation(libs.androidx.test.ext)
-    androidTestImplementation(libs.androidx.test.rules)
-
     implementation(project(":core:common"))
     implementation(project(":core:data"))
     implementation(project(":core:ui"))
@@ -30,4 +20,9 @@ dependencies {
     implementation(project(":feature:config-application-keys"))
     implementation(project(":feature:groups"))
     implementation(project(":mesh:core"))
+
+    testImplementation(libs.junit4)
+    testImplementation(libs.kotlin.junit)
+    testImplementation(libs.androidx.test.ext)
+    testImplementation(libs.androidx.test.rules)
 }

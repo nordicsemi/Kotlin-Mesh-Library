@@ -27,7 +27,6 @@ import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.nodes.R
-import no.nordicsemi.android.nrfmesh.feature.nodes.node.ElementListData
 import no.nordicsemi.kotlin.mesh.core.model.Element
 import no.nordicsemi.kotlin.mesh.core.model.Location
 import no.nordicsemi.kotlin.mesh.core.model.Model
@@ -57,59 +56,6 @@ internal fun ElementScreen(
         )
         NameRow(
             name = element.name ?: stringResource(id = R.string.unknown),
-            onNameChanged = {
-                element.name = it
-                save()
-            }
-        )
-        Spacer(modifier = Modifier.size(size = 8.dp))
-        AddressRow(address = element.unicastAddress)
-        Spacer(modifier = Modifier.size(size = 8.dp))
-        LocationRow(location = element.location)
-        SectionTitle(
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .padding(horizontal = 16.dp),
-            title = stringResource(id = R.string.label_models)
-        )
-        element.models.forEachIndexed { index, model ->
-            ModelRow(
-                model = model,
-                isSelected = index == selectedIndex && highlightSelectedItem,
-                onModelClicked = {
-                    selectedIndex = index
-                    navigateToModel(it)
-                }
-            )
-            if (index < element.models.size - 1)
-                Spacer(modifier = Modifier.size(size = 8.dp))
-        }
-        Spacer(modifier = Modifier.size(size = 8.dp))
-    }
-}
-
-@Composable
-internal fun ElementScreen(
-    element: Element,
-    elementData: ElementListData,
-    highlightSelectedItem: Boolean,
-    navigateToModel: (Model) -> Unit,
-    save: () -> Unit,
-) {
-    var selectedIndex by rememberSaveable { mutableIntStateOf(-1) }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(state = rememberScrollState())
-    ) {
-        SectionTitle(
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .padding(horizontal = 16.dp),
-            title = stringResource(id = R.string.label_element)
-        )
-        NameRow(
-            name = elementData.name ?: stringResource(id = R.string.unknown),
             onNameChanged = {
                 element.name = it
                 save()

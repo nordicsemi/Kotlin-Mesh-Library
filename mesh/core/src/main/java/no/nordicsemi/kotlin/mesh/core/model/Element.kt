@@ -20,7 +20,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.health.HealthAttentionTimer
 import no.nordicsemi.kotlin.mesh.core.model.serialization.LocationAsStringSerializer
 import no.nordicsemi.kotlin.mesh.logger.Logger
 import java.nio.ByteOrder
-import kotlin.time.Duration
 
 /**
  * Element represents a mesh element that is defined as an addressable entity within a mesh node.
@@ -252,10 +251,17 @@ class Element(
     /**
      * Returns whether the Element contains a Bluetooth SIG defined Model with the given model ID.
      *
+     * @param modelId Model ID.
+     */
+    fun contains(modelId: UInt) = models.any { it.modelId.id == modelId }
+
+    /**
+     * Returns whether the Element contains a Bluetooth SIG defined Model with the given model ID.
+     *
      * @param sigModelId Bluetooth SIG defined Model ID.
      * @return true if the Element contains the Model, false otherwise.
      */
-    fun contains(sigModelId: SigModelId) = models.any { it.modelId == sigModelId }
+    fun contains(sigModelId: SigModelId) = contains(modelId = sigModelId.id)
 
     /**
      * Returns whether the Element contains a Vendor Model with the given model ID.
@@ -263,7 +269,7 @@ class Element(
      * @param vendorModelId Vendor Model ID.
      * @return true if the Element contains the Model, false otherwise.
      */
-    fun contains(vendorModelId: VendorModelId) = models.any { it.modelId == vendorModelId }
+    fun contains(vendorModelId: VendorModelId) = contains(modelId = vendorModelId.id)
 
     /**
      * Returns whether the Element contains the given model.

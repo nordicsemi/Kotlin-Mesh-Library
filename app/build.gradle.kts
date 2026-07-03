@@ -55,9 +55,4 @@ dependencies {
     testImplementation(libs.kotlin.junit)
     testImplementation(libs.androidx.test.ext)
     testImplementation(libs.androidx.test.rules)
-
-    androidTestImplementation(libs.junit4)
-    androidTestImplementation(libs.kotlin.junit)
-    androidTestImplementation(libs.androidx.test.ext)
-    androidTestImplementation(libs.androidx.test.rules)
 }

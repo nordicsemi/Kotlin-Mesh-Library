@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Badge
+import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.dropUnlessResumed
 import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.feature.models.R
@@ -22,11 +24,12 @@ import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 
 
 @Composable
-internal fun CommonInformation(model: Model) {
+internal fun CommonInformation(model: Model, onRelatedModelsClicked: (Model) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
         NameRow(name = model.name())
         ModelIdRow(modelId = model.modelId)
         Company(modelId = model.modelId)
+        RelatedModels(model = model, onRelatedModelsClicked = onRelatedModelsClicked)
     }
 }
 
@@ -53,6 +56,7 @@ private fun ModelIdRow(modelId: ModelId) {
                     upperCase = true
                 }
             )
+
             is VendorModelId -> modelId.modelIdentifier.toHexString(
                 format = HexFormat {
                     number.prefix = "0x"
@@ -74,5 +78,16 @@ private fun Company(modelId: ModelId) {
             is VendorModelId -> CompanyIdentifier.name(id = modelId.companyIdentifier)
                 ?: stringResource(id = R.string.label_unknown)
         }
+    )
+}
+
+@Composable
+private fun RelatedModels(model: Model, onRelatedModelsClicked: (Model) -> Unit) {
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageVector = Icons.Outlined.DeviceHub,
+        title = stringResource(id = R.string.label_related_models),
+        subtitle = "${model.relatedModels.size}",
+        onClick = dropUnlessResumed { onRelatedModelsClicked(model) }
     )
 }

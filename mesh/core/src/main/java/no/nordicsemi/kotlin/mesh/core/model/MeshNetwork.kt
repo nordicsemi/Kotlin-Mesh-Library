@@ -86,7 +86,7 @@ data class MeshNetwork internal constructor(
     @SerialName("provisioners")
     internal var _provisioners: MutableList<Provisioner> = mutableListOf(),
     @SerialName("netKeys")
-    internal var _networkKeys: MutableList<NetworkKey> = mutableListOf(),
+    internal var _networkKeys: MutableList<NetworkKey> = mutableListOf(NetworkKey()),
     @SerialName("appKeys")
     internal var _applicationKeys: MutableList<ApplicationKey> = mutableListOf(),
     @SerialName("nodes")
@@ -98,7 +98,7 @@ data class MeshNetwork internal constructor(
     @SerialName("networkExclusions")
     internal var _networkExclusions: MutableList<ExclusionList> = mutableListOf(),
     @SerialName("timestamp")
-    internal var _timestamp: Instant = Instant.fromEpochMilliseconds(System.currentTimeMillis())
+    internal var _timestamp: Instant = Instant.fromEpochMilliseconds(System.currentTimeMillis()),
 ) {
     var name: String
         get() = _name
@@ -968,6 +968,21 @@ data class MeshNetwork internal constructor(
     }
 
     /**
+     * Adds a given Scene with the given name to the mesh network for a given provisioner
+     *
+     * @param name        Name of the scene.
+     * @param provisioner Provisioner for whom the scene is being added.
+     * @throws [NoSceneNumberAvailable] If there is no scene number available for the provisioner.
+     * @throws [SceneAlreadyExists] If the scene already exists.
+     */
+    @Throws(NoSceneNumberAvailable::class, SceneAlreadyExists::class)
+    fun add(name: String, provisioner: Provisioner): Scene {
+        val nextSceneNumber =
+            nextAvailableScene(provisioner = provisioner) ?: throw NoSceneNumberAvailable()
+        return add(name = name, number = nextSceneNumber)
+    }
+
+    /**
      * Adds a given Scene with the given name and the scene number to the mesh network.
      *
      * @param name   Name of the scene.
@@ -988,21 +1003,6 @@ data class MeshNetwork internal constructor(
     }
 
     /**
-     * Adds a given Scene with the given name to the mesh network for a given provisioner
-     *
-     * @param name        Name of the scene.
-     * @param provisioner Provisioner for whom the scene is being added.
-     * @throws [NoSceneNumberAvailable] If there is no scene number available for the provisioner.
-     * @throws [SceneAlreadyExists] If the scene already exists.
-     */
-    @Throws(NoSceneNumberAvailable::class, SceneAlreadyExists::class)
-    fun add(name: String, provisioner: Provisioner): Scene {
-        val nextSceneNumber =
-            nextAvailableScene(provisioner = provisioner) ?: throw NoSceneNumberAvailable()
-        return add(name = name, number = nextSceneNumber)
-    }
-
-    /**
      * Adds a given [Scene] to the list of scenes in the mesh network.
      *
      * @param scene Scene to be added.
@@ -1012,7 +1012,6 @@ data class MeshNetwork internal constructor(
     @Throws(DoesNotBelongToNetwork::class, SceneAlreadyExists::class)
     internal fun add(scene: Scene) {
         require(scene(number = scene.number) == null) { throw SceneAlreadyExists() }
-        require(scene.network?.uuid == uuid) { throw DoesNotBelongToNetwork() }
         _scenes.add(scene.also { it.network = this }).also { updateTimestamp() }
     }
 
@@ -1065,9 +1064,7 @@ data class MeshNetwork internal constructor(
      */
     fun isAddressAvailable(address: UnicastAddress, elementCount: Int) =
         isAddressRangeAvailable(
-            range = UnicastRange(
-                address = address, elementsCount = elementCount
-            )
+            range = UnicastRange(address = address, elementsCount = elementCount)
         )
 
     /**
@@ -1078,8 +1075,13 @@ data class MeshNetwork internal constructor(
      * @param node            Node
      * @return true if the address is assignable to the given `node or false otherwise.
      */
-    fun isAddressAvailable(address: UnicastAddress, node: Node) =
-        isAddressAvailable(address = address, elementCount = node.elementsCount)
+    fun isAddressAvailable(address: UnicastAddress, node: Node): Boolean {
+        val range = UnicastRange(address = address, elementsCount = node.elements.size)
+        val otherNodes = _nodes.filter { it != node }
+        return otherNodes.none {
+            it.containsElementsWithAddress(range)
+        } && !_networkExclusions.contains(range, ivIndex)
+    }
 
     /**
      * Returns the next available unicast address from the provisioner's range that can be assigned
