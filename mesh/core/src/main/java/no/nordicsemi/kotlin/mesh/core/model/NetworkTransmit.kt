@@ -55,8 +55,8 @@ data class NetworkTransmit internal constructor(val count: Int, val interval: In
     )
 
     companion object {
-        const val MIN_COUNT = 1
-        const val MAX_COUNT = 8
+        const val MIN_COUNT = 0
+        const val MAX_COUNT = 7
         val COUNT_RANGE = MIN_COUNT..MAX_COUNT
         const val MIN_INTERVAL = 10
         const val MAX_INTERVAL = 320
