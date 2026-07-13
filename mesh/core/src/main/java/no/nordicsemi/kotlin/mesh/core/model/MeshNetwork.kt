@@ -234,6 +234,13 @@ data class MeshNetwork internal constructor(
         _name = name
     )
 
+    /**
+     * Convenience constructor to create a network.
+     *
+     * @param name The name of the network
+     * @param uuid The Uuid of the network
+     * @param networkKeys The list of network keys that includes information about network keys.
+     */
     internal constructor(
         name: String,
         uuid: Uuid = Uuid.random(),
