@@ -205,7 +205,7 @@ class NetworkWizardViewModel @Inject constructor(
     internal fun onContinuePressed() {
         viewModelScope.launch {
             val configuration = _uiState.value.configuration
-            repository.createNewMeshNetwork(configuration = configuration)
+            val _ = repository.createNewMeshNetwork(configuration = configuration)
             repository.save()
             resetWizardState()
         }
