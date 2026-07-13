@@ -35,7 +35,10 @@ class MeshNetworkTest {
 
     @Test
     fun testNextAvailableUnicastAddressEmptyNetwork() {
-        val meshNetwork = MeshNetwork(name = "Test Network")
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        )
         val provisioner = Provisioner(uuid = Uuid.random()).apply {
             this.network = meshNetwork
             this.name = "Test Provisioner"
@@ -54,7 +57,10 @@ class MeshNetworkTest {
 
     @Test
     fun testNextAvailableUnicastAddressBasicNetwork() {
-        val meshNetwork = MeshNetwork(name = "Test Network").apply {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
             add(node = Node(name = "Node 0", address = 1, elements = 9))
             add(node = Node(name = "Node 1", address = 10, elements = 9))
             add(node = Node(name = "Node 2", address = 20, elements = 9))
@@ -76,12 +82,15 @@ class MeshNetworkTest {
 
     @Test
     fun testNextAvailableUnicastAddressWithOffset() {
-        val meshNetwork = MeshNetwork(name = "Test Network").apply {
-             add(node = Node(name = "Node 0", address = 1, elements = 9))
-             add(node = Node(name = "Node 1", address = 10, elements = 9))
-             add(node = Node(name = "Node 2", address = 20, elements = 9))
-             add(node = Node(name = "Node 3", address = 30, elements = 9))
-             add(node = Node(name = "Node 4", address = 115, elements = 2))
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
+            add(node = Node(name = "Node 0", address = 1, elements = 9))
+            add(node = Node(name = "Node 1", address = 10, elements = 9))
+            add(node = Node(name = "Node 2", address = 20, elements = 9))
+            add(node = Node(name = "Node 3", address = 30, elements = 9))
+            add(node = Node(name = "Node 4", address = 115, elements = 2))
         }
 
         val provisioner = Provisioner(
@@ -111,7 +120,10 @@ class MeshNetworkTest {
     @OptIn(ExperimentalTime::class)
     @Test
     fun testNextAvailableUnicastAddressComplexNetwork() {
-        val meshNetwork = MeshNetwork(name = "Test Network").apply {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
             add(node = Node(name = "Node 0", address = 1, elements = 9))
             add(node = Node(name = "Node 1", address = 10, elements = 9))
             add(node = Node(name = "Node 2", address = 20, elements = 9))
@@ -176,7 +188,10 @@ class MeshNetworkTest {
 
     @Test
     fun testNextAvailableUnicastAddressAdvancedNetwork() {
-        val meshNetwork = MeshNetwork(name = "Test Network").apply {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
             add(node = Node(name = "Node 0", address = 1, elements = 10))
             add(node = Node(name = "Node 1", address = 12, elements = 18))
             add(node = Node(name = "Node 2", address = 30, elements = 11))
@@ -203,7 +218,10 @@ class MeshNetworkTest {
 
     @Test
     fun testNextAvailableUnicastAddressOne() {
-        val meshNetwork = MeshNetwork(name = "Test Network").apply {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
             add(node = Node(name = "Node 0", address = 1, elements = 10))
             add(node = Node(name = "Node 1", address = 12, elements = 18))
             add(node = Node(name = "Node 2", address = 30, elements = 11))
@@ -229,13 +247,16 @@ class MeshNetworkTest {
 
     @Test
     fun testNextAvailableUnicastAddressNone() {
-        val meshNetwork = MeshNetwork(name = "Test Network").apply {
-             add(node = Node(name = "Node 0", address = 1, elements = 10))
-             add(node = Node(name = "Node 1", address = 12, elements = 18))
-             add(node = Node(name = "Node 2", address = 30, elements = 11))
-             add(node = Node(name = "Node 3", address = 55, elements = 10))
-             add(node = Node(name = "Node 4", address = 65, elements = 5))
-             add(node = Node(name = "Node 5", address = 73, elements = 5))
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
+            add(node = Node(name = "Node 0", address = 1, elements = 10))
+            add(node = Node(name = "Node 1", address = 12, elements = 18))
+            add(node = Node(name = "Node 2", address = 30, elements = 11))
+            add(node = Node(name = "Node 3", address = 55, elements = 10))
+            add(node = Node(name = "Node 4", address = 65, elements = 5))
+            add(node = Node(name = "Node 5", address = 73, elements = 5))
         }
 
         val provisioner = Provisioner(

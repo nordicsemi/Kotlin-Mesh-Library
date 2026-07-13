@@ -86,7 +86,7 @@ data class MeshNetwork internal constructor(
     @SerialName("provisioners")
     internal var _provisioners: MutableList<Provisioner> = mutableListOf(),
     @SerialName("netKeys")
-    internal var _networkKeys: MutableList<NetworkKey> = mutableListOf(NetworkKey()),
+    internal var _networkKeys: MutableList<NetworkKey> = mutableListOf(),
     @SerialName("appKeys")
     internal var _applicationKeys: MutableList<ApplicationKey> = mutableListOf(),
     @SerialName("nodes")
@@ -232,6 +232,16 @@ data class MeshNetwork internal constructor(
     internal constructor(name: String, uuid: Uuid = Uuid.random()) : this(
         uuid = uuid,
         _name = name
+    )
+
+    internal constructor(
+        name: String,
+        uuid: Uuid = Uuid.random(),
+        networkKeys: MutableList<NetworkKey>,
+    ) : this(
+        uuid = uuid,
+        _name = name,
+        _networkKeys = networkKeys
     )
 
     /**
