@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
@@ -55,7 +54,6 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     messageState = uiState.messageState,
                     nodeIdentityStates = uiState.nodeIdentityStates,
                     modelState = modelState,
-                    sendApplicationMessage = viewModel::sendApplicationMessage,
                     requestNodeIdentityStates = viewModel::requestNodeIdentityStates,
                     onAddGroupClicked = { navigator.navigate(GroupsKey) },
                     resetMessageState = viewModel::resetMessageState,
