@@ -139,7 +139,8 @@ internal fun FirmwareUpdateScreen(
                             selectedKey = uiState.selectedKey,
                             onApplicationKeyClicked = viewModel::onApplicationKeyClicked,
                             onBindAppKeysClicked = onBindAppKeysClicked,
-                            phase = uiState.phase,
+                            firmwareDistributionStatus = uiState.distributionStatus,
+                            capabilitiesStatus = uiState.capabilitiesStatus,
                             send = viewModel::send
                         )
                     }
@@ -149,15 +150,6 @@ internal fun FirmwareUpdateScreen(
             }
         }
     }
-}
-
-@Composable
-fun FirmwareUpdateOptions.Content() {
-    // when (this) {
-    //     FirmwareUpdateOptions.SMP -> SmpContent(onGattProxyClicked = onGattProxyClicked)
-    //     FirmwareUpdateOptions.BLOB -> BlobContent()
-    //     FirmwareUpdateOptions.HTTPS -> HttpsContent()
-    // }
 }
 
 @Composable

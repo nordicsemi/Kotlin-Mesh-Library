@@ -22,7 +22,8 @@ import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesGet
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionStatus
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
@@ -155,16 +156,24 @@ internal class SmpViewModel @Inject internal constructor(
                             )
                         }
 
-                        if (_uiState.value.phase == null) {
+                        if (_uiState.value.distributionStatus == null) {
                             repository.proxyFilter.proxy
                                 ?.model(modelId = firmwareDistributionServer)
                                 ?.let {
                                     if (it.boundApplicationKeys.isNotEmpty()) {
-                                        val status = send(
+                                        println("AAA App keys not empty")
+                                        val distributionStatus = send(
                                             model = it,
                                             message = FirmwareDistributionGet()
                                         ) as? FirmwareDistributionStatus
-                                        _uiState.update { state -> state.copy(phase = status?.phase) }
+                                        //_uiState.update { state -> state.copy(distributionStatus = distributionStatus) }
+                                        println("AAA Requesting Firmware Capabilities Status")
+                                        val capabilitiesStatus = send(
+                                            model = it,
+                                            message = FirmwareDistributionCapabilitiesGet()
+                                        ) as? FirmwareDistributionCapabilitiesStatus
+                                        _uiState.update { state -> state.copy(capabilitiesStatus = capabilitiesStatus, distributionStatus = distributionStatus) }
+                                        println("AAA Firmware Capabilities Status Received: $capabilitiesStatus")
                                     }
                                 }
                         }
@@ -207,6 +216,7 @@ internal data class SmpScreenUiState(
     val node: Node? = null,
     val selectedKey: ApplicationKey? = null,
     val isProxyReady: Boolean? = null,
-    val phase: FirmwareDistributionPhase? = null,
+    val distributionStatus: FirmwareDistributionStatus? = null,
+    val capabilitiesStatus: FirmwareDistributionCapabilitiesStatus? = null,
     val isBonded: Boolean? = null,
 )

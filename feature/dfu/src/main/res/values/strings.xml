@@ -38,5 +38,11 @@
     <string name="label_phase">Phase</string>
     <string name="label_no_distribution_server_model">Node does not have a firmware distribution server model</string>
     <string name="label_no_app_keys_bound">No applicationkeys bound</string>
+    <string name="label_capabilities">Capablities</string>
+    <string name="label_max_receivers_list_size">Max Receiver List Size</string>
+    <string name="label_available_image_size">Available Image Sizes</string>
+    <string name="label_max_firmware_image_size">Max Firmware Image Size</string>
+    <string name="label_max_upload_space">Max Upload Space</string>
+    <string name="label_remaining_upload_space">Remaining Upload Space</string>
     ">
 </resources>
