@@ -58,7 +58,6 @@ internal class NodeViewModel @AssistedInject internal constructor(
     }
 
     override fun onCleared() {
-        super.onCleared()
         messenger?.clear()
     }
 
