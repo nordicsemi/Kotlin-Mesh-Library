@@ -18,6 +18,8 @@ class FirmwareDistributionFirmwareGetByIndex(val imageIndex: UShort) : Acknowled
     override val responseOpCode: UInt = FirmwareDistributionFirmwareStatus.opCode
     override val parameters = imageIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
+    override fun toString() = "FirmwareDistributionFirmwareGetByIndex(imageIndex: $imageIndex)"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8324u
 
