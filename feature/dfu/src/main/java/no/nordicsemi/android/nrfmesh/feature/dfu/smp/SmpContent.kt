@@ -41,6 +41,8 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesStatus
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionStatus
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
@@ -60,7 +62,8 @@ internal fun SmpContent(
     selectedKey: ApplicationKey?,
     onApplicationKeyClicked: (ApplicationKey) -> Unit,
     onBindAppKeysClicked: (Model) -> Unit,
-    phase: FirmwareDistributionPhase?,
+    firmwareDistributionStatus: FirmwareDistributionStatus?,
+    capabilitiesStatus: FirmwareDistributionCapabilitiesStatus?,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
     Text(
@@ -95,8 +98,15 @@ internal fun SmpContent(
             )
             DistributorStatus(
                 connectionState = connectionState,
-                phase = phase
+                phase = firmwareDistributionStatus?.phase
             )
+            if (selectedKey != null && firmwareDistributionStatus?.phase == FirmwareDistributionPhase.IDLE) {
+                CapabilitiesContent(
+                    capabilitiesStatus = capabilitiesStatus,
+                    model = node?.model(modelId = firmwareDistributionServer) ?: return,
+                    send = send
+                )
+            }
         }
     }
 }
@@ -406,25 +416,24 @@ private fun BoundApplicationKeys(
             buttonIcon = Icons.Outlined.Link,
         )
     }
-    node?.model(modelId = firmwareDistributionServer)?.boundApplicationKeys
+    node?.model(modelId = firmwareDistributionServer)
+        ?.boundApplicationKeys
         ?.takeIf { it.isNotEmpty() }
-        ?.let {
-            it.forEach { key ->
-                key(key.index.toInt() + 1) {
-                    key.Row(
-                        onClick = { onApplicationKeyClicked(key) },
-                        titleAction = {
-                            if (selectedKey?.index == key.index) {
-                                Icon(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    imageVector = Icons.Outlined.CheckCircle,
-                                    tint = Color.Green,
-                                    contentDescription = null
-                                )
-                            }
+        ?.forEach { key ->
+            key(key.index.toInt() + 1) {
+                key.Row(
+                    onClick = { onApplicationKeyClicked(key) },
+                    titleAction = {
+                        if (selectedKey?.index == key.index) {
+                            Icon(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                imageVector = Icons.Outlined.CheckCircle,
+                                tint = Color.Green,
+                                contentDescription = null
+                            )
                         }
-                    )
-                }
+                    }
+                )
             }
         }
         ?: run {
@@ -451,7 +460,7 @@ private fun BoundApplicationKeys(
 @Composable
 private fun DistributorStatus(
     connectionState: NetworkConnectionState,
-    phase: FirmwareDistributionPhase?
+    phase: FirmwareDistributionPhase?,
 ) {
     SectionTitle(title = stringResource(R.string.label_distributor_status))
     ElevatedCardItem(

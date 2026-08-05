@@ -9,17 +9,12 @@ import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Checklist
-import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.PlaylistAddCheckCircle
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Schema
-import androidx.compose.material.icons.outlined.SdCard
-import androidx.compose.material.icons.outlined.SdStorage
-import androidx.compose.material.icons.outlined.SecurityUpdate
 import androidx.compose.material.icons.outlined.SpaceDashboard
 import androidx.compose.material.icons.outlined.SyncAlt
 import androidx.compose.material.icons.outlined.Timelapse
@@ -42,9 +37,15 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.common.name
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
+import no.nordicsemi.android.nrfmesh.core.ui.MaxFirmwareImageSize
+import no.nordicsemi.android.nrfmesh.core.ui.MaxFirmwareImagesListSize
+import no.nordicsemi.android.nrfmesh.core.ui.MaxReceiversListSize
+import no.nordicsemi.android.nrfmesh.core.ui.MaxUploadSpace
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
+import no.nordicsemi.android.nrfmesh.core.ui.RemainingUploadSpace
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.core.ui.SupportedUriSchemes
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
@@ -67,7 +68,6 @@ import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.Model
-import no.nordicsemi.kotlin.mesh.core.model.UriScheme
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 
 @Composable
@@ -378,13 +378,30 @@ private fun Capabilities(
             isOnClickActionInProgress = shouldShowProgressIcon
         )
     }
-    MaxReceiversListSize(receiversSize = maxReceiversCount)
-    MaxFirmwareImagesListSize(imageListSize = maxFirmwareImagesListSize)
-    MaxFirmwareImageSize(firmwareImageSize = maxFirmwareImageSize)
-    MaxUploadSpace(uploadSpace = maxUploadSpace)
-    RemainingUploadSpace(remainingUploadSpace = remainingUploadSpace)
-    SupportedUriSchemes(uriSchemes = supportedUriSchemes)
-
+    MaxReceiversListSize(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        receiversSize = maxReceiversCount
+    )
+    MaxFirmwareImagesListSize(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageListSize = maxFirmwareImagesListSize
+    )
+    MaxFirmwareImageSize(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        firmwareImageSize = maxFirmwareImageSize
+    )
+    MaxUploadSpace(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        uploadSpace = maxUploadSpace
+    )
+    RemainingUploadSpace(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        remainingUploadSpace = remainingUploadSpace
+    )
+    SupportedUriSchemes(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        uriSchemes = supportedUriSchemes
+    )
 
     error?.let {
         MeshMessageStatusDialog(
@@ -393,77 +410,6 @@ private fun Capabilities(
             onDismissRequest = { error = null },
         )
     }
-}
-
-@Composable
-private fun MaxReceiversListSize(receiversSize: Int?) {
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Download,
-        title = stringResource(R.string.label_max_receivers_list_size),
-        subtitle = receiversSize?.toString() ?: stringResource(R.string.label_unknown)
-    )
-}
-
-@Composable
-private fun MaxFirmwareImagesListSize(imageListSize: Int?) {
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.SecurityUpdate,
-        title = stringResource(R.string.label_max_firmware_images_list_size),
-        subtitle = imageListSize?.toString() ?: stringResource(R.string.label_unknown)
-    )
-}
-
-@Composable
-private fun MaxFirmwareImageSize(firmwareImageSize: Int?) {
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.SecurityUpdate,
-        title = stringResource(R.string.label_max_firmware_image_size),
-        subtitle = firmwareImageSize
-            ?.let { stringResource(R.string.label_value_in_bytes, it) }
-            ?: stringResource(R.string.label_unknown)
-    )
-}
-
-@Composable
-private fun MaxUploadSpace(uploadSpace: Int?) {
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.SdCard,
-        title = stringResource(R.string.label_max_upload_space),
-        subtitle = uploadSpace
-            ?.let { stringResource(R.string.label_value_in_bytes, it) }
-            ?: stringResource(R.string.label_unknown)
-    )
-}
-
-@Composable
-private fun RemainingUploadSpace(remainingUploadSpace: Int?) {
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.SdStorage,
-        title = stringResource(R.string.label_remaining_upload_space),
-        subtitle = remainingUploadSpace
-            ?.let { stringResource(R.string.label_value_in_bytes, it) }
-            ?: stringResource(R.string.label_unknown)
-    )
-}
-
-@Composable
-private fun SupportedUriSchemes(uriSchemes: List<UriScheme>?) {
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Schema,
-        title = stringResource(R.string.label_supported_uri_schemes),
-        subtitle = uriSchemes
-            ?.let {
-                it.takeIf { schemes -> schemes.isNotEmpty() }
-                    ?.joinToString(separator = ", ")
-                    ?: stringResource(R.string.label_none)
-            } ?: stringResource(R.string.label_unknown)
-    )
 }
 
 @Composable
