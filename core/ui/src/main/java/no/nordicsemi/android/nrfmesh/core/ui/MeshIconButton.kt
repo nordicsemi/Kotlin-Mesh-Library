@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
  * @param modifier                  Modifier to be used for the button.
  * @param isOnClickActionInProgress Boolean flag that will indicate if the action is in progress and
  *                                  this will show a progress indicator in front of the button text.
- * @param buttonIcon                ImageVector to be shown int he button icon.
+ * @param buttonIcon                ImageVector to be shown in the button icon.
  * @param buttonIconTint            Color to be used as tint for the button icon.
  * @param onClick                   Action to be performed on button click.
  * @param enabled                   Flag to enable or disable the button.
