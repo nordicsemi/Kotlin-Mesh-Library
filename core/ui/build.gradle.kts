@@ -12,13 +12,11 @@ dependencies {
     api(libs.androidx.compose.material.icons.extended)
     implementation(nordic.logger)
     implementation(nordic.log.timber)
-    implementation("androidx.compose.material3:material3:1.4.0")
+    api("androidx.compose.material3:material3:1.5.0-alpha25")
 
     implementation(project(":core:common"))
     implementation(project(":core:navigation"))
     implementation(project(":mesh:core"))
-
-
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlin.junit)
