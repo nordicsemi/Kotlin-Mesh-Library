@@ -21,6 +21,7 @@ class ConfigVendorModelAppGet(
     override val modelIdentifier: UShort = modelId.modelIdentifier
     override val parameters: ByteArray
         get() = elementAddress.address.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                modelId.companyIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
                 modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     override fun toString() = "ConfigVendorModelAppGet(elementAddress: $elementAddress, " +

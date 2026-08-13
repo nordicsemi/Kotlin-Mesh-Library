@@ -91,8 +91,9 @@ internal class ProvisioningData {
                 KeyDistribution -> networkKey.oldKey!!
                 else -> networkKey.key
             }
-            val data = key + networkKey.index.toByteArray() + ivIndex.index.toByteArray() +
-                    flags.rawValue.toByteArray() + unicastAddress.address.toByteArray()
+            val data = key + networkKey.index.toByteArray() +
+                    flags.rawValue.toByteArray() + ivIndex.index.toByteArray() +
+                    unicastAddress.address.toByteArray()
             return Crypto.encrypt(data = data, key = keys.first, nonce = keys.second, micSize = 8)
         }
 
