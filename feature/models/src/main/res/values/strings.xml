@@ -197,4 +197,5 @@
     <string name="label_sensor_information">Sensor Information</string>
     <string name="label_error_bind_application_key">Please bind an application key first.</string>
     <string name="label_application_keys">Application Keys</string>
+    <string name="label_le_pairing">LE Pairing</string>
 </resources>

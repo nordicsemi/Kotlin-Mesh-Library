@@ -30,14 +30,16 @@ fun MaxReceiversListSize(
 @Composable
 fun MaxFirmwareImagesListSize(
     modifier: Modifier = Modifier,
+    title: String = stringResource(R.string.label_max_firmware_images_list_size),
     imageListSize: Int?,
+    subtitle: String = imageListSize?.toString() ?: stringResource(R.string.label_unknown),
     titleAction: @Composable () -> Unit = {},
 ) {
     ElevatedCardItem(
         modifier = modifier,
         imageVector = Icons.Outlined.SecurityUpdate,
-        title = stringResource(R.string.label_max_firmware_images_list_size),
-        subtitle = imageListSize?.toString() ?: stringResource(R.string.label_unknown),
+        title = title,
+        subtitle = subtitle,
         titleAction = titleAction
     )
 }

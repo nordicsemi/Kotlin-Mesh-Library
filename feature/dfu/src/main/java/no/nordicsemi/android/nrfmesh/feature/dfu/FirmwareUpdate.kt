@@ -1,29 +1,30 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -31,18 +32,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
+import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.ui.view.NordicAppBar
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
-import no.nordicsemi.android.nrfmesh.feature.dfu.smp.SmpContent
-import no.nordicsemi.android.nrfmesh.feature.dfu.smp.SmpViewModel
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page0
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page1
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 
@@ -54,8 +56,10 @@ internal fun FirmwareUpdateScreen(
     onBindAppKeysClicked: (Model) -> Unit,
     onBackClick: () -> Unit,
 ) {
-    var option by rememberSaveable { mutableStateOf(FirmwareUpdateOptions.SMP) }
+    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val pagerState = rememberPagerState(pageCount = { 4 })
+    var enableNext by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -64,108 +68,109 @@ internal fun FirmwareUpdateScreen(
                 showBackButton = true,
                 backButtonIcon = Icons.Outlined.Close,
                 onNavigationButtonClick = onBackClick,
-                actions = {
-
-                }
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) {
-        Row(
+        HorizontalPager(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues = it)
-                .background(
-                    color = if (!isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant
-                    else MaterialTheme.colorScheme.background
-                ),
-            horizontalArrangement = Arrangement.Center
-        ) {
+                .padding(paddingValues = it),
+            state = pagerState,
+            userScrollEnabled = false
+        ) { page ->
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(fraction = if (!isCompactWidth()) 0.5f else 1f)
-                    .padding(horizontal = 16.dp)
-                    .fillMaxHeight()
-                    .verticalScroll(state = rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                SingleChoiceSegmentedButtonRow(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
+                        .fillMaxWidth(fraction = if (!isCompactWidth()) 0.5f else 1f)
+                        .fillMaxHeight()
+                        .padding(horizontal = 16.dp)
+                        .verticalScroll(state = rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                 ) {
-                    FirmwareUpdateOptions.entries.forEachIndexed { index, entry ->
-                        SegmentedButton(
-                            modifier = Modifier.defaultMinSize(minWidth = 60.dp),
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = FirmwareUpdateOptions.entries.size
-                            ),
-                            onClick = { option = entry },
-                            selected = entry == option,
-                            icon = {
-                                SegmentedButtonDefaults.Icon(active = entry == option) {
-                                    Icon(
-                                        imageVector = entry.icon(),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
-                                    )
+                    when (page) {
+                        0 -> {
+                            Page0(
+                                onGattProxyClicked = onGattProxyClicked,
+                                onBindAppKeysClicked = onBindAppKeysClicked,
+                                enableNextStage = {
+                                    enableNext = true
                                 }
-                            },
-                            label = {
-                                Text(
-                                    text = entry.description(),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                            )
+                        }
+
+                        1 -> Page1(
+                            goToNext = dropUnlessResumed {
+                                scope.launch {
+                                    pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
+                                }
                             }
                         )
+
+                        2 -> {
+
+                        }
+
+                        3 -> {
+
+                        }
                     }
-                }
-                when (option) {
-                    FirmwareUpdateOptions.SMP -> {
-                        val viewModel = hiltViewModel<SmpViewModel>()
-                        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                        SmpContent(
-                            snackbarHostState = snackbarHostState,
-                            connectionState = uiState.proxyConnectionState.connectionState,
-                            node = uiState.node,
-                            name = uiState.name,
-                            unicastAddress = uiState.unicastAddress,
-                            isSmpServiceSupported = uiState.isSmpServiceSupported,
-                            isDistributorServerModelSupported = uiState.isDistributorServerModelSupported,
-                            isLePairingSupported = uiState.isLePairingSupported,
-                            onGattProxyClicked = onGattProxyClicked,
-                            selectedKey = uiState.selectedKey,
-                            onApplicationKeyClicked = viewModel::onApplicationKeyClicked,
-                            onBindAppKeysClicked = onBindAppKeysClicked,
-                            firmwareDistributionStatus = uiState.distributionStatus,
-                            capabilitiesStatus = uiState.capabilitiesStatus,
-                            send = viewModel::send
-                        )
+                    AnimatedVisibility(visible = enableNext) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(space = 32.dp),
+                        ) {
+                            OutlinedButton(
+                                modifier = Modifier
+                                    .widthIn(min = 80.dp)
+                                    .weight(1f),
+                                onClick = dropUnlessResumed {
+                                    scope.launch {
+                                        pagerState.requestScrollToPage(
+                                            page = when (pagerState.currentPage == 2) {
+                                                true -> pagerState.currentPage - 2
+                                                else -> pagerState.currentPage - 1
+                                            }
+                                        )
+                                    }
+                                },
+                                enabled = pagerState.currentPage > 0,
+                                content = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                        contentDescription = null
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(text = "Back")
+                                }
+                            )
+                            OutlinedButton(
+                                modifier = Modifier
+                                    .widthIn(min = 80.dp)
+                                    .weight(1f),
+                                onClick = dropUnlessResumed {
+                                    scope.launch {
+                                        pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
+                                    }
+                                },
+                                enabled = enableNext && pagerState.currentPage < 4,
+                                content = {
+                                    Text(text = "Next")
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                        }
                     }
-                    FirmwareUpdateOptions.BLOB -> BlobContent()
-                    FirmwareUpdateOptions.HTTPS -> HttpsContent()
                 }
             }
         }
     }
-}
-
-@Composable
-fun BlobContent() {
-    Text(
-        modifier = Modifier.padding(horizontal = 8.dp),
-        text = stringResource(R.string.label_dfu_over_blob_rationale),
-        style = MaterialTheme.typography.bodySmall
-    )
-}
-
-@Composable
-fun HttpsContent() {
-    Text(
-        modifier = Modifier.padding(horizontal = 8.dp),
-        text = stringResource(R.string.label_dfu_over_https_rationale),
-        style = MaterialTheme.typography.bodySmall
-    )
 }
