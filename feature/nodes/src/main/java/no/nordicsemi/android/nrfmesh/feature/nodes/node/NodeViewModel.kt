@@ -10,9 +10,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -63,8 +62,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
 
     private fun observeNetworkChanges() {
         repository.networkEvents
-            .map { repository.meshNetwork }
-            .filterNotNull()
+            .mapNotNull { repository.meshNetwork }
             .onEach {
                 val nodeState = it.node(uuid = nodeUuid)?.let { node ->
                     this@NodeViewModel.selectedNode = node
