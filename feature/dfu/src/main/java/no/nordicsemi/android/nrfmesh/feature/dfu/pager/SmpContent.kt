@@ -1,5 +1,6 @@
-package no.nordicsemi.android.nrfmesh.feature.dfu.smp
+package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,15 +24,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
+import kotlinx.coroutines.launch
+import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.firmwareDistributionServer
 import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
@@ -41,16 +52,23 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigSigModelAppGet
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigVendorModelAppGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesStatus
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionStatus
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
+import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
+import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 
 @Composable
 internal fun SmpContent(
     snackbarHostState: SnackbarHostState,
+    messageState: MessageState,
     connectionState: NetworkConnectionState,
     node: Node?,
     name: String?,
@@ -65,6 +83,7 @@ internal fun SmpContent(
     firmwareDistributionStatus: FirmwareDistributionStatus?,
     capabilitiesStatus: FirmwareDistributionCapabilitiesStatus?,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
+    enableNextStage: () -> Unit,
 ) {
     Text(
         modifier = Modifier.padding(horizontal = 8.dp),
@@ -89,22 +108,32 @@ internal fun SmpContent(
     if (isSmpServiceSupported != null && isDistributorServerModelSupported != null && isLePairingSupported != null) {
         if (!isSmpServiceSupported || !isDistributorServerModelSupported || !isLePairingSupported) {
             ReadMore()
-        } else {
+        } else if (node != null) {
             BoundApplicationKeys(
-                node = node,
+                messageState = messageState,
+                model = node.model(modelId = firmwareDistributionServer) ?: return,
                 selectedKey = selectedKey,
                 onBindAppKeyClicked = onBindAppKeysClicked,
-                onApplicationKeyClicked = onApplicationKeyClicked
+                onApplicationKeyClicked = onApplicationKeyClicked,
+                send = send
             )
             DistributorStatus(
+                messageState = messageState,
                 connectionState = connectionState,
-                phase = firmwareDistributionStatus?.phase
+                model = node.model(modelId = firmwareDistributionServer) ?: return,
+                firmwareDistributionStatus = firmwareDistributionStatus,
+                selectedKey = selectedKey,
+                send = send
             )
             if (selectedKey != null && firmwareDistributionStatus?.phase == FirmwareDistributionPhase.IDLE) {
                 CapabilitiesContent(
+                    selectedKey = selectedKey,
+                    phase = firmwareDistributionStatus.phase,
+                    messageState = messageState,
                     capabilitiesStatus = capabilitiesStatus,
-                    model = node?.model(modelId = firmwareDistributionServer) ?: return,
-                    send = send
+                    model = node.model(modelId = firmwareDistributionServer) ?: return,
+                    send = send,
+                    enableNextStage = enableNextStage
                 )
             }
         }
@@ -330,7 +359,7 @@ private fun FirmwareDistributor(
 @Composable
 private fun ReadMore() {
     val uriHandler = LocalUriHandler.current
-    val context = LocalContext.current
+    val resources = LocalResources.current
     SectionTitle(title = stringResource(R.string.label_read_more))
     ElevatedCardItem(
         imageVector = Icons.AutoMirrored.Outlined.Label,
@@ -340,7 +369,7 @@ private fun ReadMore() {
             MeshIconButton(
                 onClick = dropUnlessResumed {
                     uriHandler.openUri(
-                        uri = context.getString(R.string.label_device_firmware_update_link)
+                        uri = resources.getString(R.string.label_device_firmware_update_link)
                     )
                 },
                 buttonIcon = Icons.AutoMirrored.Outlined.OpenInNew,
@@ -355,7 +384,7 @@ private fun ReadMore() {
             MeshIconButton(
                 onClick = dropUnlessResumed {
                     uriHandler.openUri(
-                        uri = context.getString(R.string.label_dfu_over_bluetooth_mesh_link)
+                        uri = resources.getString(R.string.label_dfu_over_bluetooth_mesh_link)
                     )
                 },
                 buttonIcon = Icons.AutoMirrored.Outlined.OpenInNew,
@@ -370,7 +399,7 @@ private fun ReadMore() {
             MeshIconButton(
                 onClick = dropUnlessResumed {
                     uriHandler.openUri(
-                        uri = context.getString(R.string.label_sample_distributor_link)
+                        uri = resources.getString(R.string.label_sample_distributor_link)
                     )
                 },
                 buttonIcon = Icons.AutoMirrored.Outlined.OpenInNew,
@@ -385,7 +414,7 @@ private fun ReadMore() {
             MeshIconButton(
                 onClick = dropUnlessResumed {
                     uriHandler.openUri(
-                        uri = context.getString(R.string.label_device_management_smp_link)
+                        uri = resources.getString(R.string.label_device_management_smp_link)
                     )
                 },
                 buttonIcon = Icons.AutoMirrored.Outlined.OpenInNew,
@@ -397,11 +426,14 @@ private fun ReadMore() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BoundApplicationKeys(
-    node: Node?,
+    messageState: MessageState,
+    model: Model,
     selectedKey: ApplicationKey?,
     onBindAppKeyClicked: (Model) -> Unit,
     onApplicationKeyClicked: (ApplicationKey) -> Unit,
+    send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
+    val scope = rememberCoroutineScope()
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         SectionTitle(
             modifier = Modifier.weight(weight = 1f),
@@ -409,16 +441,46 @@ private fun BoundApplicationKeys(
         )
         MeshIconButton(
             onClick = dropUnlessResumed {
-                node?.model(modelId = firmwareDistributionServer)?.let {
-                    onBindAppKeyClicked(it)
+                scope.launch {
+                    val _ = runCatching {
+                        val _ = send(
+                            model,
+                            when (model.modelId) {
+                                is SigModelId -> {
+                                    ConfigSigModelAppGet(
+                                        elementAddress = model.parentElement?.unicastAddress
+                                            ?: throw IllegalStateException("Model should have a parent element with a unicast address"),
+                                        modelId = model.modelId as SigModelId
+                                    )
+                                }
+
+                                is VendorModelId -> ConfigVendorModelAppGet(
+                                    elementAddress = model.parentElement?.unicastAddress
+                                        ?: throw IllegalStateException("Model should have a parent element with a unicast address"),
+                                    modelId = model.modelId as VendorModelId
+                                )
+                            }
+                        )
+                    }
                 }
             },
+            buttonIcon = Icons.Outlined.Refresh,
+            enabled = !messageState.isInProgress(),
+            isOnClickActionInProgress = messageState.isInProgress() &&
+                    (messageState.message is ConfigSigModelAppGet ||
+                            messageState.message is ConfigVendorModelAppGet)
+        )
+        MeshIconButton(
+            onClick = dropUnlessResumed { onBindAppKeyClicked(model) },
             buttonIcon = Icons.Outlined.Link,
+            enabled = !messageState.isInProgress(),
+            isOnClickActionInProgress = messageState.isInProgress() &&
+                    (messageState.message is ConfigModelAppBind)
         )
     }
-    node?.model(modelId = firmwareDistributionServer)
-        ?.boundApplicationKeys
-        ?.takeIf { it.isNotEmpty() }
+    model
+        .boundApplicationKeys
+        .takeIf { it.isNotEmpty() }
         ?.forEach { key ->
             key(key.index.toInt() + 1) {
                 key.Row(
@@ -444,7 +506,7 @@ private fun BoundApplicationKeys(
                     Icon(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         imageVector = Icons.Rounded.WarningAmber,
-                        tint = Color.Yellow,
+                        tint = Color(red = 1f, green = 0.6f, blue = 0f),
                         contentDescription = null
                     )
                 }
@@ -459,14 +521,49 @@ private fun BoundApplicationKeys(
 
 @Composable
 private fun DistributorStatus(
+    messageState: MessageState,
     connectionState: NetworkConnectionState,
-    phase: FirmwareDistributionPhase?,
+    model: Model,
+    firmwareDistributionStatus: FirmwareDistributionStatus?,
+    selectedKey: ApplicationKey?,
+    send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
-    SectionTitle(title = stringResource(R.string.label_distributor_status))
+    val scope = rememberCoroutineScope()
+    var distributionStatus by remember { mutableStateOf(firmwareDistributionStatus) }
+    var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
+    //var phaseValue by remember(key1 = phase) { mutableStateOf(phase) }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        SectionTitle(
+            modifier = Modifier.weight(weight = 1f),
+            title = stringResource(R.string.label_distributor_status)
+        )
+        MeshIconButton(
+            buttonIcon = Icons.Outlined.Refresh,
+            onClick = dropUnlessResumed {
+                scope.launch {
+                    try {
+                        distributionStatus = send(
+                            model,
+                            FirmwareDistributionGet()
+                        ) as? FirmwareDistributionStatus
+                        //phaseValue = distributionStatus?.phase
+                    } catch (e: Exception) {
+                        error = e
+                    }
+                }
+            },
+            enabled = !messageState.isInProgress(),
+            isOnClickActionInProgress = messageState.isInProgress() &&
+                    messageState.message is FirmwareDistributionGet
+        )
+    }
     ElevatedCardItem(
         imageVector = Icons.Outlined.Checklist,
         title = stringResource(R.string.label_phase),
-        subtitle = phase?.debugDescription ?: stringResource(R.string.label_na),
+        subtitle = distributionStatus?.phase?.debugDescription ?: stringResource(R.string.label_na),
         titleAction = {
             when (connectionState) {
                 // 1. Connection in progress, but distribution server model support is still unknown
@@ -479,13 +576,27 @@ private fun DistributorStatus(
                 }
                 // 2. Connected, but distribution server model support is not yet known
                 is NetworkConnectionState.Connected -> {
-                    if (phase == null) {
+                    /*if (distributionStatus?.phase == null) {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .padding(end = 16.dp)
                                 .size(size = 24.dp)
                         )
-                    } else if (phase == FirmwareDistributionPhase.IDLE) {
+                    }*/
+                    if (selectedKey == null) {
+                        Icon(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            imageVector = Icons.Outlined.Close,
+                            tint = MaterialTheme.colorScheme.error,
+                            contentDescription = null
+                        )
+                    } else if(distributionStatus?.phase == null) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(end = 16.dp)
+                                .size(size = 24.dp)
+                        )
+                    } else if (distributionStatus?.phase == FirmwareDistributionPhase.IDLE) {
                         Icon(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             imageVector = Icons.Outlined.CheckCircle,
@@ -506,4 +617,17 @@ private fun DistributorStatus(
             }
         }
     )
+    LaunchedEffect(selectedKey) {
+        if (selectedKey != null && distributionStatus == null) {
+            try {
+                distributionStatus = send(
+                    model,
+                    FirmwareDistributionGet()
+                ) as? FirmwareDistributionStatus
+                //phaseValue = distributionStatus?.phase
+            } catch (e: Exception) {
+                error = e
+            }
+        }
+    }
 }

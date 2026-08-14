@@ -44,5 +44,6 @@
     <string name="label_max_firmware_image_size">Max Firmware Image Size</string>
     <string name="label_max_upload_space">Max Upload Space</string>
     <string name="label_remaining_upload_space">Remaining Upload Space</string>
+    <string name="label_available_firmware_image_entries">Available Firmware Image Entries</string>
     ">
 </resources>

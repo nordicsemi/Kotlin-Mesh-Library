@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.dfu.smp
+package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,8 +11,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import no.nordicsemi.android.nrfmesh.core.common.Completed
+import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.NotStarted
+import no.nordicsemi.android.nrfmesh.core.common.Sending
 import no.nordicsemi.android.nrfmesh.core.common.firmwareDistributionServer
 import no.nordicsemi.android.nrfmesh.core.common.lePairingResponder
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -21,7 +24,12 @@ import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.ConfigModelAppList
+import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigSigModelAppGet
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigVendorModelAppGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionGet
@@ -30,16 +38,18 @@ import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
+import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
+import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
-internal class SmpViewModel @Inject internal constructor(
+internal class Page0ViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
     private val centralManager: CentralManager,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(SmpScreenUiState())
+    private val _uiState = MutableStateFlow(Page0ScreenUiState())
     internal val uiState = _uiState.asStateFlow()
     private lateinit var network: MeshNetwork
 
@@ -49,21 +59,18 @@ internal class SmpViewModel @Inject internal constructor(
         observeProxyFilterState()
     }
 
-
     @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
             .onEach {
                 network = it
+                val selectedKey = uiState.value.selectedKey ?: repository.proxyFilter.proxy
+                    ?.model(modelId = firmwareDistributionServer)
+                    ?.boundApplicationKeys
+                    ?.firstOrNull()
                 _uiState.update { state ->
-                    state.copy(
-                        selectedKey = state.selectedKey
-                            ?: repository.proxyFilter.proxy
-                                ?.model(modelId = firmwareDistributionServer)
-                                ?.boundApplicationKeys
-                                ?.firstOrNull()
-                    )
+                    state.copy(selectedKey = selectedKey)
                 }
             }
             .launchIn(scope = viewModelScope)
@@ -155,28 +162,74 @@ internal class SmpViewModel @Inject internal constructor(
                                 isProxyReady = true,
                             )
                         }
+                        repository.proxyFilter.proxy
+                            ?.model(modelId = firmwareDistributionServer)
+                            ?.let { model ->
+                                try {
+                                    val message = when (model.modelId) {
+                                        is SigModelId -> ConfigSigModelAppGet(
+                                            modelId = model.modelId as SigModelId,
+                                            elementAddress = model.parentElement?.unicastAddress
+                                                ?: throw IllegalStateException("Element not found")
+                                        )
 
-                        if (_uiState.value.distributionStatus == null) {
-                            repository.proxyFilter.proxy
-                                ?.model(modelId = firmwareDistributionServer)
-                                ?.let {
-                                    if (it.boundApplicationKeys.isNotEmpty()) {
-                                        println("AAA App keys not empty")
-                                        val distributionStatus = send(
-                                            model = it,
-                                            message = FirmwareDistributionGet()
-                                        ) as? FirmwareDistributionStatus
-                                        //_uiState.update { state -> state.copy(distributionStatus = distributionStatus) }
-                                        println("AAA Requesting Firmware Capabilities Status")
-                                        val capabilitiesStatus = send(
-                                            model = it,
-                                            message = FirmwareDistributionCapabilitiesGet()
-                                        ) as? FirmwareDistributionCapabilitiesStatus
-                                        _uiState.update { state -> state.copy(capabilitiesStatus = capabilitiesStatus, distributionStatus = distributionStatus) }
-                                        println("AAA Firmware Capabilities Status Received: $capabilitiesStatus")
+                                        is VendorModelId -> ConfigVendorModelAppGet(
+                                            modelId = model.modelId as VendorModelId,
+                                            elementAddress = model.parentElement?.unicastAddress
+                                                ?: throw IllegalStateException("Element not found")
+                                        )
                                     }
+                                    val status = send(
+                                        model = model,
+                                        message = message
+                                    ) as? ConfigModelAppList
+                                    status?.let { appKeyList ->
+                                        if (appKeyList.applicationKeyIndexes.isNotEmpty()) {
+                                            val key = model.boundApplicationKeys.firstOrNull()
+                                            _uiState.update { it.copy(selectedKey = key) }
+                                            if (_uiState.value.distributionStatus == null && key != null) {
+                                                val distributionStatus = send(
+                                                    model = model,
+                                                    message = FirmwareDistributionGet()
+                                                ) as? FirmwareDistributionStatus
+                                                val capabilitiesStatus = send(
+                                                    model = model,
+                                                    message = FirmwareDistributionCapabilitiesGet()
+                                                ) as? FirmwareDistributionCapabilitiesStatus
+                                                _uiState.update { state ->
+                                                    state.copy(
+                                                        selectedKey = key,
+                                                        capabilitiesStatus = capabilitiesStatus,
+                                                        distributionStatus = distributionStatus
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    // val key = it.boundApplicationKeys.firstOrNull()
+                                    // // _uiState.value = _uiState.value.copy(selectedKey = key)
+                                    // if (_uiState.value.distributionStatus == null && key != null) {
+                                    //     val distributionStatus = send(
+                                    //         model = it,
+                                    //         message = FirmwareDistributionGet()
+                                    //     ) as? FirmwareDistributionStatus
+                                    //     //_uiState.update { state -> state.copy(distributionStatus = distributionStatus) }
+                                    //     val capabilitiesStatus = send(
+                                    //         model = it,
+                                    //         message = FirmwareDistributionCapabilitiesGet()
+                                    //     ) as? FirmwareDistributionCapabilitiesStatus
+                                    //     _uiState.update { state ->
+                                    //         state.copy(
+                                    //             selectedKey = key,
+                                    //             capabilitiesStatus = capabilitiesStatus,
+                                    //             distributionStatus = distributionStatus
+                                    //         )
+                                    //     }
+                                    // }
+                                } catch (e: Exception) {
+
                                 }
-                        }
+                            }
                     }
 
                     else -> {
@@ -192,20 +245,41 @@ internal class SmpViewModel @Inject internal constructor(
     }
 
     internal fun onApplicationKeyClicked(key: ApplicationKey) {
+        // Check if the selected key is bound to LE Pairing Responder
+        val isBound = _uiState.value.node?.model(modelId = lePairingResponder)
+            ?.boundApplicationKeys
+            ?.any { it.index == key.index }
         _uiState.update { it.copy(selectedKey = key) }
-    }
-
-    internal fun onBindAppKeyClicked() {
-
     }
 
     internal suspend fun send(
         model: Model,
         message: AcknowledgedMeshMessage,
-    ) = repository.send(model = model, ackedMessage = message)
+    ): MeshMessage? {
+        return try {
+            _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+            val response = if (message is AcknowledgedConfigMessage) {
+                val parentNode = model.parentElement?.parentNode
+                    ?: throw IllegalStateException("Parent not found")
+                repository.send(node = parentNode, message = message)
+            } else {
+                repository.send(model = model, ackedMessage = message)
+            }
+            response?.let {
+                _uiState.value = _uiState.value.copy(messageState = Completed(message = message, response = it))
+            } ?: run {
+                _uiState.value = _uiState.value.copy(messageState = Failed(message = message, error = IllegalStateException("No response received")))
+            }
+            response
+        } catch (e: Exception) {
+            _uiState.value =
+                _uiState.value.copy(messageState = Failed(message = message, error = e))
+            null
+        }
+    }
 }
 
-internal data class SmpScreenUiState(
+internal data class Page0ScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val messageState: MessageState = NotStarted,
     val name: String? = null,
@@ -218,5 +292,5 @@ internal data class SmpScreenUiState(
     val isProxyReady: Boolean? = null,
     val distributionStatus: FirmwareDistributionStatus? = null,
     val capabilitiesStatus: FirmwareDistributionCapabilitiesStatus? = null,
-    val isBonded: Boolean? = null,
+    val isBonded: Boolean? = false,
 )

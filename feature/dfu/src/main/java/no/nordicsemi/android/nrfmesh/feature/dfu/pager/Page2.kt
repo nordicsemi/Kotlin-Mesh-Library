@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.model.lepairing
+package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
@@ -34,11 +34,11 @@ import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 @Composable
-internal fun LePairingResponder(
+internal fun Page2(
     model: Model,
     isInProgress: Boolean,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
-    startPairing: (Context) -> Unit
+    startPairing: (Context) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -61,7 +61,10 @@ internal fun LePairingResponder(
                 scope.launch {
                     shouldShowProgressIcon = true
                     try {
-                        status = send(model, PairingRequest()) as PairingResponse?
+                        status = send(
+                            model,
+                            PairingRequest()
+                        ) as PairingResponse?
                         passKey = status?.passKey
                         status
                             ?.takeIf { it.status == 0.toUByte() }
