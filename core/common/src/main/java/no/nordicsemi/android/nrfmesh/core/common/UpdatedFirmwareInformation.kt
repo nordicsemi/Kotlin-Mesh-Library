@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.model.dfu
+package no.nordicsemi.android.nrfmesh.core.common
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

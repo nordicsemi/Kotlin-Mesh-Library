@@ -9,6 +9,7 @@ import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import no.nordicsemi.android.nrfmesh.core.common.UpdatedFirmwareInformation
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import java.io.File
 import java.io.IOException

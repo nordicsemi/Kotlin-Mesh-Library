@@ -53,4 +53,9 @@ val lePairingResponder = VendorModelId(
     companyIdentifier = NORDIC_SEMICONDUCTOR_COMPANY_ID
 )
 
-val firmwareDistributionServer = SigModelId(modelIdentifier = Model.FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID)
+val firmwareDistributionServer =
+    SigModelId(modelIdentifier = Model.FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID)
+
+val firmwareUpdateServer = SigModelId(modelIdentifier = Model.FIRMWARE_UPDATE_SERVER_MODEL_ID)
+
+val blobTransferServerModel = SigModelId(modelIdentifier = Model.BLOB_TRANSFER_SERVER_MODEL_ID)

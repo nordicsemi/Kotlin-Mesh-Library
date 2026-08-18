@@ -141,7 +141,6 @@ internal class Page1ViewModel @Inject internal constructor(
                         -> {
                         val isBonded = centralManager.getBondedPeripherals()
                             .any { p -> p.identifier == repository.identifier }
-                        println("AAA is the device bonded? $isBonded")
                         _uiState.update { state ->
                             state.copy(
                                 node = repository.proxyFilter.proxy,

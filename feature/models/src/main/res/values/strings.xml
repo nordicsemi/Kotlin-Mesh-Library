@@ -195,4 +195,7 @@
     <string name="label_unknown_vendor">Unknown vendor</string>
     <string name="label_application_keys">Application Keys</string>
     <string name="label_le_pairing">LE Pairing</string>
+    <string name="label_firmware">Firmware</string>
+    <string name="label_file">File</string>
+    <string name="label_application">Application</string>
 </resources>
