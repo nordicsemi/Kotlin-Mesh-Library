@@ -198,4 +198,7 @@
     <string name="label_error_bind_application_key">Please bind an application key first.</string>
     <string name="label_application_keys">Application Keys</string>
     <string name="label_le_pairing">LE Pairing</string>
+    <string name="label_firmware">Firmware</string>
+    <string name="label_file">File</string>
+    <string name="label_application">Application</string>
 </resources>

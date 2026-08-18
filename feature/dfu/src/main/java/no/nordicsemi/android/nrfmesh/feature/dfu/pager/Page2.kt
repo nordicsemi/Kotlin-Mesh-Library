@@ -1,101 +1,166 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
-import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Password
-import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.AccountTree
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.DeveloperBoard
+import androidx.compose.material.icons.outlined.FileOpen
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Numbers
+import androidx.compose.material.icons.outlined.SelectAll
+import androidx.compose.material.icons.outlined.WorkOutline
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
-import kotlinx.coroutines.launch
-import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
-import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.message.PairingRequest
-import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.message.PairingResponse
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
-import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
+import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
-import no.nordicsemi.android.nrfmesh.feature.models.R
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
-import no.nordicsemi.kotlin.mesh.core.model.Model
+import no.nordicsemi.android.nrfmesh.feature.dfu.R
+import no.nordicsemi.kotlin.mesh.core.model.Node
+import kotlin.uuid.ExperimentalUuidApi
 
 @Composable
-internal fun Page2(
-    model: Model,
-    isInProgress: Boolean,
-    send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
-    startPairing: (Context) -> Unit,
-) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var status by remember { mutableStateOf<PairingResponse?>(null) }
-    var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
-    var shouldShowProgressIcon by rememberSaveable { mutableStateOf(false) }
-    var passKey by rememberSaveable { mutableStateOf<Int?>(null) }
+internal fun Page2() {
+    val viewModel = hiltViewModel<Page2ViewModel>()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    FileSelector()
+    TargetNodes(nodes = uiState.nodes)
+}
+
+@Composable
+private fun FileSelector() {
+    val resources = LocalResources.current
+    val openDocument = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = {}
+    )
     Row(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxSize(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         SectionTitle(
             modifier = Modifier.weight(weight = 1f),
-            title = stringResource(R.string.label_controls)
+            title = stringResource(R.string.label_firmware)
         )
         MeshIconButton(
-            buttonIcon = Icons.Outlined.Refresh,
+            buttonIcon = Icons.Outlined.FolderOpen,
             onClick = dropUnlessResumed {
-                scope.launch {
-                    shouldShowProgressIcon = true
-                    try {
-                        status = send(
-                            model,
-                            PairingRequest()
-                        ) as PairingResponse?
-                        passKey = status?.passKey
-                        status
-                            ?.takeIf { it.status == 0.toUByte() }
-                            ?.let {
-                                passKey = it.passKey
-                                startPairing(context)
-                            }
-                    } catch (e: Exception) {
-                        error = e
-                    } finally {
-                        shouldShowProgressIcon = false
-                    }
-                }
-            },
-            enabled = !isInProgress,
-            isOnClickActionInProgress = shouldShowProgressIcon
+                openDocument.launch(
+                    arrayOf(resources.getString(R.string.document_type))
+                )
+            }
         )
     }
     ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Password,
-        title = stringResource(R.string.label_pass_key),
-        subtitle = passKey?.toString() ?: stringResource(R.string.label_unknown),
-        enabled = !isInProgress
+        imageVector = Icons.Outlined.FileOpen,
+        title = stringResource(R.string.label_file),
+        subtitle = ""
     )
+    AnimatedVisibility(true) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ElevatedCardItem(
+                imageVector = Icons.Outlined.DeveloperBoard,
+                title = stringResource(R.string.label_application),
+            )
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .padding(bottom = 8.dp),
+                text = stringResource(R.string.label_available_space, 500000),
+                style = MaterialTheme.typography.bodySmall
+            )
+            ElevatedCardItem(
+                imageVector = Icons.Outlined.WorkOutline,
+                title = stringResource(R.string.label_company),
+            )
+            ElevatedCardItem(
+                imageVector = Icons.Outlined.Numbers,
+                title = stringResource(R.string.label_version),
+            )
+            ElevatedCardItem(
+                imageVector = Icons.Outlined.AccountTree,
+                title = stringResource(R.string.label_metadata)
+            )
+        }
+    }
+    Text(
+        modifier = Modifier.padding(horizontal = 8.dp),
+        text = stringResource(R.string.label_firmware_selection_description),
+        style = MaterialTheme.typography.bodySmall
+    )
+}
 
-    error?.let {
-        MeshMessageStatusDialog(
-            text = it.describe(),
-            showDismissButton = true,
-            onDismissRequest = { error = null },
+@OptIn(ExperimentalUuidApi::class)
+@Composable
+private fun TargetNodes(nodes: List<Node>) {
+    Row(
+        modifier = Modifier.fillMaxSize(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        SectionTitle(
+            modifier = Modifier.weight(weight = 1f),
+            title = stringResource(R.string.label_available_target_nodes)
+        )
+        MeshIconButton(
+            buttonIcon = Icons.Outlined.SelectAll,
+            onClick = dropUnlessResumed {
+
+            }
         )
     }
+    when (nodes.isEmpty()) {
+        true -> MeshNoItemsAvailable(
+            modifier = Modifier.fillMaxSize(),
+            imageVector = Icons.Outlined.AutoAwesome,
+            title = stringResource(R.string.label_no_nodes_available)
+        )
+
+        false -> {
+            nodes.forEach {
+                key(it.uuid.toString()) {
+                    ElevatedCardItem(
+                        imageVector = Icons.Outlined.FolderOpen,
+                        title = it.name,
+                        subtitle = it.uuid.toString()
+                    )
+                }
+            }
+        }
+    }
+    Text(
+        modifier = Modifier.padding(horizontal = 8.dp),
+        text = stringResource(R.string.label_node_firmware_details_description),
+        style = MaterialTheme.typography.bodySmall
+    )
+    Text(
+        modifier = Modifier.padding(horizontal = 8.dp),
+        text = stringResource(R.string.label_image_firmware_details_description),
+        style = MaterialTheme.typography.bodySmall
+    )
+    Text(
+        modifier = Modifier.padding(horizontal = 8.dp),
+        text = stringResource(R.string.label_distributor_update_description),
+        style = MaterialTheme.typography.bodySmall
+    )
 }

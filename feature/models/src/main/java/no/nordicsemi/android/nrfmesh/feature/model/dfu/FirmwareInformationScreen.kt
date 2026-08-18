@@ -63,6 +63,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateFirm
 import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 import java.net.URL
 import androidx.core.net.toUri
+import no.nordicsemi.android.nrfmesh.core.common.UpdatedFirmwareInformation
 
 @Composable
 internal fun FirmwareInformationScreen(

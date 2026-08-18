@@ -45,6 +45,7 @@ import no.nordicsemi.android.common.ui.view.NordicAppBar
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page0
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page1
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page2
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 
@@ -59,7 +60,7 @@ internal fun FirmwareUpdateScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(pageCount = { 4 })
-    var enableNext by rememberSaveable { mutableStateOf(false) }
+    var enableNext by rememberSaveable { mutableStateOf(true) }
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -80,7 +81,7 @@ internal fun FirmwareUpdateScreen(
         ) { page ->
             Column(
                 modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
                     modifier = Modifier
@@ -89,87 +90,86 @@ internal fun FirmwareUpdateScreen(
                         .padding(horizontal = 16.dp)
                         .verticalScroll(state = rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-                ) {
-                    when (page) {
-                        0 -> {
-                            Page0(
-                                onGattProxyClicked = onGattProxyClicked,
-                                onBindAppKeysClicked = onBindAppKeysClicked,
-                                enableNextStage = {
-                                    enableNext = true
-                                }
-                            )
-                        }
-
-                        1 -> Page1(
-                            goToNext = dropUnlessResumed {
-                                scope.launch {
-                                    pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
-                                }
-                            }
-                        )
-
-                        2 -> {
-
-                        }
-
-                        3 -> {
-
-                        }
-                    }
-                    AnimatedVisibility(visible = enableNext) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(space = 32.dp),
-                        ) {
-                            OutlinedButton(
-                                modifier = Modifier
-                                    .widthIn(min = 80.dp)
-                                    .weight(1f),
-                                onClick = dropUnlessResumed {
-                                    scope.launch {
-                                        pagerState.requestScrollToPage(
-                                            page = when (pagerState.currentPage == 2) {
-                                                true -> pagerState.currentPage - 2
-                                                else -> pagerState.currentPage - 1
-                                            }
-                                        )
+                    content = {
+                        when (page) {
+                            0 -> {
+                                Page0(
+                                    onGattProxyClicked = onGattProxyClicked,
+                                    onBindAppKeysClicked = onBindAppKeysClicked,
+                                    enableNextStage = {
+                                        enableNext = true
                                     }
-                                },
-                                enabled = pagerState.currentPage > 0,
-                                content = {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                        contentDescription = null
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(text = "Back")
-                                }
-                            )
-                            OutlinedButton(
-                                modifier = Modifier
-                                    .widthIn(min = 80.dp)
-                                    .weight(1f),
-                                onClick = dropUnlessResumed {
+                                )
+                            }
+
+                            1 -> Page1(
+                                goToNext = dropUnlessResumed {
                                     scope.launch {
                                         pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
                                     }
-                                },
-                                enabled = enableNext && pagerState.currentPage < 4,
-                                content = {
-                                    Text(text = "Next")
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-                                        contentDescription = null
-                                    )
                                 }
                             )
+
+                            2 -> Page2()
+
+                            3 -> {
+
+                            }
+                        }
+                        AnimatedVisibility(visible = enableNext) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(space = 32.dp),
+                            ) {
+                                OutlinedButton(
+                                    modifier = Modifier
+                                        .widthIn(min = 80.dp)
+                                        .weight(weight = 1f),
+                                    onClick = dropUnlessResumed {
+                                        scope.launch {
+                                            pagerState.requestScrollToPage(
+                                                page = when (pagerState.currentPage == 2) {
+                                                    true -> pagerState.currentPage - 2
+                                                    else -> pagerState.currentPage - 1
+                                                }
+                                            )
+                                        }
+                                    },
+                                    enabled = pagerState.currentPage > 0,
+                                    content = {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                            contentDescription = null
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(text = "Back")
+                                    }
+                                )
+                                OutlinedButton(
+                                    modifier = Modifier
+                                        .widthIn(min = 80.dp)
+                                        .weight(weight = 1f),
+                                    onClick = dropUnlessResumed {
+                                        scope.launch {
+                                            pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
+                                        }
+                                    },
+                                    enabled = enableNext && pagerState.currentPage < 4,
+                                    content = {
+                                        Text(text = "Next")
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                                            contentDescription = null
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
-                }
+                )
             }
         }
     }

@@ -37,13 +37,30 @@
     <string name="label_distributor_status">Distributor Status</string>
     <string name="label_phase">Phase</string>
     <string name="label_no_distribution_server_model">Node does not have a firmware distribution server model</string>
-    <string name="label_no_app_keys_bound">No applicationkeys bound</string>
-    <string name="label_capabilities">Capablities</string>
+    <string name="label_no_app_keys_bound">No application keys bound</string>
+    <string name="label_capabilities">Capabilities</string>
     <string name="label_max_receivers_list_size">Max Receiver List Size</string>
     <string name="label_available_image_size">Available Image Sizes</string>
     <string name="label_max_firmware_image_size">Max Firmware Image Size</string>
     <string name="label_max_upload_space">Max Upload Space</string>
     <string name="label_remaining_upload_space">Remaining Upload Space</string>
     <string name="label_available_firmware_image_entries">Available Firmware Image Entries</string>
+    <string name="label_le_pairing">LE Pairing</string>
+    <string name="label_firmware">Firmware</string>
+    <string name="label_file">File</string>
+    <string name="label_application">Application</string>
+    <string name="label_firmware_selection_description">Select a ZIP file generated when building the new firmware. The file can also be downloaded automatically by tapping a target node that provide a URI to an online resource with the latest version.</string>
+    <string name="label_available_space">Max available space is %d bytes.</string>
+    <string name="document_type">application/json</string>
+    <string name="label_available_target_nodes">Available Target Nodes</string>
+    <string name="label_node_firmware_details_description">Tap a node to view its firmware details.</string>
+    <string name="label_image_firmware_details_description">Tap an image to check the firmware compatibility and select it for update.</string>
+    <string name="label_image_firmware_update_description">The list contains nodes with Firmware Update Server and BLOB Transfer Server models.</string>
+    <string name="label_distributor_update_description">Updating firmware on the distributor is instantaneous. When selected, no other nodes will be updated.</string>
+    <string name="label_metadata">Metadata</string>
+    <string name="label_compatibility">Compatibility</string>
+    <string name="label_version">Version</string>
+    <string name="label_company">Company</string>
+    <string name="label_no_nodes_available">No targets available</string>
     ">
 </resources>
