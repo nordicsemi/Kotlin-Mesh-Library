@@ -36,7 +36,7 @@ import kotlin.uuid.ExperimentalUuidApi
 @HiltViewModel
 internal class Page1ViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
-    private val centralManager: CentralManager,
+    private val centralManager: CentralManager
 ) : ViewModel(), McuMgrTransport.ConnectionCallback {
     private val _uiState = MutableStateFlow(Page1ScreenUiState())
     internal val uiState = _uiState.asStateFlow()

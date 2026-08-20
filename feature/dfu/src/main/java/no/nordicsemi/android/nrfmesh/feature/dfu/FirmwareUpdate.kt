@@ -30,6 +30,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,6 +62,7 @@ internal fun FirmwareUpdateScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(pageCount = { 4 })
     var enableNext by rememberSaveable { mutableStateOf(true) }
+    var selectedKeyIndex by rememberSaveable { mutableIntStateOf(-1) }
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -96,7 +98,8 @@ internal fun FirmwareUpdateScreen(
                                 Page0(
                                     onGattProxyClicked = onGattProxyClicked,
                                     onBindAppKeysClicked = onBindAppKeysClicked,
-                                    enableNextStage = {
+                                    enableNextStage = { index ->
+                                        selectedKeyIndex = index.toInt()
                                         enableNext = true
                                     }
                                 )
@@ -110,7 +113,7 @@ internal fun FirmwareUpdateScreen(
                                 }
                             )
 
-                            2 -> Page2()
+                            2 -> Page2(index = selectedKeyIndex)
 
                             3 -> {
 

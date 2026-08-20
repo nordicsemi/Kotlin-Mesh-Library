@@ -1,7 +1,12 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
+import android.content.ContentResolver
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,17 +20,19 @@ import no.nordicsemi.android.nrfmesh.core.common.blobTransferServerModel
 import no.nordicsemi.android.nrfmesh.core.common.firmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
+import no.nordicsemi.android.nrfmesh.feature.dfu.util.Target
+import no.nordicsemi.android.nrfmesh.feature.dfu.util.ZipPackage
 import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 
-@HiltViewModel
-internal class Page2ViewModel @Inject internal constructor(
+@HiltViewModel(assistedFactory = Page2ViewModel.Factory::class)
+internal class Page2ViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
+    @Assisted index: Int,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(Page2ScreenUiState())
     internal val uiState = _uiState.asStateFlow()
@@ -77,15 +84,27 @@ internal class Page2ViewModel @Inject internal constructor(
                     }
 
                     else -> {
-
                     }
                 }
             }
             .launchIn(scope = viewModelScope)
     }
 
+    internal fun importZipPackage(uri: Uri, contentResolver: ContentResolver): ZipPackage {
+        val data = contentResolver.openInputStream(uri)
+            ?.use { it.readBytes() }
+            ?: byteArrayOf()
+        return ZipPackage(data = data)
+    }
+
     internal suspend fun send(model: Model, message: AcknowledgedMeshMessage) =
         repository.send(model = model, ackedMessage = message)
+
+    @AssistedFactory
+    interface Factory {
+        fun create(index: Int): Page2ViewModel
+    }
+
 }
 
 internal data class Page2ScreenUiState(
@@ -94,3 +113,7 @@ internal data class Page2ScreenUiState(
     val nodes: List<Node> = emptyList(),
     val targets: List<Target> = emptyList(),
 )
+
+private fun List<Node>.toTarget() {
+
+}

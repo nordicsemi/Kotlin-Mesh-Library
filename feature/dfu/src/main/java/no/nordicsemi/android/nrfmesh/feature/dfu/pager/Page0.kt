@@ -26,13 +26,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.nordicsemi.android.nrfmesh.feature.dfu.FirmwareUpdateOptions
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.android.nrfmesh.feature.dfu.icon
+import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 @Composable
 internal fun Page0(
     onGattProxyClicked: () -> Unit,
     onBindAppKeysClicked: (Model) -> Unit,
-    enableNextStage: () -> Unit,
+    enableNextStage: (KeyIndex) -> Unit,
 ) {
     val viewModel = hiltViewModel<Page0ViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -90,7 +91,11 @@ internal fun Page0(
                 firmwareDistributionStatus = uiState.distributionStatus,
                 capabilitiesStatus = uiState.capabilitiesStatus,
                 send = viewModel::send,
-                enableNextStage = enableNextStage
+                enableNextStage = {
+                    uiState.selectedKey?.let {
+                        enableNextStage(it.index)
+                    }
+                }
             )
         }
 
