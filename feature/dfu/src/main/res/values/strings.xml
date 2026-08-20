@@ -55,12 +55,13 @@
     <string name="label_available_target_nodes">Available Target Nodes</string>
     <string name="label_node_firmware_details_description">Tap a node to view its firmware details.</string>
     <string name="label_image_firmware_details_description">Tap an image to check the firmware compatibility and select it for update.</string>
-    <string name="label_image_firmware_update_description">The list contains nodes with Firmware Update Server and BLOB Transfer Server models.</string>
+    <string name="label_target_nodes_description">These nodes contain Firmware Update Server and BLOB Transfer Server models.</string>
     <string name="label_distributor_update_description">Updating firmware on the distributor is instantaneous. When selected, no other nodes will be updated.</string>
     <string name="label_metadata">Metadata</string>
     <string name="label_compatibility">Compatibility</string>
     <string name="label_version">Version</string>
     <string name="label_company">Company</string>
     <string name="label_no_nodes_available">No targets available</string>
+    <string name="label_application_size">%d bytes</string>
     ">
 </resources>
