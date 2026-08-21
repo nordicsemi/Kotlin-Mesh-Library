@@ -1226,15 +1226,21 @@ private fun ByteArray.string(offset: Int, length: Int, valid: Boolean): String =
     if (!valid) " ".repeat(length)
     else String(this, offset, length, Charsets.UTF_8)
 
-/** Returns the value, or `null` when it is equal to the unknown value. */
+/**
+ * Returns the value, or `null` when it is equal to the unknown value.
+ */
 private fun UShort.unlessUnknown(unknownValue: UShort): UShort? =
     if (this == unknownValue) null else this
 
-/** Returns the value, or `null` when it is equal to the unknown value. */
+/**
+ * Returns the value, or `null` when it is equal to the unknown value.
+ */
 private fun UInt.unlessUnknown(unknownValue: UInt): UInt? =
     if (this == unknownValue) null else this
 
-/** Converts the value to a [BigDecimal] with the given resolution, clamped to the given range. */
+/**
+ * Converts the value to a [BigDecimal] with the given resolution, clamped to the given range.
+ */
 private fun Long.toDecimal(
     range: ClosedRange<BigDecimal>? = null,
     resolution: BigDecimal,
