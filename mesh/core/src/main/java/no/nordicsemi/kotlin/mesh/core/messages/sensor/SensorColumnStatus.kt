@@ -2,6 +2,7 @@ package no.nordicsemi.kotlin.mesh.core.messages.sensor
 
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
+import no.nordicsemi.kotlin.data.toHexString
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
@@ -51,7 +52,12 @@ class SensorColumnStatus(
                 upperCase = true
             }
         )
-    }, result: ${result.toHex()})"
+    }, result: ${
+        result.toHexString(format = HexFormat {
+            number.prefix = "0x"
+            upperCase = true
+        })
+    })"
 
     companion object Initializer : SensorMessageInitializer {
         override val opCode = 0x53u

@@ -40,8 +40,14 @@ class SensorColumnGet(
         rawValueX = rawValueX,
     )
 
-    override fun toString() = "SensorColumnGet(property: ${property ?: propertyId}, " +
-            "rawValueX: ${rawValueX.toHex()})"
+    override fun toString() = "SensorColumnGet(property: ${
+        property ?: propertyId.toHexString(
+            format = HexFormat {
+                number.prefix = "0x"
+                upperCase = true
+            }
+        )
+    }, rawValueX: ${rawValueX.toHexString(format = HexFormat { number.prefix = "0x" })})"
 
     companion object Initializer : SensorMessageInitializer {
         override val opCode = 0x8232u

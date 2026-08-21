@@ -13,10 +13,9 @@ import java.nio.ByteOrder
 /**
  * A Device Property with its corresponding characteristic.
  *
- * @property propertyId The Property ID of the sensor.
- * @property value      The value reported by the sensor.
- * @property property   The Device Property of the sensor, or `null` when the Property ID is not
- *                      known.
+ * @property propertyId Property ID of the sensor.
+ * @property value      Value reported by the sensor.
+ * @property property   Device Property of the sensor, or `null` when the Property ID is not known.
  */
 data class SensorValue(val propertyId: UShort, val value: DevicePropertyCharacteristic) {
 
@@ -26,8 +25,8 @@ data class SensorValue(val propertyId: UShort, val value: DevicePropertyCharacte
     /**
      * Convenience constructor.
      *
-     * @param property The Device Property of the sensor.
-     * @param value    The value reported by the sensor.
+     * @param property Device Property of the sensor.
+     * @param value    Value reported by the sensor.
      */
     constructor(property: DeviceProperty, value: DevicePropertyCharacteristic) : this(
         propertyId = property.id,
@@ -41,7 +40,7 @@ data class SensorValue(val propertyId: UShort, val value: DevicePropertyCharacte
  * This message is a response to a [SensorGet] and contains the Sensor Data state of one or more
  * sensors within an Element.
  *
- * Each value is marshalled using Format A when the Property ID is lower than 2048 and the value
+ * Each value is marshaled using Format A when the Property ID is lower than 2048 and the value
  * is 1 to 16 octets long, and using Format B otherwise.
  *
  * @property values The sensor values. The maximum length of a single value is 128 octets.
@@ -86,7 +85,7 @@ class SensorStatus(val values: List<SensorValue>) : MeshResponse, Unacknowledged
             val id = value.propertyId.toUInt()
 
             // Format A can be used when the Property ID is lower than 2048 and the value is
-            // 1 to 16 octets long. Otherwise Format B is used.
+            // 1 to 16 octets long. Otherwise, Format B is used.
             return if (id < MAX_FORMAT_A_PROPERTY_ID && data.size in 1..16) {
                 // Format A: 1 bit format, 4 bits length - 1, 11 bits Property ID.
                 val length = (data.size - 1).toUInt()
@@ -156,7 +155,3 @@ class SensorStatus(val values: List<SensorValue>) : MeshResponse, Unacknowledged
         }
     }
 }
-
-/** Returns the data as an uppercase hexadecimal string, with a `0x` prefix. */
-internal fun ByteArray.toHex(): String =
-    if (isEmpty()) "" else joinToString(separator = "", prefix = "0x") { "%02X".format(it) }
