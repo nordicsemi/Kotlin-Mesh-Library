@@ -11,6 +11,11 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
+ * Base initializer for Sensor Messages.
+ */
+interface SensorMessageInitializer : BaseMeshMessageInitializer, HasOpCode
+
+/**
  * A base interface for sensor property messages.
  *
  * @property propertyId 16-bit Property ID of the sensor.
