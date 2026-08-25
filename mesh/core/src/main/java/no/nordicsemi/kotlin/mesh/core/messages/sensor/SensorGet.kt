@@ -36,7 +36,7 @@ class SensorGet(val propertyId: UShort?) : AcknowledgedMeshMessage {
      * @param property The Device Property of the sensor.
      */
     @Suppress("unused")
-    constructor(property: DeviceProperty) : this(propertyId = property.id)
+    constructor(property: DeviceProperty?) : this(propertyId = property?.id)
 
     override fun toString() = "SensorGet(property: ${property ?: propertyId ?: "all"})"
 

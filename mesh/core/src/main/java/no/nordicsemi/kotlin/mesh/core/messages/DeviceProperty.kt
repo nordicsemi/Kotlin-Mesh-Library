@@ -28,7 +28,7 @@ import kotlin.time.Instant
  * @property valueLength Length of the characteristic value in octets, or `null` when the
  *                       characteristic is not supported by this library.
  */
-enum class DeviceProperty(val id: UShort, val valueLength: Int?, private val propertyName: String) {
+enum class DeviceProperty(val id: UShort, val valueLength: Int?, val propertyName: String) {
     AVERAGE_AMBIENT_TEMPERATURE_IN_A_PERIOD_OF_DAY(
         id = 0x0001u,
         valueLength = null,
