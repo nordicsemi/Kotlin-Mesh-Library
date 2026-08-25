@@ -31,6 +31,7 @@ import no.nordicsemi.android.nrfmesh.feature.model.common.Subscriptions
 import no.nordicsemi.android.nrfmesh.feature.model.configurationserver.ConfigurationServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.feature.model.sensor.SensorServer
 import no.nordicsemi.android.nrfmesh.feature.model.vendor.VendorModelControls
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage

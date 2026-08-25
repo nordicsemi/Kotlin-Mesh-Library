@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.model
+package no.nordicsemi.android.nrfmesh.feature.model.sensor
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
