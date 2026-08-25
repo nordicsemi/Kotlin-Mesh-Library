@@ -156,4 +156,6 @@
     <string name="label_bluetooth_sig">Bluetooth SIG</string>
     <string name="vendor_model">Vendor Specific</string>
     <string name="label_unknown_vendor">Unknown vendor</string>
+    <string name="label_unknown_sensor">Unknown Sensor</string>
+    <string name="label_sensor_information">Sensor Information</string>
 </resources>

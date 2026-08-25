@@ -25,3 +25,6 @@ fun isSupportedGroupItem(model: Model) = model.isGenericOnOffServer() ||
         model.isLightLCServer() ||
         model.isSceneServer() ||
         model.isSceneSetupServer()
+
+fun Model.isSensorServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.SENSOR_SERVER_MODEL_ID

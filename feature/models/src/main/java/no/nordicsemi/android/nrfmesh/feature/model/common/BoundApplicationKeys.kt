@@ -105,12 +105,7 @@ internal fun BoundApplicationKeys(
             containerColor = MaterialTheme.colorScheme.surface,
             sheetState = bottomSheetState,
             onDismissRequest = { showBottomSheet = !showBottomSheet },
-            content = {
-                BindAppKeysScreen(
-                    model = model,
-                    send = send
-                )
-            }
+            content = { BindAppKeysScreen(model = model, send = send) }
         )
     }
 }

@@ -20,6 +20,7 @@ import no.nordicsemi.android.nrfmesh.core.common.NodeIdentityStatus
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.common.isSensorServer
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -122,7 +123,13 @@ internal fun ModelScreen(
                 sendApplicationMessage = sendApplicationMessage
             )
         }
-
+        if(model.isSensorServer()) {
+            SensorServer(
+                model = model,
+                messageState = messageState,
+                sendApplicationMessage = sendApplicationMessage
+            )
+        }
         if (model.isVendorModel()) {
             VendorModelControls(
                 model = model,
