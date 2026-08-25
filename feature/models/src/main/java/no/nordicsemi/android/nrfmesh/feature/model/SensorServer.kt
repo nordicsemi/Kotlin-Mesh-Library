@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sensors
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,10 +27,9 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 
 @Composable
 internal fun SensorServer(
-    snackbarHostState: SnackbarHostState,
     model: Model,
     messageState: MessageState,
-    sendApplicationMessage: (Model, MeshMessage) -> Unit,
+    sendApplicationMessage: (Model, MeshMessage) -> Unit
 ) {
     val sensorValues = remember(messageState) {
         (messageState.response as? SensorStatus)?.values.orEmpty()

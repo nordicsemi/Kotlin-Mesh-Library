@@ -125,7 +125,6 @@ internal fun ModelScreen(
         }
         if(model.isSensorServer()) {
             SensorServer(
-                snackbarHostState = snackbarHostState,
                 model = model,
                 messageState = messageState,
                 sendApplicationMessage = sendApplicationMessage
