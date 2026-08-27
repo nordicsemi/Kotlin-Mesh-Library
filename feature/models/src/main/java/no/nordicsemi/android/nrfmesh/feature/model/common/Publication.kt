@@ -145,7 +145,18 @@ internal fun Publication(
             enabled = !messageState.isInProgress(),
         )
         MeshIconButton(
-            onClick = { showBottomSheet = true },
+            onClick = {
+                if(model.boundApplicationKeys.isNotEmpty()) {
+                    showBottomSheet = true
+                } else {
+                    scope.launch {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        snackbarHostState.showSnackbar(
+                            message = resources.getString(R.string.label_error_bind_application_key)
+                        )
+                    }
+                }
+            },
             buttonIcon = Icons.Outlined.Add,
             enabled = !messageState.isInProgress(),
             isOnClickActionInProgress = messageState.isInProgress() &&
