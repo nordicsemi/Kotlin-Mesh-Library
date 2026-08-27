@@ -45,6 +45,7 @@ fun EntryProviderScope<NavKey>.provisioningEntry(
                 navigator.goBack()
             },
             disconnect = viewModel::disconnect,
+            onBackPressed = navigator::goBack,
             onScanResultSelected = viewModel::onScanResultSelected
         )
     }
