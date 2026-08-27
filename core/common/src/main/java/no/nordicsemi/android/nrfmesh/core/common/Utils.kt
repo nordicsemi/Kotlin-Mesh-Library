@@ -3,14 +3,8 @@
 package no.nordicsemi.android.nrfmesh.core.common
 
 import android.content.ClipData
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
-import androidx.compose.ui.platform.LocalClipboard
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.kotlin.mesh.core.exception.AddressAlreadyInUse
@@ -24,7 +18,6 @@ import no.nordicsemi.kotlin.mesh.core.exception.GroupAlreadyExists
 import no.nordicsemi.kotlin.mesh.core.exception.GroupInUse
 import no.nordicsemi.kotlin.mesh.core.exception.ImportError
 import no.nordicsemi.kotlin.mesh.core.exception.InvalidKeyLength
-import no.nordicsemi.kotlin.mesh.core.exception.InvalidPdu
 import no.nordicsemi.kotlin.mesh.core.exception.InvalidPduType
 import no.nordicsemi.kotlin.mesh.core.exception.KeyInUse
 import no.nordicsemi.kotlin.mesh.core.exception.KeyIndexOutOfRange
@@ -45,6 +38,19 @@ import no.nordicsemi.kotlin.mesh.core.exception.SceneInUse
 import no.nordicsemi.kotlin.mesh.core.exception.SecurityException
 import no.nordicsemi.kotlin.mesh.core.layers.access.AccessError
 import no.nordicsemi.kotlin.mesh.logger.LogLevel
+import no.nordicsemi.kotlin.mesh.provisioning.AddressNotSpecified
+import no.nordicsemi.kotlin.mesh.provisioning.ConfirmationFailed
+import no.nordicsemi.kotlin.mesh.provisioning.InvalidAddress
+import no.nordicsemi.kotlin.mesh.provisioning.InvalidConfirmation
+import no.nordicsemi.kotlin.mesh.provisioning.InvalidOobValueFormat
+import no.nordicsemi.kotlin.mesh.provisioning.InvalidPublicKey
+import no.nordicsemi.kotlin.mesh.provisioning.InvalidState
+import no.nordicsemi.kotlin.mesh.provisioning.KeyGenerationFailed
+import no.nordicsemi.kotlin.mesh.provisioning.NetworkKeyNotSpecified
+import no.nordicsemi.kotlin.mesh.provisioning.NoAddressAvailable
+import no.nordicsemi.kotlin.mesh.provisioning.ProvisioningError
+import no.nordicsemi.kotlin.mesh.provisioning.RemoteError
+import no.nordicsemi.kotlin.mesh.provisioning.UnsupportedDevice
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
@@ -71,6 +77,21 @@ object Utils {
 
     fun Throwable.describe(): String {
         return when (this) {
+            is ProvisioningError -> when (this) {
+                is AddressNotSpecified -> "Address not specified."
+                is ConfirmationFailed -> "Confirmation Failed."
+                is InvalidAddress -> "Invalid Address."
+                is InvalidConfirmation -> "Invalid Confirmation."
+                is InvalidOobValueFormat -> "Invalid OOB Value Format."
+                is no.nordicsemi.kotlin.mesh.provisioning.InvalidPdu -> "Invalid PDU."
+                is InvalidPublicKey -> "Invalid Public Key."
+                is InvalidState -> "Invalid State."
+                is KeyGenerationFailed -> "Key Generation Failed."
+                is NetworkKeyNotSpecified -> "Network Key Not Specified."
+                is NoAddressAvailable -> "No Address Available."
+                is RemoteError -> "Remote Error."
+                is UnsupportedDevice -> "Unsupported Device."
+            }
             is AccessError -> this.toString()
 
             is MeshNetworkException -> when (this) {
@@ -85,7 +106,7 @@ object Utils {
                 is GroupInUse -> "Group in use."
                 is ImportError -> "Import error: $error"
                 is InvalidKeyLength -> "Invalid key length."
-                is InvalidPdu -> "Invalid PDU."
+                is no.nordicsemi.kotlin.mesh.core.exception.InvalidPdu -> "Invalid PDU."
                 is InvalidPduType -> "Invalid PDU type."
                 is KeyInUse -> "Key in use."
                 is KeyIndexOutOfRange -> "Key index out of range."
