@@ -36,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -50,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -99,11 +101,13 @@ import kotlin.time.DurationUnit
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun Publication(
+    snackbarHostState: SnackbarHostState,
     messageState: MessageState,
     model: Model,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val resources = LocalResources.current
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var destination by remember { mutableStateOf(model.publish?.address) }
@@ -145,12 +149,23 @@ internal fun Publication(
             enabled = !messageState.isInProgress(),
         )
         MeshIconButton(
-            onClick = { showBottomSheet = true },
+            onClick = {
+                if(model.boundApplicationKeys.isNotEmpty()) {
+                    showBottomSheet = true
+                } else {
+                    scope.launch {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        snackbarHostState.showSnackbar(
+                            message = resources.getString(R.string.label_error_bind_application_key)
+                        )
+                    }
+                }
+            },
             buttonIcon = Icons.Outlined.Add,
             enabled = !messageState.isInProgress(),
             isOnClickActionInProgress = messageState.isInProgress() &&
-                  ((messageState.message as? ConfigModelPublicationSet)?.publish?.isCanceled == false ||
-                    messageState.message is ConfigModelPublicationVirtualAddressSet),
+                    ((messageState.message as? ConfigModelPublicationSet)?.publish?.isCanceled == false ||
+                            messageState.message is ConfigModelPublicationVirtualAddressSet),
         )
     }
 
@@ -404,7 +419,7 @@ private fun Destination(
                         modifier = Modifier.padding(start = 16.dp, top = 8.dp),
                         text = stringResource(R.string.label_fixed_group_addresses)
                     )
-                    fixedGroupAddresses.forEach {destination ->
+                    fixedGroupAddresses.forEach { destination ->
                         MeshSingleLineListItem(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)

@@ -158,4 +158,5 @@
     <string name="label_unknown_vendor">Unknown vendor</string>
     <string name="label_unknown_sensor">Unknown Sensor</string>
     <string name="label_sensor_information">Sensor Information</string>
+    <string name="label_error_bind_application_key">Please bind an application key first.</string>
 </resources>
