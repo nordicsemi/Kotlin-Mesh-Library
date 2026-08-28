@@ -1,7 +1,5 @@
 package no.nordicsemi.android.nrfmesh.feature.model.common
 
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +24,6 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.SportsScore
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.VpnKey
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -333,9 +330,7 @@ private fun Destination(
             subtitle = destination?.toHexString()
         )
         ExposedDropdownMenu(
-            modifier = Modifier
-                .exposedDropdownSize()
-                .scrollable(state = scrollState, orientation = Orientation.Vertical),
+            modifier = Modifier.exposedDropdownSize(),
             scrollState = scrollState,
             expanded = expanded,
             shape = RoundedCornerShape(size = 16.dp),
@@ -368,25 +363,6 @@ private fun Destination(
                                 )
                             }
                         )
-                        // MeshSingleLineListItem(
-                        //     modifier = Modifier.padding(horizontal = 16.dp),
-                        //     imageVector = Icons.Outlined.SportsScore,
-                        //     title = node.name,
-                        //     trailingComposable = {
-                        //         IconButton(
-                        //             onClick = { isListExpanded = !isListExpanded },
-                        //             content = {
-                        //                 Icon(
-                        //                     modifier = Modifier.rotate(
-                        //                         if (isListExpanded) 180f else 0f
-                        //                     ),
-                        //                     imageVector = Icons.Outlined.ArrowDropDown,
-                        //                     contentDescription = null
-                        //                 )
-                        //             }
-                        //         )
-                        //     }
-                        // )
                         if (isListExpanded) {
                             node.elements.forEach { element ->
                                 DropdownMenuItem(
@@ -503,7 +479,7 @@ private fun ApplicationKeys(
                 .firstOrNull { it.index == selectedKeyIndex.toUShort() }
                 ?.name ?: stringResource(R.string.label_unknown)
         )
-        DropdownMenu(
+        ExposedDropdownMenu(
             modifier = Modifier.exposedDropdownSize(),
             expanded = expanded,
             shape = RoundedCornerShape(size = 16.dp),
