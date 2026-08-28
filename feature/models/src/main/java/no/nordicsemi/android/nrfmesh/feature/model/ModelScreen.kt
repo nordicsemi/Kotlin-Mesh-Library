@@ -96,6 +96,7 @@ internal fun ModelScreen(
         }
         if (model.supportsModelPublication != false) {
             Publication(
+                snackbarHostState = snackbarHostState,
                 messageState = messageState,
                 model = model,
                 send = send

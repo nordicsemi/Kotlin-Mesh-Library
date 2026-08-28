@@ -10,19 +10,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
-import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.SportsScore
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.VpnKey
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -259,7 +259,7 @@ private fun NetworkKeysRow(
     ) {
         ElevatedCardItem(
             modifier = Modifier.menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-            onClick = { expanded = true },
+            // onClick = { expanded = true }, menuAnchor handles the expansion by default
             imageVector = Icons.Outlined.VpnKey,
             title = stringResource(R.string.label_network_key),
             titleAction = {
@@ -272,10 +272,11 @@ private fun NetworkKeysRow(
                 it.index == selectedKeyIndex.toUShort()
             }?.name ?: stringResource(R.string.label_unknown)
         )
-        DropdownMenu(
+        ExposedDropdownMenu(
             modifier = Modifier.exposedDropdownSize(),
             expanded = expanded,
             onDismissRequest = { expanded = !expanded },
+            shape = RoundedCornerShape(size = 16.dp),
             content = {
                 network?.networkKeys?.forEachIndexed { index, key ->
                     DropdownMenuItem(
@@ -318,7 +319,7 @@ private fun DestinationRow(
         ElevatedCardItem(
             modifier = Modifier
                 .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-            onClick = { expanded = true },
+            // onClick = { expanded = true }, menuAnchor handles the expansion by default
             imageVector = Icons.Outlined.SportsScore,
             title = when (destination) {
                 is UnicastAddress -> network

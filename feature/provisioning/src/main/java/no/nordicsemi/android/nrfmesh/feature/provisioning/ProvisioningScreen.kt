@@ -101,7 +101,7 @@ internal fun ProvisioningScreen(
     ScannerView(
         modifier = Modifier.padding(horizontal = 16.dp),
         state = rememberFilterState(filter = { ServiceUuid(uuid = MeshProvisioningService.uuid) }),
-        onScanningStateChanged = { println("AAA did scanning state changed?: $it") },
+        onScanningStateChanged = {},
         deviceItem = { scanResult ->
             runCatching {
                 UnprovisionedDevice.from(advertisementData = scanResult.advertisingData.raw)

@@ -3,17 +3,16 @@ package no.nordicsemi.android.nrfmesh.feature.model.configurationserver
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.GroupWork
 import androidx.compose.material.icons.outlined.SportsScore
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBoxScope
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,9 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.nrfmesh.core.common.name
 import no.nordicsemi.android.nrfmesh.core.ui.MeshSingleLineListItem
-import no.nordicsemi.android.nrfmesh.core.ui.MeshTwoLineListItem
 import no.nordicsemi.android.nrfmesh.feature.models.R
-import no.nordicsemi.kotlin.mesh.core.model.HeartbeatPublicationDestination
 import no.nordicsemi.kotlin.mesh.core.model.HeartbeatSubscriptionDestination
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
@@ -44,12 +41,13 @@ internal fun ExposedDropdownMenuBoxScope.HeartbeatSubscriptionDestinationsDropdo
         .orEmpty()
         .filter { it.address is HeartbeatSubscriptionDestination }
         .map { it.address as HeartbeatSubscriptionDestination }
-    DropdownMenu(
+    ExposedDropdownMenu(
         modifier = Modifier
             .exposedDropdownSize()
             .wrapContentHeight(),
         expanded = expanded,
         onDismissRequest = onDismissed,
+        shape = RoundedCornerShape(size = 16.dp),
         content = {
             Text(
                 modifier = Modifier.padding(start = 16.dp, top = 8.dp),
