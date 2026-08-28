@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
@@ -21,14 +22,12 @@ import androidx.compose.material.icons.outlined.KeyboardAlt
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.VpnKey
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -263,39 +262,31 @@ private fun NetworkKeyRow(
                 .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
             imageVector = Icons.Outlined.VpnKey,
             title = stringResource(R.string.label_network_key),
+            // onClick = { expanded = true }, menuAnchor handles the expansion by default
             titleAction = {
-                IconButton(
+                Icon(
                     modifier = Modifier.rotate(if (isExpanded) 180f else 0f),
-                    onClick = { isExpanded = true },
-                    content = {
-                        Icon(
-                            imageVector = Icons.Outlined.ArrowDropDown,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    imageVector = Icons.Outlined.ArrowDropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
             },
             subtitle = name
         )
-        DropdownMenu(
+        ExposedDropdownMenu(
             modifier = Modifier.exposedDropdownSize(),
             expanded = isExpanded,
-            onDismissRequest = { isExpanded = false }
+            onDismissRequest = { isExpanded = false },
+            shape = RoundedCornerShape(size = 16.dp)
         ) {
             networkKeys.forEachIndexed { index, key ->
                 DropdownMenuItem(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.VpnKey,
-                            contentDescription = null
-                        )
+                        Icon(imageVector = Icons.Outlined.VpnKey, contentDescription = null)
                     },
-                    text = {
-                        Text(text = key.name)
-                    },
+                    text = { Text(text = key.name) },
                     onClick = {
                         name = key.name
                         onNetworkKeyClick(key)

@@ -302,7 +302,7 @@ private fun Destination(
     ) {
         ElevatedCardItem(
             modifier = Modifier.menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-            onClick = { expanded = true },
+            // onClick = { expanded = true }, menuAnchor handles the expansion by default
             imageVector = Icons.Outlined.SportsScore,
             title = when (destination) {
                 is UnicastAddress -> network
@@ -466,7 +466,7 @@ private fun ApplicationKeys(
     ) {
         ElevatedCardItem(
             modifier = Modifier.menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-            onClick = { expanded = true },
+            // onClick = { expanded = true }, menuAnchor handles the expansion by default
             imageVector = Icons.Outlined.VpnKey,
             title = stringResource(R.string.label_application_key),
             titleAction = {
