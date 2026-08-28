@@ -27,6 +27,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
@@ -51,6 +52,7 @@ import kotlinx.coroutines.CoroutineScope
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemHexTextField
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
+import no.nordicsemi.android.nrfmesh.core.ui.MeshSingleLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.showSnackbar
 import no.nordicsemi.kotlin.mesh.core.model.Address
@@ -265,7 +267,9 @@ private fun NetworkKeyRow(
             // onClick = { expanded = true }, menuAnchor handles the expansion by default
             titleAction = {
                 Icon(
-                    modifier = Modifier.rotate(if (isExpanded) 180f else 0f),
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .rotate(if (isExpanded) 180f else 0f),
                     imageVector = Icons.Outlined.ArrowDropDown,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary
@@ -283,16 +287,20 @@ private fun NetworkKeyRow(
                 DropdownMenuItem(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Outlined.VpnKey, contentDescription = null)
+                    text = {
+                        MeshSingleLineListItem(
+                            imageVector = Icons.Outlined.VpnKey,
+                            title = key.name
+                        )
                     },
-                    text = { Text(text = key.name) },
                     onClick = {
                         name = key.name
                         onNetworkKeyClick(key)
                         isExpanded = false
                     }
                 )
+                if (index < networkKeys.size - 1)
+                    HorizontalDivider()
             }
         }
     }
