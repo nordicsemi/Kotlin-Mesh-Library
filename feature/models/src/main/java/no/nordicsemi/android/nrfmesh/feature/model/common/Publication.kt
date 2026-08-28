@@ -1,6 +1,7 @@
 package no.nordicsemi.android.nrfmesh.feature.model.common
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,7 +34,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
@@ -84,7 +85,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Credentials
 import no.nordicsemi.kotlin.mesh.core.model.FriendshipSecurity
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.MasterSecurity
-import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.PublicationAddress
 import no.nordicsemi.kotlin.mesh.core.model.Publish
@@ -150,7 +150,7 @@ internal fun Publication(
         )
         MeshIconButton(
             onClick = {
-                if(model.boundApplicationKeys.isNotEmpty()) {
+                if (model.boundApplicationKeys.isNotEmpty()) {
                     showBottomSheet = true
                 } else {
                     scope.launch {
@@ -297,14 +297,14 @@ private fun Destination(
 ) {
     val network = model.parentElement?.parentNode?.network ?: return
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
     ExposedDropdownMenuBox(
         modifier = Modifier.padding(horizontal = 16.dp),
         expanded = expanded,
         onExpandedChange = { expanded = it },
     ) {
         ElevatedCardItem(
-            modifier = Modifier
-                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            modifier = Modifier.menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
             onClick = { expanded = true },
             imageVector = Icons.Outlined.SportsScore,
             title = when (destination) {
@@ -332,9 +332,13 @@ private fun Destination(
             },
             subtitle = destination?.toHexString()
         )
-        DropdownMenu(
-            modifier = Modifier.exposedDropdownSize(),
+        ExposedDropdownMenu(
+            modifier = Modifier
+                .exposedDropdownSize()
+                .scrollable(state = scrollState, orientation = Orientation.Vertical),
+            scrollState = scrollState,
             expanded = expanded,
+            shape = RoundedCornerShape(size = 16.dp),
             onDismissRequest = { expanded = !expanded },
             content = {
                 model.parentElement?.parentNode?.network?.let { network ->
@@ -344,41 +348,65 @@ private fun Destination(
                     )
                     network.nodes.forEach { node ->
                         var isListExpanded by rememberSaveable { mutableStateOf(false) }
-                        MeshSingleLineListItem(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            imageVector = Icons.Outlined.SportsScore,
-                            title = node.name,
-                            trailingComposable = {
-                                IconButton(
-                                    onClick = { isListExpanded = !isListExpanded },
-                                    content = {
-                                        Icon(
-                                            modifier = Modifier.rotate(
-                                                if (isListExpanded) 180f else 0f
-                                            ),
-                                            imageVector = Icons.Outlined.ArrowDropDown,
-                                            contentDescription = null
-                                        )
-                                    }
+                        DropdownMenuItem(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                            text = {
+                                MeshSingleLineListItem(
+                                    imageVector = Icons.Outlined.SportsScore,
+                                    title = node.name,
+                                )
+                            },
+                            onClick = { isListExpanded = !isListExpanded },
+                            trailingIcon = {
+                                Icon(
+                                    modifier = Modifier.rotate(
+                                        degrees = if (isListExpanded) 180f else 0f
+                                    ),
+                                    imageVector = Icons.Outlined.ArrowDropDown,
+                                    contentDescription = null
                                 )
                             }
                         )
+                        // MeshSingleLineListItem(
+                        //     modifier = Modifier.padding(horizontal = 16.dp),
+                        //     imageVector = Icons.Outlined.SportsScore,
+                        //     title = node.name,
+                        //     trailingComposable = {
+                        //         IconButton(
+                        //             onClick = { isListExpanded = !isListExpanded },
+                        //             content = {
+                        //                 Icon(
+                        //                     modifier = Modifier.rotate(
+                        //                         if (isListExpanded) 180f else 0f
+                        //                     ),
+                        //                     imageVector = Icons.Outlined.ArrowDropDown,
+                        //                     contentDescription = null
+                        //                 )
+                        //             }
+                        //         )
+                        //     }
+                        // )
                         if (isListExpanded) {
                             node.elements.forEach { element ->
-                                MeshTwoLineListItem(
-                                    modifier = Modifier
-                                        .exposedDropdownSize()
-                                        .clickable {
-                                            onDestinationSelected(element.unicastAddress as PublicationAddress)
-                                            isListExpanded = !isListExpanded
-                                            expanded = !expanded
-                                        },
-                                    leadingComposable = {
-                                        Spacer(modifier = Modifier.width(width = 56.dp))
+                                DropdownMenuItem(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                    text = {
+                                        MeshTwoLineListItem(
+                                            leadingComposable = {
+                                                Spacer(modifier = Modifier.width(width = 56.dp))
+                                            },
+                                            title = element.name
+                                                ?: stringResource(R.string.label_unknown),
+                                            subtitle = element.unicastAddress.toHexString()
+                                        )
                                     },
-                                    title = element.name
-                                        ?: stringResource(R.string.label_unknown),
-                                    subtitle = element.unicastAddress.toHexString()
+                                    onClick = {
+                                        onDestinationSelected(element.unicastAddress as PublicationAddress)
+                                        isListExpanded = !isListExpanded
+                                        expanded = !expanded
+                                    }
                                 )
                             }
                         }
@@ -393,26 +421,32 @@ private fun Destination(
                         .takeIf { it.isNotEmpty() }
                         ?.let {
                             it.forEach { destination ->
-                                MeshSingleLineListItem(
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp)
-                                        .clickable {
-                                            onDestinationSelected(destination.address as PublicationAddress)
-                                            expanded = !expanded
-                                        },
-                                    imageVector = Icons.Outlined.SportsScore,
-                                    title = destination.name
+                                DropdownMenuItem(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                    text = {
+                                        MeshSingleLineListItem(
+                                            imageVector = Icons.Outlined.SportsScore,
+                                            title = destination.name
+                                        )
+                                    },
+                                    onClick = {
+                                        onDestinationSelected(destination.address as PublicationAddress)
+                                        expanded = !expanded
+                                    }
                                 )
                             }
                         }
-                    MeshSingleLineListItem(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .clickable {
-
-                            },
-                        imageVector = Icons.Outlined.Add,
-                        title = stringResource(R.string.label_add_group)
+                    DropdownMenuItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                        text = {
+                            MeshSingleLineListItem(
+                                imageVector = Icons.Outlined.Add,
+                                title = stringResource(R.string.label_add_group)
+                            )
+                        },
+                        onClick = { onDestinationSelected(UnassignedAddress) }
                     )
                     HorizontalDivider()
                     Text(
@@ -420,15 +454,19 @@ private fun Destination(
                         text = stringResource(R.string.label_fixed_group_addresses)
                     )
                     fixedGroupAddresses.forEach { destination ->
-                        MeshSingleLineListItem(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .clickable {
-                                    onDestinationSelected(destination as PublicationAddress)
-                                    expanded = !expanded
-                                },
-                            imageVector = Icons.Outlined.GroupWork,
-                            title = destination.name()
+                        DropdownMenuItem(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                            text = {
+                                MeshSingleLineListItem(
+                                    imageVector = Icons.Outlined.GroupWork,
+                                    title = destination.name()
+                                )
+                            },
+                            onClick = {
+                                onDestinationSelected(destination as PublicationAddress)
+                                expanded = !expanded
+                            }
                         )
                     }
                 }
@@ -461,13 +499,14 @@ private fun ApplicationKeys(
                     expanded = expanded
                 )
             },
-            subtitle = keys.firstOrNull {
-                it.index == selectedKeyIndex.toUShort()
-            }?.name ?: stringResource(R.string.label_unknown)
+            subtitle = keys
+                .firstOrNull { it.index == selectedKeyIndex.toUShort() }
+                ?.name ?: stringResource(R.string.label_unknown)
         )
         DropdownMenu(
             modifier = Modifier.exposedDropdownSize(),
             expanded = expanded,
+            shape = RoundedCornerShape(size = 16.dp),
             onDismissRequest = { expanded = !expanded },
             content = {
                 keys.forEachIndexed { index, key ->
@@ -694,17 +733,6 @@ private fun RetransmissionCountAndInterval(
                 textAlign = TextAlign.End
             )
         }
-    )
-}
-
-/**
- * Returns the list of possible addresses that can be selected as a destination address for a
- * publication message for a given non ConfigurationServer Model.
- */
-fun Model.groupPublicationDestinations(network: MeshNetwork): List<PublicationAddress> {
-    val groups = network.groups.map { it.address as PublicationAddress }
-    return groups + listOf<PublicationAddress>(
-        AllRelays, AllFriends, AllProxies, AllNodes
     )
 }
 
