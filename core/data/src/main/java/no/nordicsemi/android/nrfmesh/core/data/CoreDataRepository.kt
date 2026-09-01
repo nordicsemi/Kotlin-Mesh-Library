@@ -37,9 +37,13 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
-import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEventHandler
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.PairingInitiatorClient
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.SimpleOnOffClient
+import no.nordicsemi.android.nrfmesh.core.data.meshnetwork.simpleonoff.SimpleOnOffClientHandler
+import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericDefaultTransitionTimeServer
+import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericOnOffClientEventHandler
+import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEventHandler
 import no.nordicsemi.android.nrfmesh.core.data.storage.SceneStatesDataStoreStorage
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.Peripheral
