@@ -85,8 +85,6 @@ internal fun BoundApplicationKeys(
             model.boundApplicationKeys.size,
             model.boundApplicationKeys.size
         ),
-        onClick = dropUnlessResumed {
-            navigateToBindApplicationKeys(model)
-        }
+        onClick = dropUnlessResumed { navigateToBindApplicationKeys(model) }
     )
 }

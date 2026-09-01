@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bluetooth
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.GroupWork
 import androidx.compose.material.icons.outlined.SyncLock
 import androidx.compose.material.icons.rounded.CheckCircleOutline
@@ -28,8 +29,10 @@ import androidx.compose.material.icons.rounded.SentimentVeryDissatisfied
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -55,6 +58,7 @@ import no.nordicsemi.android.common.scanner.view.DeviceListItem
 import no.nordicsemi.android.common.scanner.view.ScannerView
 import no.nordicsemi.android.common.theme.nordicGreen
 import no.nordicsemi.android.common.theme.nordicSun
+import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -86,6 +90,7 @@ internal fun ProvisioningScreen(
     onProvisioningComplete: (Uuid) -> Unit,
     onProvisioningFailed: () -> Unit,
     disconnect: () -> Unit,
+    onBackPressed: () -> Unit,
     onScanResultSelected: (ScanResult) -> Boolean,
 ) {
     val scope = rememberCoroutineScope()
@@ -167,13 +172,24 @@ internal fun ProvisioningScreen(
                 openDeviceCapabilitiesSheet = !openDeviceCapabilitiesSheet
             },
             sheetState = capabilitiesSheetState,
-            contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) }
+            contentWindowInsets = { WindowInsets.safeDrawing.only(WindowInsetsSides.Top) },
+            sheetGesturesEnabled = false,
+            properties = ModalBottomSheetProperties(shouldDismissOnBackPress = false)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(
+                    onClick = {
+                        disconnect()
+                        onBackPressed()
+                        openDeviceCapabilitiesSheet = !openDeviceCapabilitiesSheet
+                    },
+                    content = {
+                        Icon(imageVector = Icons.Outlined.Close, contentDescription = null)
+                    }
+                )
                 SectionTitle(
                     modifier = Modifier
                         .weight(weight = 1f)
@@ -305,7 +321,7 @@ private fun ProvisioningContent(
                     icon = Icons.Rounded.ErrorOutline,
                     iconColor = MaterialTheme.colorScheme.error,
                     title = stringResource(R.string.label_status),
-                    text = provisionerState.throwable.toString()
+                    text = "Error while provisioning: ${provisionerState.throwable.describe()}"
                 )
             }
         }

@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,7 +34,6 @@ import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.ScanResult
 import no.nordicsemi.kotlin.mesh.bearer.BearerEvent
 import no.nordicsemi.kotlin.mesh.bearer.provisioning.ProvisioningBearer
-import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigCompositionDataGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigDefaultTtlGet
 import no.nordicsemi.kotlin.mesh.core.model.Address
@@ -83,8 +81,7 @@ class ProvisioningViewModel @Inject constructor(
      */
     private fun observeNetwork() {
         repository.networkEvents
-            .map { repository.meshNetwork }
-            .filterNotNull()
+            .mapNotNull { repository.meshNetwork }
             .onEach {
                 meshNetwork = it
                 _uiState.update { state ->
@@ -127,7 +124,7 @@ class ProvisioningViewModel @Inject constructor(
         pbBearer = AndroidPbGattBearer(centralManager, scanResult.peripheral, dispatcher)
             .apply { logger = repository.logger }
         unprovisionedDevice = device
-        originalNode = meshNetwork?.node(uuid = device.uuid)
+        originalNode = meshNetwork.node(uuid = device.uuid)
 
         // Return whether the Node with the same UUID already exists in the network.
         return originalNode != null
@@ -162,7 +159,7 @@ class ProvisioningViewModel @Inject constructor(
         unprovisionedDevice: UnprovisionedDevice,
         bearer: ProvisioningBearer,
     ) {
-        val meshNetwork = requireNotNull(meshNetwork) { throw NoNetwork() }
+        val meshNetwork = meshNetwork
 
         // The Provisioning Manager will carry on the provisioning.
         val provisioningManager = ProvisioningManager(

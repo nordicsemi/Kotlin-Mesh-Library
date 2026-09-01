@@ -327,7 +327,7 @@ private fun SourceRow(
     ) {
         ElevatedCardItem(
             modifier = Modifier.menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-            onClick = { expanded = true },
+            // onClick = { expanded = true }, menuAnchor handles the expansion by default
             imageVector = Icons.Outlined.Start,
             title = when (source) {
                 is UnicastAddress -> network
@@ -374,11 +374,11 @@ private fun DestinationRow(
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp),
         expanded = expanded,
-        onExpandedChange = { expanded = it },
+        onExpandedChange = { expanded = it }
     ) {
         ElevatedCardItem(
             modifier = Modifier.menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-            onClick = { expanded = true },
+            // onClick = { expanded = true }, menuAnchor handles the expansion by default
             imageVector = Icons.Outlined.SportsScore,
             title = when (destination) {
                 is UnicastAddress -> network
