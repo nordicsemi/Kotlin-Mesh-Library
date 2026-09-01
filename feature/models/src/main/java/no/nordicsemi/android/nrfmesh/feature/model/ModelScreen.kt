@@ -18,6 +18,7 @@ import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.NodeIdentityStatus
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
+import no.nordicsemi.android.nrfmesh.core.common.isFirmwareDistributionServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isSensorServer
@@ -29,6 +30,7 @@ import no.nordicsemi.android.nrfmesh.feature.model.common.CommonInformation
 import no.nordicsemi.android.nrfmesh.feature.model.common.Publication
 import no.nordicsemi.android.nrfmesh.feature.model.common.Subscriptions
 import no.nordicsemi.android.nrfmesh.feature.model.configurationserver.ConfigurationServer
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareDistributionServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.feature.model.sensor.SensorServer
@@ -139,6 +141,15 @@ internal fun ModelScreen(
                 sendApplicationMessage = sendApplicationMessage
             )
         }
+
+        if (model.isFirmwareDistributionServer()) {
+            FirmwareDistributionServer(
+                model = model,
+                messageState = messageState,
+                send = sendApplicationMessage
+            )
+        }
+
         Spacer(modifier = Modifier.size(size = 8.dp))
     }
 

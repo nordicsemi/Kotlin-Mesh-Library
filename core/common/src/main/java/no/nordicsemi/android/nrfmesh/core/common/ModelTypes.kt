@@ -20,11 +20,14 @@ fun Model.isLightLCServer() =
 
 fun Model.isVendorModel() = !isBluetoothSigAssigned
 
+fun Model.isSensorServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.SENSOR_SERVER_MODEL_ID
+
+fun Model.isFirmwareDistributionServer() = isBluetoothSigAssigned
+        && (modelId as SigModelId).modelIdentifier == Model.FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID
+
 fun isSupportedGroupItem(model: Model) = model.isGenericOnOffServer() ||
         model.isGenericLevelServer() ||
         model.isLightLCServer() ||
         model.isSceneServer() ||
         model.isSceneSetupServer()
-
-fun Model.isSensorServer() =
-    (modelId as? SigModelId)?.modelIdentifier == Model.SENSOR_SERVER_MODEL_ID
