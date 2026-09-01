@@ -140,6 +140,13 @@ internal fun ModelScreen(
                     sendApplicationMessage = sendApplicationMessage
                 )
 
+            model.isSensorServer() ->
+                SensorServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
             model.isFirmwareDistributionServer() ->
                 FirmwareDistributionServer(
                     model = model,
@@ -170,15 +177,6 @@ internal fun ModelScreen(
                     sendApplicationMessage = sendApplicationMessage
                 )
         }
-
-        if (model.isFirmwareUpdateServer()) {
-            FirmwareUpdateServer(
-                model = model,
-                isInProgress = messageState.isInProgress(),
-                send = sendAcknowledgedMessage,
-            )
-        }
-
         Spacer(modifier = Modifier.size(size = 8.dp))
     }
 
