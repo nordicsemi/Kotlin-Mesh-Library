@@ -42,10 +42,10 @@ data class UpdatedFirmwareInformation(val manifest: Manifest) {
             /**
              * The Firmware ID of the firmware image.
              */
-            val firmwareId: FirmwareId
+            val firmwareId: FirmwareId?
                 get() {
                     val data = firmwareIdString.hexToByteArray()
-                    return FirmwareId(data)
+                    return FirmwareId.from(data = data)
                 }
 
             override fun toString() = "Firmware(firmwareId: $firmwareId, " +
