@@ -40,7 +40,6 @@ import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEventHandler
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.PairingInitiatorClient
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.SimpleOnOffClient
-import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEventHandler
 import no.nordicsemi.android.nrfmesh.core.data.storage.SceneStatesDataStoreStorage
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.Peripheral

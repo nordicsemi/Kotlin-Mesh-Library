@@ -66,7 +66,7 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                             )
                         }
                     },
-                    navigateToFirmwareInformation = { model, information ->
+                    navigateToFirmwareInformation = { title, model, information ->
                         navigator.navigate(
                             key = FirmwareInformationKey(
                                 title = title,
