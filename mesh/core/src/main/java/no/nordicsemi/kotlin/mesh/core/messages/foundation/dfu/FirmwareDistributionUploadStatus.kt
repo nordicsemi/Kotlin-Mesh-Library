@@ -99,7 +99,7 @@ class FirmwareDistributionUploadStatus(
                     val firmwareId = params
                         .copyOfRange(fromIndex = 3, toIndex = params.size)
                         .takeIf { it.isNotEmpty() }
-                        ?.let { FirmwareId(data = it) }
+                        ?.let { FirmwareId.from(data = it) }
                     FirmwareDistributionUploadStatus(
                         status = status,
                         phase = phase,
