@@ -52,8 +52,6 @@ Product documentation is available here: [Documentation](https://nordicsemicondu
 
 Most of the features listed above are demonstrated in nRF Mesh sample application.
 
-The app is not yet published to Playstore but is available on this repo.
-
 ### Supported features
 
 1. Provisioning with all available features.
