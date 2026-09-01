@@ -47,17 +47,6 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
 
     constructor(companyIdentifier: UShort) : this(companyIdentifier, byteArrayOf())
 
-    constructor(data: ByteArray) : this(
-        companyIdentifier = when (data.size >= 2) {
-            true -> data.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
-            else -> 0u
-        },
-        version = when (data.size > 2) {
-            true -> data.copyOfRange(fromIndex = 2, toIndex = data.size)
-            else -> byteArrayOf()
-        }
-    )
-
     /**
      * Returns the version string in the format `major.minor.revision+build`, skipping the build
      * number if it is 0.
@@ -78,7 +67,7 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
             when (version.size) {
                 8 -> build = version.getUInt(offset = 4, order = ByteOrder.LITTLE_ENDIAN)
                 4 -> revision = version.getUShort(offset = 2, order = ByteOrder.LITTLE_ENDIAN)
-                2,1 -> {} // major and minor are already set
+                2, 1 -> {} // major and minor are already set
                 else -> return "0x${version.toHexString(HexFormat.UpperCase)}"
             }
             return if (build == 0u) "$major.$minor.$revision" else "$major.$minor.$revision+$build"
@@ -118,6 +107,18 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
         result = 31 * result + bytes.contentHashCode()
         result = 31 * result + (versionString?.hashCode() ?: 0)
         return result
+    }
+
+    companion object {
+
+        fun from(data: ByteArray) = data.takeIf { it.size >= 2 }
+            ?.let {
+                FirmwareId(
+                    companyIdentifier = it.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN),
+                    version = it.copyOfRange(fromIndex = 2, toIndex = it.size)
+                )
+            }
+
     }
 }
 
