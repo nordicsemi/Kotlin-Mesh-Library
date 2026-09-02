@@ -13,12 +13,14 @@ import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
 import no.nordicsemi.android.nrfmesh.feature.application.keys.key.navigation.ApplicationKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.navigation.ApplicationKeysContentKey
+import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.BindAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.AddAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.ConfigAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.developer.navigation.DeveloperSettingsContentKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.GroupControlsKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.navigation.GroupKey
 import no.nordicsemi.android.nrfmesh.feature.ivindex.navigation.IvIndexContentKey
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.FirmwareInformationKey
 import no.nordicsemi.android.nrfmesh.feature.model.navigation.ModelKey
 import no.nordicsemi.android.nrfmesh.feature.model.navigation.RelatedModelsKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.key.navigation.NetworkKeyContentKey
@@ -80,7 +82,9 @@ class MeshAppState(
             is AddAppKeysKey,
             is ElementKey,
             is ModelKey,
+            is BindAppKeysKey,
             is RelatedModelsKey,
+            is FirmwareInformationKey,
             is ProvisioningKey,
                 -> true
 

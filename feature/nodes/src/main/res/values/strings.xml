@@ -39,7 +39,7 @@
     <string name="label_success">Success</string>
     <string name="title_node_information">Node Information</string>
     <string name="label_company_identifier">Company Identifier</string>
-    <string name="unknown">Unknown</string>
+    <string name="label_unknown">Unknown</string>
     <string name="label_product_identifier">Product Identifier</string>
     <string name="label_product_version">Product Version</string>
     <string name="label_replay_protection_count">Replay Protection Count</string>

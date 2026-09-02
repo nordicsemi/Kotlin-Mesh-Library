@@ -167,9 +167,6 @@ class Model internal constructor(
             ?.filter { it.isBoundTo(this) }
             ?: emptyList()
 
-    val supportsApplicationKeyBinding: Boolean
-        get() = !requiresDeviceKey
-
     val supportsDeviceKey: Boolean
         get() = requiresDeviceKey || isOpcodesAggregatorServer || isOpcodesAggregatorClient
 
@@ -228,6 +225,9 @@ class Model internal constructor(
 
     @Transient
     var eventHandler: ModelEventHandler? = null
+
+    val supportsApplicationKeyBinding: Boolean
+        get() = !requiresDeviceKey
 
     val supportsModelPublication: Boolean?
         get() = when ((modelId as? SigModelId)?.modelIdentifier) {
@@ -334,11 +334,21 @@ class Model internal constructor(
             LIGHT_LC_SETUP_SERVER_MODEL_ID,
             LIGHT_LC_CLIENT_MODEL_ID,
                 -> true
+            // BLOB Transfer
+            BLOB_TRANSFER_SERVER_MODEL_ID,
+            BLOB_TRANSFER_CLIENT_MODEL_ID,
+                -> false
+            // Device Firmware Update
+            FIRMWARE_UPDATE_SERVER_MODEL_ID,
+            FIRMWARE_UPDATE_CLIENT_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID,
+                -> false
 
-            else -> null
+            else -> false
         }
 
-    val supportsModelSubscription: Boolean?
+    val supportsModelSubscription: Boolean
         get() = when ((modelId as? SigModelId)?.modelIdentifier) {
             // Foundation
             CONFIGURATION_SERVER_MODEL_ID,
@@ -427,9 +437,14 @@ class Model internal constructor(
             LIGHT_LC_SERVER_MODEL_ID,
             LIGHT_LC_SETUP_SERVER_MODEL_ID,
             LIGHT_LC_CLIENT_MODEL_ID,
+                // Device Firmware Update
+            FIRMWARE_UPDATE_SERVER_MODEL_ID,
+            FIRMWARE_UPDATE_CLIENT_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID,
                 -> true
 
-            else -> null
+            else -> false
         }
 
     val directBaseModels: List<Model>
@@ -578,6 +593,14 @@ class Model internal constructor(
 
         else -> false
     }
+
+    /**
+     * Returns the bound application key for a given key index
+     *
+     * @param index Application key index.
+     * @return Bound application key or null if the key index is not bound to the model
+     */
+    fun boundApplicationKey(index: KeyIndex) = boundApplicationKeys.find { it.index == index }
 
     /**
      * Sets the [Publish] settings for this model.

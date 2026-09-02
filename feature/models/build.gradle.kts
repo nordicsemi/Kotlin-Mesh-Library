@@ -9,7 +9,12 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.runtime.saveable)
     implementation(nordic.kotlin.data)
+    implementation(nordic.mcumgr.ble)
+    implementation(nordic.permissions.ble)
+
+    implementation(libs.androidx.compose.runtime.saveable)
     implementation(libs.kotlinx.serialization.json)
 
     implementation(project(":core:common"))

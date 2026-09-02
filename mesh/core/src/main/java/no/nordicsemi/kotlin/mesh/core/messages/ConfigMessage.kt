@@ -294,6 +294,7 @@ interface ConfigNetAndAppKeyMessage : ConfigNetKeyMessage, ConfigAppKeyMessage {
      *
      * @property networkKeyIndex The Network Key Index.
      * @property applicationKeyIndex The Application Key Index.
+     * @constructor Constructs a ConfigNetKeyAndAppKeyIndex.
      */
     data class ConfigNetKeyAndAppKeyIndex(
         val networkKeyIndex: KeyIndex,
@@ -367,7 +368,7 @@ interface ConfigAnyModelMessage : ConfigModelMessage {
 }
 
 /**
- * A base interface for a app key bind model message to a model.
+ * A base interface for an app key bind model message to a model.
  */
 interface ConfigAnyAppKeyModelMessage : ConfigAnyModelMessage, ConfigAppKeyMessage
 

@@ -264,8 +264,8 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
         }
 
         logger?.i(LogCategory.MODEL) {
-            "Sending $msg from: ${element.unicastAddress.toHexString()}, " +
-                    "to: ${destination.toHexString()})"
+            "Sending $msg from: ${element.unicastAddress.toHexString()} " +
+                    "to: ${destination.toHexString()}"
         }
 
         val pdu = AccessPdu.init(
@@ -535,7 +535,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
                         } else {
                             logger?.w(LogCategory.MODEL) {
                                 "Local ${model.name} model on ${model.parentElement!!.unicastAddress} " +
-                                        "not bound to ${keySet.applicationKey}"
+                                        "not bound to ${keySet.applicationKey.name}"
                             }
                         }
                     }

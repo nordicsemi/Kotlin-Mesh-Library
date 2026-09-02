@@ -778,6 +778,24 @@ data class Node internal constructor(
     else null
 
     /**
+     * Returns the model with the given model ID.
+     *
+     * @param modelId Model ID.
+     * @return Model or null if not found.
+     */
+    fun model(modelId: ModelId) = model(modelId = modelId.id)
+
+    /**
+     * Returns the model with the given model ID.
+     *
+     * @param modelId Model ID.
+     * @return Model or null if not found.
+     */
+    fun model(modelId: UInt) = elements
+        .flatMap { it.models }
+        .firstOrNull { it.modelId.id == modelId }
+
+    /**
      * Checks if the given Application Key known by the node.
      *
      * Note: This is based on the key index.

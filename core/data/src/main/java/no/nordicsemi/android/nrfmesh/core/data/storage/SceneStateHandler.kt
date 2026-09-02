@@ -1,6 +1,6 @@
 package no.nordicsemi.android.nrfmesh.core.data.storage
 
-import no.nordicsemi.android.nrfmesh.core.data.models.SceneNumber
+import no.nordicsemi.android.nrfmesh.core.data.ui.SceneNumber
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

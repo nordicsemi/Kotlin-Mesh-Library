@@ -1,6 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.nodes.node
 
-import no.nordicsemi.android.nrfmesh.core.data.models.ModelData
+import no.nordicsemi.android.nrfmesh.core.data.ui.ModelData
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.Element
 import no.nordicsemi.kotlin.mesh.core.model.Features

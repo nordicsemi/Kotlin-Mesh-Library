@@ -4,15 +4,18 @@ import android.content.Context
 import no.nordicsemi.android.feature.config.networkkeys.navigation.AddNetKeysKey
 import no.nordicsemi.android.feature.config.networkkeys.navigation.ConfigNetKeysKey
 import no.nordicsemi.android.nrfmesh.R
+import no.nordicsemi.android.nrfmesh.core.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.android.nrfmesh.core.navigation.GroupsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NavigationState
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.ProxyKey
+import no.nordicsemi.android.nrfmesh.core.navigation.ScannerKey
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.key.navigation.ApplicationKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.application.keys.navigation.ApplicationKeysContentKey
+import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.BindAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.AddAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.config.applicationkeys.navigation.ConfigAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.developer.navigation.DeveloperSettingsContentKey
@@ -20,6 +23,7 @@ import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.GroupControlsKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.navigation.GroupKey
 import no.nordicsemi.android.nrfmesh.feature.ivindex.navigation.IvIndexContentKey
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.FirmwareInformationKey
 import no.nordicsemi.android.nrfmesh.feature.model.navigation.ModelKey
 import no.nordicsemi.android.nrfmesh.feature.model.navigation.RelatedModelsKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.key.navigation.NetworkKeyContentKey
@@ -94,12 +98,12 @@ internal fun title(
     is ModelKey -> {
         val address = key.address
         if (isCompactWidth) {
-            val node =
-                network.node(address = address) ?: return context.getString(R.string.label_unknown)
-            val element =
-                node.element(address = address) ?: return context.getString(R.string.label_unknown)
-            val modelId =
-                element.model(key.modelId) ?: return context.getString(R.string.label_unknown)
+            val node = network.node(address = address)
+                ?: return context.getString(R.string.label_unknown)
+            val element = node.element(address = address)
+                ?: return context.getString(R.string.label_unknown)
+            val modelId = element.model(key.modelId)
+                ?: return context.getString(R.string.label_unknown)
             modelId.name ?: context.getString(R.string.label_unknown)
         } else network.element(elementAddress = address)?.name
             ?: context.getString(R.string.label_unknown)
@@ -113,6 +117,12 @@ internal fun title(
         }
     }
 
+    is BindAppKeysKey -> key.model.name ?: context.getString(R.string.label_unknown)
+
+    is FirmwareInformationKey -> if (isCompactWidth) {
+        key.model.name ?: context.getString(R.string.label_unknown)
+    } else context.getString(R.string.label_unknown)
+
     is GroupsKey -> context.getString(R.string.label_groups)
     is GroupKey -> network.group(address = key.address)?.name
         ?: context.getString(R.string.label_unknown)
@@ -122,6 +132,14 @@ internal fun title(
     } else context.getString(R.string.label_groups)
 
     is ProxyKey -> context.getString(R.string.label_proxy)
+    is ScannerKey -> context.getString(
+        when (navigationState.previousKey) {
+            ProxyKey -> R.string.label_proxy
+            FirmwareUpdateKey -> R.string.label_proxy
+            else -> R.string.label_unknown
+        }
+    )
+
     is SettingsKey,
     is ExportKey,
     is ProvisionerSelectorKey,
