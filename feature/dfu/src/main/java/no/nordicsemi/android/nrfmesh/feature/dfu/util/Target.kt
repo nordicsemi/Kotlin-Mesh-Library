@@ -13,7 +13,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Node
  * @property entries         Firmware entries.
  * @property isSelected      Whether the target is selected.
  */
-internal data class Target(val node: Node, var entries: FirmwareEntries) {
+internal data class Target(val node: Node, val entries: FirmwareEntries) {
     val isSelected: Boolean
         get() = (entries as? FirmwareEntries.Ready)?.entries?.any { it.isSelected } == true
 
@@ -99,3 +99,11 @@ internal sealed interface Status {
     /** Firmware entry is error. */
     data class Error(val message: String) : Status
 }
+
+/**
+ * Update Package
+ *
+ * @property zipPackage ZIP package containing the firmware update.
+ * @property metadata   Mesh metadata associated with the firmware update.
+ */
+internal data class UpdatePackage(val zipPackage: ZipPackage, val metadata: Metadata)
