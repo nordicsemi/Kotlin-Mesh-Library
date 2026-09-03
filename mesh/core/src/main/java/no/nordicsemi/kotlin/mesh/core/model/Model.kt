@@ -595,6 +595,16 @@ class Model internal constructor(
     }
 
     /**
+     * Returns true if the given Application Key index is bound to the model
+     */
+    fun isBound(index: KeyIndex) = boundApplicationKey(index) != null
+
+    /**
+     * Returns true if the given Application Key is bound to the model
+     */
+    fun isBound(key: ApplicationKey) = isBound(index = key.index)
+
+    /**
      * Returns the bound application key for a given key index
      *
      * @param index Application key index.
