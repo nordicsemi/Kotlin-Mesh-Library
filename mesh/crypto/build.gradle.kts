@@ -17,7 +17,7 @@ nordicNexusPublishing {
 
 dependencies {
     implementation(nordic.kotlin.data)
-    implementation("org.bouncycastle:bcprov-jdk18on:1.83")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.85.2")
     testImplementation(libs.kotlin.junit)
 }
 
