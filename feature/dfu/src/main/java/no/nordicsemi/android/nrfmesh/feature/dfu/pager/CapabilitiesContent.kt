@@ -9,6 +9,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SdCardAlert
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -189,7 +190,7 @@ internal fun CapabilitiesContent(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     imageVector = when (it.maxFirmwareImageSize > 0u) {
                         true -> Icons.Outlined.CheckCircle
-                        else -> Icons.Outlined.WarningAmber
+                        else -> Icons.Rounded.WarningAmber
                     },
                     tint = when (it.maxFirmwareImageSize > 0u) {
                         true -> Color.Green
