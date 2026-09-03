@@ -19,7 +19,6 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -84,6 +83,39 @@ fun ElevatedCardItem(
             actions = actions
         )
     }
+}
+
+@Composable
+fun ElevatedCardItem(
+    modifier: Modifier = Modifier,
+    colors: CardColors = CardDefaults.outlinedCardColors(),
+    enabled: Boolean = true,
+    onClick: (() -> Unit),
+    leadingIcon: @Composable () -> Unit,
+    title: String,
+    titleAction: @Composable () -> Unit = {},
+    subtitle: String? = null,
+    subtitlesMaxLines: Int = 1,
+    subtitleTextColor: Color = LocalTextStyle.current.color,
+    supportingText: String? = null,
+    body: @Composable (ColumnScope?.() -> Unit)? = null,
+    actions: @Composable (RowScope?.() -> Unit)? = null,
+) {
+    ClickableElevatedCardItem(
+        modifier = modifier,
+        colors = colors,
+        enabled = enabled,
+        onClick = onClick,
+        leadingIcon = leadingIcon,
+        title = title,
+        titleAction = titleAction,
+        subtitle = subtitle,
+        supportingText = supportingText,
+        subtitleMaxLines = subtitlesMaxLines,
+        subtitleTextColor = subtitleTextColor,
+        body = body,
+        actions = actions
+    )
 }
 
 @Composable
@@ -167,6 +199,67 @@ private fun ClickableElevatedCardItem(
         MeshTwoLineListItem(
             modifier = Modifier,
             imageVector = imageVector,
+            title = title,
+            subtitle = subtitle,
+            subtitleMaxLines = subtitleMaxLines,
+            subtitleTextColor = subtitleTextColor,
+            trailingComposable = titleAction
+        )
+        if (supportingText != null)
+            Text(
+                modifier = Modifier.padding(start = 58.dp, end = 16.dp, bottom = 16.dp),
+                text = supportingText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        body?.let {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .padding(horizontal = 16.dp)
+            ) {
+                it()
+            }
+        }
+        actions?.let {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                it()
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClickableElevatedCardItem(
+    modifier: Modifier = Modifier,
+    colors: CardColors = CardDefaults.outlinedCardColors(),
+    enabled: Boolean = true,
+    onClick: (() -> Unit),
+    leadingIcon: @Composable () -> Unit,
+    title: String,
+    titleAction: @Composable () -> Unit = {},
+    subtitle: String? = null,
+    subtitleMaxLines: Int = 1,
+    subtitleTextColor: Color = LocalTextStyle.current.color,
+    supportingText: String? = null,
+    body: @Composable (ColumnScope?.() -> Unit)? = null,
+    actions: @Composable (RowScope?.() -> Unit)? = null,
+) {
+    OutlinedCard(
+        modifier = modifier,
+        onClick = onClick,
+        enabled = enabled,
+        colors = colors
+    ) {
+        MeshTwoLineListItem(
+            modifier = Modifier,
+            leadingComposable = leadingIcon,
             title = title,
             subtitle = subtitle,
             subtitleMaxLines = subtitleMaxLines,
