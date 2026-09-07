@@ -148,7 +148,7 @@ data class FirmwareInformation(
         }
 
     override fun toString() =
-        "FirmwareInformation(currentFirmwareId: $currentFirmwareId, updateUri: ${updateUri?.toString() ?: "nil"})"
+        "FirmwareInformation(currentFirmwareId: $currentFirmwareId, updateUri: ${updateUri?.toString() ?: "null"})"
 }
 
 /**
