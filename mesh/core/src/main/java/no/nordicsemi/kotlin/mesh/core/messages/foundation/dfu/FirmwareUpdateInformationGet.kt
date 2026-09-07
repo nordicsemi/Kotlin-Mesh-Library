@@ -31,6 +31,16 @@ class FirmwareUpdateInformationGet(
     @Suppress("unused")
     constructor() : this(firstIndex = 0u, entriesLimit = 0u)
 
+    /**
+     * Creates the Firmware Update Information Get message. This convenience constructor will only
+     * request the total count of entries in the Firmware Information List state.
+     */
+    @Suppress("unused")
+    constructor(firstIndex: Int, entriesLimit: Int) : this(
+        firstIndex = firstIndex.toUByte(),
+        entriesLimit = entriesLimit.toUByte()
+    )
+
     override fun toString() =
         "FirmwareUpdateInformationGet(firstIndex: $firstIndex, entriesLimit: $entriesLimit)"
 
