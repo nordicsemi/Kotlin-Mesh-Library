@@ -13,7 +13,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
  *                      Update Firmware Image Index field shall identify the firmware image in the
  *                      Firmware Information List state on the Firmware Update Server that the
  *                      metadata is checked against.
- * @property metaData   Vendor-specific metadata. If present, the Incoming Firmware Metadata field
+ * @property metadata   Vendor-specific metadata. If present, the Incoming Firmware Metadata field
  *                      shall contain the custom data from the firmware vendor. The firmware
  *                      metadata can be used to check whether the installed firmware image
  *                      identified by the Firmware Image Index field will accept an update based on
@@ -23,11 +23,11 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
  */
 class FirmwareUpdateFirmwareMetadataCheck(
     val imageIndex: UByte,
-    val metaData: ByteArray?,
+    val metadata: ByteArray?,
 ) : AcknowledgedMeshMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareUpdateFirmwareMetadataStatus.opCode
-    override val parameters = imageIndex.toByteArray() + (metaData ?: byteArrayOf())
+    override val parameters = imageIndex.toByteArray() + (metadata ?: byteArrayOf())
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x830Au
@@ -37,9 +37,9 @@ class FirmwareUpdateFirmwareMetadataCheck(
             ?.let { params ->
                 FirmwareUpdateFirmwareMetadataCheck(
                     imageIndex = params[0].toUByte(),
-                    metaData = if (params.size > 1)
-                        params.copyOfRange(fromIndex = 1, toIndex = params.size)
-                    else null
+                    metadata = params
+                        .takeIf { it.size > 1 }
+                        ?.copyOfRange(fromIndex = 1, toIndex = params.size)
                 )
             }
     }
