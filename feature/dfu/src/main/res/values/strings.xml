@@ -63,5 +63,6 @@
     <string name="label_company">Company</string>
     <string name="label_no_nodes_available">No targets available</string>
     <string name="label_application_size">%d bytes</string>
+    <string name="label_image_value">Image %d</string>
     ">
 </resources>

@@ -91,7 +91,6 @@ internal fun FirmwareUpdateScreen(
                         .fillMaxHeight()
                         .padding(horizontal = 16.dp)
                         .verticalScroll(state = rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(space = 8.dp),
                     content = {
                         when (page) {
                             0 -> {
@@ -113,7 +112,10 @@ internal fun FirmwareUpdateScreen(
                                 }
                             )
 
-                            2 -> Page2(index = selectedKeyIndex)
+                            2 -> Page2(
+                                index = selectedKeyIndex,
+                                snackbarHostState = snackbarHostState
+                            )
 
                             3 -> {
 

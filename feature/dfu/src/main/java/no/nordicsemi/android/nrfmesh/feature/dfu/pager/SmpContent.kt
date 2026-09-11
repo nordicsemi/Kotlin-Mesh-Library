@@ -1,7 +1,9 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -85,56 +87,61 @@ internal fun SmpContent(
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
     enableNextStage: () -> Unit,
 ) {
-    Text(
-        modifier = Modifier.padding(horizontal = 8.dp),
-        text = stringResource(R.string.label_dfu_over_smp_rationale),
-        style = MaterialTheme.typography.bodySmall
-    )
-    GattProxy(
-        connectionState = connectionState,
-        name = name,
-        unicastAddress = unicastAddress,
-        onGattProxyClicked = onGattProxyClicked
-    )
-    DeviceManagement(
-        connectionState = connectionState,
-        isSmpServiceSupported = isSmpServiceSupported,
-        isLePairingSupported = isLePairingSupported
-    )
-    FirmwareDistributor(
-        connectionState = connectionState,
-        isDistributorServerModelSupported = isDistributorServerModelSupported
-    )
-    if (isSmpServiceSupported != null && isDistributorServerModelSupported != null && isLePairingSupported != null) {
-        if (!isSmpServiceSupported || !isDistributorServerModelSupported || !isLePairingSupported) {
-            ReadMore()
-        } else if (node != null) {
-            BoundApplicationKeys(
-                messageState = messageState,
-                model = node.model(modelId = firmwareDistributionServer) ?: return,
-                selectedKey = selectedKey,
-                onBindAppKeyClicked = onBindAppKeysClicked,
-                onApplicationKeyClicked = onApplicationKeyClicked,
-                send = send
-            )
-            DistributorStatus(
-                messageState = messageState,
-                connectionState = connectionState,
-                model = node.model(modelId = firmwareDistributionServer) ?: return,
-                firmwareDistributionStatus = firmwareDistributionStatus,
-                selectedKey = selectedKey,
-                send = send
-            )
-            if (selectedKey != null && firmwareDistributionStatus?.phase == FirmwareDistributionPhase.IDLE) {
-                CapabilitiesContent(
-                    selectedKey = selectedKey,
-                    phase = firmwareDistributionStatus.phase,
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+    ) {
+        Text(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            text = stringResource(R.string.label_dfu_over_smp_rationale),
+            style = MaterialTheme.typography.bodySmall
+        )
+        GattProxy(
+            connectionState = connectionState,
+            name = name,
+            unicastAddress = unicastAddress,
+            onGattProxyClicked = onGattProxyClicked
+        )
+        DeviceManagement(
+            connectionState = connectionState,
+            isSmpServiceSupported = isSmpServiceSupported,
+            isLePairingSupported = isLePairingSupported
+        )
+        FirmwareDistributor(
+            connectionState = connectionState,
+            isDistributorServerModelSupported = isDistributorServerModelSupported
+        )
+        if (isSmpServiceSupported != null && isDistributorServerModelSupported != null && isLePairingSupported != null) {
+            if (!isSmpServiceSupported || !isDistributorServerModelSupported || !isLePairingSupported) {
+                ReadMore()
+            } else if (node != null) {
+                BoundApplicationKeys(
                     messageState = messageState,
-                    capabilitiesStatus = capabilitiesStatus,
                     model = node.model(modelId = firmwareDistributionServer) ?: return,
-                    send = send,
-                    enableNextStage = enableNextStage
+                    selectedKey = selectedKey,
+                    onBindAppKeyClicked = onBindAppKeysClicked,
+                    onApplicationKeyClicked = onApplicationKeyClicked,
+                    send = send
                 )
+                DistributorStatus(
+                    messageState = messageState,
+                    connectionState = connectionState,
+                    model = node.model(modelId = firmwareDistributionServer) ?: return,
+                    firmwareDistributionStatus = firmwareDistributionStatus,
+                    selectedKey = selectedKey,
+                    send = send
+                )
+                if (selectedKey != null && firmwareDistributionStatus?.phase == FirmwareDistributionPhase.IDLE) {
+                    CapabilitiesContent(
+                        selectedKey = selectedKey,
+                        phase = firmwareDistributionStatus.phase,
+                        messageState = messageState,
+                        capabilitiesStatus = capabilitiesStatus,
+                        model = node.model(modelId = firmwareDistributionServer) ?: return,
+                        send = send,
+                        enableNextStage = enableNextStage
+                    )
+                }
             }
         }
     }
@@ -590,7 +597,7 @@ private fun DistributorStatus(
                             tint = MaterialTheme.colorScheme.error,
                             contentDescription = null
                         )
-                    } else if(distributionStatus?.phase == null) {
+                    } else if (distributionStatus?.phase == null) {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .padding(end = 16.dp)

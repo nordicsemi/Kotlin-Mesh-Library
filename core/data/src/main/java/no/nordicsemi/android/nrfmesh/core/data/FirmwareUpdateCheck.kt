@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.model.dfu
+package no.nordicsemi.android.nrfmesh.core.data
 
 import android.content.ContentValues
 import android.content.Context
@@ -27,13 +27,14 @@ import javax.net.ssl.HttpsURLConnection
  * @param url URL to check for updates.
  * @return updated firmware information if there is an update available, null otherwise.
  */
-internal suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
+suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
     withContext(Dispatchers.IO) {
-        val connection = (URL(url.toString()).openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 10000
-            readTimeout = 10000
-        }
+        val connection = (URL(url.toString()).openConnection() as HttpURLConnection)
+            .apply {
+                requestMethod = "GET"
+                connectTimeout = 10000
+                readTimeout = 10000
+            }
 
         try {
             when (val statusCode = connection.responseCode) {
@@ -58,7 +59,7 @@ internal suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = tr
  * @param url The URL to download the firmware from.
  * @param firmwareId The firmware ID.
  */
-internal suspend fun downloadFirmware(context: Context, url: URL, firmwareId: FirmwareId): File {
+suspend fun downloadFirmware(context: Context, url: URL, firmwareId: FirmwareId): File {
     val updatedUrl = url.toString()
         .replace(oldValue = "192.168.0.173", newValue = "10.0.0.22")
         .toUri()
@@ -115,7 +116,7 @@ internal suspend fun downloadFirmware(context: Context, url: URL, firmwareId: Fi
  * @param context The application context.
  * @param zipFile The zip file to save.
  */
-internal fun saveToDownloads(context: Context, zipFile: File) {
+fun saveToDownloads(context: Context, zipFile: File) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         val contentValues = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, zipFile.name)

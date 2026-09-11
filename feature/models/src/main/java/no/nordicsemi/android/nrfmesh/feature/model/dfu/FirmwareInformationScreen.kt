@@ -1,6 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model.dfu
 
-import android.content.Context
+import android.content.res.Resources
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,14 +37,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.dropUnlessResumed
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import no.nordicsemi.android.nrfmesh.core.common.UpdatedFirmwareInformation
+import no.nordicsemi.android.nrfmesh.core.data.checkForUpdates
+import no.nordicsemi.android.nrfmesh.core.data.downloadFirmware
+import no.nordicsemi.android.nrfmesh.core.data.saveToDownloads
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedHexTextField
@@ -62,8 +68,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateFirm
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateFirmwareMetadataStatus
 import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 import java.net.URL
-import androidx.core.net.toUri
-import no.nordicsemi.android.nrfmesh.core.common.UpdatedFirmwareInformation
 
 @Composable
 internal fun FirmwareInformationScreen(
@@ -135,6 +139,7 @@ private fun FirmwareUpdate(
     isInProgress: Boolean,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     var updatedFirmwareInformation by rememberSaveable(stateSaver = firmwareSaver) {
         mutableStateOf(null)
     }
@@ -212,7 +217,7 @@ private fun FirmwareUpdate(
     LaunchedEffect(key1 = error) {
         error?.let { error ->
             snackbarHostState.showSnackbar(
-                message = error.message ?: context.getString(R.string.label_failed_to_check_for_updates),
+                message = error.message ?: resources.getString(R.string.label_failed_to_check_for_updates),
             )
         }
     }
@@ -225,7 +230,7 @@ private fun FirmwareCompatibility(
     send: suspend (AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf<FirmwareUpdateFirmwareMetadataStatus?>(null) }
     var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
@@ -281,7 +286,7 @@ private fun FirmwareCompatibility(
                             status = send(
                                 FirmwareUpdateFirmwareMetadataCheck(
                                     imageIndex = 0.toUByte(),
-                                    metaData = metaData.text.hexToByteArray()
+                                    metadata = metaData.text.hexToByteArray()
                                 )
                             ) as? FirmwareUpdateFirmwareMetadataStatus
                         } catch (e: Exception) {
@@ -312,31 +317,31 @@ private fun FirmwareCompatibility(
             snackbarHostState.showSnackbar(
                 message = when (metadataStatus.status) {
                     FirmwareUpdateMessageStatus.SUCCESS ->
-                        context.getString(
+                        resources.getString(
                             R.string.label_firmware_compatibility_rationale,
-                            metadataStatus.additionalInformation.rationale(context = context)
+                            metadataStatus.additionalInformation.rationale(resources = resources)
                         )
 
-                    else -> context.getString(R.string.label_firmware_compatibility_check_failed_rationale)
+                    else -> resources.getString(R.string.label_firmware_compatibility_check_failed_rationale)
                 },
-                actionLabel = context.getString(R.string.label_ok)
+                actionLabel = resources.getString(R.string.label_ok)
             )
         }
     }
 }
 
-private fun FirmwareUpdateAdditionalInformation.rationale(context: Context) = when (this) {
+private fun FirmwareUpdateAdditionalInformation.rationale(resources: Resources) = when (this) {
     FirmwareUpdateAdditionalInformation.DEVICE_UNPROVISIONED ->
-        context.getString(R.string.label_device_unprovisioned_rationale)
+        resources.getString(R.string.label_device_unprovisioned_rationale)
 
     FirmwareUpdateAdditionalInformation.COMPOSITION_DATA_UNCHANGED ->
-        context.getString(R.string.label_composition_data_will_not_change_rationale)
+        resources.getString(R.string.label_composition_data_will_not_change_rationale)
 
     FirmwareUpdateAdditionalInformation.COMPOSITION_DATA_CHANGED_AND_RPR_SUPPORTED ->
-        context.getString(R.string.label_composition_data_will_change_remote_provisioning_will_be_supported_rationale)
+        resources.getString(R.string.label_composition_data_will_change_remote_provisioning_will_be_supported_rationale)
 
     FirmwareUpdateAdditionalInformation.COMPOSITION_DATA_CHANGED_AND_RPR_UNSUPPORTED ->
-        context.getString(R.string.label_composition_data_will_change_remote_provisioning_will_not_be_supported_rationale)
+        resources.getString(R.string.label_composition_data_will_change_remote_provisioning_will_not_be_supported_rationale)
 }
 
 /**

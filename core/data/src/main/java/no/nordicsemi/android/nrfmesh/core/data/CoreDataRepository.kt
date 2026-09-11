@@ -281,7 +281,10 @@ class CoreDataRepository @Inject constructor(
             _models = mutableListOf(
                 Model(modelId = SigModelId(modelIdentifier = Model.SCENE_SERVER_MODEL_ID)),
                 Model(modelId = SigModelId(modelIdentifier = Model.SCENE_SETUP_SERVER_MODEL_ID)),
-                Model(modelId = SigModelId(modelIdentifier = Model.SENSOR_CLIENT_MODEL_ID), handler = SensorClientEventHandler()),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.SENSOR_CLIENT_MODEL_ID),
+                    handler = SensorClientEventHandler()
+                ),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_POWER_ON_OFF_CLIENT_MODEL_ID)),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_SERVER_MODEL_ID)),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_CLIENT_MODEL_ID)),
@@ -751,7 +754,11 @@ class CoreDataRepository @Inject constructor(
      * @param model        Destination model.
      * @param ackedMessage Unacknowledged mesh message to be sent.
      */
-    suspend fun send(model: Model, ackedMessage: AcknowledgedMeshMessage) = withContext(
+    suspend fun send(
+        model: Model,
+        ackedMessage: AcknowledgedMeshMessage,
+        applicationKey: ApplicationKey? = null,
+    ) = withContext(
         context = ioDispatcher
     ) {
         val parentElement = requireNotNull(model.parentElement)
@@ -762,7 +769,8 @@ class CoreDataRepository @Inject constructor(
                 1.toUByte() // Use TTL 1 for messages destined to the local node
             } else {
                 null
-            }
+            },
+            applicationKey = applicationKey
         )
     }
 

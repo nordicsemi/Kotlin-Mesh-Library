@@ -10,12 +10,12 @@ import no.nordicsemi.kotlin.mesh.core.model.Node
  * Target for the firmware update.
  *
  * @property node            Node to update.
- * @property entries         Firmware entries.
+ * @property targetState     Firmware entries.
  * @property isSelected      Whether the target is selected.
  */
-internal data class Target(val node: Node, val entries: FirmwareEntries) {
+internal data class Target(val node: Node, val targetState: TargetState) {
     val isSelected: Boolean
-        get() = (entries as? FirmwareEntries.Ready)?.entries?.any { it.isSelected } == true
+        get() = (targetState as? TargetState.Ready)?.entries?.any { it.isSelected } == true
 
     val selectedReceiver: Receiver?
         get() {
@@ -23,28 +23,28 @@ internal data class Target(val node: Node, val entries: FirmwareEntries) {
                 ?.parentElement
                 ?.unicastAddress
                 ?: return null
-            val ready = entries as? FirmwareEntries.Ready ?: return null
+            val ready = targetState as? TargetState.Ready ?: return null
             val selectedIndex = ready.entries.firstOrNull { it.isSelected }?.index ?: return null
             return Receiver(address = address, imageIndex = selectedIndex)
         }
 }
 
-internal sealed interface FirmwareEntries {
+internal sealed interface TargetState {
 
     /** Model needs configuration. Application Key is not bound to the Model. */
-    data object ConfigurationRequired : FirmwareEntries
+    data object ConfigurationRequired : TargetState
 
     /** Firmware Image entries can be downloaded. */
-    data object Configured : FirmwareEntries
+    data object Configured : TargetState
 
-    /** The app is downloading Firmware Image entries and checks available updates. */
-    data object Downloading : FirmwareEntries
+    /** The target is downloading  app is downloading Firmware Image for a given target. */
+    data object Downloading : TargetState
 
     /** The Firmware Image entries are ready to be displayed. */
-    data class Ready(val entries: List<FirmwareEntry>) : FirmwareEntries
+    data class Ready(val entries: List<FirmwareEntry>) : TargetState
 
     /** Operation resulted with an error. */
-    data class Error(val message: String) : FirmwareEntries
+    data class Error(val message: String) : TargetState
 
     val count: Int
         get() = when (this) {
@@ -57,7 +57,7 @@ internal sealed interface FirmwareEntries {
         (this as? Ready)?.entries?.getOrNull(index)
 
     /** Replacement for the Swift subscript setter: returns a new value instead of mutating. */
-    fun with(index: Int, entry: FirmwareEntry?): FirmwareEntries {
+    fun with(index: Int, entry: FirmwareEntry?): TargetState {
         val ready = this as? Ready ?: return this
         if (index !in ready.entries.indices) return this
         return Ready(
