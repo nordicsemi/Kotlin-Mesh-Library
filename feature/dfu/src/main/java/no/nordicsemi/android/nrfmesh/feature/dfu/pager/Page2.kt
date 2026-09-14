@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.ui.view.CircularIcon
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
@@ -82,7 +83,10 @@ internal fun Page2(
     var metadata by remember { mutableStateOf("") }
     FileSelector(
         updateZipPackage = viewModel::importZipPackage,
-        onMetadataChanged = { metadata = it }
+        onMetadataChanged = {
+            metadata = it
+            viewModel.resetTargets()
+        }
     )
     TargetNodes(
         snackbarHostState = snackbarHostState,
@@ -436,31 +440,19 @@ private fun Images(
                                     modifier = Modifier.padding(start = 16.dp, end = 8.dp),
                                     checked = entry.isSelected,
                                     onCheckedChange = { checked ->
-                                        isCompatibilityCheckInProgress = checked
-                                        scope.launch {
-                                            try {
-                                                metadata
-                                                    .hexToByteArray()
-                                                    .takeIf { it.isNotEmpty() }
-                                                    ?.let { metadata ->
-                                                        checkCompatibility(
-                                                            target,
-                                                            entry,
-                                                            indexOfEntry,
-                                                            metadata,
-                                                            checked
-                                                        )
-                                                    }
-                                            } catch (e: Exception) {
-                                                snackbarHostState.currentSnackbarData?.dismiss()
-                                                snackbarHostState.showSnackbar(
-                                                    message = e.message
-                                                        ?: "Error checking compatibility",
-                                                )
-                                            } finally {
-                                                isCompatibilityCheckInProgress = false
-                                            }
-                                        }
+                                        selectImage(
+                                            scope = scope,
+                                            snackbarHostState = snackbarHostState,
+                                            metadata = metadata,
+                                            checked = checked,
+                                            target = target,
+                                            entry = entry,
+                                            indexOfEntry = indexOfEntry,
+                                            onCompatibilityCheckIsInProgress = {
+                                                isCompatibilityCheckInProgress = it
+                                            },
+                                            checkCompatibility = checkCompatibility
+                                        )
                                     },
                                     enabled = !isRequestInProgress
                                 )
@@ -474,7 +466,56 @@ private fun Images(
     }
 }
 
-fun ContentResolver.fileName(uri: Uri) = when (uri.scheme) {
+private fun selectImage(
+    scope: CoroutineScope,
+    snackbarHostState: SnackbarHostState,
+    metadata: String,
+    checked: Boolean,
+    target: Target,
+    entry: FirmwareEntry,
+    indexOfEntry: Int,
+    onCompatibilityCheckIsInProgress: (Boolean) -> Unit,
+    checkCompatibility: suspend (Target, FirmwareEntry, Int, ByteArray, Boolean) -> Unit,
+) {
+    metadata
+        .hexToByteArray()
+        .takeIf { it.isNotEmpty() }
+        ?.let { metadata ->
+            scope.launch {
+                try {
+                    onCompatibilityCheckIsInProgress(checked)
+                    checkCompatibility(
+                        target,
+                        entry,
+                        indexOfEntry,
+                        metadata,
+                        checked
+                    )
+                } catch (e: Exception) {
+                    snackbarHostState.run {
+                        currentSnackbarData?.dismiss()
+                        showSnackbar(
+                            message = e.message
+                                ?: "Error checking compatibility",
+                        )
+                    }
+                } finally {
+                    onCompatibilityCheckIsInProgress(false)
+                }
+            }
+        } ?: run {
+        scope.launch {
+            snackbarHostState.run {
+                currentSnackbarData?.dismiss()
+                showSnackbar(
+                    message = "Please select a Firmware File first"
+                )
+            }
+        }
+    }
+}
+
+private fun ContentResolver.fileName(uri: Uri) = when (uri.scheme) {
     ContentResolver.SCHEME_CONTENT -> query(
         uri,
         arrayOf(OpenableColumns.DISPLAY_NAME),

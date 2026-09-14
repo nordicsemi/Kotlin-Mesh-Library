@@ -31,10 +31,10 @@ suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
     withContext(Dispatchers.IO) {
         val connection = (URL(url.toString()).openConnection() as HttpURLConnection)
             .apply {
-                requestMethod = "GET"
-                connectTimeout = 10000
-                readTimeout = 10000
-            }
+            requestMethod = "GET"
+            connectTimeout = 10000
+            readTimeout = 10000
+        }
 
         try {
             when (val statusCode = connection.responseCode) {
@@ -61,7 +61,7 @@ suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
  */
 suspend fun downloadFirmware(context: Context, url: URL, firmwareId: FirmwareId): File {
     val updatedUrl = url.toString()
-        .replace(oldValue = "192.168.0.173", newValue = "10.0.0.22")
+        .replace(oldValue = "192.168.0.173", newValue = "192.168.68.58")
         .toUri()
         .let { uri ->
             URI(

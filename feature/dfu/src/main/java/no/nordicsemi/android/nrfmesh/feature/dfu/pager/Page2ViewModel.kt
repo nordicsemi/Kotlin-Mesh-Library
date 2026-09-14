@@ -2,6 +2,7 @@ package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
 import android.content.ContentResolver
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -30,8 +31,6 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.util.Metadata
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Status
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Target
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.TargetState
-import no.nordicsemi.android.nrfmesh.feature.dfu.util.TargetState.ConfigurationRequired
-import no.nordicsemi.android.nrfmesh.feature.dfu.util.TargetState.Configured
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.ZipPackage
 import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
@@ -52,6 +51,7 @@ import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
+import java.net.URL
 import java.util.zip.ZipInputStream
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -94,8 +94,8 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                                                 Target(
                                                     node = node,
                                                     targetState = when (model.isBound(index = index.toUShort())) {
-                                                        true -> Configured
-                                                        else -> ConfigurationRequired
+                                                        true -> TargetState.Configured
+                                                        else -> TargetState.ConfigurationRequired
                                                     }
                                                 )
                                             }
@@ -159,6 +159,23 @@ internal class Page2ViewModel @AssistedInject internal constructor(
             ?: byteArrayOf()
         val zipPackage = ZipPackage(data = data)
         return UpdatePackage(zipPackage = zipPackage, metadata = metadata)
+    }
+
+    internal fun resetTargets() {
+        _uiState.update { status ->
+            status.copy(
+                targets = status.targets
+                    .toMutableList()
+                    .map { target ->
+                        if(target.targetState is TargetState.Ready){
+                            val entries = target.targetState.entries.map { entry ->
+                                entry.copy(status = Status.Unselected)
+                            }
+                            target.copy(targetState = TargetState.Ready(entries = entries))
+                        } else target
+                    }
+            )
+        }
     }
 
     /**
@@ -293,7 +310,22 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                                     index = index.toUByte(),
                                     firmware = image,
                                     availableUpdate = image.updateUri?.let { url ->
-                                        checkForUpdates(url)
+                                        val newUrl = url
+                                            .toString()
+                                            .replace(
+                                                oldValue = "192.168.0.173",
+                                                newValue = "192.168.68.58"
+                                            )
+                                            .toUri()
+                                            .buildUpon()
+                                            .appendPath("check")
+                                            .appendQueryParameter(
+                                                "cfwid",
+                                                image.currentFirmwareId.bytes.toHexString()
+                                            )
+                                            .build()
+                                            .let { URL(it.toString()) }
+                                        checkForUpdates(newUrl)
                                     }
                                 )
                             } catch (e: Exception) {
@@ -304,8 +336,8 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                                 )
                             }
                         }
-                        updateTarget =
-                            target.copy(targetState = TargetState.Ready(entries = entries))
+                        updateTarget = target
+                            .copy(targetState = TargetState.Ready(entries = entries))
                     } catch (e: Exception) {
                         updateTarget = target.copy(
                             targetState = TargetState.Error(

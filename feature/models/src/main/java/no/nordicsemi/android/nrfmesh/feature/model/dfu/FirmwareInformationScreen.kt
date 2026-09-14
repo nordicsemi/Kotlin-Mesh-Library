@@ -144,7 +144,7 @@ private fun FirmwareUpdate(
         mutableStateOf(null)
     }
     val updateUrl = url?.toString()
-        ?.replace(oldValue = "192.168.0.173", newValue = "10.0.0.22")
+        ?.replace(oldValue = "192.168.0.173", newValue = "192.168.68.58")
         ?.toUri()
         ?.buildUpon()
         ?.appendPath("check")
