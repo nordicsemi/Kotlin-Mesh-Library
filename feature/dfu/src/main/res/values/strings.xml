@@ -64,5 +64,8 @@
     <string name="label_no_nodes_available">No targets available</string>
     <string name="label_application_size">%d bytes</string>
     <string name="label_image_value">Image %d</string>
+    <string name="label_error_checking_compatibility">Error checking compatibility.</string>
+    <string name="label_select_a_firmware_file_first">Please select a Firmware file first.</string>
+    <string name="label_new_firmware_available">There is a new firmware version available. Do you want to download and replace the selected one?</string>
     ">
 </resources>

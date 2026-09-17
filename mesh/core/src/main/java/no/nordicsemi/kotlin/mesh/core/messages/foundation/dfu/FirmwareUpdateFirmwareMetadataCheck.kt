@@ -29,6 +29,11 @@ class FirmwareUpdateFirmwareMetadataCheck(
     override val responseOpCode = FirmwareUpdateFirmwareMetadataStatus.opCode
     override val parameters = imageIndex.toByteArray() + (metadata ?: byteArrayOf())
 
+    override fun toString() =
+        "FirmwareUpdateFirmwareMetadataCheck(imageIndex: $imageIndex, metadata: 0x${
+            metadata?.toHexString(format = HexFormat.UpperCase)
+        })"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x830Au
 

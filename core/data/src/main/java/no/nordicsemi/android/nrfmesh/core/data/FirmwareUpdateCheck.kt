@@ -31,10 +31,10 @@ suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
     withContext(Dispatchers.IO) {
         val connection = (URL(url.toString()).openConnection() as HttpURLConnection)
             .apply {
-            requestMethod = "GET"
-            connectTimeout = 10000
-            readTimeout = 10000
-        }
+                requestMethod = "GET"
+                connectTimeout = 10000
+                readTimeout = 10000
+            }
 
         try {
             when (val statusCode = connection.responseCode) {
@@ -115,8 +115,10 @@ suspend fun downloadFirmware(context: Context, url: URL, firmwareId: FirmwareId)
  *
  * @param context The application context.
  * @param zipFile The zip file to save.
+ *
+ * @return The URI of the saved file.
  */
-fun saveToDownloads(context: Context, zipFile: File) {
+fun saveToDownloads(context: Context, zipFile: File) =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         val contentValues = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, zipFile.name)
@@ -137,13 +139,14 @@ fun saveToDownloads(context: Context, zipFile: File) {
         contentValues.clear()
         contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
         resolver.update(uri, contentValues, null, null)
+        uri
     } else {
         val downloadsDir =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
         downloadsDir.mkdirs()
         zipFile.copyTo(File(downloadsDir, zipFile.name), overwrite = true)
+        zipFile.toUri()
     }
-}
 
 
 /**
