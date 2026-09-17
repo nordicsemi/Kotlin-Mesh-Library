@@ -181,15 +181,15 @@ internal class Page2ViewModel @AssistedInject internal constructor(
     /**
      * Checks the firmware compatibility
      * @param target The target node
-     * @param entry The firmware entry
      * @param indexOfEntry The index of the firmware entry
+     * @param entry The firmware entry
      * @param metadata The metadata of the firmware
      */
     @OptIn(ExperimentalUuidApi::class)
     internal suspend fun checkCompatibility(
         target: Target,
-        entry: FirmwareEntry,
         indexOfEntry: Int,
+        entry: FirmwareEntry,
         metadata: ByteArray,
         isChecked: Boolean,
     ) {
@@ -314,7 +314,7 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                                             .toString()
                                             .replace(
                                                 oldValue = "192.168.0.173",
-                                                newValue = "192.168.68.58"
+                                                newValue = "192.168.68.63"
                                             )
                                             .toUri()
                                             .buildUpon()
@@ -375,6 +375,40 @@ internal class Page2ViewModel @AssistedInject internal constructor(
         message: AcknowledgedMeshMessage,
         applicationKey: ApplicationKey? = null,
     ) = repository.send(model = model, ackedMessage = message, applicationKey = applicationKey)
+
+    internal suspend fun send1(
+        model: Model,
+        message: AcknowledgedMeshMessage,
+        applicationKey: ApplicationKey? = null,
+    ): MeshMessage? {
+        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+        return try {
+            repository.send(model = model, ackedMessage = message, applicationKey = applicationKey)
+                ?.let { response ->
+                    _uiState.value = _uiState.value.copy(
+                        messageState = Completed(
+                            message = message,
+                            response = response as ConfigResponse
+                        ),
+                    )
+                    response
+                }
+                ?: run {
+                    _uiState.value = _uiState.value.copy(
+                        messageState = Failed(
+                            message = message,
+                            error = IllegalStateException("No response received")
+                        ),
+                    )
+                    null
+                }
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(
+                messageState = Failed(message = message, error = e),
+            )
+            null
+        }
+    }
 
     private suspend fun send(node: Node, message: AcknowledgedConfigMessage): MeshMessage? {
         _uiState.value = _uiState.value.copy(messageState = Sending(message = message))

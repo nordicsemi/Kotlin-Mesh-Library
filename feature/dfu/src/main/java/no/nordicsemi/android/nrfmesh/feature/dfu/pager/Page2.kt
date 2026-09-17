@@ -1,9 +1,12 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
 import android.content.ContentResolver
+import android.content.Context
+import android.content.res.Resources
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -34,6 +37,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,9 +60,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.ui.view.CircularIcon
+import no.nordicsemi.android.nrfmesh.core.data.downloadFirmware
+import no.nordicsemi.android.nrfmesh.core.data.saveToDownloads
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
@@ -67,7 +72,6 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.FirmwareEntry
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Target
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.TargetState
-import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import java.util.Locale
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -80,28 +84,6 @@ internal fun Page2(
         factory.create(index = index)
     }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var metadata by remember { mutableStateOf("") }
-    FileSelector(
-        updateZipPackage = viewModel::importZipPackage,
-        onMetadataChanged = {
-            metadata = it
-            viewModel.resetTargets()
-        }
-    )
-    TargetNodes(
-        snackbarHostState = snackbarHostState,
-        metadata = metadata,
-        targets = uiState.targets,
-        downloadFirmwareInformation = viewModel::downloadFirmwareInformation,
-        checkCompatibility = viewModel::checkCompatibility
-    )
-}
-
-@Composable
-private fun FileSelector(
-    updateZipPackage: (uri: Uri, contentResolver: ContentResolver) -> UpdatePackage,
-    onMetadataChanged: (String) -> Unit,
-) {
     val context = LocalContext.current
     val resource = LocalResources.current
     var fileName by rememberSaveable { mutableStateOf("") }
@@ -115,7 +97,7 @@ private fun FileSelector(
         uri?.let {
             try {
                 fileName = context.contentResolver.fileName(it) ?: ""
-                val updatePackage = updateZipPackage(uri, context.contentResolver)
+                val updatePackage = viewModel.importZipPackage(uri, context.contentResolver)
                 fileSize = updatePackage.zipPackage
                     .getBinaries()
                     .images
@@ -130,12 +112,61 @@ private fun FileSelector(
                 metadata = updatePackage.metadata.encodedMetadata
                     ?.uppercase(locale = Locale.ROOT)
                     ?: resource.getString(R.string.label_unknown)
-                onMetadataChanged(updatePackage.metadata.encodedMetadata ?: "")
+                viewModel.resetTargets()
             } catch (e: Exception) {
 
             }
         }
     }
+    FileSelector(
+        fileName = fileName,
+        fileSize = fileSize,
+        company = company,
+        version = version,
+        metadata = metadata,
+        fileLauncher = fileLauncher,
+    )
+    TargetNodes(
+        snackbarHostState = snackbarHostState,
+        metadata = metadata,
+        targets = uiState.targets,
+        downloadFirmwareInformation = viewModel::downloadFirmwareInformation,
+        checkCompatibility = viewModel::checkCompatibility,
+        onFirmwareDownloaded = { uri ->
+            try {
+                fileName = context.contentResolver.fileName(uri) ?: ""
+                val updatePackage = viewModel.importZipPackage(uri, context.contentResolver)
+                fileSize = updatePackage.zipPackage
+                    .getBinaries()
+                    .images
+                    .firstOrNull()
+                    ?.image
+                    ?.data
+                    ?.size
+                    ?: 0
+                company = updatePackage.metadata.compositionData?.companyName
+                    ?: resource.getString(R.string.label_unknown)
+                version = updatePackage.metadata.signVersion.toString()
+                metadata = updatePackage.metadata.encodedMetadata
+                    ?.uppercase(locale = Locale.ROOT)
+                    ?: resource.getString(R.string.label_unknown)
+                viewModel.resetTargets()
+            } catch (e: Exception) {
+
+            }
+        }
+    )
+}
+
+@Composable
+private fun FileSelector(
+    fileName: String,
+    fileSize: Int,
+    company: String,
+    version: String,
+    metadata: String,
+    fileLauncher: ActivityResultLauncher<String>,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -206,7 +237,8 @@ private fun TargetNodes(
     metadata: String,
     targets: List<Target>,
     downloadFirmwareInformation: suspend (Target) -> Unit,
-    checkCompatibility: suspend (Target, FirmwareEntry, Int, ByteArray, Boolean) -> Unit,
+    checkCompatibility: suspend (Target, Int, FirmwareEntry, ByteArray, Boolean) -> Unit,
+    onFirmwareDownloaded: (Uri) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -251,17 +283,18 @@ private fun TargetNodes(
                                 downloadFirmwareInformation(target)
                                 isRequestInProgress = !isRequestInProgress
                             },
-                            checkCompatibility = { target, firmwareEntry, indexOfEntry, metadata, isSelected ->
+                            checkCompatibility = { target, indexOfEntry, firmwareEntry, metadata, isSelected ->
                                 isRequestInProgress = isSelected
                                 checkCompatibility(
                                     target,
-                                    firmwareEntry,
                                     indexOfEntry,
+                                    firmwareEntry,
                                     metadata,
                                     isSelected
                                 )
                                 isRequestInProgress = false
-                            }
+                            },
+                            onFirmwareDownloaded = onFirmwareDownloaded
                         )
                     }
                 }
@@ -296,7 +329,8 @@ private fun TargetNode(
     target: Target,
     downloadFirmwareInformation: suspend (Target) -> Unit,
     isRequestInProgress: Boolean = false,
-    checkCompatibility: suspend (Target, FirmwareEntry, Int, ByteArray, Boolean) -> Unit,
+    checkCompatibility: suspend (Target, Int, FirmwareEntry, ByteArray, Boolean) -> Unit,
+    onFirmwareDownloaded: (Uri) -> Unit,
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     Box(modifier = Modifier.padding(top = 8.dp)) {
@@ -310,7 +344,8 @@ private fun TargetNode(
                 metadata = metadata,
                 target = target,
                 isRequestInProgress = isRequestInProgress,
-                checkCompatibility = checkCompatibility
+                checkCompatibility = checkCompatibility,
+                onFirmwareDownloaded = onFirmwareDownloaded
             )
         }
         ElevatedCardItem(
@@ -373,10 +408,10 @@ private fun TitleAction(
                 is TargetState.Configured,
                     -> {
                     scope.launch {
-                        isConfiguring = !isConfiguring
+                        isConfiguring = true
                         downloadFirmwareInformation(target)
-                        isConfiguring = !isConfiguring
-                        onExpandStateChanged(!isExpanded)
+                        isConfiguring = false
+                        onExpandStateChanged(true)
                     }
                 }
 
@@ -397,9 +432,12 @@ private fun Images(
     metadata: String,
     target: Target,
     isRequestInProgress: Boolean,
-    checkCompatibility: suspend (Target, FirmwareEntry, Int, ByteArray, Boolean) -> Unit,
+    checkCompatibility: suspend (Target, Int, FirmwareEntry, ByteArray, Boolean) -> Unit,
+    onFirmwareDownloaded: (Uri) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val resources = LocalResources.current
     val entries = (target.targetState as? TargetState.Ready)
         ?.entries
         .orEmpty()
@@ -440,19 +478,47 @@ private fun Images(
                                     modifier = Modifier.padding(start = 16.dp, end = 8.dp),
                                     checked = entry.isSelected,
                                     onCheckedChange = { checked ->
-                                        selectImage(
-                                            scope = scope,
-                                            snackbarHostState = snackbarHostState,
-                                            metadata = metadata,
-                                            checked = checked,
-                                            target = target,
-                                            entry = entry,
-                                            indexOfEntry = indexOfEntry,
-                                            onCompatibilityCheckIsInProgress = {
-                                                isCompatibilityCheckInProgress = it
-                                            },
-                                            checkCompatibility = checkCompatibility
-                                        )
+                                        if (checked) {
+                                            scope.launch {
+                                                metadata
+                                                    .takeIf { it.isNotEmpty() }
+                                                    ?.hexToByteArray()
+                                                    ?.let { metadata ->
+                                                        selectImage(
+                                                            context = context,
+                                                            resources = resources,
+                                                            snackbarHostState = snackbarHostState,
+                                                            metadata = metadata,
+                                                            checked = checked,
+                                                            target = target,
+                                                            entry = entry,
+                                                            indexOfEntry = indexOfEntry,
+                                                            onCompatibilityCheckIsInProgress = {
+                                                                isCompatibilityCheckInProgress = it
+                                                            },
+                                                            checkCompatibility = checkCompatibility,
+                                                            onFirmwareDownloaded = onFirmwareDownloaded
+                                                        )
+                                                    } ?: run {
+                                                    snackbarHostState.run {
+                                                        currentSnackbarData?.dismiss()
+                                                        showSnackbar(
+                                                            message = resources.getString(R.string.label_select_a_firmware_file_first)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            scope.launch {
+                                                checkCompatibility(
+                                                    target,
+                                                    indexOfEntry,
+                                                    entry,
+                                                    metadata.hexToByteArray(),
+                                                    checked
+                                                )
+                                            }
+                                        }
                                     },
                                     enabled = !isRequestInProgress
                                 )
@@ -466,52 +532,82 @@ private fun Images(
     }
 }
 
-private fun selectImage(
-    scope: CoroutineScope,
+private suspend fun selectImage(
+    context: Context,
+    resources: Resources,
     snackbarHostState: SnackbarHostState,
-    metadata: String,
+    metadata: ByteArray,
     checked: Boolean,
     target: Target,
     entry: FirmwareEntry,
     indexOfEntry: Int,
     onCompatibilityCheckIsInProgress: (Boolean) -> Unit,
-    checkCompatibility: suspend (Target, FirmwareEntry, Int, ByteArray, Boolean) -> Unit,
+    checkCompatibility: suspend (Target, Int, FirmwareEntry, ByteArray, Boolean) -> Unit,
+    onFirmwareDownloaded: (Uri) -> Unit
 ) {
-    metadata
-        .hexToByteArray()
-        .takeIf { it.isNotEmpty() }
-        ?.let { metadata ->
-            scope.launch {
-                try {
-                    onCompatibilityCheckIsInProgress(checked)
-                    checkCompatibility(
-                        target,
-                        entry,
-                        indexOfEntry,
-                        metadata,
-                        checked
+    try {
+        onCompatibilityCheckIsInProgress(checked)
+        if (checked) {
+            if (entry.availableUpdate != null) {
+                snackbarHostState.run {
+                    currentSnackbarData?.dismiss()
+                    val result = showSnackbar(
+                        message = resources.getString(R.string.label_new_firmware_available),
+                        actionLabel = "Download",
+                        withDismissAction = true
                     )
-                } catch (e: Exception) {
-                    snackbarHostState.run {
-                        currentSnackbarData?.dismiss()
-                        showSnackbar(
-                            message = e.message
-                                ?: "Error checking compatibility",
-                        )
+
+                    when (result) {
+                        SnackbarResult.ActionPerformed -> {
+                            entry.firmware.run {
+                                updateUri?.let {
+                                    val file = downloadFirmware(
+                                        context = context,
+                                        url = it,
+                                        firmwareId = currentFirmwareId
+                                    )
+                                    val uri = saveToDownloads(
+                                        context = context,
+                                        zipFile = file
+                                    )
+                                    onFirmwareDownloaded(uri)
+                                    checkCompatibility(
+                                        target,
+                                        indexOfEntry,
+                                        entry,
+                                        metadata,
+                                        true
+                                    )
+                                }
+                            }
+                        }
+
+                        SnackbarResult.Dismissed -> {
+                            checkCompatibility(
+                                target,
+                                indexOfEntry,
+                                entry,
+                                metadata,
+                                true
+                            )
+                        }
                     }
-                } finally {
-                    onCompatibilityCheckIsInProgress(false)
                 }
-            }
-        } ?: run {
-        scope.launch {
-            snackbarHostState.run {
-                currentSnackbarData?.dismiss()
-                showSnackbar(
-                    message = "Please select a Firmware File first"
-                )
+            } else {
+                checkCompatibility(target, indexOfEntry, entry, metadata, true)
             }
         }
+
+    } catch (e: Exception) {
+        snackbarHostState.run {
+            currentSnackbarData?.dismiss()
+            showSnackbar(
+                message = e.message
+                    ?: resources.getString(R.string.label_error_checking_compatibility),
+            )
+        }
+    } finally {
+        onCompatibilityCheckIsInProgress(false)
     }
 }
 
