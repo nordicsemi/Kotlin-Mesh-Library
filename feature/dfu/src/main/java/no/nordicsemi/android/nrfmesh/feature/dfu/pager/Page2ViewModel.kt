@@ -1,7 +1,10 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,12 +12,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import no.nordicsemi.android.nrfmesh.core.common.Completed
 import no.nordicsemi.android.nrfmesh.core.common.Failed
@@ -26,6 +31,8 @@ import no.nordicsemi.android.nrfmesh.core.common.firmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.android.nrfmesh.core.data.checkForUpdates
+import no.nordicsemi.android.nrfmesh.core.data.downloadFirmware
+import no.nordicsemi.android.nrfmesh.core.data.saveToDownloads
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.FirmwareEntry
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Metadata
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Status
@@ -51,17 +58,21 @@ import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
+import no.nordicsemi.kotlin.mesh.logger.LogCategory
+import no.nordicsemi.kotlin.mesh.logger.LogLevel
+import java.io.FileInputStream
 import java.net.URL
 import java.util.zip.ZipInputStream
 import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel(assistedFactory = Page2ViewModel.Factory::class)
 internal class Page2ViewModel @AssistedInject internal constructor(
+    @ApplicationContext private val context: Context,
     private val repository: CoreDataRepository,
     @Assisted private val index: Int,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(Page2ScreenUiState())
-    internal val uiState = _uiState.asStateFlow()
+    internal val uiState: StateFlow<Page2ScreenUiState>
+        field = MutableStateFlow(Page2ScreenUiState())
     private lateinit var network: MeshNetwork
     private val json = Json {
         ignoreUnknownKeys = true    // Ignores the keys not available in the mesh network mode.
@@ -77,9 +88,9 @@ internal class Page2ViewModel @AssistedInject internal constructor(
     private fun observeNetwork() {
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
-            .onEach {
-                network = it
-                _uiState.update { state ->
+            .onEach { network ->
+                this.network = network
+                uiState.update { state ->
                     when (state.targets.isEmpty()) {
                         true -> {
                             state.copy(
@@ -104,7 +115,10 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                             )
                         }
 
-                        else -> state
+                        else -> state.copy(
+                            targets = state.targets
+                            .sortedBy { it.node.uuid == repository.proxyFilter.proxy?.uuid }
+                        )
                     }
                 }
             }
@@ -114,7 +128,7 @@ internal class Page2ViewModel @AssistedInject internal constructor(
     private fun observeProxyConnectionState() {
         repository.proxyConnectionStateFlow
             .onEach { proxyConnectionState ->
-                _uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
+                uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
             }
             .launchIn(scope = viewModelScope)
     }
@@ -138,36 +152,91 @@ internal class Page2ViewModel @AssistedInject internal constructor(
             .launchIn(scope = viewModelScope)
     }
 
-    internal fun importZipPackage(uri: Uri, contentResolver: ContentResolver): UpdatePackage {
-        val metadata = ZipInputStream(
-            contentResolver.openInputStream(uri)?.buffered()
-                ?: throw IllegalStateException("Unable to open input stream for URI: $uri")
-        ).use { zis ->
-            lateinit var metadata: Metadata
-            while (true) {
-                val entry = zis.nextEntry ?: break
-                if (entry.name == "ble_mesh_metadata.json") {
-                    metadata = json.decodeFromString(zis.readBytes().decodeToString())
-                    break
+    internal fun loadZipPackage(uri: Uri, contentResolver: ContentResolver) {
+        try {
+            viewModelScope.launch {
+                val metadata = ZipInputStream(
+                    contentResolver.openInputStream(uri)?.buffered()
+                        ?: throw IllegalStateException("Unable to open input stream for URI: $uri")
+                ).use { zis ->
+                    lateinit var metadata: Metadata
+                    while (true) {
+                        val entry = zis.nextEntry ?: break
+                        if (entry.name == "ble_mesh_metadata.json") {
+                            metadata = json.decodeFromString(zis.readBytes().decodeToString())
+                            break
+                        }
+                    }
+                    metadata
+                }
+
+                val data = contentResolver.openInputStream(uri)
+                    ?.use { it.readBytes() }
+                    ?: byteArrayOf()
+                val zipPackage = ZipPackage(data = data)
+                val fileName = contentResolver.fileName(uri)
+                uiState.update {
+                    it.copy(
+                        updatePackage = UpdatePackage(
+                            fileName = fileName,
+                            zipPackage = zipPackage,
+                            metadata = metadata
+                        )
+                    )
                 }
             }
-            metadata
+        } catch (e: Exception) {
+            repository.logger.log(
+                message = { "Error while loading zip file: $e" },
+                category = LogCategory.PROVISIONING,
+                level = LogLevel.ERROR
+            )
         }
+    }
 
-        val data = contentResolver.openInputStream(uri)
-            ?.use { it.readBytes() }
-            ?: byteArrayOf()
-        val zipPackage = ZipPackage(data = data)
-        return UpdatePackage(zipPackage = zipPackage, metadata = metadata)
+    internal fun loadZipPackage(uri: Uri) {
+        try {
+            val file = uri.toFile()
+            val bytes = file.readBytes()
+            val zipPackage = ZipPackage(data = bytes)
+            val metadata = FileInputStream(file).use { fis ->
+                ZipInputStream(fis.buffered()).use { zis ->
+                    lateinit var metadata: Metadata
+                    while (true) {
+                        val entry = zis.nextEntry ?: break
+                        if (entry.name == "ble_mesh_metadata.json") {
+                            metadata = json.decodeFromString(zis.readBytes().decodeToString())
+                            break
+                        }
+                    }
+                    metadata
+                }
+            }
+            uiState.update {
+                it.copy(
+                    updatePackage = UpdatePackage(
+                        fileName = file.name,
+                        zipPackage = zipPackage,
+                        metadata = metadata
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            repository.logger.log(
+                message = { "Error while loading zip file: $e" },
+                category = LogCategory.PROVISIONING,
+                level = LogLevel.ERROR
+            )
+        }
     }
 
     internal fun resetTargets() {
-        _uiState.update { status ->
+        uiState.update { status ->
             status.copy(
                 targets = status.targets
                     .toMutableList()
                     .map { target ->
-                        if(target.targetState is TargetState.Ready){
+                        if (target.targetState is TargetState.Ready) {
                             val entries = target.targetState.entries.map { entry ->
                                 entry.copy(status = Status.Unselected)
                             }
@@ -178,97 +247,149 @@ internal class Page2ViewModel @AssistedInject internal constructor(
         }
     }
 
-    /**
-     * Checks the firmware compatibility
-     * @param target The target node
-     * @param indexOfEntry The index of the firmware entry
-     * @param entry The firmware entry
-     * @param metadata The metadata of the firmware
-     */
     @OptIn(ExperimentalUuidApi::class)
-    internal suspend fun checkCompatibility(
+    internal suspend fun downloadFirmwareUpdate(
         target: Target,
         indexOfEntry: Int,
         entry: FirmwareEntry,
-        metadata: ByteArray,
-        isChecked: Boolean,
     ) {
-        val targetIndex = _uiState.value.targets.indexOfFirst { it.node.uuid == target.node.uuid }
-        val targetState = (target.targetState as TargetState.Ready)
-        if (!isChecked) {
-            _uiState.update { status ->
-                status.copy(
-                    targets = status.targets
-                        .toMutableList()
-                        .also {
-                            it[targetIndex] = target.copy(
-                                targetState = target.targetState.with(
-                                    index = indexOfEntry,
-                                    entry = entry.copy(status = Status.Unselected)
-                                )
-                            )
-                        }.toList()
-                )
-            }
-        } else {
-            _uiState.update { status ->
-                status.copy(
-                    targets = status.targets
-                        .toMutableList()
-                        .also {
-                            it[targetIndex] = target.copy(
-                                targetState = target.targetState.with(
-                                    index = indexOfEntry,
-                                    entry = entry.copy(status = Status.CheckingMetadata)
-                                )
-                            )
-                        }.toList()
-                )
-            }
-            val firmwareUpdateServerModel =
-                target.node.model(modelId = firmwareUpdateServer) ?: return
-            val metadataStatusCheck = send(
-                model = firmwareUpdateServerModel,
-                message = FirmwareUpdateFirmwareMetadataCheck(
-                    imageIndex = entry.index,
-                    metadata = metadata
-                )
-            ) as? FirmwareUpdateFirmwareMetadataStatus
-            metadataStatusCheck?.let {
-                val updatedEntry = when (metadataStatusCheck.status) {
-                    FirmwareUpdateMessageStatus.SUCCESS -> entry.copy(
-                        status = Status.Selected(
-                            additionalInformation = metadataStatusCheck.additionalInformation
-                        )
-                    )
-
-                    else -> entry.copy(
-                        status = Status.Error(message = metadataStatusCheck.status.debugDescription)
-                    )
-                }
-                // Updates the entry in the state of the given target
-                _uiState.update { status ->
+        entry.availableUpdate?.let {
+            val index = uiState.value.targets.indexOfFirst { it.node.uuid == target.node.uuid }
+            downloadFirmware(
+                context = context,
+                url = entry.firmware.updateUri!!,
+                firmwareId = entry.firmware.currentFirmwareId
+            ).let { file ->
+                val uri = saveToDownloads(zipFile = file)
+                uiState.update { status ->
                     status.copy(
                         targets = status.targets
                             .toMutableList()
                             .also {
-                                it[targetIndex] = target.copy(
-                                    targetState = targetState.with(
-                                        index = indexOfEntry,
-                                        entry = updatedEntry
-                                    )
+                                it[index] = target.copy(
+                                    targetState = target.targetState
+                                        .with(index = indexOfEntry, entry = entry)
                                 )
-                            }.toList()
+                            }
+                            .toList()
+                            .sortedBy { it.node.uuid == repository.proxyFilter.proxy?.uuid }
                     )
                 }
-            } ?: run {
-                throw IllegalStateException("No response received during metadata check")
+                loadZipPackage(uri = uri)
+                checkCompatibility(
+                    target = target,
+                    indexOfEntry = indexOfEntry,
+                    entry = entry,
+                    metadata = uiState.value.updatePackage?.metadata ?: throw IllegalStateException(
+                        "Unknown error, no metadata available"
+                    ),
+                    isChecked = true
+                )
             }
         }
     }
 
+    /**
+     * Downloads the firmware information for a given target
+     */
     @OptIn(ExperimentalUuidApi::class)
-    internal suspend fun downloadFirmwareInformation(target: Target) {
+    internal suspend fun downloadFirmwareInformation(target: Target): Target {
+        val key = network.applicationKey(index = index.toUShort()) ?: return target
+        val node = target.node
+        val firmwareUpdateServer = node.models(modelId = firmwareUpdateServer)
+            .firstOrNull() ?: return target
+        // Make sure the Target Node knows the selected Network Key
+        if (!node.knows(key = key.boundNetworkKey)) {
+            val _ = send(node = node, message = ConfigNetKeyAdd(key = key.boundNetworkKey))
+        }
+        // Make sure the Target Node knows the selected Application Key
+        if (!node.knows(key = key)) {
+            val _ = send(node = node, message = ConfigAppKeyAdd(key = key))
+        }
+        // Make sure the selected App Key is bound to the Firmware Update Server model.
+        if (!firmwareUpdateServer.isBound(key = key)) {
+            val _ = send(
+                node = node,
+                message = ConfigModelAppBind(model = firmwareUpdateServer, applicationKey = key)
+            )
+        }
+        val targetIndex =
+            uiState.value.targets.indexOfFirst { it.node.uuid == target.node.uuid }
+        val message = FirmwareUpdateInformationGet(firstIndex = 0, entriesLimit = 2)
+        return send(model = firmwareUpdateServer, message = message)
+            ?.let { response ->
+                val status = response as FirmwareUpdateInformationStatus
+                val updatedTarget = try {
+                    val entries = status.list.mapIndexed { index, fwInformation ->
+                        try {
+                            FirmwareEntry(
+                                index = index.toUByte(),
+                                firmware = fwInformation,
+                                availableUpdate = fwInformation.updateUri?.let { url ->
+                                    val newUrl = url
+                                        .toString()
+                                        .replace(
+                                            oldValue = "192.168.0.173",
+                                            newValue = "10.0.0.104"
+                                        )
+                                        .toUri()
+                                        .buildUpon()
+                                        .appendPath("check")
+                                        .appendQueryParameter(
+                                            "cfwid",
+                                            fwInformation.currentFirmwareId.bytes.toHexString()
+                                        )
+                                        .build()
+                                        .let { URL(it.toString()) }
+                                    checkForUpdates(url = newUrl)
+                                }
+                            )
+                        } catch (e: Exception) {
+                            FirmwareEntry(
+                                index = index.toUByte(),
+                                firmware = fwInformation,
+                                availableUpdate = null
+                            )
+                        }
+                    }
+                    target
+                        .copy(targetState = TargetState.Ready(entries = entries))
+                } catch (e: Exception) {
+                    target.copy(
+                        targetState = TargetState.Error(message = e.message ?: "Unknown error")
+                    )
+                }
+                uiState.update { status ->
+                    status.copy(
+                        targets = status.targets
+                            .toMutableList()
+                            .also { it[targetIndex] = updatedTarget }
+                            .toList()
+                            .sortedBy { it.node.uuid == repository.proxyFilter.proxy?.uuid }
+                    )
+                }
+                updatedTarget
+            }
+            ?: run {
+                uiState.update {
+                    it.copy(
+                        messageState = Failed(
+                            message = message,
+                            error = IllegalStateException("No response received")
+                        ),
+                    )
+                }
+                target
+            }
+    }
+
+    /**
+     * Downloads the firmware information for a given target
+     *
+     * @param target The target node
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    internal suspend fun downloadFirmwareInformation1(target: Target) {
         val key = network.applicationKey(index = index.toUShort()) ?: return
         val node = target.node
         val firmwareUpdateServer = node.models(modelId = firmwareUpdateServer)
@@ -288,113 +409,233 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                 message = ConfigModelAppBind(model = firmwareUpdateServer, applicationKey = key)
             )
         }
-        val message = FirmwareUpdateInformationGet(firstIndex = 0, entriesLimit = 2)
-        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
-        try {
-            send(model = firmwareUpdateServer, message = message)
+
+        send(
+            model = firmwareUpdateServer,
+            message = FirmwareUpdateInformationGet(firstIndex = 0, entriesLimit = 2)
+        )
+            ?.let { response ->
+                val index = uiState.value.targets
+                    .indexOfFirst { it.node.uuid == target.node.uuid }
+                val status = response as FirmwareUpdateInformationStatus
+                lateinit var updateTarget: Target
+                try {
+                    val entries = status.list.mapIndexed { index, image ->
+                        try {
+                            FirmwareEntry(
+                                index = index.toUByte(),
+                                firmware = image,
+                                availableUpdate = image.updateUri?.let { url ->
+                                    val newUrl = url
+                                        .toString()
+                                        .replace(
+                                            oldValue = "192.168.0.173",
+                                            newValue = "10.0.0.104"
+                                        )
+                                        .toUri()
+                                        .buildUpon()
+                                        .appendPath("check")
+                                        .appendQueryParameter(
+                                            "cfwid",
+                                            image.currentFirmwareId.bytes.toHexString()
+                                        )
+                                        .build()
+                                        .let { URL(it.toString()) }
+                                    checkForUpdates(newUrl)
+                                }
+                            )
+                        } catch (e: Exception) {
+                            FirmwareEntry(
+                                index = index.toUByte(),
+                                firmware = image,
+                                availableUpdate = null
+                            )
+                        }
+                    }
+                    updateTarget = target
+                        .copy(targetState = TargetState.Ready(entries = entries))
+                } catch (e: Exception) {
+                    updateTarget = target.copy(
+                        targetState = TargetState.Error(
+                            message = e.message ?: "Unknown error"
+                        )
+                    )
+                } finally {
+                    uiState.update { status ->
+                        if (index > -1) {
+                            val list = status.targets
+                                .toMutableList()
+                                .also { it[index] = updateTarget }
+                            status.copy(targets = list)
+                        } else status
+                    }
+                }
+            }
+    }
+
+    /**
+     * Checks the firmware compatibility
+     *
+     * @param node        Target node
+     * @param entry       Firmware entry
+     * @param metadata    Metadata of the firmware
+     * @param isChecked   Whether the entry is checked or not
+     * @return The updated firmware entry
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    internal suspend fun checkCompatibility(
+        node: Node,
+        entry: FirmwareEntry,
+        metadata: ByteArray,
+        isChecked: Boolean,
+    ): FirmwareEntry = when (isChecked) {
+        true -> {
+            val updatedEntry = entry.copy(status = Status.CheckingMetadata)
+            val firmwareUpdateServerModel = node.model(modelId = firmwareUpdateServer)
+                ?: throw IllegalStateException("Firmware update server model not found")
+            val metadataStatusCheck = send(
+                model = firmwareUpdateServerModel,
+                message = FirmwareUpdateFirmwareMetadataCheck(
+                    imageIndex = entry.index,
+                    metadata = metadata
+                )
+            ) as? FirmwareUpdateFirmwareMetadataStatus
+            metadataStatusCheck?.let {
+                when (metadataStatusCheck.status) {
+                    FirmwareUpdateMessageStatus.SUCCESS -> updatedEntry.copy(
+                        status = Status.Selected(
+                            additionalInformation = metadataStatusCheck.additionalInformation
+                        )
+                    )
+
+                    else -> updatedEntry.copy(
+                        status = Status.Error(message = metadataStatusCheck.status.debugDescription)
+                    )
+                }
+            } ?: run {
+                throw IllegalStateException("No response received during metadata check")
+            }
+        }
+
+        false -> entry.copy(status = Status.Unselected)
+    }
+
+    /**
+     * Checks the firmware compatibility
+     * @param target The target node
+     * @param indexOfEntry The index of the firmware entry
+     * @param entry The firmware entry
+     * @param metadata The metadata of the firmware
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    internal suspend fun checkCompatibility(
+        target: Target,
+        indexOfEntry: Int,
+        entry: FirmwareEntry,
+        metadata: Metadata,
+        isChecked: Boolean,
+    ) {
+        val targetIndex = uiState.value.targets.indexOfFirst { it.node.uuid == target.node.uuid }
+        val targetState = (target.targetState as TargetState.Ready)
+        if (!isChecked) {
+            uiState.update { status ->
+                status.copy(
+                    targets = status.targets
+                        .toMutableList()
+                        .also {
+                            it[targetIndex] = target.copy(
+                                targetState = target.targetState.with(
+                                    index = indexOfEntry,
+                                    entry = entry.copy(status = Status.Unselected)
+                                )
+                            )
+                        }.toList()
+                )
+            }
+        } else {
+            uiState.update { status ->
+                status.copy(
+                    targets = status.targets
+                        .toMutableList()
+                        .also {
+                            it[targetIndex] = target.copy(
+                                targetState = target.targetState.with(
+                                    index = indexOfEntry,
+                                    entry = entry.copy(status = Status.CheckingMetadata)
+                                )
+                            )
+                        }.toList()
+                )
+            }
+            val firmwareUpdateServerModel =
+                target.node.model(modelId = firmwareUpdateServer) ?: return
+            val metadataStatusCheck = send(
+                model = firmwareUpdateServerModel,
+                message = FirmwareUpdateFirmwareMetadataCheck(
+                    imageIndex = entry.index,
+                    metadata = metadata.metadataOctets ?: byteArrayOf()
+                )
+            ) as? FirmwareUpdateFirmwareMetadataStatus
+            metadataStatusCheck?.let {
+                val updatedEntry = when (metadataStatusCheck.status) {
+                    FirmwareUpdateMessageStatus.SUCCESS -> entry.copy(
+                        status = Status.Selected(
+                            additionalInformation = metadataStatusCheck.additionalInformation
+                        )
+                    )
+
+                    else -> entry.copy(
+                        status = Status.Error(message = metadataStatusCheck.status.debugDescription)
+                    )
+                }
+                // Updates the entry in the state of the given target
+                uiState.update { status ->
+                    status.copy(
+                        targets = status.targets
+                            .toMutableList()
+                            .also {
+                                it[targetIndex] = target.copy(
+                                    targetState = targetState.with(
+                                        index = indexOfEntry,
+                                        entry = updatedEntry
+                                    )
+                                )
+                            }.toList()
+                    )
+                }
+            } ?: run {
+                throw IllegalStateException("No response received during metadata check")
+            }
+        }
+    }
+
+    /**
+     * Sends a message to the given model
+     *
+     * @param model             Model to send the message to
+     * @param message           Message to send
+     * @param applicationKey    Application key to send the message with
+     * @return Response from the model or null if the message times out or no response was received
+     */
+    internal suspend fun send(
+        model: Model,
+        message: AcknowledgedMeshMessage,
+        applicationKey: ApplicationKey? = null,
+    ): MeshMessage? {
+        uiState.value = uiState.value.copy(messageState = Sending(message = message))
+        return try {
+            repository.send(model = model, ackedMessage = message, applicationKey = applicationKey)
                 ?.let { response ->
-                    val index = _uiState.value.targets
-                        .indexOfFirst { it.node.uuid == target.node.uuid }
-                    val status = response as FirmwareUpdateInformationStatus
-                    _uiState.value = _uiState.value.copy(
+                    uiState.value = uiState.value.copy(
                         messageState = Completed(
                             message = message,
                             response = response as MeshResponse
                         ),
                     )
-                    lateinit var updateTarget: Target
-                    try {
-                        val entries = status.list.mapIndexed { index, image ->
-                            try {
-                                FirmwareEntry(
-                                    index = index.toUByte(),
-                                    firmware = image,
-                                    availableUpdate = image.updateUri?.let { url ->
-                                        val newUrl = url
-                                            .toString()
-                                            .replace(
-                                                oldValue = "192.168.0.173",
-                                                newValue = "192.168.68.63"
-                                            )
-                                            .toUri()
-                                            .buildUpon()
-                                            .appendPath("check")
-                                            .appendQueryParameter(
-                                                "cfwid",
-                                                image.currentFirmwareId.bytes.toHexString()
-                                            )
-                                            .build()
-                                            .let { URL(it.toString()) }
-                                        checkForUpdates(newUrl)
-                                    }
-                                )
-                            } catch (e: Exception) {
-                                FirmwareEntry(
-                                    index = index.toUByte(),
-                                    firmware = image,
-                                    availableUpdate = null
-                                )
-                            }
-                        }
-                        updateTarget = target
-                            .copy(targetState = TargetState.Ready(entries = entries))
-                    } catch (e: Exception) {
-                        updateTarget = target.copy(
-                            targetState = TargetState.Error(
-                                message = e.message ?: "Unknown error"
-                            )
-                        )
-                    } finally {
-                        _uiState.update { status ->
-                            if (index > -1) {
-                                val list = status.targets
-                                    .toMutableList()
-                                    .also { it[index] = updateTarget }
-                                status.copy(targets = list)
-                            } else status
-                        }
-                    }
-                }
-                ?: run {
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Failed(
-                            message = message,
-                            error = IllegalStateException("No response received")
-                        ),
-                    )
-                }
-        } catch (e: Exception) {
-            _uiState.value = _uiState.value.copy(
-                messageState = Failed(message = message, error = e),
-            )
-        }
-    }
-
-    internal suspend fun send(
-        model: Model,
-        message: AcknowledgedMeshMessage,
-        applicationKey: ApplicationKey? = null,
-    ) = repository.send(model = model, ackedMessage = message, applicationKey = applicationKey)
-
-    internal suspend fun send1(
-        model: Model,
-        message: AcknowledgedMeshMessage,
-        applicationKey: ApplicationKey? = null,
-    ): MeshMessage? {
-        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
-        return try {
-            repository.send(model = model, ackedMessage = message, applicationKey = applicationKey)
-                ?.let { response ->
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Completed(
-                            message = message,
-                            response = response as ConfigResponse
-                        ),
-                    )
                     response
                 }
                 ?: run {
-                    _uiState.value = _uiState.value.copy(
+                    uiState.value = uiState.value.copy(
                         messageState = Failed(
                             message = message,
                             error = IllegalStateException("No response received")
@@ -403,18 +644,26 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                     null
                 }
         } catch (e: Exception) {
-            _uiState.value = _uiState.value.copy(
+            uiState.value = uiState.value.copy(
                 messageState = Failed(message = message, error = e),
             )
             null
         }
     }
 
+
+    /**
+     * Sends a message to the given model
+     *
+     * @param node              Node to send the message to
+     * @param message           Message to send
+     * @return Response from the model or null if the message times out or no response was received
+     */
     private suspend fun send(node: Node, message: AcknowledgedConfigMessage): MeshMessage? {
-        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+        uiState.value = uiState.value.copy(messageState = Sending(message = message))
         return try {
             repository.send(node, message)?.let { response ->
-                _uiState.value = _uiState.value.copy(
+                uiState.value = uiState.value.copy(
                     messageState = Completed(
                         message = message,
                         response = response as ConfigResponse
@@ -422,7 +671,7 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                 )
                 response
             } ?: run {
-                _uiState.value = _uiState.value.copy(
+                uiState.value = uiState.value.copy(
                     messageState = Failed(
                         message = message,
                         error = IllegalStateException("No response received")
@@ -431,7 +680,7 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                 null
             }
         } catch (e: Exception) {
-            _uiState.value = _uiState.value.copy(
+            uiState.value = uiState.value.copy(
                 messageState = Failed(message = message, error = e),
             )
             null
@@ -448,4 +697,18 @@ internal data class Page2ScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val messageState: MessageState = NotStarted,
     val targets: List<Target> = emptyList(),
+    val updatePackage: UpdatePackage? = null,
 )
+
+private fun ContentResolver.fileName(uri: Uri) = when (uri.scheme) {
+    ContentResolver.SCHEME_CONTENT -> query(
+        uri,
+        arrayOf(OpenableColumns.DISPLAY_NAME),
+        null, null, null,
+    )?.use { cursor ->
+        val i = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (i >= 0 && cursor.moveToFirst()) cursor.getString(i) else null
+    }
+
+    else -> ""
+}

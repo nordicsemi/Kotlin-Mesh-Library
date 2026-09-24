@@ -47,6 +47,7 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
 
     constructor(companyIdentifier: UShort) : this(companyIdentifier, byteArrayOf())
 
+
     /**
      * Returns the version string in the format `major.minor.revision+build`, skipping the build
      * number if it is 0.
@@ -111,6 +112,12 @@ data class FirmwareId(val companyIdentifier: UShort, val version: ByteArray = by
 
     companion object {
 
+        /**
+         * Returns a [FirmwareId] from the given [data].
+         *
+         * @param data The data to parse.
+         * @return The [FirmwareId] from the given [data] or null otherwise
+         */
         fun from(data: ByteArray) = data.takeIf { it.size >= 2 }
             ?.let {
                 FirmwareId(

@@ -2,6 +2,7 @@ package no.nordicsemi.android.nrfmesh.feature.dfu.util
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 
 /**
@@ -14,11 +15,11 @@ import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
  *                              the metadata does not declare it.
  * @property compositionHash    The hash of the Composition Data after the update. This is
  *                              a 32-bit value.
- * @property encodedMetadata    The vendor specific metadata, as a hexadecimal string, or `null`
+ * @property metadataString    The vendor specific metadata, as a hexadecimal string, or `null`
  *                              when not present.
- * @property firmwareId         The Firmware ID, as a hexadecimal string.
- * @property metadata           [encodedMetadata] decoded into octets, or `null` when not present.
- * @property firmwareIdOctets   [firmwareId] decoded into octets.
+ * @property firmwareIdString         The Firmware ID, as a hexadecimal string.
+ * @property metadataOctets           [metadataString] decoded into octets, or `null` when not present.
+ * @property firmwareIdOctets   [firmwareIdString] decoded into octets.
  */
 @Serializable
 data class Metadata(
@@ -27,8 +28,8 @@ data class Metadata(
     @SerialName("core_type") val coreType: Int,
     @SerialName("composition_data") val compositionData: CompositionData? = null,
     @SerialName("composition_hash") val compositionHash: UInt,
-    @SerialName("encoded_metadata") val encodedMetadata: String? = null,
-    @SerialName("firmware_id") val firmwareId: String,
+    @SerialName("encoded_metadata") val metadataString: String? = null,
+    @SerialName("firmware_id") val firmwareIdString: String,
 ) {
 
     /**
@@ -89,9 +90,12 @@ data class Metadata(
         @SerialName("vendor_models") val vendorModels: List<UInt> = emptyList(),
     )
 
-    val metadata: ByteArray?
-        get() = encodedMetadata?.hexToByteArray(format = HexFormat.UpperCase)
+    val metadataOctets: ByteArray?
+        get() = metadataString?.hexToByteArray(format = HexFormat.UpperCase)
+
+    val firmwareId: FirmwareId?
+        get() = FirmwareId.from(data = firmwareIdOctets)
 
     val firmwareIdOctets: ByteArray
-        get() = firmwareId.hexToByteArray(format = HexFormat.UpperCase)
+        get() = firmwareIdString.hexToByteArray(format = HexFormat.UpperCase)
 }

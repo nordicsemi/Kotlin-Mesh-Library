@@ -92,10 +92,13 @@ internal data class FirmwareEntry(
 internal sealed interface Status {
     /** Firmware entry is not selected. */
     data object Unselected : Status
+
     /** Firmware entry is selected. */
     data object CheckingMetadata : Status
+
     /** Firmware entry is selected. */
     data class Selected(val additionalInformation: FirmwareUpdateAdditionalInformation) : Status
+
     /** Firmware entry is error. */
     data class Error(val message: String) : Status
 }
@@ -106,4 +109,18 @@ internal sealed interface Status {
  * @property zipPackage ZIP package containing the firmware update.
  * @property metadata   Mesh metadata associated with the firmware update.
  */
-internal data class UpdatePackage(val zipPackage: ZipPackage, val metadata: Metadata)
+internal data class UpdatePackage(
+    val fileName: String?,
+    val zipPackage: ZipPackage,
+    val metadata: Metadata,
+) {
+    val packageSize: Int
+        get() = zipPackage
+            .getBinaries()
+            .images
+            .firstOrNull()
+            ?.image
+            ?.data
+            ?.size
+            ?: 0
+}

@@ -1,7 +1,9 @@
 package no.nordicsemi.android.nrfmesh.core.data
 
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -44,6 +46,8 @@ suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
 
             val data = connection.inputStream.bufferedReader().use { it.readText() }
             Json.decodeFromString<UpdatedFirmwareInformation>(data)
+        } catch (e: Exception) {
+            throw Exception("Failed to decode firmware information: ${e.localizedMessage}")
         } finally {
             connection.disconnect()
         }
@@ -61,7 +65,7 @@ suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
  */
 suspend fun downloadFirmware(context: Context, url: URL, firmwareId: FirmwareId): File {
     val updatedUrl = url.toString()
-        .replace(oldValue = "192.168.0.173", newValue = "192.168.68.63")
+        .replace(oldValue = "192.168.0.173", newValue = "10.0.0.104")
         .toUri()
         .let { uri ->
             URI(
@@ -79,8 +83,8 @@ suspend fun downloadFirmware(context: Context, url: URL, firmwareId: FirmwareId)
                 hostnameVerifier = HostnameVerifier { _, _ -> true }
             }
             requestMethod = "GET"
-            connectTimeout = 15_000
-            readTimeout = 15_000
+            connectTimeout = 10_000
+            readTimeout = 10_000
         }
 
         try {
@@ -118,7 +122,7 @@ suspend fun downloadFirmware(context: Context, url: URL, firmwareId: FirmwareId)
  *
  * @return The URI of the saved file.
  */
-fun saveToDownloads(context: Context, zipFile: File) =
+fun saveToDownloads(context: ContentResolver?, zipFile: File) =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         val contentValues = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, zipFile.name)
@@ -126,7 +130,7 @@ fun saveToDownloads(context: Context, zipFile: File) =
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
 
-        val resolver = context.contentResolver
+        val resolver = context ?: throw IOException("ContentResolver is null")
         val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
             ?: throw IOException("Failed to create Downloads entry")
 
@@ -147,6 +151,14 @@ fun saveToDownloads(context: Context, zipFile: File) =
         zipFile.copyTo(File(downloadsDir, zipFile.name), overwrite = true)
         zipFile.toUri()
     }
+
+fun saveToDownloads(zipFile: File): Uri {
+    val downloadsDir =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+    downloadsDir.mkdirs()
+    zipFile.copyTo(File(downloadsDir, zipFile.name), overwrite = true)
+    return zipFile.toUri()
+}
 
 
 /**

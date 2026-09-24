@@ -144,7 +144,7 @@ private fun FirmwareUpdate(
         mutableStateOf(null)
     }
     val updateUrl = url?.toString()
-        ?.replace(oldValue = "192.168.0.173", newValue = "192.168.68.63")
+        ?.replace(oldValue = "192.168.0.173", newValue = "10.0.0.104")
         ?.toUri()
         ?.buildUpon()
         ?.appendPath("check")
@@ -177,7 +177,7 @@ private fun FirmwareUpdate(
                                 url = it,
                                 firmwareId = firmwareId
                             )
-                            saveToDownloads(context = context, zipFile = file)
+                            saveToDownloads(context = context.contentResolver, zipFile = file)
                         }
                     } catch (e: Exception) {
                         error = e
