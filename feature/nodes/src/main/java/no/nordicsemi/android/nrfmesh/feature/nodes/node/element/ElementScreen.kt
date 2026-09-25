@@ -55,7 +55,7 @@ internal fun ElementScreen(
             title = stringResource(id = R.string.label_element)
         )
         NameRow(
-            name = element.name ?: stringResource(id = R.string.unknown),
+            name = element.name ?: stringResource(id = R.string.label_unknown),
             onNameChanged = {
                 element.name = it
                 save()

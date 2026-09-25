@@ -54,4 +54,5 @@
     <string name="label_unknown_error_while_importing">Unknown error occurred while importing a Network.</string>
     <string name="label_error_while_importing_a_network">Error while importing a network: \n\n%1$s</string>
     <string name="label_developer_settings">Developer Settings</string>
+    <string name="label_firmware_update">Firmware Update</string>
 </resources>

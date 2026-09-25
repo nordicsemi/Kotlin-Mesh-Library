@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model
 
+import android.content.Context
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,9 +19,13 @@ import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.NodeIdentityStatus
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
+import no.nordicsemi.android.nrfmesh.core.common.isFirmwareDistributionServer
+import no.nordicsemi.android.nrfmesh.core.common.isFirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isSensorServer
+import no.nordicsemi.android.nrfmesh.core.common.isLePairingResponderServer
+import no.nordicsemi.android.nrfmesh.feature.model.lepairing.LePairingResponder
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -29,13 +34,17 @@ import no.nordicsemi.android.nrfmesh.feature.model.common.CommonInformation
 import no.nordicsemi.android.nrfmesh.feature.model.common.Publication
 import no.nordicsemi.android.nrfmesh.feature.model.common.Subscriptions
 import no.nordicsemi.android.nrfmesh.feature.model.configurationserver.ConfigurationServer
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareDistributionServer
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.feature.model.sensor.SensorServer
 import no.nordicsemi.android.nrfmesh.feature.model.vendor.VendorModelControls
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareInformation
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import kotlin.uuid.ExperimentalUuidApi
@@ -49,11 +58,15 @@ internal fun ModelScreen(
     modelState: ModelState.Success,
     send: (AcknowledgedConfigMessage) -> Unit,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
+    sendAcknowledgedMessage: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
     requestNodeIdentityStates: (Model) -> Unit,
     resetMessageState: () -> Unit,
     onAddGroupClicked: () -> Unit,
     navigateToGroups: () -> Unit,
+    navigateToFirmwareInformation: (String, Model, FirmwareInformation) -> Unit,
+    navigateToBindApplicationKeys: (Model) -> Unit,
     onRelatedModelsClicked: (Model) -> Unit,
+    startPairing: (Context) -> Unit,
 ) {
     // When entering this screen the TextFields automatically gets focused causing the keyboard
     // to show up. This is a known issue and the workaround is to make the column focusable to
@@ -87,11 +100,12 @@ internal fun ModelScreen(
                 onAddGroupClicked = onAddGroupClicked,
             )
         }
-        if (model.supportsModelPublication != false && model.supportsModelSubscription != false) {
+        if (model.supportsApplicationKeyBinding) {
             BoundApplicationKeys(
                 model = model,
                 messageState = messageState,
-                send = send
+                send = send,
+                navigateToBindApplicationKeys = navigateToBindApplicationKeys
             )
         }
         if (model.supportsModelPublication != false) {
@@ -102,7 +116,7 @@ internal fun ModelScreen(
                 send = send
             )
         }
-        if (model.supportsModelSubscription != false) {
+        if (model.supportsModelSubscription) {
             Subscriptions(
                 snackbarHostState = snackbarHostState,
                 messageState = messageState,
@@ -111,33 +125,57 @@ internal fun ModelScreen(
                 send = send
             )
         }
-        if (model.isGenericOnOffServer()) {
-            GenericOnOffServer(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-        if (model.isGenericLevelServer()) {
-            GenericLevelServer(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-        if(model.isSensorServer()) {
-            SensorServer(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
-        }
-        if (model.isVendorModel()) {
-            VendorModelControls(
-                model = model,
-                messageState = messageState,
-                sendApplicationMessage = sendApplicationMessage
-            )
+        when {
+            model.isGenericOnOffServer() ->
+                GenericOnOffServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericLevelServer() ->
+                GenericLevelServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isSensorServer() ->
+                SensorServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isFirmwareDistributionServer() ->
+                FirmwareDistributionServer(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    send = sendAcknowledgedMessage,
+                )
+
+            model.isFirmwareUpdateServer() ->
+                FirmwareUpdateServer(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    onFirmwareInformationPressed = navigateToFirmwareInformation,
+                    send = sendAcknowledgedMessage,
+                )
+
+            model.isLePairingResponderServer() ->
+                LePairingResponder(
+                    model = model,
+                    isInProgress = messageState.isInProgress(),
+                    send = sendAcknowledgedMessage,
+                    startPairing = startPairing,
+                )
+
+            model.isVendorModel() ->
+                VendorModelControls(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
         }
         Spacer(modifier = Modifier.size(size = 8.dp))
     }
@@ -149,20 +187,16 @@ internal fun ModelScreen(
             onDismissRequest = resetMessageState,
         )
 
-        is Completed -> {
-            messageState.response?.takeIf {
-                (it is ConfigStatusMessage && !it.isSuccess)
-            }?.let {
+        is Completed -> messageState.response
+            ?.takeIf { (it is ConfigStatusMessage && !it.isSuccess) }
+            ?.let {
                 MeshMessageStatusDialog(
                     text = (messageState.response as ConfigStatusMessage).message,
                     showDismissButton = true,
                     onDismissRequest = resetMessageState,
                 )
             }
-        }
 
-        else -> {
-
-        }
+        else -> {}
     }
 }

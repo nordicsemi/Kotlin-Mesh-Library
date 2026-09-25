@@ -46,6 +46,8 @@ include(":feature:provisioning")
 include(":feature:scenes")
 include(":feature:ivindex")
 include(":feature:developer-settings")
+include(":feature:dfu")
+ include(":feature:scanner")
 
 include(":mesh:core")
 include(":mesh:crypto")
@@ -62,9 +64,9 @@ include(":mesh:bearer-gatt")
 // if (file("../Android-Gradle-Plugins").exists()) {
 //     includeBuild("../Android-Gradle-Plugins")
 // }
-// if (file("../Kotlin-Util-Library").exists()) {
-//     includeBuild("../Kotlin-Util-Library")
-// }
+if (file("../Kotlin-Util-Library").exists()) {
+    includeBuild("../Kotlin-Util-Library")
+}
 // if (file("../Kotlin-BLE-Library").exists()) {
 //     includeBuild("../Kotlin-BLE-Library")
 // }

@@ -14,14 +14,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.Row
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
@@ -57,16 +58,13 @@ fun BindAppKeysScreen(
                 }
             }
 
-            false -> model.parentElement?.parentNode?.applicationKeys
-                ?.takeIf { it.isEmpty() }
-                ?.let {
-                    MeshNoItemsAvailable(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Outlined.VpnKey,
-                        title = stringResource(R.string.label_no_bound_app_keys),
-                        rationale = stringResource(R.string.label_bind_an_app_key_rationale),
-                    )
-                }
+            false ->
+                MeshNoItemsAvailable(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = Icons.Outlined.VpnKey,
+                    title = stringResource(R.string.label_no_bound_app_keys),
+                    rationale = stringResource(R.string.label_bind_an_app_key_rationale),
+                )
         }
     }
 }
@@ -77,12 +75,11 @@ private fun AddedKeyRow(
     key: ApplicationKey,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
     var isBound by rememberSaveable { mutableStateOf(key.isBoundTo(model = model)) }
     var displayWarningDialog by rememberSaveable { mutableStateOf(false) }
-    ElevatedCardItem(
+    key.Row(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.VpnKey,
-        title = key.name,
         titleAction = {
             Checkbox(
                 checked = isBound,

@@ -32,7 +32,6 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -46,7 +45,7 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
-import no.nordicsemi.android.nrfmesh.core.data.models.ApplicationKeyData
+import no.nordicsemi.android.nrfmesh.core.data.ui.ApplicationKeyData
 import no.nordicsemi.android.nrfmesh.core.ui.ApplicationKeyRow
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle

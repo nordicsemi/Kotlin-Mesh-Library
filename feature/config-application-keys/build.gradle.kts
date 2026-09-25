@@ -11,6 +11,12 @@ android {
 dependencies {
     implementation(nordic.kotlin.data)
 
+    testImplementation(libs.junit4)
+    testImplementation(libs.kotlin.junit)
+    testImplementation(libs.androidx.test.ext)
+    testImplementation(libs.androidx.test.rules)
+
+
     implementation(project(":core:common"))
     implementation(project(":core:data"))
     implementation(project(":core:navigation"))
@@ -19,8 +25,4 @@ dependencies {
     implementation(project(":feature:application-keys"))
     implementation(project(":mesh:core"))
 
-    testImplementation(libs.junit4)
-    testImplementation(libs.kotlin.junit)
-    testImplementation(libs.androidx.test.ext)
-    testImplementation(libs.androidx.test.rules)
 }

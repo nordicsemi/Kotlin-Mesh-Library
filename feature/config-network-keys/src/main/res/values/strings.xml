@@ -23,7 +23,7 @@
     <string name="label_network_key_added">Network key added</string>
     <string name="label_network_key_deleting">Deleting network key…</string>
     <string name="label_remove_key">Remove Key</string>
-    <string name="label_remove_key_confirmation">The selected key is bound to one or more Application Keys in the Node. When removed, those keys will also be removed and unbound from all models, causing the models may stop working. \\n\\nDo you wish to continue?</string>
+    <string name="label_remove_key_confirmation">The selected key is bound to one or more Application Keys in the Node. When removed, those keys will also be removed and unbound from all models, causing the models may stop working. \n\nDo you wish to continue?</string>
     <string name="label_cancel">Cancel</string>
     <string name="label_ok">Ok</string>
     <string name="label_available_network_keys">Available Network Keys</string>

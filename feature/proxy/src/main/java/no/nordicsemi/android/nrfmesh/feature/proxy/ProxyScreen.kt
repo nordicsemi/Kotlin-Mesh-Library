@@ -103,8 +103,9 @@ internal fun ProxyScreen(
     onBluetoothEnabled: (Boolean) -> Unit,
     onLocationEnabled: (Boolean) -> Unit,
     onAutoConnectToggled: (Boolean) -> Unit,
-    onScanResultSelected: (ScanResult) -> Unit,
+    onConnectClicked: () -> Unit,
     onDisconnectClicked: () -> Unit,
+    onScanResultSelected: (ScanResult) -> Unit,
     send: (ProxyConfigurationMessage) -> Unit,
     resetMessageState: () -> Unit,
 ) {
@@ -119,8 +120,9 @@ internal fun ProxyScreen(
             onBluetoothEnabled = onBluetoothEnabled,
             onLocationEnabled = onLocationEnabled,
             onAutoConnectToggled = onAutoConnectToggled,
-            onScanResultSelected = onScanResultSelected,
+            onConnectClicked = onConnectClicked,
             onDisconnectClicked = onDisconnectClicked,
+            onScanResultSelected = onScanResultSelected,
             send = send,
             resetMessageState = resetMessageState
         )
@@ -144,6 +146,7 @@ private fun ProxyContent(
     onLocationEnabled: (Boolean) -> Unit,
     onAutoConnectToggled: (Boolean) -> Unit,
     onScanResultSelected: (ScanResult) -> Unit,
+    onConnectClicked: () -> Unit,
     onDisconnectClicked: () -> Unit,
     send: (ProxyConfigurationMessage) -> Unit,
     resetMessageState: () -> Unit,
@@ -161,8 +164,9 @@ private fun ProxyContent(
                     networkKeys = network.networkKeys,
                     proxyConnectionState = proxyConnectionState,
                     onAutoConnectToggled = onAutoConnectToggled,
-                    onScanResultSelected = onScanResultSelected,
-                    onDisconnectClicked = onDisconnectClicked
+                    onConnectClicked = onConnectClicked,
+                    onDisconnectClicked = onDisconnectClicked,
+                    onScanResultSelected = onScanResultSelected
                 )
                 FilterSection(
                     network = network,
@@ -186,6 +190,7 @@ private fun ProxyFilterInfo(
     networkKeys: List<NetworkKey>,
     proxyConnectionState: ProxyConnectionState,
     onAutoConnectToggled: (Boolean) -> Unit,
+    onConnectClicked: () -> Unit,
     onDisconnectClicked: () -> Unit,
     onScanResultSelected: (ScanResult) -> Unit,
 ) {
@@ -195,7 +200,7 @@ private fun ProxyFilterInfo(
     AutomaticConnectionRow(
         proxyConnectionState = proxyConnectionState,
         onAutoConnectToggled = onAutoConnectToggled,
-        onConnectClicked = { showProxyScannerSheet = true },
+        onConnectClicked = onConnectClicked,
         onDisconnectClicked = onDisconnectClicked
     )
     if (showProxyScannerSheet)

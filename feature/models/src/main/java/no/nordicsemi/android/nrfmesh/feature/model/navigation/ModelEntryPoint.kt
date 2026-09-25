@@ -21,9 +21,13 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeListDetailSceneKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
+import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.BindAppKeysKey
+import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.bindAppKeysEntry
 import no.nordicsemi.android.nrfmesh.feature.model.ModelScreen
 import no.nordicsemi.android.nrfmesh.feature.model.ModelState
 import no.nordicsemi.android.nrfmesh.feature.model.ModelViewModel
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.FirmwareInformationKey
+import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.firmwareInformationEntryPoint
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import kotlin.uuid.ExperimentalUuidApi
@@ -33,12 +37,13 @@ data class ModelKey(val address: Address, val modelId: UInt) : NavKey
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class)
 fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigator) {
+    var viewModel: ModelViewModel? = null
     entry<ModelKey>(
         metadata = ListDetailSceneStrategy.extraPane(
             sceneKey = NodeListDetailSceneKey
         )
     ) { key ->
-        val viewModel = hiltViewModel<ModelViewModel, ModelViewModel.Factory> {
+        viewModel = hiltViewModel<ModelViewModel, ModelViewModel.Factory> {
             it.create(key.address.toInt(), key.modelId.toInt())
         }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -49,13 +54,31 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     messageState = uiState.messageState,
                     nodeIdentityStates = uiState.nodeIdentityStates,
                     modelState = modelState,
-                    send = viewModel::send,
-                    sendApplicationMessage = viewModel::sendApplicationMessage,
                     requestNodeIdentityStates = viewModel::requestNodeIdentityStates,
                     resetMessageState = viewModel::resetMessageState,
                     onAddGroupClicked = { navigator.navigate(GroupsKey) },
                     navigateToGroups = { navigator.navigate(GroupsKey) },
-                    onRelatedModelsClicked = { navigator.navigate(key = RelatedModelsKey(model = it)) }
+                    onRelatedModelsClicked = { navigator.navigate(key = RelatedModelsKey(model = it)) },
+                    navigateToBindApplicationKeys = { model ->
+                        model.parentElement?.let {
+                            navigator.navigate(
+                                key = BindAppKeysKey(model = model)
+                            )
+                        }
+                    },
+                    navigateToFirmwareInformation = { title, model, information ->
+                        navigator.navigate(
+                            key = FirmwareInformationKey(
+                                title = title,
+                                model = model,
+                                information = information
+                            )
+                        )
+                    },
+                    send = viewModel::send,
+                    sendApplicationMessage = viewModel::sendApplicationMessage,
+                    sendAcknowledgedMessage = viewModel::send,
+                    startPairing = viewModel::startPairing
                 )
                 var showNoNetworkDialog by remember { mutableStateOf(uiState.wasNetworkRemoved) }
                 if (showNoNetworkDialog) {
@@ -77,5 +100,12 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
             ModelState.Loading -> {}
         }
     }
+    bindAppKeysEntry(send = { message -> viewModel?.send(message = message) })
+    firmwareInformationEntryPoint(
+        isInProgress = false,
+        send = { model, message ->
+            viewModel?.send(model = model, message = message)
+        }
+    )
     relatedModelsEntry(navigator = navigator)
 }

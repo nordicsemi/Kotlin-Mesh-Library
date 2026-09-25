@@ -50,7 +50,7 @@ class NetworkViewModel @Inject constructor(
     private fun observeNetworkChanges() {
         repository.networkEvents
             .map {
-                if(repository.meshNetwork == null) {
+                if (repository.meshNetwork == null) {
                     _uiState.update { state ->
                         state.copy(networkState = MeshNetworkState.NoNetwork)
                     }
@@ -146,46 +146,48 @@ class NetworkViewModel @Inject constructor(
      *
      * @param node The target node.
      */
-    internal fun startAttentionTimer(node: Node) = node.primaryElement
-        .model(SigModelId(Model.HEALTH_SERVER_MODEL_ID))
-        ?.let { healthServerModel ->
-            viewModelScope.launch {
-                // Is there any App Key bound to the Health Server model?
-                if (healthServerModel.boundApplicationKeys.isEmpty()) {
-                    // Does the node know any App Key?
-                    var firstAppKey = node.applicationKeys.firstOrNull()
-                    if (firstAppKey == null) {
-                        // Usually, the keys are numbered from 0, so it's unlikely that 4095 exists.
-                        val keyIndex = 4095.toUShort()
-                        // Is there already a key with index 4095?
-                        firstAppKey = meshNetwork
-                            .applicationKeys
-                            .firstOrNull { it.index == keyIndex }
+    internal fun startAttentionTimer(node: Node) {
+        node.primaryElement
+            .model(SigModelId(Model.HEALTH_SERVER_MODEL_ID))
+            ?.let { healthServerModel ->
+                viewModelScope.launch {
+                    // Is there any App Key bound to the Health Server model?
+                    if (healthServerModel.boundApplicationKeys.isEmpty()) {
+                        // Does the node know any App Key?
+                        var firstAppKey = node.applicationKeys.firstOrNull()
                         if (firstAppKey == null) {
-                            // Create such key.
-                            firstAppKey = meshNetwork.add(
-                                "Node Identification Key",
-                                index = keyIndex,
-                                boundNetworkKey = node.networkKeys.first()
-                            )
+                            // Usually, the keys are numbered from 0, so it's unlikely that 4095 exists.
+                            val keyIndex = 4095.toUShort()
+                            // Is there already a key with index 4095?
+                            firstAppKey = meshNetwork
+                                .applicationKeys
+                                .firstOrNull { it.index == keyIndex }
+                            if (firstAppKey == null) {
+                                // Create such key.
+                                firstAppKey = meshNetwork.add(
+                                    "Node Identification Key",
+                                    index = keyIndex,
+                                    boundNetworkKey = node.networkKeys.first()
+                                )
+                            }
+                            // Send it to the node before binding.
+                            val _ = repository.send(node, ConfigAppKeyAdd(firstAppKey))
                         }
-                        // Send it to the node before binding.
-                        val _ = repository.send(node, ConfigAppKeyAdd(firstAppKey))
-                    }
-                    // Bind the key. Here it is guaranteed, that the key is known to the node.
-                    val _ = repository.send(
-                        node, ConfigModelAppBind(
-                            healthServerModel, firstAppKey
+                        // Bind the key. Here it is guaranteed, that the key is known to the node.
+                        val _ = repository.send(
+                            node, ConfigModelAppBind(
+                                healthServerModel, firstAppKey
+                            )
                         )
+                    }
+                    // Finally, start the attention timer for 3 seconds.
+                    repository.send(
+                        healthServerModel,
+                        HealthAttentionSetUnacknowledged(attentionTimer = 3u)
                     )
                 }
-                // Finally, start the attention timer for 3 seconds.
-                repository.send(
-                    healthServerModel,
-                    HealthAttentionSetUnacknowledged(attentionTimer = 3u)
-                )
             }
-        }
+    }
 }
 
 internal sealed interface MeshNetworkState {

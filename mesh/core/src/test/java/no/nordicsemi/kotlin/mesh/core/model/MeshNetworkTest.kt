@@ -14,7 +14,6 @@ import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 class MeshNetworkTest {
-
     private val networkManager = MeshNetworkManager(
         storage = TestStorage(),
         secureProperties = TestPropertiesStorage(),

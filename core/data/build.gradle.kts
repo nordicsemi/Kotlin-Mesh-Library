@@ -18,6 +18,7 @@ dependencies {
     implementation(nordic.permissions.ble)
     implementation(nordic.kotlin.data)
     implementation(nordic.blek.client.android)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation("androidx.datastore:datastore-core:1.2.1")
     implementation("androidx.datastore:datastore-preferences:1.2.1")
