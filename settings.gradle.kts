@@ -20,7 +20,7 @@ dependencyResolutionManagement {
              from("no.nordicsemi.android.gradle:version-catalog:2.15")
         }
         create("nordic") {
-            from("no.nordicsemi.android:version-catalog:2025.12.01")
+            from("no.nordicsemi.android:version-catalog:2026.04.01")
         }
     }
 }
