@@ -69,5 +69,14 @@
     <string name="label_firmware_available">There is a new firmware version available. Do you want to download and replace the selected one?</string>
     <string name="label_download">Download</string>
     <string name="label_update_available_for_download">An update is available for download</string>
-    ">
+    <string name="label_distribution_parameters">Distribution Parameters</string>
+    <string name="label_distribution_multicast">Distribution Address</string>
+    <string name="label_timeout">Timeout</string>
+    <string name="label_policy">Policy</string>
+    <string name="label_client_timeout_rationale">Client Timeout is calculated with the following formula\n\n10000 * (Timeout Base + 2) + 1000 * TTL (ms)</string>
+    <string name="label_ttl">TTL</string>
+    <string name="label_mode">Mode</string>
+    <string name="label_disabled">Disabled</string>
+    <string name="label_disabled_multicast_rationale">Messages will not be sent to multicast address</string>
+    <string name="label_multicast_distribution_rationale">Firmware Update Server and BLOB Server models on target nodes will get automatically subscribed to the selected group.</string>
 </resources>

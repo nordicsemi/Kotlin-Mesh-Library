@@ -47,6 +47,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page0
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page1
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page2
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page3
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 
@@ -117,9 +118,9 @@ internal fun FirmwareUpdateScreen(
                                 snackbarHostState = snackbarHostState
                             )
 
-                            3 -> {
+                            3 -> Page3(
 
-                            }
+                            )
                         }
                         AnimatedVisibility(visible = enableNext) {
                             Row(
