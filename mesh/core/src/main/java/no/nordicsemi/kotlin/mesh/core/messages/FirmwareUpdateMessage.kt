@@ -584,7 +584,7 @@ enum class FirmwareUpdatePolicy(internal val value: UByte) {
     val debugDescription: String
         get() = when (this) {
             VERIFY_ONLY -> "Verify Only"
-            VERIFY_AND_APPLY -> "Verify And Apply"
+            VERIFY_AND_APPLY -> "Verify & Apply"
         }
 
     internal companion object {

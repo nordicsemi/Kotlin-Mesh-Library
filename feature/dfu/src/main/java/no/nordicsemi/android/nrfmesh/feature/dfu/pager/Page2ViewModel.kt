@@ -84,6 +84,9 @@ internal class Page2ViewModel @AssistedInject internal constructor(
         observeProxyFilterState()
     }
 
+    /**
+     * Observes the network state
+     */
     @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
@@ -127,6 +130,9 @@ internal class Page2ViewModel @AssistedInject internal constructor(
             .launchIn(scope = viewModelScope)
     }
 
+    /**
+     * Observes the proxy connection state
+     */
     private fun observeProxyConnectionState() {
         repository.proxyConnectionStateFlow
             .onEach { proxyConnectionState ->
@@ -135,6 +141,9 @@ internal class Page2ViewModel @AssistedInject internal constructor(
             .launchIn(scope = viewModelScope)
     }
 
+    /**
+     * Observes the proxy filter state
+     */
     @OptIn(ExperimentalUuidApi::class)
     private fun observeProxyFilterState() {
         repository.proxyFilter.proxyFilterStateFlow
@@ -192,6 +201,7 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                         )
                     )
                 }
+                resetTargets()
             } catch (e: Exception) {
                 repository.logger.log(
                     message = { "Error while loading zip file: $e" },
@@ -243,7 +253,10 @@ internal class Page2ViewModel @AssistedInject internal constructor(
         }
     }
 
-    internal fun resetTargets() {
+    /**
+     * Resets the targets to unselected
+     */
+    private fun resetTargets() {
         uiState.update { status ->
             status.copy(
                 targets = status.targets
@@ -260,6 +273,13 @@ internal class Page2ViewModel @AssistedInject internal constructor(
         }
     }
 
+    /**
+     * Downloads the firmware update information for a given target.
+     *
+     * @param target        Target to download the firmware update for
+     * @param indexOfEntry  Index of the firmware entry
+     * @param entry         Firmware entry belonging to the given target
+     */
     @OptIn(ExperimentalUuidApi::class)
     internal suspend fun downloadFirmwareUpdate(
         target: Target,
@@ -532,7 +552,6 @@ internal class Page2ViewModel @AssistedInject internal constructor(
             null
         }
     }
-
 
     /**
      * Sends a message to the given model
