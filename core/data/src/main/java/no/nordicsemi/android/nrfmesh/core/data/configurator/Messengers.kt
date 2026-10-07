@@ -59,17 +59,27 @@ class Messengers(
 
     /**
      * Creates a new configurator for the given node.
+     *
+     * @param uuid Uuid of the node.
      */
-    fun createMessenger(nodeUuid: Uuid) =
-        Messenger(meshNetworkManager = meshNetworkManager, scope = scope).also {
-            _messengers[nodeUuid] = it
-        }
+    fun create(uuid: Uuid) = Messenger(meshNetworkManager = meshNetworkManager, scope = scope)
+        .also { _messengers[uuid] = it }
 
+    /**
+     * Gets the configurator for the given node.
+     *
+     * @param uuid Uuid of the node.
+     */
     fun messenger(uuid: Uuid) = _messengers[uuid]
 
+    /**
+     * Removes the configurator for the given node.
+     *
+     * @param uuid Uuid of the node.
+     */
     @Suppress("unused")
-    fun removeMessenger(nodeUuid: Uuid) {
-        _messengers.remove(nodeUuid)
+    fun removeMessenger(uuid: Uuid) {
+        _messengers.remove(uuid)
     }
 }
 
@@ -463,7 +473,7 @@ class Messenger(
         }
     }
 
-    fun retry(node: Node){
+    fun retry(node: Node) {
         job?.cancel()
         job = scope.launch {
             executeReconfigurationTasks(newNode = node)
@@ -535,12 +545,12 @@ class Messenger(
                     initialTtl = null
                 )?.let {
                     tempTask = when ((it as? ConfigStatusMessage) != null) {
-                        true -> if(it.isSuccess) {
+                        true -> if (it.isSuccess) {
                             tempTask.copy(status = TaskStatus.Completed)
-                        }
-                        else {
+                        } else {
                             tempTask.copy(status = TaskStatus.Error(error = it.message))
                         }
+
                         else -> tempTask.copy(status = TaskStatus.Completed)
                     }
                 } ?: run { tempTask = tempTask.copy(status = TaskStatus.Skipped) }

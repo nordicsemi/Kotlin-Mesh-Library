@@ -369,7 +369,7 @@ class ProvisioningViewModel @Inject constructor(
 
         // Queue ConfigCompositionDataGet and ConfigDefaultTtl
         // When provisioning is complete we enqueue the next configuration tasks that can be resumed
-        val messenger = repository.messengers.createMessenger(nodeUuid = uuid)
+        val messenger = repository.messengers.create(uuid = uuid)
         messenger.enqueueTask(
             task = ConfigTask(
                 icon = Icons.Outlined.DeviceHub,
