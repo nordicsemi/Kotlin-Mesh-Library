@@ -2,7 +2,7 @@ package no.nordicsemi.kotlin.mesh.core.messages.sensor
 
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
@@ -23,7 +23,7 @@ class SensorSettingSet(
     override val propertyId: UShort,
     val settingPropertyId: UShort,
     val settingValue: DevicePropertyCharacteristic,
-) : AcknowledgedMeshMessage, SensorPropertyMessage {
+) : AcknowledgedApplicationMessage, SensorPropertyMessage {
     override val opCode = Initializer.opCode
     override val responseOpCode = SensorSettingStatus.opCode
     override val parameters = propertyId.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +

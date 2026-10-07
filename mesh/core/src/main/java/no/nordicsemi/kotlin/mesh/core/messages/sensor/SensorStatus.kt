@@ -4,9 +4,9 @@ import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.read
 import java.nio.ByteOrder
 
@@ -45,7 +45,7 @@ data class SensorValue(val propertyId: UShort, val value: DevicePropertyCharacte
  *
  * @property values The sensor values. The maximum length of a single value is 128 octets.
  */
-class SensorStatus(val values: List<SensorValue>) : MeshResponse, UnacknowledgedMeshMessage {
+class SensorStatus(val values: List<SensorValue>) : ApplicationResponse, UnacknowledgedApplicationMessage {
     override val opCode = Initializer.opCode
     override val parameters = values.fold(byteArrayOf()) { data, value -> data + marshal(value) }
 

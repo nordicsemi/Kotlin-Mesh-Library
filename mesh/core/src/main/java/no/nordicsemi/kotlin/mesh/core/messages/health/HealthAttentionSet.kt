@@ -2,7 +2,7 @@
 
 package no.nordicsemi.kotlin.mesh.core.messages.health
 
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 class HealthAttentionSet(
     val attentionTimer: UByte
-): AcknowledgedMeshMessage {
+): AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = HealthAttentionStatus.opCode
     override val parameters = byteArrayOf(attentionTimer.toByte())

@@ -3,7 +3,7 @@
 package no.nordicsemi.kotlin.mesh.core.messages.health
 
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -21,7 +21,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @property attentionTimer The current Attention Timer value, in seconds.
  */
-class HealthAttentionSetUnacknowledged(val attentionTimer: UByte): UnacknowledgedMeshMessage {
+class HealthAttentionSetUnacknowledged(val attentionTimer: UByte): UnacknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters = byteArrayOf(attentionTimer.toByte())
 

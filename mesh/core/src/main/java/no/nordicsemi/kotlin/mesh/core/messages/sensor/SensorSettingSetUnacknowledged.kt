@@ -6,7 +6,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.read
 import java.nio.ByteOrder
 
@@ -23,7 +23,7 @@ class SensorSettingSetUnacknowledged(
     override val propertyId: UShort,
     val settingPropertyId: UShort,
     val settingValue: DevicePropertyCharacteristic,
-) : UnacknowledgedMeshMessage, SensorPropertyMessage {
+) : UnacknowledgedApplicationMessage, SensorPropertyMessage {
     override val opCode = Initializer.opCode
 
     override val parameters = propertyId.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +

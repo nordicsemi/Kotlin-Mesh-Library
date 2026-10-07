@@ -9,7 +9,7 @@ import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.BLOBTransferMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.RetrievedUpdatePhase
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
@@ -35,7 +35,7 @@ class FirmwareDistributionReceiversList(
     val totalCount: UShort,
     val firstIndex: UShort,
     val receivers: List<ReceiverStatus>,
-) : MeshResponse {
+) : ApplicationResponse {
     override val opCode: UInt = Initializer.opCode
 
     @OptIn(ExperimentalUnsignedTypes::class)

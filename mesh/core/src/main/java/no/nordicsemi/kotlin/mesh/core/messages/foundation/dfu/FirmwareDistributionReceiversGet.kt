@@ -2,7 +2,7 @@ package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import java.nio.ByteOrder
 
@@ -16,7 +16,7 @@ import java.nio.ByteOrder
 class FirmwareDistributionReceiversGet(
     val firstIndex: UShort,
     val entriesLimit: UShort
-) : AcknowledgedMeshMessage {
+) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionReceiversList.opCode
     override val parameters = firstIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +

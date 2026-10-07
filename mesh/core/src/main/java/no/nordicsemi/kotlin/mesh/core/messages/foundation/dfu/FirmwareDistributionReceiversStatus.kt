@@ -5,7 +5,7 @@ import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionStatusMessage
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import java.nio.ByteOrder
 
 /**
@@ -20,7 +20,7 @@ import java.nio.ByteOrder
 class FirmwareDistributionReceiversStatus(
     override val status: FirmwareDistributionMessageStatus,
     val totalCount: UShort,
-) : MeshResponse, FirmwareDistributionStatusMessage {
+) : ApplicationResponse, FirmwareDistributionStatusMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters = status.value.toByteArray() +
             totalCount.toByteArray(order = ByteOrder.LITTLE_ENDIAN)

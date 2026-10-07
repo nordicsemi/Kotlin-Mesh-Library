@@ -7,7 +7,7 @@ import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.shl
 import no.nordicsemi.kotlin.data.shr
 import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
@@ -57,7 +57,7 @@ internal constructor(
     val firmwareImageIndex: UShort,
     val address: Address? = null,
     val labelUuid: Uuid? = null,
-) : AcknowledgedMeshMessage {
+) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionStatus.opCode
 

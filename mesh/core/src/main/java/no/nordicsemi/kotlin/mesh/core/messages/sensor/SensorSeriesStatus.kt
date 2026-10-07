@@ -3,10 +3,10 @@ package no.nordicsemi.kotlin.mesh.core.messages.sensor
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import java.nio.ByteOrder
 
 /**
@@ -25,7 +25,7 @@ import java.nio.ByteOrder
 class SensorSeriesStatus(
     override val propertyId: UShort,
     val seriesRawData: ByteArray?,
-) : MeshResponse, UnacknowledgedMeshMessage, SensorPropertyMessage {
+) : ApplicationResponse, UnacknowledgedApplicationMessage, SensorPropertyMessage {
     override val opCode = Initializer.opCode
     override val parameters = propertyId.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
             (seriesRawData ?: byteArrayOf())

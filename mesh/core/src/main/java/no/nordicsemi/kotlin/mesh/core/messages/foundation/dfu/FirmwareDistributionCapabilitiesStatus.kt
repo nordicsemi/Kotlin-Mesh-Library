@@ -4,7 +4,7 @@ import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.model.UriScheme
 import java.nio.ByteOrder
 
@@ -32,7 +32,7 @@ class FirmwareDistributionCapabilitiesStatus(
     val maxUploadSpace: UInt,
     val remainingUploadSpace: UInt,
     val supportedUriSchemes: List<UriScheme>,
-) : MeshResponse {
+) : ApplicationResponse {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
         get() {

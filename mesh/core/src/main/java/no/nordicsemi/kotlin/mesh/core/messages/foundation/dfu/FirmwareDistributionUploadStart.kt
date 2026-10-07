@@ -4,7 +4,7 @@ import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getULong
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import java.nio.ByteOrder
@@ -31,7 +31,7 @@ class FirmwareDistributionUploadStart(
     val firmwareSize: UInt,
     val metadata: ByteArray? = null,
     val firmwareId: FirmwareId,
-) : AcknowledgedMeshMessage {
+) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareDistributionUploadStatus.opCode
     override val parameters = ttl.toByteArray() +

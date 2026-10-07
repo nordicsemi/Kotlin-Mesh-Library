@@ -1,6 +1,6 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 
 
@@ -9,7 +9,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
  * cancel a firmware update and delete any stored information about the update
  * on a Firmware Update Server.
  */
-class FirmwareUpdateCancel : AcknowledgedMeshMessage {
+class FirmwareUpdateCancel : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareUpdateStatus.opCode
     override val parameters = null

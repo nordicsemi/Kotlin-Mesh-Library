@@ -1,13 +1,13 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 
 /**
  * The Firmware Distribution Capabilities Get message is an acknowledged message sent by a Firmware
  * Distribution Client to get the capabilities of a Firmware Distribution Server.
  */
-class FirmwareDistributionCapabilitiesGet : AcknowledgedMeshMessage {
+class FirmwareDistributionCapabilitiesGet : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareDistributionCapabilitiesStatus.opCode
     override val parameters = null

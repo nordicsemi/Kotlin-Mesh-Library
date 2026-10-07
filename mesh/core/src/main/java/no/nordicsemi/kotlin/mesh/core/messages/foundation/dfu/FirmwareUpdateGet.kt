@@ -1,6 +1,6 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 
 
@@ -8,7 +8,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
  * Firmware Update Get message is an acknowledged message used to get the current status of the
  * Firmware Update Server.
  */
-class FirmwareUpdateGet : AcknowledgedMeshMessage {
+class FirmwareUpdateGet : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareUpdateStatus.opCode
     override val parameters = null

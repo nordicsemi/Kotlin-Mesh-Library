@@ -5,7 +5,7 @@ import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareInformation
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import java.net.URI
 import java.nio.ByteOrder
 
@@ -23,7 +23,7 @@ class FirmwareUpdateInformationStatus(
     val totalCount: UByte,
     val firstIndex: UByte,
     val list: List<FirmwareInformation>,
-) : MeshResponse {
+) : ApplicationResponse {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
         get() {

@@ -1,7 +1,7 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
 import no.nordicsemi.kotlin.data.getUShort
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import java.nio.ByteOrder
@@ -11,7 +11,7 @@ import java.nio.ByteOrder
  * Distribution Client to check whether a specific firmware image is stored on a Firmware
  * Distribution Server.
  */
-class FirmwareDistributionFirmwareGet(val firmwareId: FirmwareId) : AcknowledgedMeshMessage {
+class FirmwareDistributionFirmwareGet(val firmwareId: FirmwareId) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionFirmwareStatus.opCode
     override val parameters = firmwareId.bytes

@@ -2,7 +2,7 @@ package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import java.nio.ByteOrder
 
@@ -13,7 +13,7 @@ import java.nio.ByteOrder
  *
  * @property imageIndex Index of the firmware image.
  */
-class FirmwareDistributionFirmwareGetByIndex(val imageIndex: UShort) : AcknowledgedMeshMessage {
+class FirmwareDistributionFirmwareGetByIndex(val imageIndex: UShort) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionFirmwareStatus.opCode
     override val parameters = imageIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN)

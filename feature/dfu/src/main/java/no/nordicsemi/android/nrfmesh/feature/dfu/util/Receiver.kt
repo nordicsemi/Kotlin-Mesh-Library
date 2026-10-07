@@ -2,13 +2,17 @@ package no.nordicsemi.android.nrfmesh.feature.dfu.util
 
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 
-/** Represents a receiver in the firmware update process. */
+/**
+ * Represents a receiver in the firmware update process.
+ *
+ * @property address    Unicast Address of the Element with the Firmware Update Server model on the
+ *                      Receiver.
+ * @property imageIndex Index of the image being updated.
+ * @property status     Status of the receiver.
+ */
 data class Receiver(
-    /** The Unicast Address of the Element with the Firmware Update Server model on the Receiver. */
     val address: UnicastAddress,
-    /** The index of the image being updated. */
     val imageIndex: UByte,
-    /** The status of the receiver. */
     val status: Status = Status.Idle,
 ) {
     /** The status of the firmware update process. */

@@ -10,7 +10,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateAdditionalInformation
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePhase
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import java.nio.ByteOrder
 
 
@@ -44,7 +44,7 @@ class FirmwareUpdateStatus(
     val updateTimeoutBase: UShort?,
     val blobId: ULong?,
     val imageIndex: UByte?,
-) : MeshResponse {
+) : ApplicationResponse {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray?
         get() {

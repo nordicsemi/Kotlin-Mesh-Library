@@ -1,7 +1,7 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
 import no.nordicsemi.kotlin.data.getUShort
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import java.net.URI
@@ -29,7 +29,7 @@ import java.nio.ByteOrder
 class FirmwareDistributionUploadOOBStart(
     val url: URL,
     val currentFirmwareId: FirmwareId,
-) : AcknowledgedMeshMessage {
+) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareDistributionUploadStatus.opCode
     override val parameters = url.toString().encodeToByteArray() + currentFirmwareId.bytes

@@ -1,6 +1,6 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 
 /**
@@ -8,7 +8,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
  * Distribution Client to check the status of a firmware image upload to a Firmware Distribution
  * Server.
  */
-class FirmwareDistributionUploadGet : AcknowledgedMeshMessage {
+class FirmwareDistributionUploadGet : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareDistributionUploadStatus.opCode
     override val parameters = null

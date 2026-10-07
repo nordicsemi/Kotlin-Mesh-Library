@@ -1,13 +1,13 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 
 /**
  * Firmware Distribution Cancel message is an acknowledged message sent by a Firmware Distribution
  * Client to stop the firmware image distribution from a Firmware Distribution Server.
  */
-class FirmwareDistributionCancel : AcknowledgedMeshMessage {
+class FirmwareDistributionCancel : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareDistributionStatus.opCode
     override val parameters = null

@@ -12,7 +12,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.DistributionMulticastAddress
@@ -56,7 +56,7 @@ class FirmwareDistributionStatus internal constructor(
     val distributionTransferMode: TransferMode?,
     val updatePolicy: FirmwareUpdatePolicy?,
     val firmwareImageIndex: UShort?,
-) : MeshResponse, FirmwareDistributionStatusMessage {
+) : ApplicationResponse, FirmwareDistributionStatusMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters = status.value.toByteArray() +
             phase.value.toByteArray() +

@@ -6,7 +6,7 @@ import no.nordicsemi.kotlin.data.ushr
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateAdditionalInformation
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import kotlin.experimental.and
 
 
@@ -22,7 +22,7 @@ class FirmwareUpdateFirmwareMetadataStatus(
     val status: FirmwareUpdateMessageStatus,
     val additionalInformation: FirmwareUpdateAdditionalInformation,
     val imageIndex: UByte,
-) : MeshResponse {
+) : ApplicationResponse {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray
         get() {
