@@ -2,42 +2,61 @@ package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
+import no.nordicsemi.kotlin.mesh.core.model.Address
+import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import java.nio.ByteOrder
 
 /**
  * Firmware Distribution Receivers Add message is an acknowledged message sent by a Firmware
- * Distribution Client to add new entries to the Distribution Receivers List state of
+ * Distribution Client to add new entries to the Distribution Receivers List state of a given
+ * Firmware Distribution Server.
  *
- * @property firstIndex   Index of the first firmware image.
- * @property entriesLimit Number of entries in the Distribution Receivers List state.
+ * @property receivers List of receiver entries to be added to the Distribution Receivers List state.
  */
-class FirmwareDistributionReceiversAdd(
-    val firstIndex: UShort,
-    val entriesLimit: UShort,
-) : AcknowledgedMeshMessage {
+class FirmwareDistributionReceiversAdd(val receivers: List<Receiver>) :
+    AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionReceiversStatus.opCode
-    override val parameters = firstIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-            entriesLimit.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+    override val parameters: ByteArray
+        get() = receivers.fold(ByteArray(0)) { data, receiver ->
+            data + receiver.address.address
+                .toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                    receiver.imageIndex.toByteArray()
+        }
+
+    constructor(receiver: Receiver) : this(listOf(receiver))
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8311u
 
         override fun init(parameters: ByteArray?) = parameters
-            ?.takeIf { it.size == 4 }
+            ?.takeIf { it.size % 3 == 0 }
             ?.let { params ->
-                FirmwareDistributionReceiversAdd(
-                    firstIndex = params.getUShort(
-                        offset = 0,
-                        order = ByteOrder.LITTLE_ENDIAN
-                    ),
-                    entriesLimit = params.getUShort(
-                        offset = 2,
-                        order = ByteOrder.LITTLE_ENDIAN
-                    )
-                )
+                params
+                val receivers = mutableListOf<Receiver>()
+                var index = 0
+                while (index < params.size) {
+                    val address: Address = params.getUShort(offset = index, order = ByteOrder.LITTLE_ENDIAN)
+                    val imageIndex = params[index + 2]
+                    receivers.add(Receiver(address = address, index = imageIndex.toUByte()))
+                    index += 3
+                }
+                FirmwareDistributionReceiversAdd(receivers = receivers)
             }
+    }
+
+    /**
+     * Receiver entry
+     *
+     * @property address    Unicast address of the receiver or the target node.
+     * @property imageIndex Index of the firmware image in the Firmware Information List
+     */
+    data class Receiver(val address: UnicastAddress, val imageIndex: UByte) {
+        constructor(address: Address, index: UByte) : this(
+            address = UnicastAddress(address = address),
+            imageIndex = index
+        )
     }
 }
