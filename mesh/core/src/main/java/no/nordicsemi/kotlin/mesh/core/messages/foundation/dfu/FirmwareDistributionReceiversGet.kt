@@ -22,6 +22,8 @@ class FirmwareDistributionReceiversGet(
     override val parameters = firstIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
             entriesLimit.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
+    override fun toString() = "FirmwareDistributionReceiversGet()"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8314u
 

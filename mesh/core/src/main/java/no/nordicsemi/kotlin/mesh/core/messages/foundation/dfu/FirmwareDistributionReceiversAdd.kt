@@ -26,7 +26,16 @@ class FirmwareDistributionReceiversAdd(val receivers: List<Receiver>) :
                     receiver.imageIndex.toByteArray()
         }
 
+    /**
+     * Creates a [FirmwareDistributionReceiversAdd] message with a single receiver.
+     *
+     * @param receiver Receiver entry to be added to the Distribution Receivers List state.
+     * @constructor Creates a [FirmwareDistributionReceiversAdd] message with a single receiver.
+     */
+    @Suppress("unused")
     constructor(receiver: Receiver) : this(listOf(receiver))
+
+    override fun toString() = "FirmwareDistributionReceiversAdd(receivers: $receivers)"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8311u
@@ -38,7 +47,8 @@ class FirmwareDistributionReceiversAdd(val receivers: List<Receiver>) :
                 val receivers = mutableListOf<Receiver>()
                 var index = 0
                 while (index < params.size) {
-                    val address: Address = params.getUShort(offset = index, order = ByteOrder.LITTLE_ENDIAN)
+                    val address: Address =
+                        params.getUShort(offset = index, order = ByteOrder.LITTLE_ENDIAN)
                     val imageIndex = params[index + 2]
                     receivers.add(Receiver(address = address, index = imageIndex.toUByte()))
                     index += 3
@@ -58,5 +68,8 @@ class FirmwareDistributionReceiversAdd(val receivers: List<Receiver>) :
             address = UnicastAddress(address = address),
             imageIndex = index
         )
+
+        override fun toString() =
+            "Receiver(address: ${address.toHexString(addPrefix = true)}, imageIndex: $imageIndex)"
     }
 }

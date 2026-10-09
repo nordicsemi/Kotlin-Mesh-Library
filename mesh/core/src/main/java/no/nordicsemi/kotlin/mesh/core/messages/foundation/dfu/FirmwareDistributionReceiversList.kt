@@ -1,20 +1,17 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
-import no.nordicsemi.kotlin.data.bigEndian
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.or
 import no.nordicsemi.kotlin.data.shl
 import no.nordicsemi.kotlin.data.shr
 import no.nordicsemi.kotlin.data.toByteArray
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.BLOBTransferMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
-import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.RetrievedUpdatePhase
 import no.nordicsemi.kotlin.mesh.core.model.Address
-import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
 import java.nio.ByteOrder
-import kotlin.collections.fold
 
 
 /**
@@ -62,6 +59,15 @@ class FirmwareDistributionReceiversList(
             }
         }
 
+    /**
+     * Convenience constructor for creating a [FirmwareDistributionReceiversList] from a given
+     * [FirmwareDistributionReceiversGet] request and a list of receivers.
+     *
+     * @param request  The [FirmwareDistributionReceiversGet] request.
+     * @param receivers  The list of receivers.
+     * @constructor Creates a [FirmwareDistributionReceiversList] from a given
+     */
+    @Suppress("unused")
     constructor(
         request: FirmwareDistributionReceiversGet,
         receivers: List<ReceiverStatus>,
@@ -78,8 +84,17 @@ class FirmwareDistributionReceiversList(
         },
     )
 
+    override fun toString() = "FirmwareDistributionReceiversList(totalCount: $totalCount, firstIndex: $firstIndex, receivers: $receivers)"
+
     /**
+     * Defines the structure of an entry from the Distribution Receivers List state.
      *
+     * @property address          Address of the receiver.
+     * @property phase            Phase of the receiver.
+     * @property updateStatus     Update status of the receiver.
+     * @property transferStatus   Transfer status of the receiver.
+     * @property transferProgress Transfer progress of the receiver.
+     * @property imageIndex       Image index of the receiver.
      */
     data class ReceiverStatus(
         val address: Address,
@@ -89,7 +104,7 @@ class FirmwareDistributionReceiversList(
         val transferProgress: Int,
         val imageIndex: UByte,
     ) {
-        val debugDescription = "ReceiverStatus(address: ${
+        override fun toString() = "ReceiverStatus(address: ${
             address.toHexString(
                 HexFormat {
                     number.prefix = "0x"
@@ -101,7 +116,6 @@ class FirmwareDistributionReceiversList(
                 "transferStatus: ${transferStatus.debugDescription}, " +
                 "transferProgress: $transferProgress, " +
                 "imageIndex: $imageIndex)"
-
     }
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
@@ -123,12 +137,12 @@ class FirmwareDistributionReceiversList(
                                 ((params[i + 2].toInt() and 0x07) shl 1))
 
                     val phase =
-                        RetrievedUpdatePhase.from(value = phaseValue.toUByte()) ?: return null
+                        RetrievedUpdatePhase.from(value = phaseValue.toUByte()) ?: return@let null
                     val updateStateValue = (params[i + 2].toInt() ushr 3) and 0x07
 
                     val updateStatus =
                         FirmwareUpdateMessageStatus.from(value = updateStateValue.toUByte())
-                            ?: return null
+                            ?: return@let null
 
                     val transferStateValue =
                         ((params[i + 2].toInt() ushr 6) or
@@ -136,7 +150,7 @@ class FirmwareDistributionReceiversList(
 
                     val transferStatus =
                         BLOBTransferMessageStatus.from(value = transferStateValue.toUByte())
-                            ?: return null
+                            ?: return@let null
 
                     val transferProgress = ((params[i + 3].toInt() ushr 2) * 2)
 
