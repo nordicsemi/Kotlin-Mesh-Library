@@ -8,10 +8,12 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
  * Firmware Distribution Client to remove all entries from the Distribution Receivers List state of
  * a Firmware Distribution Server.
  */
-class FirmwareDistributionReceiversDeleteAll() : AcknowledgedApplicationMessage {
+class FirmwareDistributionReceiversDeleteAll : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
-    override val responseOpCode: UInt = FirmwareDistributionReceiversList.opCode
+    override val responseOpCode: UInt = FirmwareDistributionReceiversStatus.opCode
     override val parameters = null
+
+    override fun toString() = "FirmwareDistributionReceiversDeleteAll()"
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8312u
