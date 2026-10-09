@@ -2,11 +2,11 @@ package no.nordicsemi.android.nrfmesh.core.data.configurator
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.TransactionMessage
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
-import no.nordicsemi.kotlin.mesh.core.model.Element
 import no.nordicsemi.kotlin.mesh.core.model.Model
+import no.nordicsemi.kotlin.mesh.core.model.Node
 
 /**
  * Represents a mesh messaging task.
@@ -14,8 +14,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 sealed class MeshTask(
     open val icon: ImageVector,
     open val label: String,
-    open val element: Element?,
-    open val model: Model?,
     open val applicationKey: ApplicationKey? = null,
     open val message: MeshMessage,
     open val status: TaskStatus = TaskStatus.Idle,
@@ -29,11 +27,10 @@ data class ConfigTask(
     override val label: String,
     override val message: AcknowledgedConfigMessage,
     override val status: TaskStatus = TaskStatus.Idle,
+    val target : Node
 ) : MeshTask(
     icon = icon,
     label = label,
-    element = null,
-    model = null,
     message = message,
     status = status,
 )
@@ -44,16 +41,13 @@ data class ConfigTask(
 data class AppTask(
     override val icon: ImageVector,
     override val label: String,
-    override val element: Element,
-    override val model: Model,
-    override val message: TransactionMessage,
+    override val message: ApplicationMessage,
     override val applicationKey: ApplicationKey,
     override val status: TaskStatus = TaskStatus.Idle,
+    val model: Model,
 ) : MeshTask(
     icon = icon,
     label = label,
-    element = element,
-    model = model,
     applicationKey = applicationKey,
     message = message,
     status = status

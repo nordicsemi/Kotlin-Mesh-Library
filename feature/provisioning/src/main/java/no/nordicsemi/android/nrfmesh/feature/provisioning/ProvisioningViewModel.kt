@@ -84,11 +84,7 @@ class ProvisioningViewModel @Inject constructor(
             .mapNotNull { repository.meshNetwork }
             .onEach {
                 meshNetwork = it
-                _uiState.update { state ->
-                    state.copy(
-                        networkKeys = it.networkKeys.toList(),
-                    )
-                }
+                _uiState.update { state -> state.copy(networkKeys = it.networkKeys.toList()) }
             }
             .launchIn(scope = viewModelScope)
     }
@@ -366,25 +362,28 @@ class ProvisioningViewModel @Inject constructor(
     @OptIn(ExperimentalUuidApi::class)
     internal fun onProvisioningComplete(uuid: Uuid) {
         disconnect()
-
         // Queue ConfigCompositionDataGet and ConfigDefaultTtl
         // When provisioning is complete we enqueue the next configuration tasks that can be resumed
+        val node = repository.meshNetwork?.node(uuid = uuid) ?: throw Throwable("Node not found")
         val messenger = repository.messengers.create(uuid = uuid)
         messenger.enqueueTask(
             task = ConfigTask(
                 icon = Icons.Outlined.DeviceHub,
                 label = "Reading composition data",
-                message = ConfigCompositionDataGet(page = 0x00u)
+                message = ConfigCompositionDataGet(page = 0x00u),
+                target = node
             )
         )
         originalNode?.let {
-            messenger.enqueueReconfigurationWith(it)
+            // If reconfiguration is needed, select the node for reconfiguration
+            repository.selectNodeForReconfiguration(node = it)
         } ?: run {
             messenger.enqueueTask(
                 task = ConfigTask(
                     icon = Icons.Outlined.Timer,
                     label = "Reading default TTL",
-                    message = ConfigDefaultTtlGet()
+                    message = ConfigDefaultTtlGet(),
+                    target = node
                 )
             )
         }

@@ -12,7 +12,7 @@ dependencies {
     api(libs.androidx.compose.material.icons.extended)
     implementation(nordic.logger)
     implementation(nordic.log.timber)
-    implementation("androidx.compose.material3:material3:1.4.0")
+    api("androidx.compose.material3:material3:1.4.0")
 
     implementation(project(":core:common"))
     implementation(project(":core:navigation"))

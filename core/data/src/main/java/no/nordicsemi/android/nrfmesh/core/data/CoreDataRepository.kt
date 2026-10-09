@@ -104,6 +104,8 @@ class CoreDataRepository @Inject constructor(
     private val storage: SceneStatesDataStoreStorage,
     private val centralManager: CentralManager,
 ) {
+    var nodeToReconfigure: Node? = null
+        private set
     private var _proxyConnectionStateFlow = MutableStateFlow(ProxyConnectionState())
     val proxyConnectionStateFlow = _proxyConnectionStateFlow.asStateFlow()
     private val isAutoConnectEnabled: Boolean
@@ -128,7 +130,7 @@ class CoreDataRepository @Inject constructor(
 
     private val ioScope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
 
-    val messengers = Messengers(meshNetworkManager = meshNetworkManager, scope = ioScope)
+    val messengers = Messengers(meshNetworkManager = meshNetworkManager)
 
     private var connectivityJob: Job? = null
 
@@ -724,15 +726,18 @@ class CoreDataRepository @Inject constructor(
     suspend fun send(model: Model, unackedMessage: UnacknowledgedMeshMessage) = withContext(
         context = ioDispatcher
     ) {
+        val meshNetwork = requireNotNull(meshNetwork)
         val parentElement = requireNotNull(model.parentElement)
         meshNetworkManager.send(
             model = model,
             message = unackedMessage,
-            initialTtl = if (isDestinedToLocalNode(parentElement.unicastAddress)) {
-                1.toUByte() // Use TTL 1 for messages destined to the local node
-            } else {
-                null
-            }
+            initialTtl = when (isDestinedToLocalNode(
+                meshNetwork = meshNetwork,
+                destination = parentElement.unicastAddress
+            )) {
+                true -> 1.toUByte() // Use TTL 1 for messages destined to the local node
+                else -> null
+            },
         )
     }
 
@@ -761,21 +766,21 @@ class CoreDataRepository @Inject constructor(
     ) = withContext(
         context = ioDispatcher
     ) {
+        val meshNetwork = requireNotNull(meshNetwork)
         val parentElement = requireNotNull(model.parentElement)
         meshNetworkManager.send(
             model = model,
             message = ackedMessage,
-            initialTtl = if (isDestinedToLocalNode(parentElement.unicastAddress)) {
-                1.toUByte() // Use TTL 1 for messages destined to the local node
-            } else {
-                null
+            initialTtl = when (isDestinedToLocalNode(
+                meshNetwork = meshNetwork,
+                destination = parentElement.unicastAddress
+            )) {
+                true -> 1.toUByte() // Use TTL 1 for messages destined to the local node
+                else -> null
             },
             applicationKey = applicationKey
         )
     }
-
-    private fun isDestinedToLocalNode(destination: UnicastAddress) =
-        requireNotNull(meshNetwork).node(destination)?.isLocalProvisioner == true
 
     /**
      * Creates provisioner name based on the provisioner device model.
@@ -796,6 +801,10 @@ class CoreDataRepository @Inject constructor(
         centralManager.getPeripheralById(id = it)
     }
 
+    fun selectNodeForReconfiguration(node: Node) {
+        nodeToReconfigure = node
+    }
+
     companion object {
         @OptIn(ExperimentalUuidApi::class)
         val SMP_SERVICE = Uuid.parse("8D53DC1D-1DB7-4CD3-868B-8A527460AA84")
@@ -813,3 +822,9 @@ data class ProxyConnectionState(
     val autoConnect: Boolean = false, // Auto connect is disabled due to missing permissions
     val connectionState: NetworkConnectionState = NetworkConnectionState.Disconnected,
 )
+
+/**
+ * Checks if the given destination address is destined to the local node.
+ */
+fun isDestinedToLocalNode(meshNetwork: MeshNetwork, destination: UnicastAddress) =
+    meshNetwork.node(destination)?.isLocalProvisioner == true
