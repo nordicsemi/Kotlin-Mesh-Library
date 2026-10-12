@@ -17,20 +17,45 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelChildren
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.native
+import no.nordicsemi.kotlin.ble.core.android.AndroidEnvironment
+import no.nordicsemi.kotlin.ble.environment.android.NativeAndroidEnvironment
 import javax.inject.Singleton
 
 @Module
 @InstallIn(ActivityRetainedComponent::class)
 object CentralManagerModule {
 
+    /**
+     * Provides the Android environment.
+     *
+     * The environment is a process wide singleton that only holds receivers registered with the
+     * application context, it is therefore not closed together with the central manager.
+     */
+    @Provides
+    @ActivityRetainedScoped
+    fun provideNativeAndroidEnvironment(
+        @ApplicationContext context: Context,
+    ): NativeAndroidEnvironment = NativeAndroidEnvironment.getInstance(
+        context = context,
+        isNeverForLocationFlagSet = false
+    )
+
+    /**
+     * Provides the environment as the interface required by the Nordic permissions library.
+     */
+    @Provides
+    fun provideAndroidEnvironment(
+        environment: NativeAndroidEnvironment,
+    ): AndroidEnvironment = environment
+
     @Provides
     @ActivityRetainedScoped
     fun provideCentralManager(
-        @ApplicationContext context: Context,
+        environment: NativeAndroidEnvironment,
         @IoDispatcher ioDispatcher: CoroutineDispatcher,
         lifecycle: ActivityRetainedLifecycle,
     ) = CentralManager.native(
-        context = context,
+        environment = environment,
         scope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
     ).also {
         // Close the manager when the lifecycle is destroyed

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
@@ -23,6 +23,7 @@ import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository.Companion.SMP_
 import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
+import no.nordicsemi.kotlin.ble.client.RemoteServices
 import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
@@ -138,8 +139,10 @@ internal class Page0ViewModel @Inject internal constructor(
             .onEach { filterState ->
                 val services = repository.getPeripheral()
                     ?.services()
-                    ?.filterNotNull()
+                    // Wait until the services have been discovered.
+                    ?.filterIsInstance<RemoteServices.Discovered>()
                     ?.first()
+                    ?.services
                 // We update the state here because the proxy state updates confirm that the node is
                 // connected and ready to send messages
                 when (filterState) {

@@ -1,16 +1,15 @@
 package no.nordicsemi.android.nrfmesh.feature.model
 
-import android.bluetooth.BluetoothManager
 import android.content.Context
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.runtime.mcumgr.McuMgrTransport
-import io.runtime.mcumgr.ble.McuMgrBleTransport
+import no.nordicsemi.android.mcumgr.McuMgrTransport
+import no.nordicsemi.android.mcumgr.ble.McuMgrBleTransport
+import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,6 +43,7 @@ import kotlin.uuid.ExperimentalUuidApi
 @HiltViewModel(assistedFactory = ModelViewModel.Factory::class)
 internal class ModelViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
+    private val centralManager: CentralManager,
     @Assisted("address") address: Int,
     @Assisted("modelId") modelId: Int,
 ) : ViewModel(), McuMgrTransport.ConnectionCallback {
@@ -64,14 +64,6 @@ internal class ModelViewModel @AssistedInject internal constructor(
     override fun onConnected() {
         repository.logger.log(
             message = { "McuManagerTransport connected" },
-            category = LogCategory.MODEL,
-            level = LogLevel.APPLICATION
-        )
-    }
-
-    override fun onDeferred() {
-        repository.logger.log(
-            message = { "McuManagerTransport deferred" },
             category = LogCategory.MODEL,
             level = LogLevel.APPLICATION
         )
@@ -252,15 +244,12 @@ internal class ModelViewModel @AssistedInject internal constructor(
         message: AcknowledgedMeshMessage,
     ) = repository.send(model = model, ackedMessage = message)
 
+    @Suppress("UNUSED_PARAMETER")
     internal fun startPairing(context: Context) {
         val identifier = repository.identifier ?: return
-        val manager = ContextCompat.getSystemService(
-            context,
-            BluetoothManager::class.java
-        ) as BluetoothManager
-        val device = manager.adapter.getRemoteDevice(identifier)
-        if (transport == null || transport?.isConnected == false) {
-            val transport = McuMgrBleTransport(context, device)
+        val peripheral = centralManager.getPeripheralById(identifier) ?: return
+        if (transport == null || transport?.state?.value == McuMgrBleTransport.State.Disconnected) {
+            val transport = McuMgrBleTransport(centralManager, peripheral, viewModelScope)
                 .also { transport = it }
             transport.connect(this)
         }

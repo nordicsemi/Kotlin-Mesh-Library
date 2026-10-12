@@ -43,7 +43,7 @@ import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEv
 import no.nordicsemi.android.nrfmesh.core.data.storage.SceneStatesDataStoreStorage
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.Peripheral
-import no.nordicsemi.kotlin.ble.client.exception.BluetoothUnavailableException
+import no.nordicsemi.kotlin.ble.core.exception.BluetoothUnavailableException
 import no.nordicsemi.kotlin.ble.client.exception.ScanningException
 import no.nordicsemi.kotlin.ble.core.exception.ManagerClosedException
 import no.nordicsemi.kotlin.mesh.bearer.BearerEvent

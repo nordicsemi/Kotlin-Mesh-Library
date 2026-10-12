@@ -1,11 +1,11 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.nordic.nexus.jvm)
+    alias(libs.plugins.nordic.kotlin)
+    alias(libs.plugins.nordic.publish.jvm)
 }
 
 group = "no.nordicsemi.kotlin.mesh"
 
-nordicNexusPublishing {
+nordicPublishing {
     POM_ARTIFACT_ID = "bearer-provisioning"
     POM_NAME = "Provisioning Bearer extension in Bluetooth Mesh"
     POM_DESCRIPTION =

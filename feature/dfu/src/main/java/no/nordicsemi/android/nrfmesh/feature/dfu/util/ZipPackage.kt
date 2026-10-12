@@ -1,9 +1,9 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.util
 
-import io.runtime.mcumgr.dfu.mcuboot.model.ImageSet
-import io.runtime.mcumgr.dfu.mcuboot.model.TargetImage
-import io.runtime.mcumgr.dfu.suit.model.CacheImageSet
-import io.runtime.mcumgr.exception.McuMgrException
+import no.nordicsemi.android.mcumgr.dfu.mcuboot.model.ImageSet
+import no.nordicsemi.android.mcumgr.dfu.mcuboot.model.TargetImage
+import no.nordicsemi.android.mcumgr.dfu.suit.model.CacheImageSet
+import no.nordicsemi.android.mcumgr.exception.McuMgrException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException

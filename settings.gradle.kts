@@ -17,10 +17,13 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-             from("no.nordicsemi.android.gradle:version-catalog:2.15")
+            from("no.nordicsemi.gradle:version-catalog-min-sdk-21:3.3-2")
+            // The catalog ships androidx.hilt 1.2.0, which does not contain the
+            // androidx.hilt.lifecycle.viewmodel.compose package used by the view models.
+            version("androidxHilt", "1.3.0")
         }
         create("nordic") {
-            from("no.nordicsemi.android:version-catalog:2025.12.01")
+            from(files("gradle/nordic.versions.toml"))
         }
     }
 }
@@ -47,7 +50,7 @@ include(":feature:scenes")
 include(":feature:ivindex")
 include(":feature:developer-settings")
 include(":feature:dfu")
- include(":feature:scanner")
+include(":feature:scanner")
 
 include(":mesh:core")
 include(":mesh:crypto")
@@ -58,15 +61,6 @@ include(":mesh:bearer-provisioning")
 include(":mesh:bearer-pbgatt")
 include(":mesh:bearer-gatt")
 
-// if (file("../Android-Common-Libraries").exists()) {
-//     includeBuild("../Android-Common-Libraries")
-// }
-// if (file("../Android-Gradle-Plugins").exists()) {
-//     includeBuild("../Android-Gradle-Plugins")
-// }
-if (file("../Kotlin-Util-Library").exists()) {
-    includeBuild("../Kotlin-Util-Library")
+if (file("../Android-nRF-Connect-Device-Manager").exists()) {
+    includeBuild("../Android-nRF-Connect-Device-Manager")
 }
-// if (file("../Kotlin-BLE-Library").exists()) {
-//     includeBuild("../Kotlin-BLE-Library")
-// }

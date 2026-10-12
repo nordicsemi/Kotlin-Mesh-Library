@@ -1,16 +1,14 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
-import android.bluetooth.BluetoothManager
 import android.content.Context
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.runtime.mcumgr.McuMgrTransport
-import io.runtime.mcumgr.ble.McuMgrBleTransport
+import no.nordicsemi.android.mcumgr.McuMgrTransport
+import no.nordicsemi.android.mcumgr.ble.McuMgrBleTransport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
@@ -22,6 +20,7 @@ import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository.Companion.SMP_
 import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
+import no.nordicsemi.kotlin.ble.client.RemoteServices
 import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
@@ -58,14 +57,6 @@ internal class Page1ViewModel @Inject internal constructor(
         )
     }
 
-    override fun onDeferred() {
-        repository.logger.log(
-            message = { "McuManagerTransport deferred" },
-            category = LogCategory.MODEL,
-            level = LogLevel.APPLICATION
-        )
-    }
-
     override fun onError(throwable: Throwable) {
         repository.logger.log(
             message = { "Error in McuManagerTransport in LePairingResponser: ${throwable.message}" },
@@ -78,9 +69,10 @@ internal class Page1ViewModel @Inject internal constructor(
     private fun observeSmpState() {
         repository.getPeripheral()
             ?.services()
-            ?.filterNotNull()
-            ?.onEach { services ->
-                val service = services.firstOrNull { it.uuid == SMP_SERVICE }
+            // Only the discovered state carries services.
+            ?.filterIsInstance<RemoteServices.Discovered>()
+            ?.onEach { discovered ->
+                val service = discovered.services.firstOrNull { it.uuid == SMP_SERVICE }
                 if (service != null) {
                     _uiState.update { state ->
                         state.copy(
@@ -159,15 +151,12 @@ internal class Page1ViewModel @Inject internal constructor(
     }
 
     @OptIn(ExperimentalUuidApi::class)
+    @Suppress("UNUSED_PARAMETER")
     internal fun startPairing(context: Context) {
         val identifier = repository.identifier ?: return
-        val manager = ContextCompat.getSystemService(
-            context,
-            BluetoothManager::class.java
-        ) as BluetoothManager
-        val device = manager.adapter.getRemoteDevice(identifier)
-        if (transport == null || transport?.isConnected == false) {
-            val transport = McuMgrBleTransport(context, device)
+        val peripheral = centralManager.getPeripheralById(identifier) ?: return
+        if (transport == null || transport?.state?.value == McuMgrBleTransport.State.Disconnected) {
+            val transport = McuMgrBleTransport(centralManager, peripheral, viewModelScope)
                 .also { transport = it }
             transport.connect(this)
         }

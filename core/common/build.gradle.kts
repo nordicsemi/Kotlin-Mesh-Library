@@ -1,8 +1,8 @@
 plugins {
     // https://github.com/NordicSemiconductor/Android-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidLibraryConventionPlugin.kt
-    alias(libs.plugins.nordic.library)
+    alias(libs.plugins.nordic.android.library)
     // https://github.com/NordicSemiconductor/Android-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidHiltConventionPlugin.kt
-    alias(libs.plugins.nordic.hilt)
+    alias(libs.plugins.nordic.feature.hilt)
     alias(libs.plugins.kotlin.serialization)
 }
 

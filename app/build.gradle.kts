@@ -1,8 +1,8 @@
 plugins {
-    // https://github.com/NordicSemiconductor/Android-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidApplicationComposeConventionPlugin.kt
-    alias(libs.plugins.nordic.application.compose)
-    // https://github.com/NordicSemiconductor/Android-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidHiltConventionPlugin.kt
-    alias(libs.plugins.nordic.hilt)
+    // https://github.com/nordicsemi/Nordic-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidApplicationConventionPlugin.kt
+    alias(libs.plugins.nordic.android.application)
+    // https://github.com/nordicsemi/Nordic-Gradle-Plugins/blob/main/plugins/src/main/kotlin/HiltComposeConventionPlugin.kt
+    alias(libs.plugins.nordic.feature.hilt.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -22,7 +22,7 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     // Material3
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite-android:1.4.0")

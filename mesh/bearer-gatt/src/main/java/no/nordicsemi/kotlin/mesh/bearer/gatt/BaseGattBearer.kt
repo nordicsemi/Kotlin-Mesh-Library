@@ -14,12 +14,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.kotlin.ble.client.CentralManager
 import no.nordicsemi.kotlin.ble.client.Peripheral
 import no.nordicsemi.kotlin.ble.client.RemoteCharacteristic
 import no.nordicsemi.kotlin.ble.client.RemoteService
+import no.nordicsemi.kotlin.ble.client.RemoteServices
 import no.nordicsemi.kotlin.ble.client.ScanResult
 import no.nordicsemi.kotlin.ble.core.WriteType
 import no.nordicsemi.kotlin.mesh.bearer.BearerError
@@ -127,6 +129,8 @@ abstract class BaseGattBearer<
             var suspended = true
             // Start observing the discovered services
             servicesObserver = peripheral.services()
+                // Only the discovered state carries services, in any other state they are unknown.
+                .map { (it as? RemoteServices.Discovered)?.services }
                 .onEach { services ->
                     configureGatt(services = services)
                     if (suspended && services != null) {
