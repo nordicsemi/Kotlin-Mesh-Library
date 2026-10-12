@@ -8,7 +8,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.Comp
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.Companion.UNKNOWN
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.time.Duration

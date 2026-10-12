@@ -5,7 +5,7 @@ import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 
 /**

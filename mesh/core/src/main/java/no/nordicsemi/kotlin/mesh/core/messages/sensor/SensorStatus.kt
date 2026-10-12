@@ -8,7 +8,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.read
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * A Device Property with its corresponding characteristic.

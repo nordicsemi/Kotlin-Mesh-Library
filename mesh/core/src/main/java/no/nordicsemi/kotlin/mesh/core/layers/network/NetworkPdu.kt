@@ -21,7 +21,7 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKeyDerivatives
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.experimental.and
 import kotlin.experimental.or
 

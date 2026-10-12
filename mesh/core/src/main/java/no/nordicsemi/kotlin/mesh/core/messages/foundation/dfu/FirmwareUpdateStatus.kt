@@ -11,7 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateAdditionalInformati
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePhase
 import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 
 /**

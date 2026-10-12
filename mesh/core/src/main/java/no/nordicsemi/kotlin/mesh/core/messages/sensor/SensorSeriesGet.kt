@@ -6,7 +6,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is used to request a sequence of Sensor Series Column states of a sensor. The

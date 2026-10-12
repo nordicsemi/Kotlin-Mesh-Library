@@ -7,7 +7,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareInformation
 import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import java.net.URI
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 
 /**

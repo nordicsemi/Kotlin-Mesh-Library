@@ -9,7 +9,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.read
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is a response to a [SensorSettingGet], [SensorSettingSet] and

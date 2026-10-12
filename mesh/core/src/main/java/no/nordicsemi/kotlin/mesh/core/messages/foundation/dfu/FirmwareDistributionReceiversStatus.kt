@@ -6,7 +6,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * Firmware Distribution Receivers Status message is an unacknowledged message sent by a Firmware

@@ -9,7 +9,7 @@ import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateCancel
 import no.nordicsemi.kotlin.mesh.core.model.serialization.URLSerializer
 import java.net.URL
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * The Firmware ID state identifies a firmware image on the Node or on any subsystem within the Node.

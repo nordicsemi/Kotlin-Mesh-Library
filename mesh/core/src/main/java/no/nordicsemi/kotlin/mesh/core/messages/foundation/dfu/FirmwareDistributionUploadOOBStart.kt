@@ -6,7 +6,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import java.net.URI
 import java.net.URL
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * Firmware Distribution Upload OOB Start message is an acknowledged message sent by a Firmware

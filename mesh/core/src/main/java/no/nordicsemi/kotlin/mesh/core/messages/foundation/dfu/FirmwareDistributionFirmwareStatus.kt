@@ -9,7 +9,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareId
 import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * Firmware Distribution Firmware Status message is an unacknowledged message sent by a Firmware

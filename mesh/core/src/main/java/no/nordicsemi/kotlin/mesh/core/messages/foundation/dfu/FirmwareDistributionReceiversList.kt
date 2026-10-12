@@ -11,7 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitia
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.RetrievedUpdatePhase
 import no.nordicsemi.kotlin.mesh.core.model.Address
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 
 /**

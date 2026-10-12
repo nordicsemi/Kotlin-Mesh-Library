@@ -5,7 +5,7 @@ import no.nordicsemi.kotlin.data.getInt
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.VendorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.VendorResponse
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is used to respond to a Pairing Request message.

@@ -8,7 +8,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.ConfigVendorModelMessage
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is used to get the subscription list of a vendor model.

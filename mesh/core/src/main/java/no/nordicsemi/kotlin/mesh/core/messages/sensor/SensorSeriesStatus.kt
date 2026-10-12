@@ -7,7 +7,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is a response to a [SensorSeriesGet] and contains a sequence of Sensor Series

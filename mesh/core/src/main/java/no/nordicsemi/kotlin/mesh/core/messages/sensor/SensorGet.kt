@@ -5,7 +5,7 @@ import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is used to request the Sensor Data state of all sensors within an Element, or of

@@ -8,7 +8,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.SensorCadence
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is a response to a [SensorCadenceGet], [SensorCadenceSet] and
