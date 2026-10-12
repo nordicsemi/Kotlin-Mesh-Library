@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.util
 
+import kotlinx.serialization.Serializable
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 
 /**
@@ -10,6 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
  * @property imageIndex Index of the image being updated.
  * @property status     Status of the receiver.
  */
+@Serializable
 data class Receiver(
     val address: UnicastAddress,
     val imageIndex: UByte,

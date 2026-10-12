@@ -79,4 +79,8 @@
     <string name="label_disabled">Disabled</string>
     <string name="label_disabled_multicast_rationale">Messages will not be sent to multicast address</string>
     <string name="label_multicast_distribution_rationale">Firmware Update Server and BLOB Server models on target nodes will get automatically subscribed to the selected group.</string>
+    <string name="label_upload_progress">Upload Progress</string>
+    <string name="label_firmware_upload">Firmware Upload</string>
+    <string name="label_firmware_upload_distributor">Transferring image to the Distributor</string>
+    <string name="label_distribution_progress">Distribution Progress</string>
 </resources>

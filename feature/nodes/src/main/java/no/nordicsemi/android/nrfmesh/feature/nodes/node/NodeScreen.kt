@@ -655,20 +655,3 @@ private fun RemoveNode(
         )
     }
 }
-
-@Composable
-fun TaskStatus.color() = when (this) {
-    is TaskStatus.Idle -> Color.Gray
-    is TaskStatus.InProgress -> Color.Blue
-    is TaskStatus.Skipped -> Color.Gray
-    is TaskStatus.Completed -> Color.Green
-    is TaskStatus.Error -> Color.Red
-}
-
-fun TaskStatus.description() = when (this) {
-    TaskStatus.Idle -> "Waiting..."
-    TaskStatus.InProgress -> "In progress"
-    TaskStatus.Skipped -> "Skipped"
-    TaskStatus.Completed -> "Success"
-    is TaskStatus.Error -> error
-}

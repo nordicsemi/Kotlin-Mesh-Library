@@ -453,7 +453,7 @@ fun enqueueReconfiguration(
             val targetElement = target.elements[index]
             originalElement
                 .models
-                .filter { it.supportsModelPublication == true }
+                .filter { it.supportsModelPublication }
                 .forEach { originalModel ->
                     originalModel.publish?.let { publish ->
                         targetElement
@@ -496,7 +496,7 @@ fun enqueueReconfiguration(
             val targetElement = target.elements[index]
             originalElement
                 .models
-                .filter { it.supportsModelSubscription == true }
+                .filter { it.supportsModelSubscription }
                 .forEach { originalModel ->
                     targetElement
                         .model(modelId = originalModel.modelId)

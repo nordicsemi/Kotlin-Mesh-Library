@@ -1,6 +1,5 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +29,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,6 +46,11 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page0
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page1
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page2
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page3
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page4
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page5
+import no.nordicsemi.android.nrfmesh.feature.dfu.util.DfuParameters
+import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
+import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 
@@ -55,15 +58,24 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 @Composable
 internal fun FirmwareUpdateScreen(
     uiState: FirmwareUpdateScreenUiState,
+    session: DfuSession,
     onGattProxyClicked: () -> Unit,
     onBindAppKeysClicked: (Model) -> Unit,
     onBackClick: () -> Unit,
+    onClearTasks: () -> Unit,
+    onKeyIndexChanged: (Int) -> Unit,
+    onReceiversChanged: (List<Receiver>) -> Unit,
+    onUpdatePackageChanged: (UpdatePackage?) -> Unit,
+    onDfuParametersChanged: (DfuParameters) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val pagerState = rememberPagerState(pageCount = { 4 })
-    var enableNext by rememberSaveable { mutableStateOf(true) }
-    var selectedKeyIndex by rememberSaveable { mutableIntStateOf(-1) }
+    val pagerState = rememberPagerState(pageCount = { 6 })
+    var tasksCompleted by rememberSaveable { mutableStateOf(false) }
+    val enableNext = session.canProceed(
+        page = pagerState.currentPage,
+        tasksCompleted = tasksCompleted
+    )
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -94,16 +106,11 @@ internal fun FirmwareUpdateScreen(
                         .verticalScroll(state = rememberScrollState()),
                     content = {
                         when (page) {
-                            0 -> {
-                                Page0(
-                                    onGattProxyClicked = onGattProxyClicked,
-                                    onBindAppKeysClicked = onBindAppKeysClicked,
-                                    enableNextStage = { index ->
-                                        selectedKeyIndex = index.toInt()
-                                        enableNext = true
-                                    }
-                                )
-                            }
+                            0 -> Page0(
+                                onGattProxyClicked = onGattProxyClicked,
+                                onBindAppKeysClicked = onBindAppKeysClicked,
+                                onKeySelected = { index -> onKeyIndexChanged(index.toInt()) }
+                            )
 
                             1 -> Page1(
                                 goToNext = dropUnlessResumed {
@@ -114,65 +121,79 @@ internal fun FirmwareUpdateScreen(
                             )
 
                             2 -> Page2(
-                                index = selectedKeyIndex,
-                                snackbarHostState = snackbarHostState
+                                    index = session.keyIndex,
+                                    snackbarHostState = snackbarHostState,
+                                    onUpdatePackageChanged = onUpdatePackageChanged,
+                                    onReceiversSelected = onReceiversChanged
+                                )
+
+                            3 -> Page3(onDfuParametersChanged = onDfuParametersChanged)
+
+                            4 -> Page4(
+                                session = session,
+                                onTasksCompleted = { tasksCompleted = it }
                             )
 
-                            3 -> Page3(
-
-                            )
+                            5 -> Page5(session = session)
                         }
-                        AnimatedVisibility(visible = enableNext) {
-                            Row(
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(space = 32.dp),
+                        ) {
+                            OutlinedButton(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(space = 32.dp),
-                            ) {
-                                OutlinedButton(
-                                    modifier = Modifier
-                                        .widthIn(min = 80.dp)
-                                        .weight(weight = 1f),
-                                    onClick = dropUnlessResumed {
-                                        scope.launch {
-                                            pagerState.requestScrollToPage(
-                                                page = when (pagerState.currentPage == 2) {
-                                                    true -> pagerState.currentPage - 2
-                                                    else -> pagerState.currentPage - 1
-                                                }
-                                            )
-                                        }
-                                    },
-                                    enabled = pagerState.currentPage > 0,
-                                    content = {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                            contentDescription = null
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(text = "Back")
-                                    }
-                                )
-                                OutlinedButton(
-                                    modifier = Modifier
-                                        .widthIn(min = 80.dp)
-                                        .weight(weight = 1f),
-                                    onClick = dropUnlessResumed {
-                                        scope.launch {
-                                            pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
-                                        }
-                                    },
-                                    enabled = enableNext && pagerState.currentPage < 4,
-                                    content = {
-                                        Text(text = "Next")
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-                                            contentDescription = null
+                                    .widthIn(min = 80.dp)
+                                    .weight(weight = 1f),
+                                onClick = dropUnlessResumed {
+                                    // The tasks enqueued on the last page are discarded when
+                                    // navigating back, they are enqueued again when returning.
+                                    if (pagerState.currentPage == 4) onClearTasks()
+                                    scope.launch {
+                                        pagerState.requestScrollToPage(
+                                            page = when (pagerState.currentPage) {
+                                                // Page 1 (LE pairing) is skipped when going back.
+                                                2 -> 0
+                                                // Page 4 (tasks) is skipped when going back.
+                                                5 -> 3
+                                                else -> pagerState.currentPage - 1
+                                            }
                                         )
                                     }
-                                )
-                            }
+                                },
+                                enabled = pagerState.currentPage > 0,
+                                content = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                        contentDescription = null
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(text = "Back")
+                                }
+                            )
+                            OutlinedButton(
+                                modifier = Modifier
+                                    .widthIn(min = 80.dp)
+                                    .weight(weight = 1f),
+                                onClick = dropUnlessResumed {
+                                    // The tasks enqueued on page 4 have been executed, they are
+                                    // cleared so they are not duplicated when page 4 is shown again.
+                                    if (pagerState.currentPage == 4) onClearTasks()
+                                    scope.launch {
+                                        pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
+                                    }
+                                },
+                                enabled = enableNext,
+                                content = {
+                                    Text(text = "Next")
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
                         }
                     }
                 )

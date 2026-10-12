@@ -13,8 +13,9 @@ import no.nordicsemi.android.nrfmesh.core.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.ScannerKey
+import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSessionViewModel
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page4ViewModel
 import no.nordicsemi.android.nrfmesh.feature.dfu.FirmwareUpdateScreen
-import no.nordicsemi.android.nrfmesh.feature.dfu.FirmwareUpdateViewModel
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -24,7 +25,7 @@ import kotlin.uuid.ExperimentalUuidApi
     ExperimentalUuidApi::class
 )
 fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
-    var viewModel: FirmwareUpdateViewModel? = null
+    var viewModel: DfuSessionViewModel? = null
     entry<FirmwareUpdateKey>(
         metadata = DialogSceneStrategy.dialog(
             dialogProperties = DialogProperties(
@@ -35,15 +36,24 @@ fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
             )
         )
     ) {
-        viewModel = hiltViewModel<FirmwareUpdateViewModel>()
-        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        val sessionViewModel = hiltViewModel<DfuSessionViewModel>()
+        val page4ViewModel = hiltViewModel<Page4ViewModel>()
+        viewModel = sessionViewModel
+        val uiState by sessionViewModel.uiState.collectAsStateWithLifecycle()
+        val session by sessionViewModel.session.collectAsStateWithLifecycle()
         FirmwareUpdateScreen(
             uiState = uiState,
+            session = session,
             onGattProxyClicked = {
                 navigator.navigate(key = ScannerKey(uuid = MeshProxyService.uuid))
             },
             onBindAppKeysClicked = { navigator.navigate(key = DfuBindAppKeysKey(model = it)) },
-            onBackClick = { navigator.navigate(key = NodesKey) }
+            onKeyIndexChanged = { sessionViewModel.setKeyIndex(index = it) },
+            onReceiversChanged = { sessionViewModel.setReceivers(receivers = it) },
+            onUpdatePackageChanged = { sessionViewModel.setUpdatePackage(updatePackage = it) },
+            onDfuParametersChanged = { sessionViewModel.setDfuParameters(dfuParameters = it) },
+            onBackClick = { navigator.navigate(key = NodesKey) },
+            onClearTasks = page4ViewModel::clear
         )
     }
     dfuBindAppKeysEntry(

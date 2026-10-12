@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.core.data.configurator
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ApplicationMessage
@@ -57,28 +58,50 @@ data class AppTask(
  * Represents a task status.
  */
 sealed class TaskStatus {
+
+    /** Description of the status to be displayed to the user. */
+    abstract fun description(): String
+
+    /** Color of the status to be displayed to the user. */
+    abstract fun color(): Color
+
     /**
      * The task is idle.
      */
-    object Idle : TaskStatus()
+    object Idle : TaskStatus() {
+        override fun description() = "Waiting..."
+        override fun color() = Color.Gray
+    }
 
     /**
      * The task is in progress.
      */
-    object InProgress : TaskStatus()
+    object InProgress : TaskStatus() {
+        override fun description() = "In progress"
+        override fun color() = Color.Blue
+    }
 
     /**
      * The task has been skipped.
      */
-    object Skipped : TaskStatus()
+    object Skipped : TaskStatus() {
+        override fun description() = "Skipped"
+        override fun color() = Color.Gray
+    }
 
     /**
      * The task has been completed.
      */
-    object Completed : TaskStatus()
+    object Completed : TaskStatus() {
+        override fun description() = "Success"
+        override fun color() = Color.Green
+    }
 
     /**
      * The task has failed.
      */
-    data class Error(val error: String) : TaskStatus()
+    data class Error(val error: String) : TaskStatus() {
+        override fun description() = error
+        override fun color() = Color.Red
+    }
 }

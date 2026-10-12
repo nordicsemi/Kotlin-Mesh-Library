@@ -58,4 +58,8 @@ val firmwareDistributionServer =
 
 val firmwareUpdateServer = SigModelId(modelIdentifier = Model.FIRMWARE_UPDATE_SERVER_MODEL_ID)
 
-val blobTransferServerModel = SigModelId(modelIdentifier = Model.BLOB_TRANSFER_SERVER_MODEL_ID)
+val firmwareUpdateClient = SigModelId(modelIdentifier = Model.FIRMWARE_UPDATE_CLIENT_MODEL_ID)
+
+val blobTransferServer = SigModelId(modelIdentifier = Model.BLOB_TRANSFER_SERVER_MODEL_ID)
+
+val blobTransferClient = SigModelId(modelIdentifier = Model.BLOB_TRANSFER_CLIENT_MODEL_ID)

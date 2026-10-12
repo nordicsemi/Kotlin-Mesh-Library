@@ -33,7 +33,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 internal fun Page0(
     onGattProxyClicked: () -> Unit,
     onBindAppKeysClicked: (Model) -> Unit,
-    enableNextStage: (KeyIndex) -> Unit,
+    onKeySelected: (KeyIndex) -> Unit,
 ) {
     val viewModel = hiltViewModel<Page0ViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -93,7 +93,7 @@ internal fun Page0(
                 send = viewModel::send,
                 enableNextStage = {
                     uiState.selectedKey?.let {
-                        enableNextStage(it.index)
+                        onKeySelected(it.index)
                     }
                 }
             )

@@ -27,6 +27,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -53,9 +54,12 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-internal fun Page3() {
+internal fun Page3(onDfuParametersChanged: (DfuParameters) -> Unit) {
     val viewModel = hiltViewModel<Page3ViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState.dfuParameters) {
+        onDfuParametersChanged(uiState.dfuParameters)
+    }
     FirmwareDistributionParameters(
         dfuParameters = uiState.dfuParameters,
         onTtlChanged = viewModel::onTtlChanged,

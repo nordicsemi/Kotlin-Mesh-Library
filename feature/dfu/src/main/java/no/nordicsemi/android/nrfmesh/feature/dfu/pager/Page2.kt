@@ -39,9 +39,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -66,6 +68,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.FirmwareEntry
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Metadata
+import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Status
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Target
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.TargetState
@@ -77,6 +80,8 @@ import kotlin.uuid.ExperimentalUuidApi
 internal fun Page2(
     index: Int,
     snackbarHostState: SnackbarHostState,
+    onUpdatePackageChanged: (UpdatePackage?) -> Unit,
+    onReceiversSelected: (List<Receiver>) -> Unit,
 ) {
     val viewModel = hiltViewModel<Page2ViewModel, Page2ViewModel.Factory> { factory ->
         factory.create(index = index)
@@ -103,6 +108,13 @@ internal fun Page2(
         checkCompatibility = viewModel::checkCompatibility,
         downloadFirmwareUpdate = viewModel::downloadFirmwareUpdate
     )
+    LaunchedEffect(uiState.updatePackage) {
+        onUpdatePackageChanged(uiState.updatePackage)
+    }
+    val selectedReceivers = uiState.targets.mapNotNull { it.selectedReceiver }
+    LaunchedEffect(selectedReceivers) {
+        onReceiversSelected(selectedReceivers)
+    }
 }
 
 @Composable
@@ -195,6 +207,21 @@ private fun TargetNodes(
     val resources = LocalResources.current
     var isRequestInProgress by rememberSaveable { mutableStateOf(false) }
     var isSelectAllInProgress by rememberSaveable { mutableStateOf(false) }
+    // Expanded state of the rows is kept here so that it can also be changed by Select All. A row
+    // without an entry is expanded if the target has a selected firmware entry.
+    val expandedTargets = rememberSaveable(
+        saver = listSaver(
+            save = { map -> map.map { (id, expanded) -> "$id|$expanded" } },
+            restore = { list ->
+                mutableStateMapOf<String, Boolean>().apply {
+                    list.forEach {
+                        val (id, expanded) = it.split("|")
+                        put(id, expanded.toBoolean())
+                    }
+                }
+            }
+        )
+    ) { mutableStateMapOf<String, Boolean>() }
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -219,18 +246,21 @@ private fun TargetNodes(
                                     val newTarget = loadFirmwareInformation(
                                         target = target,
                                         isExpanded = target.isSelected,
-                                        onExpandStateChanged = {},
+                                        onExpandStateChanged = {
+                                            expandedTargets[target.node.uuid.toString()] = it
+                                        },
                                         onConfigurationRequired = { isSelectAllInProgress = it },
                                         downloadFirmwareInformation = downloadFirmwareInformation
                                     ) ?: target
                                     println("AAA Target: ${newTarget.node.name} is ${newTarget.targetState}")
                                     if (newTarget.targetState is TargetState.Ready) {
+                                        expandedTargets[target.node.uuid.toString()] = true
                                         newTarget.targetState.entries.forEachIndexed { index, entry ->
                                             selectFirmwareEntry(
                                                 snackbarHostState = snackbarHostState,
                                                 resources = resources,
                                                 checked = true,
-                                                target = target,
+                                                target = newTarget,
                                                 indexOfEntry = index,
                                                 entry = entry,
                                                 metadata = metadata,
@@ -279,6 +309,11 @@ private fun TargetNodes(
                             messageState = messageState,
                             target = target,
                             metadata = metadata,
+                            isExpanded = expandedTargets[target.node.uuid.toString()]
+                                ?: target.isSelected,
+                            onExpandStateChanged = {
+                                expandedTargets[target.node.uuid.toString()] = it
+                            },
                             isRequestInProgress = isRequestInProgress,
                             downloadFirmwareInformation = downloadFirmwareInformation,
                             checkCompatibility = checkCompatibility,
@@ -317,12 +352,13 @@ private fun TargetNode(
     messageState: MessageState,
     metadata: Metadata?,
     target: Target,
+    isExpanded: Boolean,
+    onExpandStateChanged: (Boolean) -> Unit,
     isRequestInProgress: Boolean,
     downloadFirmwareInformation: suspend (Target) -> Target,
     checkCompatibility: suspend (Target, Int, FirmwareEntry, Metadata, Boolean) -> Unit,
     downloadFirmwareUpdate: suspend (Target, Int, FirmwareEntry) -> Unit,
 ) {
-    var isExpanded by rememberSaveable { mutableStateOf(target.isSelected) }
     Box(modifier = Modifier.padding(top = 8.dp)) {
         AnimatedVisibility(
             visible = isExpanded,
@@ -350,7 +386,7 @@ private fun TargetNode(
                     messageState = messageState,
                     target = target,
                     isExpanded = isExpanded,
-                    onExpandStateChanged = { isExpanded = it },
+                    onExpandStateChanged = onExpandStateChanged,
                     downloadFirmwareInformation = downloadFirmwareInformation
                 )
             },

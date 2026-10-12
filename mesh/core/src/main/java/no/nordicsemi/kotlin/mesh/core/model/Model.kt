@@ -229,7 +229,7 @@ class Model internal constructor(
     val supportsApplicationKeyBinding: Boolean
         get() = !requiresDeviceKey
 
-    val supportsModelPublication: Boolean?
+    val supportsModelPublication: Boolean
         get() = when ((modelId as? SigModelId)?.modelIdentifier) {
             // Foundation
             CONFIGURATION_SERVER_MODEL_ID,
@@ -437,12 +437,15 @@ class Model internal constructor(
             LIGHT_LC_SERVER_MODEL_ID,
             LIGHT_LC_SETUP_SERVER_MODEL_ID,
             LIGHT_LC_CLIENT_MODEL_ID,
-                // Device Firmware Update
-            FIRMWARE_UPDATE_SERVER_MODEL_ID,
-            FIRMWARE_UPDATE_CLIENT_MODEL_ID,
-            FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID,
-            FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID,
                 -> true
+            // BLOB Transfer
+            BLOB_TRANSFER_SERVER_MODEL_ID -> true
+            BLOB_TRANSFER_CLIENT_MODEL_ID -> false
+            // Device Firmware Update
+            FIRMWARE_UPDATE_SERVER_MODEL_ID -> true
+            FIRMWARE_UPDATE_CLIENT_MODEL_ID -> false
+            FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID -> true
+            FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID -> false
 
             else -> false
         }

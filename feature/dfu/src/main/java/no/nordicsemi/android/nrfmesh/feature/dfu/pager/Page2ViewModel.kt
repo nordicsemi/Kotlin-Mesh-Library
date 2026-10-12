@@ -26,7 +26,7 @@ import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.NotStarted
 import no.nordicsemi.android.nrfmesh.core.common.Sending
-import no.nordicsemi.android.nrfmesh.core.common.blobTransferServerModel
+import no.nordicsemi.android.nrfmesh.core.common.blobTransferServer
 import no.nordicsemi.android.nrfmesh.core.common.firmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
@@ -100,7 +100,7 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                                 targets = network.nodes
                                     .filter { node ->
                                         node.model(modelId = firmwareUpdateServer) != null &&
-                                                node.model(modelId = blobTransferServerModel) != null
+                                                node.model(modelId = blobTransferServer) != null
                                     }.mapNotNull { node ->
                                         node.models(modelId = firmwareUpdateServer)
                                             .firstOrNull()
@@ -431,38 +431,29 @@ internal class Page2ViewModel @AssistedInject internal constructor(
         metadata: Metadata,
         isChecked: Boolean,
     ) {
-        val targetIndex = uiState.value.targets.indexOfFirst { it.node.uuid == target.node.uuid }
-        val targetState = (target.targetState as TargetState.Ready)
+        // The target passed in may be a stale snapshot, e.g. when selecting all the targets, so
+        // the latest target is always read from the state before updating one of its entries.
+        fun updateEntry(updatedEntry: FirmwareEntry) = uiState.update { status ->
+            val targetIndex = status.targets.indexOfFirst { it.node.uuid == target.node.uuid }
+            if (targetIndex < 0) return@update status
+            val current = status.targets[targetIndex]
+            status.copy(
+                targets = status.targets
+                    .toMutableList()
+                    .also {
+                        it[targetIndex] = current.copy(
+                            targetState = current.targetState.with(
+                                index = indexOfEntry,
+                                entry = updatedEntry
+                            )
+                        )
+                    }.toList()
+            )
+        }
         if (!isChecked) {
-            uiState.update { status ->
-                status.copy(
-                    targets = status.targets
-                        .toMutableList()
-                        .also {
-                            it[targetIndex] = target.copy(
-                                targetState = target.targetState.with(
-                                    index = indexOfEntry,
-                                    entry = entry.copy(status = Status.Unselected)
-                                )
-                            )
-                        }.toList()
-                )
-            }
+            updateEntry(updatedEntry = entry.copy(status = Status.Unselected))
         } else {
-            uiState.update { status ->
-                status.copy(
-                    targets = status.targets
-                        .toMutableList()
-                        .also {
-                            it[targetIndex] = target.copy(
-                                targetState = target.targetState.with(
-                                    index = indexOfEntry,
-                                    entry = entry.copy(status = Status.CheckingMetadata)
-                                )
-                            )
-                        }.toList()
-                )
-            }
+            updateEntry(updatedEntry = entry.copy(status = Status.CheckingMetadata))
             val firmwareUpdateServerModel =
                 target.node.model(modelId = firmwareUpdateServer) ?: return
             val metadataStatusCheck = send(
@@ -491,20 +482,7 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                     )
                 }
                 // Updates the entry in the state of the given target
-                uiState.update { status ->
-                    status.copy(
-                        targets = status.targets
-                            .toMutableList()
-                            .also {
-                                it[targetIndex] = target.copy(
-                                    targetState = targetState.with(
-                                        index = indexOfEntry,
-                                        entry = updatedEntry
-                                    )
-                                )
-                            }.toList()
-                    )
-                }
+                updateEntry(updatedEntry = updatedEntry)
             } ?: run {
                 throw IllegalStateException("No response received during metadata check")
             }
