@@ -13,9 +13,7 @@ dependencies {
     implementation(nordic.kotlin.data)
     implementation(nordic.permissions.ble)
     implementation(nordic.scanner.ble)
-    implementation(nordic.mcumgr.core)
     implementation(nordic.mcumgr.core.ktx)
-    implementation(nordic.mcumgr.ble2)
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit4)

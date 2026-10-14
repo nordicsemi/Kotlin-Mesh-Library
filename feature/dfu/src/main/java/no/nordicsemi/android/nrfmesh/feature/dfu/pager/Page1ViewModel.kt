@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import no.nordicsemi.android.mcumgr.McuMgrTransport
-import no.nordicsemi.android.mcumgr.ble.McuMgrBleTransport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -27,8 +25,6 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
-import no.nordicsemi.kotlin.mesh.logger.LogCategory
-import no.nordicsemi.kotlin.mesh.logger.LogLevel
 import javax.inject.Inject
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -36,33 +32,16 @@ import kotlin.uuid.ExperimentalUuidApi
 internal class Page1ViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
     private val centralManager: CentralManager
-) : ViewModel(), McuMgrTransport.ConnectionCallback {
+) : ViewModel() {
     private val _uiState = MutableStateFlow(Page1ScreenUiState())
     internal val uiState = _uiState.asStateFlow()
     private lateinit var network: MeshNetwork
-    private var transport: McuMgrBleTransport? = null
 
     init {
         observeNetwork()
         observeProxyConnectionState()
         observeProxyFilterState()
         observeSmpState()
-    }
-
-    override fun onConnected() {
-        repository.logger.log(
-            message = { "McuManagerTransport connected" },
-            category = LogCategory.MODEL,
-            level = LogLevel.APPLICATION
-        )
-    }
-
-    override fun onError(throwable: Throwable) {
-        repository.logger.log(
-            message = { "Error in McuManagerTransport in LePairingResponser: ${throwable.message}" },
-            category = LogCategory.MODEL,
-            level = LogLevel.APPLICATION
-        )
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -150,17 +129,8 @@ internal class Page1ViewModel @Inject internal constructor(
             .launchIn(scope = viewModelScope)
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     @Suppress("UNUSED_PARAMETER")
-    internal fun startPairing(context: Context) {
-        val identifier = repository.identifier ?: return
-        val peripheral = centralManager.getPeripheralById(identifier) ?: return
-        if (transport == null || transport?.state?.value == McuMgrBleTransport.State.Disconnected) {
-            val transport = McuMgrBleTransport(centralManager, peripheral, viewModelScope)
-                .also { transport = it }
-            transport.connect(this)
-        }
-    }
+    internal fun startPairing(context: Context) = repository.startPairing()
 
     internal suspend fun send(
         model: Model,

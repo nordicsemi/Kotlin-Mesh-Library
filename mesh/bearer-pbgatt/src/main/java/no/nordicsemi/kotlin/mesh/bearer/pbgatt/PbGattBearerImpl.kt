@@ -13,8 +13,6 @@ import no.nordicsemi.kotlin.mesh.bearer.provisioning.ProvisioningBearer
 
 /**
  * Responsible for receiving and sending mesh provisioning messages to and from the GATT Proxy Node.
- *
- * @param supportedTypes    List of supported PDU types.
  */
 open class PbGattBearerImpl<
         ID : Any,
@@ -22,7 +20,7 @@ open class PbGattBearerImpl<
         P : Peripheral<ID, EX>,
         EX : Peripheral.Executor<ID>,
         F : CentralManager.ScanFilterScope,
-        SR : ScanResult<*, *>,
+        SR : ScanResult<*, *>,z
         >(
     centralManager: C,
     peripheral: P,

@@ -37,7 +37,9 @@ object CentralManagerModule {
         @ApplicationContext context: Context,
     ): NativeAndroidEnvironment = NativeAndroidEnvironment.getInstance(
         context = context,
-        isNeverForLocationFlagSet = false
+        // The manifest declares BLUETOOTH_SCAN with the neverForLocation flag, so the location
+        // permission is not required for scanning on Android 12 and newer.
+        isNeverForLocationFlagSet = true
     )
 
     /**

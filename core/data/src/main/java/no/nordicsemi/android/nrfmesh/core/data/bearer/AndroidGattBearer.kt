@@ -3,15 +3,12 @@ package no.nordicsemi.android.nrfmesh.core.data.bearer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
-import no.nordicsemi.kotlin.ble.client.android.ConjunctionFilterScope
 import no.nordicsemi.kotlin.ble.client.android.Peripheral
-import no.nordicsemi.kotlin.ble.client.android.ScanResult
-import no.nordicsemi.kotlin.ble.core.WriteType
-import no.nordicsemi.kotlin.mesh.bearer.gatt.GattBearerImpl
-import kotlin.uuid.ExperimentalUuidApi
+import no.nordicsemi.kotlin.mesh.bearer.MeshBearer
+import no.nordicsemi.kotlin.mesh.bearer.PduTypes
 
 /**
- * Android implementation of GattBearer.
+ * Android implementation of the GATT bearer, used to communicate with a GATT proxy node.
  *
  * @param centralManager CentralManager instance.
  * @param peripheral     Peripheral instance.
@@ -22,25 +19,17 @@ class AndroidGattBearer(
     centralManager: CentralManager,
     peripheral: Peripheral,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : GattBearerImpl<
-        String,
-        CentralManager,
-        Peripheral,
-        Peripheral.Executor,
-        ConjunctionFilterScope,
-        ScanResult
-        >(
+) : MeshProfileBearer(
     centralManager = centralManager,
     peripheral = peripheral,
+    profileFactory = ::MeshProxyProfile,
+    supportedTypes = arrayOf(
+        PduTypes.NetworkPdu,
+        PduTypes.MeshBeacon,
+        PduTypes.ProxyConfiguration
+    ),
     ioDispatcher = ioDispatcher
-) {
+), MeshBearer {
     val identifier
         get() = peripheral.identifier
-
-    @OptIn(ExperimentalUuidApi::class)
-    override suspend fun configurePeripheral(peripheral: Peripheral) {
-        // Request the highest connection parameters after connect in the super.open()
-        peripheral.requestHighestValueLength()
-        mtu = peripheral.maximumWriteValueLength(WriteType.WITHOUT_RESPONSE)
-    }
 }

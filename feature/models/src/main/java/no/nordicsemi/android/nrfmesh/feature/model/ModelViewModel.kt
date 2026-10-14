@@ -7,9 +7,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import no.nordicsemi.android.mcumgr.McuMgrTransport
-import no.nordicsemi.android.mcumgr.ble.McuMgrBleTransport
-import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,46 +32,26 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNo
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import no.nordicsemi.kotlin.mesh.logger.LogCategory
-import no.nordicsemi.kotlin.mesh.logger.LogLevel
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
 @HiltViewModel(assistedFactory = ModelViewModel.Factory::class)
 internal class ModelViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
-    private val centralManager: CentralManager,
     @Assisted("address") address: Int,
     @Assisted("modelId") modelId: Int,
-) : ViewModel(), McuMgrTransport.ConnectionCallback {
+) : ViewModel() {
     private val unicastAddress = address.toUShort()
     private val modelIdentifier = modelId.toUInt()
     private lateinit var meshNetwork: MeshNetwork
     private lateinit var selectedNode: Node
     private lateinit var selectedModel: Model
-    private var transport: McuMgrBleTransport? = null
 
     private val _uiState = MutableStateFlow(ModelScreenUiState())
     val uiState: StateFlow<ModelScreenUiState> = _uiState.asStateFlow()
 
     init {
         observeNetworkChanges()
-    }
-
-    override fun onConnected() {
-        repository.logger.log(
-            message = { "McuManagerTransport connected" },
-            category = LogCategory.MODEL,
-            level = LogLevel.APPLICATION
-        )
-    }
-
-    override fun onError(throwable: Throwable) {
-        repository.logger.log(
-            message = { "Error in McuManagerTransport in LePairingResponser: ${throwable.message}" },
-            category = LogCategory.MODEL,
-            level = LogLevel.APPLICATION
-        )
     }
 
     private fun observeNetworkChanges() {
@@ -245,15 +222,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
     ) = repository.send(model = model, ackedMessage = message)
 
     @Suppress("UNUSED_PARAMETER")
-    internal fun startPairing(context: Context) {
-        val identifier = repository.identifier ?: return
-        val peripheral = centralManager.getPeripheralById(identifier) ?: return
-        if (transport == null || transport?.state?.value == McuMgrBleTransport.State.Disconnected) {
-            val transport = McuMgrBleTransport(centralManager, peripheral, viewModelScope)
-                .also { transport = it }
-            transport.connect(this)
-        }
-    }
+    internal fun startPairing(context: Context) = repository.startPairing()
 
     internal fun resetMessageState() {
         _uiState.update { state -> state.copy(messageState = NotStarted) }

@@ -27,6 +27,9 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import no.nordicsemi.android.mcumgr.ble.McuMgrBleTransport
+import no.nordicsemi.android.mcumgr.exception.McuMgrErrorException
+import no.nordicsemi.android.mcumgr.exception.McuMgrException
 import no.nordicsemi.android.nrfmesh.core.common.Configuration
 import no.nordicsemi.android.nrfmesh.core.common.NORDIC_SEMICONDUCTOR_COMPANY_ID
 import no.nordicsemi.android.nrfmesh.core.common.Utils.toAndroidLogLevel
@@ -43,8 +46,8 @@ import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEv
 import no.nordicsemi.android.nrfmesh.core.data.storage.SceneStatesDataStoreStorage
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.Peripheral
-import no.nordicsemi.kotlin.ble.core.exception.BluetoothUnavailableException
 import no.nordicsemi.kotlin.ble.client.exception.ScanningException
+import no.nordicsemi.kotlin.ble.core.exception.BluetoothUnavailableException
 import no.nordicsemi.kotlin.ble.core.exception.ManagerClosedException
 import no.nordicsemi.kotlin.mesh.bearer.BearerEvent
 import no.nordicsemi.kotlin.mesh.bearer.MeshBearer
@@ -120,6 +123,12 @@ class CoreDataRepository @Inject constructor(
 
     private var meshBearer: MeshBearer? = null
     private var bearerStateObserverJob: Job? = null
+
+    // The Mcu Manager transport of the connected proxy, shared by the screens, so that the same
+    // transport can be used during a DFU session.
+    private var mcuMgrTransport: McuMgrBleTransport? = null
+    private var mcuMgrTransportIdentifier: String? = null
+    private var pairingJob: Job? = null
     val identifier: String?
         get() = (meshBearer as? AndroidGattBearer)?.identifier
 
@@ -151,6 +160,7 @@ class CoreDataRepository @Inject constructor(
     fun close() {
         connectivityJob?.cancel()
         bearerStateObserverJob?.cancel()
+        releaseMcuMgrTransport()
         ioScope.launch {
             withContext(NonCancellable) {
                 meshBearer?.close()
@@ -645,6 +655,7 @@ class CoreDataRepository @Inject constructor(
 
                     is BearerEvent.Closed -> {
                         meshBearer = null
+                        releaseMcuMgrTransport()
                         meshNetworkManager.proxyFilter.proxyDidDisconnect()
 
                         _proxyConnectionStateFlow.update {
@@ -691,6 +702,7 @@ class CoreDataRepository @Inject constructor(
             meshBearer?.close()
             meshBearer = null
             bearerStateObserverJob?.cancel()
+            releaseMcuMgrTransport()
         }
     }
 
@@ -792,6 +804,73 @@ class CoreDataRepository @Inject constructor(
 
     fun toggleIvUpdateTestMode(flag: Boolean) {
         meshNetworkManager.networkParameters.ivUpdateTestMode = flag
+    }
+
+    /**
+     * Returns the Mcu Manager transport of the connected proxy.
+     *
+     * The transport is created the first time it is requested for a proxy and then reused, so the
+     * same transport, and connection, can be used by the screens during a DFU session. It is
+     * released when the proxy disconnects.
+     *
+     * @return The transport or null if the repository is not connected to a proxy.
+     */
+    fun mcuMgrTransport(): McuMgrBleTransport? {
+        val identifier = identifier ?: return null
+        mcuMgrTransport
+            ?.takeIf { mcuMgrTransportIdentifier == identifier }
+            ?.let { return it }
+        val peripheral = centralManager.getPeripheralById(id = identifier) ?: return null
+        // The transport of a previous proxy cannot be reused.
+        releaseMcuMgrTransport()
+        return McuMgrBleTransport(centralManager, peripheral, ioScope).also {
+            mcuMgrTransport = it
+            mcuMgrTransportIdentifier = identifier
+        }
+    }
+
+    /**
+     * Starts the LE pairing with the connected proxy.
+     *
+     * The shared Mcu Manager transport connects, and the device bonds, when the first request is
+     * sent. Reading the Mcu Manager parameters is used for that. Nothing is done if the pairing
+     * is already in progress or if the repository is not connected to a proxy.
+     */
+    fun startPairing() {
+        if (pairingJob?.isActive == true) return
+        val transport = mcuMgrTransport() ?: return
+        pairingJob = ioScope.launch {
+            try {
+                transport.connect()
+                logger.log(
+                    message = { "McuManagerTransport connected" },
+                    category = LogCategory.MODEL,
+                    level = LogLevel.APPLICATION
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: McuMgrErrorException) {
+                // The device responded with an error, so it is connected.
+                logger.log(
+                    message = { "McuManagerTransport connected, error response: ${e.message}" },
+                    category = LogCategory.MODEL,
+                    level = LogLevel.APPLICATION
+                )
+            } catch (e: McuMgrException) {
+                logger.log(
+                    message = { "Error in McuManagerTransport in LePairingResponder: ${e.message}" },
+                    category = LogCategory.MODEL,
+                    level = LogLevel.APPLICATION
+                )
+            }
+        }
+    }
+
+    private fun releaseMcuMgrTransport() {
+        pairingJob?.cancel()
+        mcuMgrTransport?.release()
+        mcuMgrTransport = null
+        mcuMgrTransportIdentifier = null
     }
 
     /**

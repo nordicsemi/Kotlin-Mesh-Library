@@ -11,8 +11,6 @@ android {
 
 dependencies {
     implementation(nordic.kotlin.data)
-    implementation(nordic.mcumgr.core)
-    implementation(nordic.mcumgr.ble2)
     implementation(nordic.permissions.ble)
 
     implementation(libs.kotlinx.serialization.json)

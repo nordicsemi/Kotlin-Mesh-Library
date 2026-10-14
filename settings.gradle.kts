@@ -17,7 +17,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-            from("no.nordicsemi.gradle:version-catalog-min-sdk-21:3.3-2")
+            from("no.nordicsemi.gradle:version-catalog:3.3-2")
             // The catalog ships androidx.hilt 1.2.0, which does not contain the
             // androidx.hilt.lifecycle.viewmodel.compose package used by the view models.
             version("androidxHilt", "1.3.0")

@@ -107,6 +107,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
                     if (!selectedNode.isCompositionDataReceived) {
                         messenger?.run{
                             // Enqueue reconfiguration tasks in the node view model
+                            delay(timeMillis = 1000)
                             repository.nodeToReconfigure?.let {
                                 enqueueReconfiguration(
                                     messenger = messenger,
@@ -114,7 +115,6 @@ internal class NodeViewModel @AssistedInject internal constructor(
                                     meshNetwork = meshNetwork,
                                     target = selectedNode
                                 )
-                                delay(timeMillis = 1000)
                             }
                             if (configurationJob?.isActive != true) {
                                 configurationJob = viewModelScope.launch { execute() }

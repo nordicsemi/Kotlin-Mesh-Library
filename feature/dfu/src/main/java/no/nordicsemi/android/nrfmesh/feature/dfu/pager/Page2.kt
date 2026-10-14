@@ -430,13 +430,17 @@ private fun ExpandRowAction(
         },
         onClick = dropUnlessResumed {
             scope.launch {
-                val _ = loadFirmwareInformation(
-                    target = target,
-                    isExpanded = isExpanded,
-                    onExpandStateChanged = onExpandStateChanged,
-                    onConfigurationRequired = { isConfiguring = it },
-                    downloadFirmwareInformation = downloadFirmwareInformation
-                )
+                if(target.targetState is TargetState.ConfigurationRequired) {
+
+                } else {
+                    val _ = loadFirmwareInformation(
+                        target = target,
+                        isExpanded = isExpanded,
+                        onExpandStateChanged = onExpandStateChanged,
+                        onConfigurationRequired = { isConfiguring = it },
+                        downloadFirmwareInformation = downloadFirmwareInformation
+                    )
+                }
             }
         },
         isOnClickActionInProgress = isConfiguring,
