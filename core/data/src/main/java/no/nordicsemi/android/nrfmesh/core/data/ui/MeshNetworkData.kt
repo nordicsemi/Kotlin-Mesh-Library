@@ -6,7 +6,6 @@ import no.nordicsemi.kotlin.mesh.core.model.IvIndex
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -35,7 +34,7 @@ import kotlin.uuid.Uuid
  *                                  Beacon and its current state.
  * @constructor                     Creates a mesh network.
  */
-@OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalTime::class)
 data class MeshNetworkData(
     val uuid: Uuid = Uuid.random(),
     val name: String,

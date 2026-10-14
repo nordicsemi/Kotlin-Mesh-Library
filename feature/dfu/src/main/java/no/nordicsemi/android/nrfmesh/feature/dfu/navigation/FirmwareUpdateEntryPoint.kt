@@ -17,12 +17,10 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSessionViewModel
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page4ViewModel
 import no.nordicsemi.android.nrfmesh.feature.dfu.FirmwareUpdateScreen
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
-import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(
     ExperimentalMaterial3AdaptiveApi::class,
-    ExperimentalMaterial3Api::class,
-    ExperimentalUuidApi::class
+    ExperimentalMaterial3Api::class
 )
 fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
     var viewModel: DfuSessionViewModel? = null

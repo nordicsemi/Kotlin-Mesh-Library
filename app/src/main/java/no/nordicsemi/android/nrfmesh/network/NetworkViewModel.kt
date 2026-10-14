@@ -25,7 +25,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
@@ -89,7 +88,6 @@ class NetworkViewModel @Inject constructor(
      * @param uri                  URI of the file.
      * @param contentResolver      Content resolver.
      */
-    @OptIn(ExperimentalUuidApi::class)
     internal fun importNetwork(uri: Uri, contentResolver: ContentResolver) {
         viewModelScope.launch {
             runCatching {
@@ -104,7 +102,6 @@ class NetworkViewModel @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private suspend fun promptProvisionerSelection(meshNetwork: MeshNetwork) {
         if (!meshNetwork.restoreLocalProvisioner(storage = storage)) {
             meshNetwork

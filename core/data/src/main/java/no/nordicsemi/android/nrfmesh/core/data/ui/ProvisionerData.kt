@@ -6,7 +6,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Provisioner
 import no.nordicsemi.kotlin.mesh.core.model.SceneRange
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.UnicastRange
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -24,7 +23,6 @@ import kotlin.uuid.Uuid
  * @param id                           A unique identifier for the ProvisionerData instance.
  *
  */
-@OptIn(ExperimentalUuidApi::class)
 data class ProvisionerData(
     val name: String,
     val uuid: Uuid,

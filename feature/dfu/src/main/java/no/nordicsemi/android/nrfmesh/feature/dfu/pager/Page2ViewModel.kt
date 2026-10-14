@@ -63,7 +63,6 @@ import no.nordicsemi.kotlin.mesh.logger.LogLevel
 import java.io.FileInputStream
 import java.net.URL
 import java.util.zip.ZipInputStream
-import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel(assistedFactory = Page2ViewModel.Factory::class)
 internal class Page2ViewModel @AssistedInject internal constructor(
@@ -87,7 +86,6 @@ internal class Page2ViewModel @AssistedInject internal constructor(
     /**
      * Observes the network state
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
@@ -144,7 +142,6 @@ internal class Page2ViewModel @AssistedInject internal constructor(
     /**
      * Observes the proxy filter state
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeProxyFilterState() {
         repository.proxyFilter.proxyFilterStateFlow
             .onEach { filterState ->
@@ -280,7 +277,6 @@ internal class Page2ViewModel @AssistedInject internal constructor(
      * @param indexOfEntry  Index of the firmware entry
      * @param entry         Firmware entry belonging to the given target
      */
-    @OptIn(ExperimentalUuidApi::class)
     internal suspend fun downloadFirmwareUpdate(
         target: Target,
         indexOfEntry: Int,
@@ -325,7 +321,6 @@ internal class Page2ViewModel @AssistedInject internal constructor(
     /**
      * Downloads the firmware information for a given target
      */
-    @OptIn(ExperimentalUuidApi::class)
     internal suspend fun downloadFirmwareInformation(target: Target): Target {
         val key = network.applicationKey(index = index.toUShort()) ?: return target
         val node = target.node
@@ -423,7 +418,6 @@ internal class Page2ViewModel @AssistedInject internal constructor(
      * @param entry The firmware entry
      * @param metadata The metadata of the firmware
      */
-    @OptIn(ExperimentalUuidApi::class)
     internal suspend fun checkCompatibility(
         target: Target,
         indexOfEntry: Int,

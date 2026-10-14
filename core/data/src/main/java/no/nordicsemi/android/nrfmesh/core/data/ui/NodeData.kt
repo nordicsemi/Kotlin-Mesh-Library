@@ -12,7 +12,6 @@ import no.nordicsemi.kotlin.mesh.core.model.RelayRetransmit
 import no.nordicsemi.kotlin.mesh.core.model.Security
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.UnicastRange
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -81,7 +80,6 @@ import kotlin.uuid.Uuid
  * @constructor                         Creates a mesh node.
  */
 @ConsistentCopyVisibility
-@OptIn(ExperimentalUuidApi::class)
 data class NodeData internal constructor(
     val uuid: Uuid,
     val name: String,

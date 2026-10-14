@@ -39,7 +39,6 @@ import no.nordicsemi.android.nrfmesh.feature.scenes.navigation.ScenesContentKey
 import no.nordicsemi.android.nrfmesh.feature.scenes.scene.navigation.SceneContentKey
 import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.ProvisionerSelectorKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 internal fun MeshNetwork.createKeysForAppTitles(): List<String?> = nodes
@@ -62,7 +61,6 @@ internal fun MeshNetwork.createKeysForAppTitles(): List<String?> = nodes
         scenes
             .map { it.name }
 
-@OptIn(ExperimentalUuidApi::class)
 internal fun title(
     context: Context,
     network: MeshNetwork,

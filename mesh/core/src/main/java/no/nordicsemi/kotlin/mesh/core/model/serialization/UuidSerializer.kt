@@ -11,7 +11,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import no.nordicsemi.kotlin.mesh.core.exception.ImportError
 import no.nordicsemi.kotlin.mesh.core.util.Utils
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -19,7 +18,6 @@ import kotlin.uuid.Uuid
  * as string with and without dashes and this Helper class encodes and decodes them accordingly.
  */
 
-@OptIn(ExperimentalUuidApi::class)
 object UuidSerializer : KSerializer<Uuid> {
 
 

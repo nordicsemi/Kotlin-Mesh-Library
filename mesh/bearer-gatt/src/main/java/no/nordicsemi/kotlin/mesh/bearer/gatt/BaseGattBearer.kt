@@ -35,7 +35,6 @@ import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Base implementation of the GATT Proxy Bearer.
@@ -89,7 +88,6 @@ abstract class BaseGattBearer<
      *
      * @param services List of remote services discovered on the peripheral.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun configureGatt(services: List<RemoteService>?) {
         var dataInChar: RemoteCharacteristic? = null
         var dataOutChar: RemoteCharacteristic? = null
@@ -118,7 +116,6 @@ abstract class BaseGattBearer<
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun open() {
         // Avoid multiple opens if already observing services
         if (servicesObserver != null) return
@@ -151,7 +148,6 @@ abstract class BaseGattBearer<
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     protected open suspend fun configurePeripheral(peripheral: P) {
         // Empty
     }

@@ -21,10 +21,9 @@ import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.util.networkIdentity
 import no.nordicsemi.kotlin.mesh.core.util.nodeIdentity
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ScannerScreen(
     networkState: MeshNetworkState,
@@ -43,7 +42,6 @@ internal fun ScannerScreen(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun ScannerContent(
     network: MeshNetwork,

@@ -1,7 +1,6 @@
 package no.nordicsemi.android.nrfmesh.core.data.storage
 
 import no.nordicsemi.android.nrfmesh.core.data.ui.SceneNumber
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -17,7 +16,6 @@ interface GenericOnOffStateStorage {
      * @param elementIndex   Index of the element.
      * @param on             State of the Generic OnOff.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun storeGenericOnOffState(
         uuid: Uuid,
         sceneNumber: SceneNumber,
@@ -33,7 +31,6 @@ interface GenericOnOffStateStorage {
      * @param elementIndex   Index of the element.
      * @return State of the Generic OnOff.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun readGenericOnOffState(
         uuid: Uuid,
         sceneNumber: SceneNumber,
@@ -54,7 +51,6 @@ interface GenericLevelStateStorage {
      * @param elementIndex   Index of the element.
      * @param level          Level value.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun storeGenericLevelState(
         uuid: Uuid,
         sceneNumber: SceneNumber,
@@ -70,7 +66,6 @@ interface GenericLevelStateStorage {
      * @param elementIndex   Index of the element.
      * @return Level value.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun readGenericLevelState(
         uuid: Uuid,
         sceneNumber: SceneNumber,

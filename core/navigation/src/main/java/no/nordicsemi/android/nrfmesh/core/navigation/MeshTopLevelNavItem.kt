@@ -13,7 +13,6 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 
@@ -99,7 +98,6 @@ data class SettingsKey(val setting: ClickableSetting? = null) : NavKey
 @Serializable
 data object FirmwareUpdateKey : NavKey
 
-@OptIn(ExperimentalUuidApi::class)
 @Serializable
 data class ScannerKey(val uuid: Uuid) : NavKey
 

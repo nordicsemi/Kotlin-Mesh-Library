@@ -17,7 +17,6 @@ import no.nordicsemi.android.nrfmesh.core.data.storage.MeshSecurePropertiesStora
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Provisioner
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
 internal class ProvisionerSelectorViewModel @Inject constructor(
@@ -50,7 +49,6 @@ internal class ProvisionerSelectorViewModel @Inject constructor(
      *
      * @param provisioner Provisioner to be selected.
      */
-    @OptIn(ExperimentalUuidApi::class)
     internal fun onProvisionerSelected(provisioner: Provisioner) {
         viewModelScope.launch {
             meshNetwork.move(provisioner = provisioner, to = 0)

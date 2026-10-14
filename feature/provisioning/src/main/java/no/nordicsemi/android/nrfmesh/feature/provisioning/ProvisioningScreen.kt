@@ -72,10 +72,8 @@ import no.nordicsemi.kotlin.mesh.provisioning.AuthenticationMethod
 import no.nordicsemi.kotlin.mesh.provisioning.ProvisioningParameters
 import no.nordicsemi.kotlin.mesh.provisioning.ProvisioningState
 import no.nordicsemi.kotlin.mesh.provisioning.UnprovisionedDevice
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 internal fun ProvisioningScreen(
     snackbarHostState: SnackbarHostState,
@@ -242,7 +240,6 @@ internal fun ProvisioningScreen(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun ProvisioningContent(
     provisionerState: ProvisionerState,
@@ -339,7 +336,6 @@ private fun ProvisioningContent(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun ProvisioningStateInfo(
     state: ProvisioningState,

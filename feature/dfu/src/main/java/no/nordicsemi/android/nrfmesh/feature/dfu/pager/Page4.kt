@@ -13,9 +13,7 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSession
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 internal fun Page4(session: DfuSession, onTasksCompleted: (Boolean) -> Unit) {
     val viewModel = hiltViewModel<Page4ViewModel>()

@@ -30,12 +30,11 @@ import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.FirmwareInform
 import no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation.firmwareInformationEntryPoint
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.model.Address
-import kotlin.uuid.ExperimentalUuidApi
 
 @Serializable
 data class ModelKey(val address: Address, val modelId: UInt) : NavKey
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigator) {
     var viewModel: ModelViewModel? = null
     entry<ModelKey>(

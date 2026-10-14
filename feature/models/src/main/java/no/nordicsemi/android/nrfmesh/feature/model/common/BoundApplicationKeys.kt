@@ -26,10 +26,9 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigVe
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
-import kotlin.uuid.ExperimentalUuidApi
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun BoundApplicationKeys(
     model: Model,

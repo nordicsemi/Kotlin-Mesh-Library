@@ -16,7 +16,6 @@ import no.nordicsemi.kotlin.mesh.core.model.serialization.KeySerializer
 import no.nordicsemi.kotlin.mesh.core.model.serialization.UShortAsStringSerializer
 import no.nordicsemi.kotlin.mesh.core.model.serialization.UuidSerializer
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -86,7 +85,6 @@ import kotlin.uuid.Uuid
  * @constructor                         Creates a mesh node.
  */
 @ConsistentCopyVisibility
-@OptIn(ExperimentalUuidApi::class)
 @Serializable
 data class Node internal constructor(
     @SerialName(value = "UUID")

@@ -21,7 +21,6 @@ import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import no.nordicsemi.kotlin.data.ByteOrder
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Status declaring if the the [ConfigModelSubscriptionStatus] operation succeeded or not.
@@ -257,7 +256,6 @@ class ConfigModelSubscriptionStatus(
          * @param status  Status of the message.
          * @return ConfigModelSubscriptionStatus message.
          */
-        @OptIn(ExperimentalUuidApi::class)
         fun <T> init(request: T, status: ConfigMessageStatus): ConfigModelSubscriptionStatus
                 where T : ConfigVirtualLabelMessage, T : ConfigAnyModelMessage {
             return ConfigModelSubscriptionStatus(

@@ -18,7 +18,6 @@ import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import no.nordicsemi.kotlin.data.ByteOrder
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -47,7 +46,7 @@ import kotlin.uuid.Uuid
  *                                    Timeout = (10,000 × (Timeout Base + 2)) + (100 × Transfer TTL)
  *                                    milliseconds.
  */
-class FirmwareDistributionStart @OptIn(ExperimentalUuidApi::class)
+class FirmwareDistributionStart 
 internal constructor(
     val applicationKeyIndex: KeyIndex,
     val ttl: UByte = 0xFF.toUByte(),
@@ -61,7 +60,6 @@ internal constructor(
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = FirmwareDistributionStatus.opCode
 
-    @OptIn(ExperimentalUuidApi::class)
     override val parameters: ByteArray
         get() {
             val data = applicationKeyIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
@@ -136,7 +134,6 @@ internal constructor(
      *                                 Timeout = (10,000 × (Timeout Base + 2)) + (100 × Transfer TTL)
      *                                 milliseconds.
      */
-    @OptIn(ExperimentalUuidApi::class)
     constructor(
         firmwareImageIndex: UShort,
         virtualAddress: VirtualAddress,
@@ -255,7 +252,6 @@ internal constructor(
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8319u
 
-        @OptIn(ExperimentalUuidApi::class)
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 10 || it.size == 24 }
             ?.let { params ->

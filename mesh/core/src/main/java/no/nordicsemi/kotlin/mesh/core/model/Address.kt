@@ -7,7 +7,6 @@ import no.nordicsemi.kotlin.data.HexString
 import no.nordicsemi.kotlin.data.toUuid
 import no.nordicsemi.kotlin.mesh.core.model.serialization.MeshAddressSerializer
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -118,7 +117,6 @@ sealed class MeshAddress : HasAddress {
          *
          * @param uuid Uuid Label.
          */
-        @OptIn(ExperimentalUuidApi::class)
         fun create(uuid: Uuid) = VirtualAddress(uuid = uuid)
     }
 }
@@ -199,7 +197,6 @@ data class UnicastAddress(
  *
  * @property Uuid     Uuid label of the virtual address.
  */
-@OptIn(ExperimentalUuidApi::class)
 @Serializable(with = MeshAddressSerializer::class)
 data class VirtualAddress(
     val uuid: Uuid,
@@ -212,7 +209,6 @@ data class VirtualAddress(
     ProxyFilterAddress,
     DistributionMulticastAddress {
 
-    @OptIn(ExperimentalUuidApi::class)
     override val address: Address = Crypto.createVirtualAddress(uuid = uuid)
 
     /**
@@ -220,7 +216,6 @@ data class VirtualAddress(
      * @param label Byte array containing the Uuid label.
      * @throws IllegalArgumentException If the byte array containing the label is not 16 bytes long.
      */
-    @OptIn(ExperimentalUuidApi::class)
     constructor(label: ByteArray) : this(uuid = label.toUuid())
 
     operator fun compareTo(o: VirtualAddress) = address.compareTo(other = o.address)

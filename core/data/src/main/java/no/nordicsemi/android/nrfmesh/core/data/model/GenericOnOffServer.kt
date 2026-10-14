@@ -24,7 +24,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
-import kotlin.uuid.ExperimentalUuidApi
 
 class GenericOnOffServer(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -80,7 +79,6 @@ class GenericOnOffServer(
             value?.invoke(state)
         }
 
-    @OptIn(ExperimentalUuidApi::class)
     override fun store(scene: SceneNumber) {
         model.parentElement?.index?.let { index ->
             storage.storeGenericOnOffState(
@@ -92,7 +90,7 @@ class GenericOnOffServer(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class)
+    @OptIn(ExperimentalTime::class)
     override fun recall(
         scene: SceneNumber,
         transitionTime: TransitionTime?,

@@ -46,10 +46,8 @@ import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import no.nordicsemi.kotlin.mesh.core.model.knownTo
 import kotlin.math.min
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 class Messengers(private val meshNetworkManager: MeshNetworkManager) {
     val messengers: Map<Uuid, Messenger>
         field = mutableMapOf<Uuid, Messenger>()
@@ -89,7 +87,6 @@ class Messengers(private val meshNetworkManager: MeshNetworkManager) {
  *
  * @param meshNetworkManager MeshNetworkManager to be used.
  */
-@OptIn(ExperimentalUuidApi::class)
 class Messenger(private val meshNetworkManager: MeshNetworkManager) {
     private val meshNetwork: MeshNetwork?
         get() = meshNetworkManager.network
@@ -272,7 +269,6 @@ class Messenger(private val meshNetworkManager: MeshNetworkManager) {
  * @param originalNode       Original Node from which the configuration should be derived from
  * @param target            New Node.
  */
-@OptIn(ExperimentalUuidApi::class)
 fun enqueueReconfiguration(
     messenger: Messenger,
     meshNetwork: MeshNetwork,

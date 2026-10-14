@@ -81,7 +81,6 @@ import no.nordicsemi.android.nrfmesh.network.util.title
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import kotlin.time.ExperimentalTime
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Composable
@@ -150,7 +149,6 @@ internal fun NetworkScreen(
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalStdlibApi::class,
-    ExperimentalUuidApi::class,
     ExperimentalMaterial3AdaptiveApi::class,
     ExperimentalTime::class
 )

@@ -74,7 +74,6 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.util.Target
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.TargetState
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import java.util.Locale
-import kotlin.uuid.ExperimentalUuidApi
 
 @Composable
 internal fun Page2(
@@ -192,7 +191,6 @@ private fun FileSelector(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun TargetNodes(
     snackbarHostState: SnackbarHostState,
@@ -345,7 +343,6 @@ private fun TargetNodes(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun TargetNode(
     snackbarHostState: SnackbarHostState,
@@ -480,7 +477,6 @@ private suspend fun loadFirmwareInformation(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun Images(
     snackbarHostState: SnackbarHostState,
@@ -509,7 +505,6 @@ private fun Images(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun ImageRow(
     snackbarHostState: SnackbarHostState,

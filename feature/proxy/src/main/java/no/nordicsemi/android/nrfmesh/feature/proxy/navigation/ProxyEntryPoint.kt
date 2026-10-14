@@ -11,9 +11,7 @@ import no.nordicsemi.android.nrfmesh.core.navigation.ScannerKey
 import no.nordicsemi.android.nrfmesh.feature.proxy.ProxyScreen
 import no.nordicsemi.android.nrfmesh.feature.proxy.ProxyViewModel
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 fun EntryProviderScope<NavKey>.proxyEntry(navigator: Navigator) {
     entry<ProxyKey> {
         val viewModel = hiltViewModel<ProxyViewModel>()

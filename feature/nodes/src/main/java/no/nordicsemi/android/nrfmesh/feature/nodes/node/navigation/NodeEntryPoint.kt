@@ -38,9 +38,8 @@ import no.nordicsemi.android.nrfmesh.feature.nodes.node.NodeViewModel
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.ElementKey
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.elementEntry
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeResetStatus
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.nodeEntry(
     appState: AppState,
     navigator: Navigator,

@@ -27,7 +27,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Group
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
 internal class Page3ViewModel @Inject internal constructor(
@@ -41,7 +40,6 @@ internal class Page3ViewModel @Inject internal constructor(
         observeNetwork()
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }

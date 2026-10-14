@@ -13,7 +13,6 @@ import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import no.nordicsemi.kotlin.data.ByteOrder
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 
@@ -404,7 +403,6 @@ interface ConfigAnyModelAddressMessage : ConfigAddressMessage, ConfigAnyModelMes
  *
  * @property virtualLabel Value of the 128-bt Virtual Label UUID.
  */
-@OptIn(ExperimentalUuidApi::class)
 interface ConfigVirtualLabelMessage : ConfigMessage {
     val virtualLabel: Uuid
 }

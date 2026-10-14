@@ -11,7 +11,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareInformation
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.Model
-import kotlin.uuid.ExperimentalUuidApi
 
 @Serializable
 data class FirmwareInformationKey(
@@ -22,7 +21,6 @@ data class FirmwareInformationKey(
 
 @OptIn(
     ExperimentalMaterial3AdaptiveApi::class,
-    ExperimentalUuidApi::class,
     ExperimentalMaterial3Api::class
 )
 

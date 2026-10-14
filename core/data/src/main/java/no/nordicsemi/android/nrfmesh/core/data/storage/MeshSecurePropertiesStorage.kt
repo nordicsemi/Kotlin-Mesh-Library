@@ -28,7 +28,6 @@ import kotlin.uuid.Uuid
 import javax.inject.Inject
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import kotlin.uuid.ExperimentalUuidApi
 
 class MeshSecurePropertiesStorage @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -44,7 +43,6 @@ class MeshSecurePropertiesStorage @Inject constructor(
      * @param uuid Uuid of the mesh network.
      * @return [ProtoSecurePropertiesMap] with a single entry for the given [uuid].
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun createProtoSecurePropertiesMap(
         uuid: Uuid,
         provisionerUUID: String = "",
@@ -71,7 +69,6 @@ class MeshSecurePropertiesStorage @Inject constructor(
      * @param uuid Uuid of the mesh network.
      * @return [ProtoSecurePropertiesMap] for the given [uuid].
      */
-    @OptIn(ExperimentalUuidApi::class)
     private suspend fun secureProperties(uuid: Uuid) = withContext(ioDispatcher) {
         securePropertiesStore.data
             .firstOrNull()
@@ -94,12 +91,10 @@ class MeshSecurePropertiesStorage @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun localProvisioner(uuid: Uuid): String? {
         return secureProperties(uuid = uuid)?.localProvisionerUuid
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun storeLocalProvisioner(uuid: Uuid, localProvisionerUuid: Uuid): Unit =
         withContext(context = ioDispatcher) {
             securePropertiesStore.updateData { securePropertiesMap ->
@@ -115,7 +110,7 @@ class MeshSecurePropertiesStorage @Inject constructor(
             }
         }
 
-    @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
+    @OptIn(ExperimentalTime::class)
     override suspend fun ivIndex(uuid: Uuid): IvIndex = withContext(context = ioDispatcher) {
         secureProperties(uuid = uuid)
             ?.ivIndex?.toIvIndex() ?: IvIndex().also {
@@ -123,7 +118,6 @@ class MeshSecurePropertiesStorage @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun storeIvIndex(uuid: Uuid, ivIndex: IvIndex): Unit =
         withContext(context = ioDispatcher) {
             securePropertiesStore.updateData { securePropertiesMap ->
@@ -137,7 +131,6 @@ class MeshSecurePropertiesStorage @Inject constructor(
             }
         }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun nextSequenceNumber(uuid: Uuid, address: UnicastAddress): UInt =
         withContext(context = ioDispatcher) {
             // Lets get the sequence number from the data store for a given address or 0 if it doesn't
@@ -154,7 +147,6 @@ class MeshSecurePropertiesStorage @Inject constructor(
             sequenceNumber
         }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun storeNextSequenceNumber(
         uuid: Uuid,
         address: UnicastAddress,
@@ -179,19 +171,16 @@ class MeshSecurePropertiesStorage @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun resetSequenceNumber(uuid: Uuid, address: UnicastAddress) {
         storeNextSequenceNumber(uuid = uuid, address = address, sequenceNumber = 0u)
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun lastSeqAuthValue(uuid: Uuid, source: UnicastAddress) =
         secureProperties(uuid = uuid)
             ?.seqAuths
             ?.get(source.address.toInt())
             ?.last?.toULong() //?: 0uL
 
-    @OptIn(ExperimentalUuidApi::class)
     override fun storeLastSeqAuthValue(
         uuid: Uuid,
         source: UnicastAddress,
@@ -217,13 +206,11 @@ class MeshSecurePropertiesStorage @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun previousSeqAuthValue(uuid: Uuid, source: UnicastAddress) =
         secureProperties(uuid = uuid)
             ?.seqAuths?.get(key = source.address.toInt())
             ?.previous?.toULong() ?: 0uL
 
-    @OptIn(ExperimentalUuidApi::class)
     override fun storePreviousSeqAuthValue(
         uuid: Uuid,
         source: UnicastAddress,

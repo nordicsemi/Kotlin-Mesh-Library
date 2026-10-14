@@ -28,7 +28,6 @@ import no.nordicsemi.kotlin.mesh.bearer.ProxyProtocolHandler
 import no.nordicsemi.kotlin.mesh.bearer.gatt.GattBearer
 import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Base class of the GATT bearers, sending and receiving the mesh PDUs over the Mesh Proxy or the
@@ -47,7 +46,6 @@ import kotlin.uuid.ExperimentalUuidApi
  * @property logger      Receives the logs of the bearer, containing the raw data of the sent and
  *                       received packets, as well as the connection events.
  */
-@OptIn(ExperimentalUuidApi::class)
 abstract class MeshProfileBearer(
     private val centralManager: CentralManager,
     protected val peripheral: Peripheral,

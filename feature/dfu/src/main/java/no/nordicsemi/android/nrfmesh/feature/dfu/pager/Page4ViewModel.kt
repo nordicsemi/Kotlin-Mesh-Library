@@ -52,10 +52,8 @@ import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @HiltViewModel
 internal class Page4ViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
@@ -97,7 +95,6 @@ internal class Page4ViewModel @Inject internal constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
@@ -172,7 +169,6 @@ internal class Page4ViewModel @Inject internal constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun enqueueTasks(
         receivers: List<Receiver>,
         dfuParameters: DfuParameters,
@@ -246,7 +242,6 @@ internal class Page4ViewModel @Inject internal constructor(
      * @param keys List of Application Keys to bind.
      * @param models List of Models to which the application keys should be bound.
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun bind(keys: List<ApplicationKey>, models: List<Model>) {
         // Cache to prevent sending the same message multiple times
         val cache = mutableMapOf<Node, MutableList<ApplicationKey>>()
@@ -310,7 +305,6 @@ internal class Page4ViewModel @Inject internal constructor(
     /**
      * Subscribes the given models to the given groups.
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun subscribe(models: List<Model>, groups: List<Group>) {
         models.forEach { model ->
             model.parentElement?.parentNode?.let { node ->
@@ -348,7 +342,6 @@ internal class Page4ViewModel @Inject internal constructor(
      * @param distributor Distributor node
      * @param model Model to clear the distribution receivers on
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun clearReceivers(distributor: Node, model: Model) {
         val messenger = repository.messengers
             .run {
@@ -372,7 +365,6 @@ internal class Page4ViewModel @Inject internal constructor(
      * @param receivers   List of receivers to add
      * @param model       Model to add the receivers to
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun addReceivers(distributor: Node, receivers: List<Receiver>, model: Model) {
         val messenger = repository.messengers
             .run { messenger(uuid = distributor.uuid) ?: create(uuid = distributor.uuid) }
@@ -393,7 +385,6 @@ internal class Page4ViewModel @Inject internal constructor(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 internal data class Page4ScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val messageState: MessageState = NotStarted,

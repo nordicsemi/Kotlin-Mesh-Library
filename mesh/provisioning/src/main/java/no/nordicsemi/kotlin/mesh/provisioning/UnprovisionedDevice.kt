@@ -5,10 +5,8 @@ package no.nordicsemi.kotlin.mesh.provisioning
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.mesh.core.oob.OobInformation
 import no.nordicsemi.kotlin.mesh.core.util.Utils
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 data class UnprovisionedDevice(
     var name: String,
     val uuid: Uuid,

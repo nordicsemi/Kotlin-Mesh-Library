@@ -91,7 +91,6 @@ import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 private object PreferenceKeys {
@@ -219,7 +218,6 @@ class CoreDataRepository @Inject constructor(
      * @param configuration Initial network configuration.
      * @return The new network instance.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun createNewMeshNetwork(
         configuration: Configuration = Configuration.Empty,
     ) = withContext(context = ioDispatcher) {
@@ -482,7 +480,6 @@ class CoreDataRepository @Inject constructor(
      *
      * @param meshNetwork Mesh network required to match the proxy node.
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun startAutomaticConnectivity() {
         // Make sure we don't start this multiple times.
         if (connectivityJob != null) {
@@ -524,7 +521,6 @@ class CoreDataRepository @Inject constructor(
      * @throws NoNetwork If the mesh network has not been initialized.
      * @throws DoesNotBelongToNetwork If the mesh network doesn't contain a node with the given UUID.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun connect(uuid: Uuid) {
         val meshNetwork = requireNotNull(meshNetwork) { throw NoNetwork() }
         val node = requireNotNull(meshNetwork.node(uuid = uuid)) { throw DoesNotBelongToNetwork() }
@@ -571,7 +567,6 @@ class CoreDataRepository @Inject constructor(
      * @throws SecurityException If the permission to scan is denied.
      * @throws ScanningException If an error occurred while starting the scan.
      */
-    @OptIn(ExperimentalUuidApi::class)
     private suspend fun scanForGattProxy(address: UnicastAddress? = null): MeshBearer {
         val meshNetwork = requireNotNull(meshNetwork)
         val peripheral = centralManager
@@ -885,7 +880,6 @@ class CoreDataRepository @Inject constructor(
     }
 
     companion object {
-        @OptIn(ExperimentalUuidApi::class)
         val SMP_SERVICE = Uuid.parse("8D53DC1D-1DB7-4CD3-868B-8A527460AA84")
     }
 }

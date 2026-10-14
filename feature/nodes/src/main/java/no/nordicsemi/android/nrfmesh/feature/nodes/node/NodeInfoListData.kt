@@ -8,7 +8,6 @@ import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.Security
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -24,7 +23,6 @@ import kotlin.uuid.Uuid
  * @property features                      Features of the node.
  * @property excluded                      True if the node is excluded from the network.
  */
-@OptIn(ExperimentalUuidApi::class)
 data class NodeInfoListData(
     val uuid: Uuid,
     val name: String,

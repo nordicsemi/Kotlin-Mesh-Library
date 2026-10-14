@@ -13,9 +13,7 @@ import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 @HiltViewModel
 internal class Page5ViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
@@ -28,7 +26,6 @@ internal class Page5ViewModel @Inject internal constructor(
         observeNetwork()
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
@@ -37,7 +34,6 @@ internal class Page5ViewModel @Inject internal constructor(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 internal data class Page5ScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val distributor: Node?,

@@ -50,7 +50,6 @@ import no.nordicsemi.kotlin.mesh.provisioning.ProvisioningParameters
 import no.nordicsemi.kotlin.mesh.provisioning.ProvisioningState
 import no.nordicsemi.kotlin.mesh.provisioning.UnprovisionedDevice
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @HiltViewModel
@@ -108,7 +107,6 @@ class ProvisioningViewModel @Inject constructor(
      * @return True if there exist a Node already in the network with the same UUID.
      * @throws IllegalArgumentException if the advertisement data is invalid.
      */
-    @OptIn(ExperimentalUuidApi::class)
     internal fun onScanResultSelected(scanResult: ScanResult): Boolean {
         assert(pbBearer == null)
 
@@ -359,7 +357,6 @@ class ProvisioningViewModel @Inject constructor(
     /**
      * Invoked when the provisioning process completes and navigates to the list of nodes.
      */
-    @OptIn(ExperimentalUuidApi::class)
     internal fun onProvisioningComplete(uuid: Uuid) {
         disconnect()
         // Queue ConfigCompositionDataGet and ConfigDefaultTtl

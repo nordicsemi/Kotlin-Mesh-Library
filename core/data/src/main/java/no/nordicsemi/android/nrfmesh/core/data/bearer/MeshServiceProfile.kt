@@ -18,7 +18,6 @@ import no.nordicsemi.kotlin.ble.client.RemoteServices
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProvisioningService
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshService
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Base class of the profiles of the mesh GATT services, that is the Mesh Proxy and the Mesh
@@ -32,7 +31,6 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param name           Name of the profile, used in the logs of the BLE library.
  * @param onNotification Invoked with the value of every notification of the Data Out characteristic.
  */
-@OptIn(ExperimentalUuidApi::class)
 abstract class MeshServiceProfile(
     private val meshService: MeshService,
     name: String,

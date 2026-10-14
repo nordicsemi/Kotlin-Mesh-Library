@@ -95,7 +95,6 @@ import no.nordicsemi.kotlin.mesh.core.model.element
 import no.nordicsemi.kotlin.mesh.core.model.fixedGroupAddresses
 import no.nordicsemi.kotlin.mesh.core.util.networkIdentity
 import no.nordicsemi.kotlin.mesh.core.util.nodeIdentity
-import kotlin.uuid.ExperimentalUuidApi
 
 @Composable
 internal fun ProxyScreen(
@@ -183,7 +182,7 @@ private fun ProxyContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProxyFilterInfo(
     nodes: List<Node>,

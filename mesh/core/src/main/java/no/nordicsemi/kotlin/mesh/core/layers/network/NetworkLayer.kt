@@ -30,7 +30,6 @@ import no.nordicsemi.kotlin.mesh.logger.Logger
 import kotlin.concurrent.timer
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Network Layer of the mesh networking stack
@@ -256,7 +255,6 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
      *
      * @param address Local source address.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun nextSequenceNumber(address: UnicastAddress) =
         secureProperties.nextSequenceNumber(uuid = meshNetwork.uuid, address = address)
 
@@ -278,7 +276,7 @@ internal class NetworkLayer(private val networkManager: NetworkManager) {
      * will set the IV Index and IV Update Active flag and change the Key Refresh Phase based on the
      * information specified in them.
      */
-    @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
+    @OptIn(ExperimentalTime::class)
     private suspend fun handle(networkBeacon: NetworkBeaconPdu) {
         // The network key the beacon was authenticated with.
         val networkKey = networkBeacon.networkKey

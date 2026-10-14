@@ -20,10 +20,8 @@ import no.nordicsemi.android.nrfmesh.core.data.ui.ProvisionerData
 import no.nordicsemi.android.nrfmesh.core.data.storage.MeshSecurePropertiesStorage
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Provisioner
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @HiltViewModel(assistedFactory = ProvisionerViewModel.Factory::class)
 internal class ProvisionerViewModel
 @AssistedInject internal constructor(
@@ -41,7 +39,6 @@ internal class ProvisionerViewModel
         observeNetwork()
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
             .map { repository.meshNetwork }
@@ -70,7 +67,6 @@ internal class ProvisionerViewModel
     /**
      * Moves the provisioner to a new index in the list.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun moveProvisioner(provisioner: Provisioner, newIndex: Int) {
         viewModelScope.launch {
             network.move(provisioner = provisioner, to = newIndex)
@@ -91,7 +87,6 @@ internal class ProvisionerViewModel
 
     @AssistedFactory
     interface Factory {
-        @OptIn(ExperimentalUuidApi::class)
         fun create(uuid: Uuid): ProvisionerViewModel
     }
 }

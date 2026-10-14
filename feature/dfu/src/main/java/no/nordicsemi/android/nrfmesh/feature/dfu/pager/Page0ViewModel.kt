@@ -43,7 +43,6 @@ import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
 internal class Page0ViewModel @Inject internal constructor(
@@ -60,7 +59,6 @@ internal class Page0ViewModel @Inject internal constructor(
         observeProxyFilterState()
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
@@ -133,7 +131,6 @@ internal class Page0ViewModel @Inject internal constructor(
             .launchIn(scope = viewModelScope)
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeProxyFilterState() {
         repository.proxyFilter.proxyFilterStateFlow
             .onEach { filterState ->

@@ -13,9 +13,7 @@ import no.nordicsemi.android.nrfmesh.feature.nodes.NodesScreen
 import no.nordicsemi.android.nrfmesh.feature.nodes.NodesViewModel
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.navigation.nodeEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.ProvisioningKey
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 fun EntryProviderScope<NavKey>.nodesEntry(
     appState: AppState,
     navigator: Navigator,

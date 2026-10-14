@@ -12,9 +12,8 @@ import no.nordicsemi.android.nrfmesh.core.navigation.ScannerKey
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.feature.scanner.ScannerScreen
 import no.nordicsemi.android.nrfmesh.feature.scanner.ScannerViewModel
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 fun EntryProviderScope<NavKey>.scannerEntry(navigator: Navigator) {
     entry<ScannerKey>(
         metadata = BottomSheetSceneStrategy.bottomSheet(

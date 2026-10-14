@@ -23,12 +23,11 @@ import no.nordicsemi.android.nrfmesh.feature.groups.group.GroupViewModel
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.GroupControlsKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.controls.navigation.groupControlsEntry
 import no.nordicsemi.kotlin.mesh.core.model.Address
-import kotlin.uuid.ExperimentalUuidApi
 
 @Serializable
 data class GroupKey(val address: Address) : NavKey
 
-@OptIn(ExperimentalUuidApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.groupEntry(appState: AppState, navigator: Navigator) {
     entry<GroupKey>(
         metadata = ListDetailSceneStrategy.listPane(

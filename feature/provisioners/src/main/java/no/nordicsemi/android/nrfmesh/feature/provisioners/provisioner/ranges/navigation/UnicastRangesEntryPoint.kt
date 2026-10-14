@@ -13,7 +13,6 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.UnicastRangesScreen
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.UnicastRangesViewModel
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
@@ -21,8 +20,7 @@ data class UnicastRangesContentKey(val uuid: String) : NavKey {
 }
 
 @OptIn(
-    ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class,
-    ExperimentalMaterial3Api::class
+    ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class
 )
 fun EntryProviderScope<NavKey>.unicastRangesEntry(appState: AppState, navigator: Navigator) {
     entry<UnicastRangesContentKey>(

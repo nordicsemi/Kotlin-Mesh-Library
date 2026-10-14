@@ -18,12 +18,11 @@ import no.nordicsemi.android.nrfmesh.feature.provisioners.ProvisionersScreen
 import no.nordicsemi.android.nrfmesh.feature.provisioners.ProvisionersViewModel
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.navigation.ProvisionerContentKey
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.navigation.provisionerEntry
-import kotlin.uuid.ExperimentalUuidApi
 
 @Serializable
 data object ProvisionersContentKey : NavKey
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.provisionersEntry(appState: AppState, navigator: Navigator) {
     entry<ProvisionersContentKey>(
         metadata = ListDetailSceneStrategy.detailPane(
