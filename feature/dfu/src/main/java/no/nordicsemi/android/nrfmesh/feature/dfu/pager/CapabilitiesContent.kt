@@ -99,7 +99,8 @@ internal fun CapabilitiesContent(
                     }
                 }
             },
-            enabled = availableEntries == 0,
+            // The firmware images cannot be deleted while a distribution is in progress.
+            enabled = availableEntries == 0 && !phase.isBusy,
             isOnClickActionInProgress = isDeleteFirmwareInProgress
         )
         MeshIconButton(

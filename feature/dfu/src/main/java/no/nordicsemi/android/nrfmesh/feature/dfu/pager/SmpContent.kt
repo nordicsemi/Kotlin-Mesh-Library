@@ -131,7 +131,16 @@ internal fun SmpContent(
                     selectedKey = selectedKey,
                     send = send
                 )
-                if (selectedKey != null && firmwareDistributionStatus?.phase == FirmwareDistributionPhase.IDLE) {
+                if (selectedKey != null &&
+                    (firmwareDistributionStatus?.phase == FirmwareDistributionPhase.IDLE ||
+                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.FAILED ||
+                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.COMPLETED ||
+                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
+                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
+                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE ||
+                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.APPLYING_UPDATE
+                            )
+                ) {
                     CapabilitiesContent(
                         selectedKey = selectedKey,
                         phase = firmwareDistributionStatus.phase,
@@ -604,17 +613,25 @@ private fun DistributorStatus(
                                 .size(size = 24.dp)
                         )
                     } else if (distributionStatus?.phase == FirmwareDistributionPhase.IDLE ||
-                               distributionStatus?.phase == FirmwareDistributionPhase.FAILED ||
-                               distributionStatus?.phase == FirmwareDistributionPhase.COMPLETED ||
-                               distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
-                               distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
-                               distributionStatus?.phase == FirmwareDistributionPhase.APPLYING_UPDATE
+                        distributionStatus?.phase == FirmwareDistributionPhase.FAILED ||
+                        distributionStatus?.phase == FirmwareDistributionPhase.COMPLETED ||
+                        distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
+                        distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
+                        distributionStatus?.phase == FirmwareDistributionPhase.APPLYING_UPDATE
                     ) {
                         Icon(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             imageVector = Icons.Outlined.CheckCircle,
                             tint = Color.Green,
                             contentDescription = null
+                        )
+                    } else if (distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .padding(end = 16.dp)
+                                .size(size = 24.dp),
+                            strokeWidth = 3.dp,
+                            color = Color.Green
                         )
                     } else {
                         Icon(
