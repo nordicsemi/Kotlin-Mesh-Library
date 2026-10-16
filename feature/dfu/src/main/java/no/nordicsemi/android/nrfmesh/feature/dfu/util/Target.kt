@@ -1,7 +1,7 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.util
 
 import no.nordicsemi.android.nrfmesh.core.common.UpdatedFirmwareInformation
-import no.nordicsemi.android.nrfmesh.core.common.firmwareDistributionServer
+import no.nordicsemi.android.nrfmesh.core.common.firmwareUpdateServer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareInformation
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateAdditionalInformation
 import no.nordicsemi.kotlin.mesh.core.model.Node
@@ -19,7 +19,9 @@ internal data class Target(val node: Node, val targetState: TargetState) {
 
     val selectedReceiver: Receiver?
         get() {
-            val address = node.model(modelId = firmwareDistributionServer)
+            // The receiver is the element with the Firmware Update Server model on the target.
+            val address = node.models(modelId = firmwareUpdateServer)
+                .firstOrNull()
                 ?.parentElement
                 ?.unicastAddress
                 ?: return null
