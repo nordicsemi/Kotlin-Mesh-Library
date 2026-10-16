@@ -26,12 +26,16 @@ internal fun Page4(session: DfuSession, onTasksCompleted: (Boolean) -> Unit) {
     }
     Column {
         uiState.targets.forEach { uuid ->
-            SectionTitle(
-                modifier = Modifier.padding(top = 8.dp),
-                title = uiState.names[uuid] ?: "Unknown"
-            )
-            uiState.tasks[uuid].orEmpty().forEach { task ->
-                MeshTaskItem(task = task)
+            uiState.tasks[uuid].orEmpty().takeIf {
+                it.isNotEmpty()
+            }?.let { taskList ->
+                SectionTitle(
+                    modifier = Modifier.padding(top = 8.dp),
+                    title = uiState.names[uuid] ?: "Unknown"
+                )
+                taskList.forEach { task ->
+                    MeshTaskItem(task = task)
+                }
             }
         }
     }
