@@ -247,11 +247,9 @@ private fun Status(
             Text(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 text = stringResource(
-                    id = (messageState.response as? GenericOnOffStatus)?.let {
-                        if (it.isOn) R.string.label_on else R.string.label_off
-                    } ?: run {
-                        R.string.label_unknown
-                    }
+                    id = (messageState.response as? GenericOnOffStatus)
+                        ?.let { if (it.isOn) R.string.label_on else R.string.label_off }
+                        ?: run { R.string.label_unknown }
                 ).uppercase()
             )
         }
@@ -263,20 +261,22 @@ private fun Status(
         titleAction = {
             Text(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                text = (messageState.response as? GenericOnOffStatus)?.let {
-                    it.remainingTime
-                    when (it.targetState) {
-                        true if it.remainingTime != null -> stringResource(
-                            R.string.label_on_with_remaining_time,
-                            it.remainingTime.toString()
-                        )
-                        false if it.remainingTime != null -> stringResource(
-                            R.string.label_off_with_remaining_time,
-                            it.remainingTime.toString()
-                        )
-                        else -> stringResource(R.string.label_na)
-                    }
-                } ?: stringResource(R.string.label_unknown).uppercase(),
+                text = (messageState.response as? GenericOnOffStatus)
+                    ?.let {
+                        when (it.targetState) {
+                            true if it.remainingTime != null -> stringResource(
+                                R.string.label_on_with_remaining_time,
+                                it.remainingTime.toString()
+                            )
+
+                            false if it.remainingTime != null -> stringResource(
+                                R.string.label_off_with_remaining_time,
+                                it.remainingTime.toString()
+                            )
+
+                            else -> stringResource(R.string.label_na)
+                        }
+                    } ?: stringResource(R.string.label_unknown).uppercase(),
             )
         }
     )

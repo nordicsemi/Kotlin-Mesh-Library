@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
+import kotlin.uuid.Uuid
 
 
 /**
@@ -93,6 +94,12 @@ object ProxyKey : NavKey
  */
 @Serializable
 data class SettingsKey(val setting: ClickableSetting? = null) : NavKey
+
+@Serializable
+data object FirmwareUpdateKey : NavKey
+
+@Serializable
+data class ScannerKey(val uuid: Uuid) : NavKey
 
 /**
  * Map of top level navigation items.

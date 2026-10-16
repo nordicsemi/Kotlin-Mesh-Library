@@ -1,12 +1,13 @@
 package no.nordicsemi.android.nrfmesh.core.data.configurator
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
-import no.nordicsemi.kotlin.mesh.core.messages.TransactionMessage
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
-import no.nordicsemi.kotlin.mesh.core.model.Element
 import no.nordicsemi.kotlin.mesh.core.model.Model
+import no.nordicsemi.kotlin.mesh.core.model.Node
 
 /**
  * Represents a mesh messaging task.
@@ -14,8 +15,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 sealed class MeshTask(
     open val icon: ImageVector,
     open val label: String,
-    open val element: Element?,
-    open val model: Model?,
     open val applicationKey: ApplicationKey? = null,
     open val message: MeshMessage,
     open val status: TaskStatus = TaskStatus.Idle,
@@ -29,11 +28,10 @@ data class ConfigTask(
     override val label: String,
     override val message: AcknowledgedConfigMessage,
     override val status: TaskStatus = TaskStatus.Idle,
+    val target : Node
 ) : MeshTask(
     icon = icon,
     label = label,
-    element = null,
-    model = null,
     message = message,
     status = status,
 )
@@ -44,16 +42,13 @@ data class ConfigTask(
 data class AppTask(
     override val icon: ImageVector,
     override val label: String,
-    override val element: Element,
-    override val model: Model,
-    override val message: TransactionMessage,
+    override val message: ApplicationMessage,
     override val applicationKey: ApplicationKey,
     override val status: TaskStatus = TaskStatus.Idle,
+    val model: Model,
 ) : MeshTask(
     icon = icon,
     label = label,
-    element = element,
-    model = model,
     applicationKey = applicationKey,
     message = message,
     status = status
@@ -63,28 +58,50 @@ data class AppTask(
  * Represents a task status.
  */
 sealed class TaskStatus {
+
+    /** Description of the status to be displayed to the user. */
+    abstract fun description(): String
+
+    /** Color of the status to be displayed to the user. */
+    abstract fun color(): Color
+
     /**
      * The task is idle.
      */
-    object Idle : TaskStatus()
+    object Idle : TaskStatus() {
+        override fun description() = "Waiting..."
+        override fun color() = Color.Gray
+    }
 
     /**
      * The task is in progress.
      */
-    object InProgress : TaskStatus()
+    object InProgress : TaskStatus() {
+        override fun description() = "In progress"
+        override fun color() = Color.Blue
+    }
 
     /**
      * The task has been skipped.
      */
-    object Skipped : TaskStatus()
+    object Skipped : TaskStatus() {
+        override fun description() = "Skipped"
+        override fun color() = Color.Gray
+    }
 
     /**
      * The task has been completed.
      */
-    object Completed : TaskStatus()
+    object Completed : TaskStatus() {
+        override fun description() = "Success"
+        override fun color() = Color.Green
+    }
 
     /**
      * The task has failed.
      */
-    data class Error(val error: String) : TaskStatus()
+    data class Error(val error: String) : TaskStatus() {
+        override fun description() = error
+        override fun color() = Color.Red
+    }
 }

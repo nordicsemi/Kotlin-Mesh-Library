@@ -11,7 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.ConfigVendorModelMessage
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is the status message to the [ConfigVendorModelSubscriptionGet] message. This lists

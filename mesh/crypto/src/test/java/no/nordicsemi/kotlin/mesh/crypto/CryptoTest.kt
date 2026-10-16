@@ -15,7 +15,6 @@ import no.nordicsemi.kotlin.mesh.crypto.Crypto.k5
 import org.junit.Assert
 import org.junit.Test
 import java.util.Locale
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -234,7 +233,6 @@ class CryptoTest {
         Assert.assertEquals(expected, actual)
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     @Test
     fun testVirtualAddress() {
         val uuid = Uuid.parse("0073e7e4-d8b9-440f-af84-15df4c56c0e1")

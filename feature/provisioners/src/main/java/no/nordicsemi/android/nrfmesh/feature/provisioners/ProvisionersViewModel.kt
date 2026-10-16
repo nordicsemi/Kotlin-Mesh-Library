@@ -14,13 +14,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
-import no.nordicsemi.android.nrfmesh.core.data.models.ProvisionerData
+import no.nordicsemi.android.nrfmesh.core.data.ui.ProvisionerData
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Provisioner
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @HiltViewModel(assistedFactory = ProvisionersViewModel.Factory::class)
 internal class ProvisionersViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
@@ -132,7 +130,6 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
         repository.save()
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     fun selectProvisioner(uuid: Uuid) {
         _uiState.update { it.copy(selectedProvisionerUuid = uuid) }
     }
@@ -143,7 +140,6 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @ConsistentCopyVisibility
 data class ProvisionersScreenUiState internal constructor(
     val provisioners: List<ProvisionerData> = listOf(),

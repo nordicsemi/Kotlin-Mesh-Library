@@ -2,7 +2,6 @@
 
 package no.nordicsemi.kotlin.mesh.bearer.gatt.utils
 
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -12,7 +11,6 @@ import kotlin.uuid.Uuid
  * @property dataInUuid      UUID of the Data In characteristic
  * @property dataOutUuid     UUID of the Data Out characteristic.
  */
-@OptIn(ExperimentalUuidApi::class)
 sealed interface MeshService {
     val uuid: Uuid
     val dataInUuid: Uuid
@@ -25,7 +23,6 @@ sealed interface MeshService {
  *
  * This is used to send provisioning messages over gatt.
  */
-@OptIn(ExperimentalUuidApi::class)
 object MeshProvisioningService : MeshService {
     override val uuid: Uuid = Uuid.parse("00001827-0000-1000-8000-00805f9b34fb")
     override val dataInUuid: Uuid = Uuid.parse("00002adb-0000-1000-8000-00805f9b34fb")
@@ -38,7 +35,6 @@ object MeshProvisioningService : MeshService {
  *
  * This is used to send mesh messages over gatt.
  */
-@OptIn(ExperimentalUuidApi::class)
 object MeshProxyService : MeshService {
     override val uuid: Uuid = Uuid.parse("00001828-0000-1000-8000-00805f9b34fb")
     override val dataInUuid: Uuid = Uuid.parse("00002add-0000-1000-8000-00805f9b34fb")

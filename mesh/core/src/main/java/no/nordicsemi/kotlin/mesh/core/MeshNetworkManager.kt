@@ -57,7 +57,6 @@ import no.nordicsemi.kotlin.mesh.core.model.serialization.config.NetworkConfigur
 import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
 import kotlin.time.ExperimentalTime
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -180,7 +179,6 @@ class MeshNetworkManager(
      *
      * @return true if the configuration was successfully loaded or false otherwise.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun load() = storage
         .load()
         .takeIf { it.isNotEmpty() }
@@ -197,7 +195,7 @@ class MeshNetworkManager(
     /**
      * Saves the network in the local storage provided by the user.
      */
-    @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
+    @OptIn(ExperimentalTime::class)
     suspend fun save() {
         export()?.let {
             mutex.withLock { storage.save(network = it) }
@@ -214,7 +212,6 @@ class MeshNetworkManager(
      *             multiple mesh networks.
      * @throws InvalidKeyLength if the key length is invalid.
      */
-    @OptIn(ExperimentalUuidApi::class)
     @Throws(InvalidKeyLength::class)
     suspend fun create(
         name: String = "Mesh Network",
@@ -242,7 +239,7 @@ class MeshNetworkManager(
      * @param provisioner Provisioner to be added to the network.
      * @throws InvalidKeyLength if the key length is invalid.
      */
-    @OptIn(ExperimentalTime::class, ExperimentalUuidApi::class)
+    @OptIn(ExperimentalTime::class)
     @Throws(InvalidKeyLength::class)
     suspend fun create(
         name: String = "Mesh Network",
@@ -1152,7 +1149,6 @@ class MeshNetworkManager(
     /**
      * Observes network manager events.
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeNetworkManagerEvents() {
         if (networkManagerEventObserver == null) {
             runCatching {

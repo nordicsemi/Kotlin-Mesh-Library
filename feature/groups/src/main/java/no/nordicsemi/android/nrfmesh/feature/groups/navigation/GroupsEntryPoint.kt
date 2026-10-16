@@ -12,9 +12,7 @@ import no.nordicsemi.android.nrfmesh.feature.groups.GroupsScreen
 import no.nordicsemi.android.nrfmesh.feature.groups.GroupsViewModel
 import no.nordicsemi.android.nrfmesh.feature.groups.group.navigation.GroupKey
 import no.nordicsemi.android.nrfmesh.feature.groups.group.navigation.groupEntry
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 fun EntryProviderScope<NavKey>.groupsEntry(appState: AppState, navigator: Navigator) {
     entry<GroupsKey> {
         val viewModel = hiltViewModel<GroupsViewModel>()

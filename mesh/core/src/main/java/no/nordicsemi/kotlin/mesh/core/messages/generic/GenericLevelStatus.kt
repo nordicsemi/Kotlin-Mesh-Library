@@ -3,11 +3,11 @@ package no.nordicsemi.kotlin.mesh.core.messages.generic
 import no.nordicsemi.kotlin.data.getShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.GenericMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.TransitionStatusMessage
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is a response to a [GenericLevelGet] and [GenericLevelSet] that contains the current
@@ -22,7 +22,7 @@ class GenericLevelStatus(
     override val remainingTime: TransitionTime?,
     val level: Short,
     val targetLevel: Short?,
-) : MeshResponse, UnacknowledgedMeshMessage, TransitionStatusMessage {
+) : ApplicationResponse, UnacknowledgedApplicationMessage, TransitionStatusMessage {
     override val opCode = Initializer.opCode
     override val parameters: ByteArray = when (targetLevel != null && remainingTime != null) {
         true -> level.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +

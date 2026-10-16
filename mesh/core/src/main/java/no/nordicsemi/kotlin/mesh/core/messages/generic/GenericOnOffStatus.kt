@@ -1,9 +1,9 @@
 package no.nordicsemi.kotlin.mesh.core.messages.generic
 
 import no.nordicsemi.kotlin.mesh.core.messages.GenericMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.TransitionStatusMessage
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 
 /**
@@ -19,7 +19,7 @@ class GenericOnOffStatus(
     val isOn: Boolean,
     override val remainingTime: TransitionTime?,
     val targetState: Boolean?,
-) : MeshResponse, UnacknowledgedMeshMessage, TransitionStatusMessage {
+) : ApplicationResponse, UnacknowledgedApplicationMessage, TransitionStatusMessage {
     override val opCode = Initializer.opCode
     override val parameters: ByteArray
         get() {

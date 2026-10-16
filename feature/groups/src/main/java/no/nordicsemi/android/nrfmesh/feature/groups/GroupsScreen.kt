@@ -56,10 +56,9 @@ import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
 import no.nordicsemi.kotlin.mesh.core.model.PrimaryGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalStdlibApi::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalStdlibApi::class)
 @Composable
 internal fun GroupsScreen(
     snackbarHostState: SnackbarHostState,
@@ -234,7 +233,7 @@ internal fun GroupsScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalStdlibApi::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalStdlibApi::class)
 @Composable
 private fun Groups(
     uiState: GroupsScreenUiState,

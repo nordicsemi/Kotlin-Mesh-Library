@@ -2,7 +2,7 @@
 
 package no.nordicsemi.kotlin.mesh.core.messages.health
 
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
 
 /**
@@ -20,7 +20,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
  */
 class HealthPeriodSet(
     val fastPeriodDivisor: UByte
-) : AcknowledgedMeshMessage {
+) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = HealthPeriodStatus.opCode
     override val parameters: ByteArray = byteArrayOf(fastPeriodDivisor.toByte())

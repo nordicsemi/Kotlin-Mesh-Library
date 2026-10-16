@@ -11,7 +11,7 @@ package no.nordicsemi.kotlin.mesh.core.messages
  *                             SIG and are coded into the second and third octets of the 3-octet
  *                             Op Code.
  */
-sealed interface VendorMessage : MeshMessage {
+sealed interface VendorMessage : ApplicationMessage {
 
     /**
      * The Op Code as defined by the company.
@@ -31,13 +31,13 @@ sealed interface VendorMessage : MeshMessage {
 }
 
 /** A base interface for unacknowledged vendor message. */
-interface UnacknowledgedVendorMessage : VendorMessage, UnacknowledgedMeshMessage
+interface UnacknowledgedVendorMessage : VendorMessage, UnacknowledgedApplicationMessage
 
 /** The base interface for vendor response messages. */
-interface VendorResponse : MeshResponse, UnacknowledgedVendorMessage
+interface VendorResponse : ApplicationResponse, UnacknowledgedVendorMessage
 
 /** A base interface for acknowledged vendor message. */
-interface AcknowledgedVendorMessage : VendorMessage, AcknowledgedMeshMessage
+interface AcknowledgedVendorMessage : VendorMessage, AcknowledgedApplicationMessage
 
 /** A base interface for vendor status message. */
 interface VendorStatusMessage : UnacknowledgedVendorMessage, StatusMessage

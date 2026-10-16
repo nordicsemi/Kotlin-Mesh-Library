@@ -1,11 +1,11 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.nordic.nexus.jvm)
+    alias(libs.plugins.nordic.kotlin)
+    alias(libs.plugins.nordic.publish.jvm)
 }
 
 group = "no.nordicsemi.kotlin.mesh"
 
-nordicNexusPublishing {
+nordicPublishing {
     POM_ARTIFACT_ID = "crypto"
     POM_NAME = "Bluetooth Mesh Crypto Library"
     POM_DESCRIPTION = "Provides a set of cryptographic functions for the Kotlin Mesh Library."

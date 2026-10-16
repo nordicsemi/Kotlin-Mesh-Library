@@ -264,8 +264,8 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
         }
 
         logger?.i(LogCategory.MODEL) {
-            "Sending $msg from: ${element.unicastAddress.toHexString()}, " +
-                    "to: ${destination.toHexString()})"
+            "Sending $msg from: ${element.unicastAddress.toHexString()} " +
+                    "to: ${destination.toHexString()}"
         }
 
         val pdu = AccessPdu.init(
@@ -415,7 +415,12 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
 
     internal suspend fun cancel(handle: MessageHandle) {
         logger?.i(LogCategory.ACCESS) {
-            "Cancelling messages with op code: ${handle.opCode}, " + "sent from: " +
+            "Cancelling messages with op code: ${handle.opCode.toHexString(
+                format = HexFormat {
+                    upperCase = true
+                    number.prefix = "0x"
+                })
+            }, " + "sent from: " +
                     "${
                         handle.source.address.toHexString(
                             format = HexFormat {
@@ -535,7 +540,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
                         } else {
                             logger?.w(LogCategory.MODEL) {
                                 "Local ${model.name} model on ${model.parentElement!!.unicastAddress} " +
-                                        "not bound to ${keySet.applicationKey}"
+                                        "not bound to ${keySet.applicationKey.name}"
                             }
                         }
                     }

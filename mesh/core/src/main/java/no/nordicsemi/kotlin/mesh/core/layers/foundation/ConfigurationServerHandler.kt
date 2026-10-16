@@ -100,7 +100,6 @@ import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import no.nordicsemi.kotlin.mesh.core.model.allNodes
 import no.nordicsemi.kotlin.mesh.core.model.boundTo
 import no.nordicsemi.kotlin.mesh.core.model.isValidKeyIndex
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * ConfigurationServerHandler is responsible for handling configuration messages.
@@ -172,7 +171,6 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun handleRequest(event: ModelEvent.AcknowledgedMessageReceived): MeshResponse? {
         return event.model.parentElement?.parentNode?.let { localNode ->
             when (val request = event.request) {

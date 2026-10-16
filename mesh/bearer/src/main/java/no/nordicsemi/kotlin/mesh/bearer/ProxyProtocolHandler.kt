@@ -27,7 +27,7 @@ private enum class SAR(private val rawValue: UByte) {
          *  @param data PDU data
          *  @return SAR type or null if the data is invalid.
          */
-        internal fun from(data: ByteArray) = when ((data[0].toUByte().toInt() shr 6).toUByte()) {
+        fun from(data: ByteArray) = when ((data[0].toUByte().toInt() shr 6).toUByte()) {
             COMPLETE_MESSAGE.rawValue -> COMPLETE_MESSAGE
             FIRST_SEGMENT.rawValue -> FIRST_SEGMENT
             CONTINUATION.rawValue -> CONTINUATION
@@ -163,7 +163,6 @@ class ProxyProtocolHandler {
  * @property type  Type of the message.
  */
 data class Pdu(val data: ByteArray, val type: PduType) {
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "Pdu(type: $type, " +
             "data: ${data.toHexString(format = HexFormat.UpperCase)})"
 }

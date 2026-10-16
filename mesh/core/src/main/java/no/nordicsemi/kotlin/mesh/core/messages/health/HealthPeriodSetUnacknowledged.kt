@@ -3,7 +3,7 @@
 package no.nordicsemi.kotlin.mesh.core.messages.health
 
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 
 /**
  * A Health Period Set Unacknowledged is an unacknowledged message used to set the current
@@ -20,7 +20,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
  */
 class HealthPeriodSetUnacknowledged(
     val fastPeriodDivisor: UByte
-) : UnacknowledgedMeshMessage {
+) : UnacknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray = byteArrayOf(fastPeriodDivisor.toByte())
 

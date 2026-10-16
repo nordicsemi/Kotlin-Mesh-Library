@@ -13,8 +13,7 @@ import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
-import java.nio.ByteOrder
-import kotlin.uuid.ExperimentalUuidApi
+import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.uuid.Uuid
 
 /**
@@ -25,7 +24,6 @@ import kotlin.uuid.Uuid
  * @property modelIdentifier   Model identifier.
  * @property companyIdentifier Company identifier, if the model is a vendor model.
  */
-@OptIn(ExperimentalUuidApi::class)
 @Suppress("unused")
 class ConfigModelSubscriptionVirtualAddressDelete(
     override val virtualLabel: Uuid,

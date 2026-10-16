@@ -1,0 +1,144 @@
+package no.nordicsemi.android.nrfmesh.feature.dfu.pager
+
+import android.content.Context
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import no.nordicsemi.android.nrfmesh.core.common.MessageState
+import no.nordicsemi.android.nrfmesh.core.common.NotStarted
+import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
+import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository.Companion.SMP_SERVICE
+import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
+import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
+import no.nordicsemi.kotlin.ble.client.android.CentralManager
+import no.nordicsemi.kotlin.ble.client.RemoteServices
+import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
+import no.nordicsemi.kotlin.mesh.core.model.Model
+import no.nordicsemi.kotlin.mesh.core.model.Node
+import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
+import javax.inject.Inject
+
+@HiltViewModel
+internal class Page1ViewModel @Inject internal constructor(
+    private val repository: CoreDataRepository,
+    private val centralManager: CentralManager
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(Page1ScreenUiState())
+    internal val uiState = _uiState.asStateFlow()
+    private lateinit var network: MeshNetwork
+
+    init {
+        observeNetwork()
+        observeProxyConnectionState()
+        observeProxyFilterState()
+        observeSmpState()
+    }
+
+    private fun observeSmpState() {
+        repository.getPeripheral()
+            ?.services()
+            // Only the discovered state carries services.
+            ?.filterIsInstance<RemoteServices.Discovered>()
+            ?.onEach { discovered ->
+                val service = discovered.services.firstOrNull { it.uuid == SMP_SERVICE }
+                if (service != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            isBonded = centralManager
+                                .getBondedPeripherals()
+                                .any { p -> p.identifier == repository.identifier }
+                        )
+                    }
+                }
+            }?.launchIn(scope = viewModelScope)
+    }
+
+    private fun observeNetwork() {
+        repository.networkEvents
+            .mapNotNull { repository.meshNetwork }
+            .onEach { network = it }
+            .launchIn(scope = viewModelScope)
+    }
+
+    private fun observeProxyConnectionState() {
+        repository.proxyConnectionStateFlow
+            .onEach { proxyConnectionState ->
+                val state = proxyConnectionState.connectionState
+                _uiState.update {
+                    it.copy(
+                        proxyConnectionState = proxyConnectionState,
+                        name = when (state) {
+                            is NetworkConnectionState.Connecting -> state.name
+                            is NetworkConnectionState.Connected -> state.name
+                            NetworkConnectionState.Disconnected,
+                            NetworkConnectionState.Scanning,
+                                -> null
+                        },
+                        unicastAddress = repository.proxyFilter.proxy?.primaryUnicastAddress,
+                        isBonded = when (state) {
+                            is NetworkConnectionState.Connected -> centralManager
+                                .getBondedPeripherals()
+                                .any { p -> p.identifier == repository.identifier }
+
+                            else -> null
+                        }
+                    )
+                }
+            }
+            .launchIn(scope = viewModelScope)
+    }
+
+    private fun observeProxyFilterState() {
+        repository.proxyFilter.proxyFilterStateFlow
+            .onEach { filterState ->
+                // We update the state here because the proxy state updates confirm that the node is
+                // connected and ready to send messages
+                when (filterState) {
+                    is ProxyFilterState.ProxyFilterUpdateAcknowledged,
+                    is ProxyFilterState.ProxyFilterLimitReached,
+                        -> {
+                        val isBonded = centralManager.getBondedPeripherals()
+                            .any { p -> p.identifier == repository.identifier }
+                        _uiState.update { state ->
+                            state.copy(
+                                node = repository.proxyFilter.proxy,
+                                unicastAddress = repository.proxyFilter.proxy?.primaryUnicastAddress,
+                                isBonded = isBonded
+                            )
+                        }
+                    }
+
+                    else -> {
+
+                    }
+                }
+            }
+            .launchIn(scope = viewModelScope)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    internal fun startPairing(context: Context) = repository.startPairing()
+
+    internal suspend fun send(
+        model: Model,
+        message: AcknowledgedMeshMessage,
+    ) = repository.send(model = model, ackedMessage = message)
+}
+
+internal data class Page1ScreenUiState(
+    val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
+    val messageState: MessageState = NotStarted,
+    val name: String? = null,
+    val unicastAddress: UnicastAddress? = null,
+    val node: Node? = null,
+    val isBonded: Boolean? = false,
+)

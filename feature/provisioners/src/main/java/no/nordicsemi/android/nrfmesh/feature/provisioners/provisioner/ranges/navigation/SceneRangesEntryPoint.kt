@@ -13,15 +13,13 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.SceneRangesScreen
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.SceneRangesViewModel
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
 data class SceneRangesContentKey(val uuid: String) : NavKey
 
 @OptIn(
-    ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class,
-    ExperimentalMaterial3Api::class
+    ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class
 )
 fun EntryProviderScope<NavKey>.sceneRangesEntry(appState: AppState, navigator: Navigator) {
     entry<SceneRangesContentKey>(

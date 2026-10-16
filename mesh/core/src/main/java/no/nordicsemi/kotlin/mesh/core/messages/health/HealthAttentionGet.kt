@@ -1,6 +1,6 @@
 package no.nordicsemi.kotlin.mesh.core.messages.health
 
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
 
 /**
@@ -15,7 +15,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
  * way (e.g., a lamp flashes, a motor makes noise, an LED blinks). The exact behavior is implementation
  * specific and depends on the type of device.
  */
-class HealthAttentionGet: AcknowledgedMeshMessage {
+class HealthAttentionGet: AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = HealthAttentionStatus.opCode
     override val parameters = null

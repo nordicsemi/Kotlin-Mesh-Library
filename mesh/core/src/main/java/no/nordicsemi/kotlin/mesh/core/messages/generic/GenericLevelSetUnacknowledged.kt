@@ -5,10 +5,10 @@ import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.GenericMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.TransactionMessage
 import no.nordicsemi.kotlin.mesh.core.messages.TransitionMessage
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import no.nordicsemi.kotlin.mesh.core.util.TransitionParameters
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.math.max
 import kotlin.math.min
 
@@ -24,7 +24,7 @@ class GenericLevelSetUnacknowledged(
     override var tid: UByte?,
     val level: Short,
     val transitionParams: TransitionParameters? = null,
-) : UnacknowledgedMeshMessage, TransactionMessage, TransitionMessage {
+) : UnacknowledgedApplicationMessage, TransactionMessage, TransitionMessage {
     override val opCode = Initializer.opCode
     override val transitionTime = transitionParams?.transitionTime
     override val continueTransaction = true
