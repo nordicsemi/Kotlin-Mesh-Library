@@ -112,8 +112,14 @@ internal class Page4ViewModel @Inject internal constructor(
      */
     internal fun enqueue(session: DfuSession) {
         val updatePackage = session.updatePackage ?: return
-        enqueuedSession = session
+        if (session.keyIndex < 0 || session.receivers.isEmpty()) return
+        // The tasks of this session have already been enqueued, i.e. the screen was recreated
+        // after a configuration change, and the view model, which survives it, still holds them.
+        if (session == enqueuedSession) return
         val key = repository.meshNetwork?.applicationKey(index = session.keyIndex.toUShort()) ?: return
+        // The session has changed, discard what was enqueued and executed for the previous one.
+        clear()
+        enqueuedSession = session
         enqueueTasks(
             receivers = session.receivers,
             dfuParameters = session.dfuParameters,
