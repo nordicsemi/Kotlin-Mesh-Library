@@ -54,6 +54,9 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 
+/** Index of the last page of the firmware update pager, which shows the distribution. */
+private const val LAST_PAGE = 5
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FirmwareUpdateScreen(
@@ -64,16 +67,20 @@ internal fun FirmwareUpdateScreen(
     onBackClick: () -> Unit,
     onClearTasks: () -> Unit,
     onKeyIndexChanged: (Int) -> Unit,
+    onMaxReceiversListSizeChanged: (Int) -> Unit,
+    onOngoingFirmwareSizeChanged: (Int?) -> Unit,
     onReceiversChanged: (List<Receiver>) -> Unit,
     onUpdatePackageChanged: (UpdatePackage?) -> Unit,
     onDfuParametersChanged: (DfuParameters) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val pagerState = rememberPagerState(pageCount = { 6 })
+    val pagerState = rememberPagerState(pageCount = { LAST_PAGE + 1 })
+    var isPaired by rememberSaveable { mutableStateOf(false) }
     var tasksCompleted by rememberSaveable { mutableStateOf(false) }
     val enableNext = session.canProceed(
         page = pagerState.currentPage,
+        isPaired = isPaired,
         tasksCompleted = tasksCompleted
     )
     Scaffold(
@@ -109,7 +116,12 @@ internal fun FirmwareUpdateScreen(
                             0 -> Page0(
                                 onGattProxyClicked = onGattProxyClicked,
                                 onBindAppKeysClicked = onBindAppKeysClicked,
-                                onKeySelected = { index -> onKeyIndexChanged(index.toInt()) }
+                                onKeySelected = { index -> onKeyIndexChanged(index.toInt()) },
+                                onMaxReceiversListSizeChanged = onMaxReceiversListSizeChanged,
+                                onOngoingDistributionChanged = { ongoing ->
+                                    ongoing?.let { onKeyIndexChanged(it.keyIndex) }
+                                    onOngoingFirmwareSizeChanged(ongoing?.firmwareSize)
+                                }
                             )
 
                             1 -> Page1(
@@ -117,11 +129,13 @@ internal fun FirmwareUpdateScreen(
                                     scope.launch {
                                         pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
                                     }
-                                }
+                                },
+                                onBondedChanged = { isPaired = it }
                             )
 
                             2 -> Page2(
                                     index = session.keyIndex,
+                                maxReceiversListSize = session.maxReceiversListSize,
                                     snackbarHostState = snackbarHostState,
                                     onUpdatePackageChanged = onUpdatePackageChanged,
                                     onReceiversSelected = onReceiversChanged
@@ -155,8 +169,13 @@ internal fun FirmwareUpdateScreen(
                                             page = when (pagerState.currentPage) {
                                                 // Page 1 (LE pairing) is skipped when going back.
                                                 2 -> 0
-                                                // Page 4 (tasks) is skipped when going back.
-                                                5 -> 3
+                                                // Page 4 (tasks) is skipped when going back. If the
+                                                // pages before were not used, i.e. a distribution
+                                                // was already running, go to the first page.
+                                                5 -> when (session.keyIndex >= 0 && session.receivers.isNotEmpty()) {
+                                                    true -> 3
+                                                    false -> 0
+                                                }
                                                 else -> pagerState.currentPage - 1
                                             }
                                         )
@@ -181,7 +200,16 @@ internal fun FirmwareUpdateScreen(
                                     // cleared so they are not duplicated when page 4 is shown again.
                                     if (pagerState.currentPage == 4) onClearTasks()
                                     scope.launch {
-                                        pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
+                                        pagerState.requestScrollToPage(
+                                            page = when {
+                                                // A distribution that is in progress can only be
+                                                // followed on the last page.
+                                                pagerState.currentPage == 0 &&
+                                                        session.ongoingFirmwareSize != null -> LAST_PAGE
+
+                                                else -> pagerState.currentPage + 1
+                                            }
+                                        )
                                     }
                                 },
                                 enabled = enableNext,

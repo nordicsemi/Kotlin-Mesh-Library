@@ -37,7 +37,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.models.R
 
 @Composable
-internal fun Page1(goToNext: () -> Unit) {
+internal fun Page1(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit) {
     val context = LocalContext.current
     val resources = LocalResources.current
     val clipboard = LocalClipboard.current
@@ -107,6 +107,8 @@ internal fun Page1(goToNext: () -> Unit) {
         )
     }
     LaunchedEffect(uiState.isBonded) {
+        // Pairing is done when the proxy is bonded, null means that the proxy is not connected.
+        onBondedChanged(uiState.isBonded == true)
         if (uiState.isBonded == true) {
             goToNext()
         } else if (uiState.isBonded == false) {

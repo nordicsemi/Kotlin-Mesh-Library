@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import no.nordicsemi.android.mcumgr.McuMgrTransport
 import no.nordicsemi.android.mcumgr.ble.McuMgrBleTransport
 import no.nordicsemi.android.mcumgr.exception.McuMgrErrorException
 import no.nordicsemi.android.mcumgr.exception.McuMgrException
@@ -810,7 +811,9 @@ class CoreDataRepository @Inject constructor(
      *
      * @return The transport or null if the repository is not connected to a proxy.
      */
-    fun mcuMgrTransport(): McuMgrBleTransport? {
+    fun mcuMgrTransport(): McuMgrTransport? = bleMcuMgrTransport()
+
+    private fun bleMcuMgrTransport(): McuMgrBleTransport? {
         val identifier = identifier ?: return null
         mcuMgrTransport
             ?.takeIf { mcuMgrTransportIdentifier == identifier }
@@ -833,7 +836,7 @@ class CoreDataRepository @Inject constructor(
      */
     fun startPairing() {
         if (pairingJob?.isActive == true) return
-        val transport = mcuMgrTransport() ?: return
+        val transport = bleMcuMgrTransport() ?: return
         pairingJob = ioScope.launch {
             try {
                 transport.connect()

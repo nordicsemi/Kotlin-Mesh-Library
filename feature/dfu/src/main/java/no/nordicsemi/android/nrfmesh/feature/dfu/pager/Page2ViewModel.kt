@@ -44,6 +44,7 @@ import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
@@ -91,6 +92,11 @@ internal class Page2ViewModel @AssistedInject internal constructor(
             .mapNotNull { repository.meshNetwork }
             .onEach { network ->
                 this.network = network
+                // The name of the selected application key, shown when a target needs to be
+                // configured for it.
+                uiState.update {
+                    it.copy(applicationKeyName = network.applicationKey(index = index.toUShort())?.name)
+                }
                 uiState.update { state ->
                     when (state.targets.isEmpty()) {
                         true -> {
@@ -326,21 +332,9 @@ internal class Page2ViewModel @AssistedInject internal constructor(
         val node = target.node
         val firmwareUpdateServer = node.models(modelId = firmwareUpdateServer)
             .firstOrNull() ?: return target
-        // Make sure the Target Node knows the selected Network Key
-        if (!node.knows(key = key.boundNetworkKey)) {
-            val _ = send(node = node, message = ConfigNetKeyAdd(key = key.boundNetworkKey))
-        }
-        // Make sure the Target Node knows the selected Application Key
-        if (!node.knows(key = key)) {
-            val _ = send(node = node, message = ConfigAppKeyAdd(key = key))
-        }
-        // Make sure the selected App Key is bound to the Firmware Update Server model.
-        if (!firmwareUpdateServer.isBound(key = key)) {
-            val _ = send(
-                node = node,
-                message = ConfigModelAppBind(model = firmwareUpdateServer, applicationKey = key)
-            )
-        }
+        // Make sure the Target Node knows the selected Application Key and that it is bound to
+        // the Firmware Update Server model.
+        if (!bind(key = key, model = firmwareUpdateServer)) return target
         val targetIndex =
             uiState.value.targets.indexOfFirst { it.node.uuid == target.node.uuid }
         val message = FirmwareUpdateInformationGet(firstIndex = 0, entriesLimit = 2)
@@ -484,6 +478,64 @@ internal class Page2ViewModel @AssistedInject internal constructor(
     }
 
     /**
+     * Configures the given target for the selected application key, so that its Firmware Update
+     * Server model can be used.
+     *
+     * The key is added to the target node, together with the network key it is bound to, if the
+     * node does not know them yet, and then bound to the Firmware Update Server model. The target
+     * is marked as configured once the key is bound to the model.
+     *
+     * @param target The target to configure.
+     */
+    internal suspend fun configure(target: Target) {
+        val key = network.applicationKey(index = index.toUShort()) ?: return
+        val model = target.node.models(modelId = firmwareUpdateServer).firstOrNull() ?: return
+        if (bind(key = key, model = model)) {
+            uiState.update { state ->
+                state.copy(
+                    targets = state.targets.map {
+                        when (it.node.uuid == target.node.uuid) {
+                            true -> it.copy(targetState = TargetState.Configured)
+                            false -> it
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    /**
+     * Makes sure the given application key is known to the node of the given model, and that it is
+     * bound to the model.
+     *
+     * @param key   Application key to bind.
+     * @param model Model to bind the application key to.
+     * @return True if the application key is bound to the model, false otherwise.
+     */
+    private suspend fun bind(key: ApplicationKey, model: Model): Boolean {
+        val node = model.parentElement?.parentNode ?: return false
+        // Make sure the node knows the network key the application key is bound to.
+        if (!node.knows(key = key.boundNetworkKey)) {
+            val response = send(node = node, message = ConfigNetKeyAdd(key = key.boundNetworkKey))
+            if ((response as? ConfigStatusMessage)?.isSuccess != true) return false
+        }
+        // Make sure the node knows the application key.
+        if (!node.knows(key = key)) {
+            val response = send(node = node, message = ConfigAppKeyAdd(key = key))
+            if ((response as? ConfigStatusMessage)?.isSuccess != true) return false
+        }
+        // Make sure the application key is bound to the model.
+        if (!model.isBound(key = key)) {
+            val response = send(
+                node = node,
+                message = ConfigModelAppBind(model = model, applicationKey = key)
+            )
+            if ((response as? ConfigStatusMessage)?.isSuccess != true) return false
+        }
+        return model.isBound(key = key)
+    }
+
+    /**
      * Sends a message to the given model
      *
      * @param model             Model to send the message to
@@ -572,6 +624,7 @@ internal data class Page2ScreenUiState(
     val proxy: Node? = null,
     val targets: List<Target> = emptyList(),
     val updatePackage: UpdatePackage? = null,
+    val applicationKeyName: String? = null,
 )
 
 private fun ContentResolver.fileName(uri: Uri) = when (uri.scheme) {

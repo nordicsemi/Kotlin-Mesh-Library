@@ -78,11 +78,16 @@ import java.util.Locale
 @Composable
 internal fun Page2(
     index: Int,
+    maxReceiversListSize: Int,
     snackbarHostState: SnackbarHostState,
     onUpdatePackageChanged: (UpdatePackage?) -> Unit,
     onReceiversSelected: (List<Receiver>) -> Unit,
 ) {
-    val viewModel = hiltViewModel<Page2ViewModel, Page2ViewModel.Factory> { factory ->
+    // The state of the targets depends on the selected application key, so a different view model
+    // is used for every key.
+    val viewModel = hiltViewModel<Page2ViewModel, Page2ViewModel.Factory>(
+        key = "firmware-selection"
+    ) { factory ->
         factory.create(index = index)
     }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -98,19 +103,23 @@ internal fun Page2(
         updatePackage = uiState.updatePackage,
         fileLauncher = fileLauncher,
     )
+    val selectedReceivers = uiState.targets.mapNotNull { it.selectedReceiver }
     TargetNodes(
         snackbarHostState = snackbarHostState,
         messageState = uiState.messageState,
         metadata = uiState.updatePackage?.metadata,
         targets = uiState.targets,
+        selectedReceiversCount = selectedReceivers.size,
+        maxReceiversListSize = maxReceiversListSize,
+        applicationKeyName = uiState.applicationKeyName,
         downloadFirmwareInformation = viewModel::downloadFirmwareInformation,
         checkCompatibility = viewModel::checkCompatibility,
-        downloadFirmwareUpdate = viewModel::downloadFirmwareUpdate
+        downloadFirmwareUpdate = viewModel::downloadFirmwareUpdate,
+        configure = viewModel::configure
     )
     LaunchedEffect(uiState.updatePackage) {
         onUpdatePackageChanged(uiState.updatePackage)
     }
-    val selectedReceivers = uiState.targets.mapNotNull { it.selectedReceiver }
     LaunchedEffect(selectedReceivers) {
         onReceiversSelected(selectedReceivers)
     }
@@ -138,8 +147,12 @@ private fun FileSelector(
         }
         ElevatedCardItem(
             imageVector = Icons.Outlined.FileOpen,
-            title = stringResource(R.string.label_file),
-            subtitle = updatePackage?.fileName ?: stringResource(R.string.label_unknown)
+            title = updatePackage?.let {
+                stringResource(R.string.label_file)
+            } ?: stringResource(R.string.label_no_file),
+            subtitle = updatePackage?.let {
+                it.fileName ?: stringResource(R.string.label_unknown)
+            }
         )
         AnimatedVisibility(
             visible = updatePackage?.fileName?.isNotEmpty() == true,
@@ -196,10 +209,14 @@ private fun TargetNodes(
     snackbarHostState: SnackbarHostState,
     messageState: MessageState,
     targets: List<Target>,
+    selectedReceiversCount: Int,
+    maxReceiversListSize: Int,
+    applicationKeyName: String?,
     metadata: Metadata?,
     downloadFirmwareInformation: suspend (Target) -> Target,
     checkCompatibility: suspend (Target, Int, FirmwareEntry, Metadata, Boolean) -> Unit,
     downloadFirmwareUpdate: suspend (Target, Int, FirmwareEntry) -> Unit,
+    configure: suspend (Target) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val resources = LocalResources.current
@@ -242,15 +259,18 @@ private fun TargetNodes(
                                     if (target.isSelected)
                                         continue@loop
                                     val newTarget = loadFirmwareInformation(
+                                        resources = resources,
+                                        snackbarHostState = snackbarHostState,
+                                        applicationKeyName = applicationKeyName,
                                         target = target,
                                         isExpanded = target.isSelected,
                                         onExpandStateChanged = {
                                             expandedTargets[target.node.uuid.toString()] = it
                                         },
                                         onConfigurationRequired = { isSelectAllInProgress = it },
-                                        downloadFirmwareInformation = downloadFirmwareInformation
+                                        downloadFirmwareInformation = downloadFirmwareInformation,
+                                        configure = configure
                                     ) ?: target
-                                    println("AAA Target: ${newTarget.node.name} is ${newTarget.targetState}")
                                     if (newTarget.targetState is TargetState.Ready) {
                                         expandedTargets[target.node.uuid.toString()] = true
                                         newTarget.targetState.entries.forEachIndexed { index, entry ->
@@ -295,6 +315,21 @@ private fun TargetNodes(
             )
 
             false -> {
+                // The Distributor can only hold a limited number of receivers, the selection
+                // cannot be used until it fits.
+                if (selectedReceiversCount > maxReceiversListSize) {
+                    Spacer(modifier = Modifier.size(size = 8.dp))
+                    Text(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        text = stringResource(
+                            R.string.label_receivers_limit_exceeded,
+                            selectedReceiversCount,
+                            maxReceiversListSize
+                        ),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 Spacer(modifier = Modifier.size(size = 8.dp))
                 Text(
                     text = stringResource(R.string.label_target_nodes_description),
@@ -306,6 +341,7 @@ private fun TargetNodes(
                             snackbarHostState = snackbarHostState,
                             messageState = messageState,
                             target = target,
+                            applicationKeyName = applicationKeyName,
                             metadata = metadata,
                             isExpanded = expandedTargets[target.node.uuid.toString()]
                                 ?: target.isSelected,
@@ -315,7 +351,8 @@ private fun TargetNodes(
                             isRequestInProgress = isRequestInProgress,
                             downloadFirmwareInformation = downloadFirmwareInformation,
                             checkCompatibility = checkCompatibility,
-                            downloadFirmwareUpdate = downloadFirmwareUpdate
+                            downloadFirmwareUpdate = downloadFirmwareUpdate,
+                            configure = configure
                         )
                     }
                 }
@@ -347,6 +384,7 @@ private fun TargetNodes(
 private fun TargetNode(
     snackbarHostState: SnackbarHostState,
     messageState: MessageState,
+    applicationKeyName: String?,
     metadata: Metadata?,
     target: Target,
     isExpanded: Boolean,
@@ -355,6 +393,7 @@ private fun TargetNode(
     downloadFirmwareInformation: suspend (Target) -> Target,
     checkCompatibility: suspend (Target, Int, FirmwareEntry, Metadata, Boolean) -> Unit,
     downloadFirmwareUpdate: suspend (Target, Int, FirmwareEntry) -> Unit,
+    configure: suspend (Target) -> Unit,
 ) {
     Box(modifier = Modifier.padding(top = 8.dp)) {
         AnimatedVisibility(
@@ -380,11 +419,14 @@ private fun TargetNode(
             title = target.node.name,
             titleAction = {
                 ExpandRowAction(
+                    snackbarHostState = snackbarHostState,
                     messageState = messageState,
+                    applicationKeyName = applicationKeyName,
                     target = target,
                     isExpanded = isExpanded,
                     onExpandStateChanged = onExpandStateChanged,
-                    downloadFirmwareInformation = downloadFirmwareInformation
+                    downloadFirmwareInformation = downloadFirmwareInformation,
+                    configure = configure
                 )
             },
             subtitle = target.node.uuid.toString()
@@ -395,13 +437,17 @@ private fun TargetNode(
 
 @Composable
 private fun ExpandRowAction(
+    snackbarHostState: SnackbarHostState,
     messageState: MessageState,
+    applicationKeyName: String?,
     target: Target,
     isExpanded: Boolean,
     onExpandStateChanged: (Boolean) -> Unit,
     downloadFirmwareInformation: suspend (Target) -> Target,
+    configure: suspend (Target) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val resources = LocalResources.current
     var isConfiguring by rememberSaveable { mutableStateOf(false) }
     MeshIconButton(
         modifier = Modifier
@@ -427,17 +473,17 @@ private fun ExpandRowAction(
         },
         onClick = dropUnlessResumed {
             scope.launch {
-                if(target.targetState is TargetState.ConfigurationRequired) {
-
-                } else {
-                    val _ = loadFirmwareInformation(
-                        target = target,
-                        isExpanded = isExpanded,
-                        onExpandStateChanged = onExpandStateChanged,
-                        onConfigurationRequired = { isConfiguring = it },
-                        downloadFirmwareInformation = downloadFirmwareInformation
-                    )
-                }
+                val _ = loadFirmwareInformation(
+                    resources = resources,
+                    snackbarHostState = snackbarHostState,
+                    applicationKeyName = applicationKeyName,
+                    target = target,
+                    isExpanded = isExpanded,
+                    onExpandStateChanged = onExpandStateChanged,
+                    onConfigurationRequired = { isConfiguring = it },
+                    downloadFirmwareInformation = downloadFirmwareInformation,
+                    configure = configure
+                )
             }
         },
         isOnClickActionInProgress = isConfiguring,
@@ -446,17 +492,39 @@ private fun ExpandRowAction(
 }
 
 private suspend fun loadFirmwareInformation(
+    resources: Resources,
+    snackbarHostState: SnackbarHostState,
+    applicationKeyName: String?,
     target: Target,
     isExpanded: Boolean,
     onExpandStateChanged: (Boolean) -> Unit,
     onConfigurationRequired: (Boolean) -> Unit,
     downloadFirmwareInformation: suspend (Target) -> Target,
+    configure: suspend (Target) -> Unit,
 ): Target? {
     return when (target.targetState) {
-        is TargetState.ConfigurationRequired,
+        is TargetState.ConfigurationRequired -> {
+            snackbarHostState.run {
+                currentSnackbarData?.dismiss()
+                val result = showSnackbar(
+                    message = resources.getString(
+                        R.string.label_configuration_required,
+                        applicationKeyName ?: resources.getString(R.string.label_unknown)
+                    ),
+                    withDismissAction = true,
+                    actionLabel = resources.getString(R.string.label_confirm)
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    onConfigurationRequired(true)
+                    configure(target)
+                    onConfigurationRequired(false)
+                }
+            }
+            null
+        }
+
         is TargetState.Configured,
             -> {
-
             onConfigurationRequired(true)
             val updatedTarget = downloadFirmwareInformation(target)
                 .takeIf { it.targetState is TargetState.Ready }

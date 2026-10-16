@@ -47,6 +47,8 @@ fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
             },
             onBindAppKeysClicked = { navigator.navigate(key = DfuBindAppKeysKey(model = it)) },
             onKeyIndexChanged = { sessionViewModel.setKeyIndex(index = it) },
+            onMaxReceiversListSizeChanged = { sessionViewModel.setMaxReceiversListSize(size = it) },
+            onOngoingFirmwareSizeChanged = { sessionViewModel.setOngoingFirmwareSize(size = it) },
             onReceiversChanged = { sessionViewModel.setReceivers(receivers = it) },
             onUpdatePackageChanged = { sessionViewModel.setUpdatePackage(updatePackage = it) },
             onDfuParametersChanged = { sessionViewModel.setDfuParameters(dfuParameters = it) },
