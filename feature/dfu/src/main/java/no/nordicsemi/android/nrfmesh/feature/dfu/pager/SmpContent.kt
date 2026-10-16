@@ -603,7 +603,13 @@ private fun DistributorStatus(
                                 .padding(end = 16.dp)
                                 .size(size = 24.dp)
                         )
-                    } else if (distributionStatus?.phase == FirmwareDistributionPhase.IDLE) {
+                    } else if (distributionStatus?.phase == FirmwareDistributionPhase.IDLE ||
+                               distributionStatus?.phase == FirmwareDistributionPhase.FAILED ||
+                               distributionStatus?.phase == FirmwareDistributionPhase.COMPLETED ||
+                               distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
+                               distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
+                               distributionStatus?.phase == FirmwareDistributionPhase.APPLYING_UPDATE
+                    ) {
                         Icon(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             imageVector = Icons.Outlined.CheckCircle,
