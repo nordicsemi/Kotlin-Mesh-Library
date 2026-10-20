@@ -241,7 +241,7 @@ class CoreDataRepository @Inject constructor(
             networkKeys = configuration.generateNetworkKeys()
         ).also { meshNetwork ->
             configuration.generateApplicationKeys().forEachIndexed { index, key ->
-                meshNetwork.add(
+                val _ = meshNetwork.add(
                     name = "Application Key ${index + 1}",
                     key = key,
                     boundNetworkKey = meshNetwork.networkKeys.first()
@@ -268,7 +268,7 @@ class CoreDataRepository @Inject constructor(
                 val sceneAddress = meshNetwork.nextAvailableScene(
                     provisioner = meshNetwork.provisioners.first()
                 ) ?: continue
-                meshNetwork.add(name = "Scene $scene", number = sceneAddress)
+                val _ = meshNetwork.add(name = "Scene $scene", number = sceneAddress)
             }
         }.also {
             onMeshNetworkChanged()
@@ -373,7 +373,7 @@ class CoreDataRepository @Inject constructor(
                     bufferedReader.readText()
                 }
             } ?: ""
-            meshNetworkManager.import(array = networkJson.encodeToByteArray())
+            val _ = meshNetworkManager.import(array = networkJson.encodeToByteArray())
             onMeshNetworkChanged()
             save()
         }
@@ -457,7 +457,6 @@ class CoreDataRepository @Inject constructor(
     /**
      * Enables or disables automatic connectivity to a proxy node.
      *
-     * @param meshNetwork Mesh network required to match a proxy node.
      * @param enabled     True to enable, false to disable.
      */
     suspend fun toggleAutomaticConnection(enabled: Boolean): Unit =
@@ -478,8 +477,6 @@ class CoreDataRepository @Inject constructor(
 
     /**
      * Starts automatic connectivity to the proxy node.
-     *
-     * @param meshNetwork Mesh network required to match the proxy node.
      */
     private fun startAutomaticConnectivity() {
         // Make sure we don't start this multiple times.
@@ -498,7 +495,7 @@ class CoreDataRepository @Inject constructor(
                 open(bearer)
                 awaitDisconnection(bearer)
                 // Added a delay of 1500 seconds to avoid any reconnects
-                // Clarify this against scan results from gatt proxy
+                // Clarify this against scan results from GATT proxy
                 delay(1500.milliseconds)
             }
             connectivityJob = null
@@ -555,6 +552,25 @@ class CoreDataRepository @Inject constructor(
      */
     fun disconnect() {
         ioScope.launch { closeBearer() }
+    }
+
+    /**
+     * Changes the connected bearer to the given peripheral.
+     *
+     * @param peripheral Peripheral to connect to.
+     */
+    fun changeProxy(peripheral: Peripheral){
+        ioScope.launch {
+            // When disconnecting we should stop the automatic connectivity, if not the app will
+            // reconnect again. The stored setting is not changed.
+            cancelAutomaticConnectivity()
+            closeBearer()
+            val bearer = createGattProxyBearer(peripheral)
+            open(bearer)
+            if(isAutoConnectEnabled) {
+                startAutomaticConnectivity()
+            }
+        }
     }
 
     /**

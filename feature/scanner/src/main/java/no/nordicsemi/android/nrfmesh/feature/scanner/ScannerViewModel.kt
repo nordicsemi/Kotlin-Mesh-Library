@@ -9,13 +9,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.NotStarted
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.kotlin.ble.client.android.ScanResult
-import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import javax.inject.Inject
 
@@ -47,63 +45,10 @@ internal class ScannerViewModel @Inject internal constructor(
                 _uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
             }
             .launchIn(scope = viewModelScope)
-
-        repository.proxyFilter.proxyFilterStateFlow
-            .onEach { state ->
-                when (state) {
-                    is ProxyFilterState.ProxyFilterUpdated -> {
-
-                    }
-
-                    is ProxyFilterState.ProxyFilterLimitReached -> {
-
-                    }
-
-                    is ProxyFilterState.ProxyFilterUpdateAcknowledged -> {
-
-                    }
-
-                    ProxyFilterState.Unknown -> {
-
-                    }
-                }
-            }
-            .launchIn(scope = viewModelScope)
     }
 
-    internal fun onAutoConnectToggled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.toggleAutomaticConnection(enabled = enabled)
-        }
-    }
-
-    internal fun connect(result: ScanResult) {
-        repository.connect(peripheral = result.peripheral)
-    }
-
-    internal fun disconnect() {
-        viewModelScope.launch {
-            repository.toggleAutomaticConnection(enabled = false)
-            // When disconnecting we should disable automatic connectivity
-            // If not the app will reconnect again
-            repository.disconnect()
-        }
-    }
-
-    internal fun onBluetoothEnabled(enabled: Boolean) {
-        if (enabled) {
-            repository.onBluetoothEnabled()
-        }
-    }
-
-    internal fun onLocationEnabled(enabled: Boolean) {
-        if (enabled) {
-            repository.onBluetoothEnabled()
-        }
-    }
-
-    internal fun resetMessageState() {
-        _uiState.value = _uiState.value.copy(messageState = NotStarted, isProxyLimitReached = false)
+    internal fun onGattProxySelected(scanResult: ScanResult) {
+        repository.changeProxy(peripheral = scanResult.peripheral)
     }
 }
 

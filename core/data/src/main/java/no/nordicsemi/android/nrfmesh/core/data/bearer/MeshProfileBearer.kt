@@ -43,8 +43,8 @@ import no.nordicsemi.kotlin.mesh.logger.Logger
  *                       callback receiving the notifications of the Data Out characteristic.
  * @param supportedTypes PDU types supported by the bearer.
  * @param ioDispatcher   Coroutine dispatcher used by the bearer.
- * @property logger      Receives the logs of the bearer, containing the raw data of the sent and
- *                       received packets, as well as the connection events.
+ * @property logger      Receives the logs of the bearer, containing the raw data of the packets
+ *                       sent and received, as well as the connection events.
  */
 abstract class MeshProfileBearer(
     private val centralManager: CentralManager,
@@ -160,7 +160,7 @@ abstract class MeshProfileBearer(
     private fun onClosed() {
         _isOpen = false
         _state.value = BearerEvent.Closed(error = BearerError.Closed())
-        logger?.v(LogCategory.BEARER) { "Bearer closed" }
+        logger?.v(LogCategory.BEARER) { "Mesh profile bearer closed" }
     }
 
     @OptIn(ExperimentalStdlibApi::class)

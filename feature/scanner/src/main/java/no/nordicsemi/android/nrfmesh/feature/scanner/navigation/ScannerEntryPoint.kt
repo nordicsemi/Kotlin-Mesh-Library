@@ -19,14 +19,14 @@ fun EntryProviderScope<NavKey>.scannerEntry(navigator: Navigator) {
         metadata = BottomSheetSceneStrategy.bottomSheet(
             modalBottomSheetProperties = ModalBottomSheetProperties()
         )
-    ) {
+    ) { scannerKey ->
         val viewModel = hiltViewModel<ScannerViewModel>()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         ScannerScreen(
             networkState = uiState.meshNetworkState,
-            uuid = it.uuid,
+            uuid = scannerKey.uuid,
             onScanResultSelected = {
-                viewModel.connect(result = it)
+                viewModel.onGattProxySelected(scanResult = it)
                 navigator.goBack()
             }
         )
