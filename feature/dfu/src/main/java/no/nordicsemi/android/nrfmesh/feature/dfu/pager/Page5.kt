@@ -43,7 +43,11 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
 
 @Composable
-internal fun Page5(session: DfuSession, onCancelled: () -> Unit) {
+internal fun Page5(
+    session: DfuSession,
+    onUploadCompletedChanged: (Boolean) -> Unit,
+    onCancelled: () -> Unit,
+) {
     val viewModel = hiltViewModel<Page5ViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     // The image is uploaded to the Distributor and distributed when the page is shown, or the
@@ -53,6 +57,10 @@ internal fun Page5(session: DfuSession, onCancelled: () -> Unit) {
     }
     val scope = rememberCoroutineScope()
     var isCancelDialogShown by rememberSaveable { mutableStateOf(false) }
+    // Once the image is on the Distributor, the distribution continues without the phone.
+    LaunchedEffect(uiState.upload is UploadState.Completed) {
+        onUploadCompletedChanged(uiState.upload is UploadState.Completed)
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         // The progress is scrollable, while the button stays at the bottom of the screen.
         Column(

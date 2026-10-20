@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -78,6 +79,7 @@ internal fun FirmwareUpdateScreen(
     val pagerState = rememberPagerState(pageCount = { LAST_PAGE + 1 })
     var isPaired by rememberSaveable { mutableStateOf(false) }
     var tasksCompleted by rememberSaveable { mutableStateOf(false) }
+    var isUploadCompleted by rememberSaveable { mutableStateOf(false) }
     val enableNext = session.canProceed(
         page = pagerState.currentPage,
         isPaired = isPaired,
@@ -89,7 +91,12 @@ internal fun FirmwareUpdateScreen(
             NordicAppBar(
                 title = { Text(text = stringResource(R.string.label_firmware_update)) },
                 showBackButton = true,
-                backButtonIcon = Icons.Outlined.Close,
+                // Once the image is uploaded, the screen can be minimized as the distribution
+                // continues on the Distributor.
+                backButtonIcon = when (pagerState.currentPage == LAST_PAGE && isUploadCompleted) {
+                    true -> Icons.Outlined.KeyboardArrowDown
+                    false -> Icons.Outlined.Close
+                },
                 onNavigationButtonClick = onBackClick,
             )
         },
@@ -153,7 +160,11 @@ internal fun FirmwareUpdateScreen(
                                 onTasksCompleted = { tasksCompleted = it }
                             )
 
-                            5 -> Page5(session = session, onCancelled = onBackClick)
+                            5 -> Page5(
+                                session = session,
+                                onUploadCompletedChanged = { isUploadCompleted = it },
+                                onCancelled = onBackClick
+                            )
                         }
                         // The last page has its own button, that cancels the firmware update.
                         if (page != LAST_PAGE) Row(
