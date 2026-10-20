@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.SdCardAlert
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.rounded.SdCardAlert
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.ui.MaxFirmwareImageSize
 import no.nordicsemi.android.nrfmesh.core.ui.MaxFirmwareImagesListSize
 import no.nordicsemi.android.nrfmesh.core.ui.MaxReceiversListSize
@@ -44,18 +43,15 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributi
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareDeleteAll
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareGetByIndex
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareStatus
-import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 @Composable
 internal fun CapabilitiesContent(
-    selectedKey: ApplicationKey,
     phase: FirmwareDistributionPhase,
     capabilitiesStatus: FirmwareDistributionCapabilitiesStatus?,
     model: Model,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
     enableNextStage: () -> Unit,
-    messageState: MessageState,
 ) {
     val scope = rememberCoroutineScope()
     var distributionStatus by remember { mutableStateOf<FirmwareDistributionFirmwareStatus?>(null) }
@@ -80,28 +76,6 @@ internal fun CapabilitiesContent(
         SectionTitle(
             modifier = Modifier.weight(weight = 1f),
             title = stringResource(R.string.label_capabilities)
-        )
-        MeshIconButton(
-            buttonIcon = Icons.Outlined.SdCardAlert,
-            buttonIconTint = Color(red = 1f, green = 0.6f, blue = 0f),
-            onClick = {
-                scope.launch {
-                    isDeleteFirmwareInProgress = true
-                    try {
-                        distributionStatus = send(
-                            model,
-                            FirmwareDistributionFirmwareDeleteAll()
-                        ) as? FirmwareDistributionFirmwareStatus
-                    } catch (e: Exception) {
-                        error = e
-                    } finally {
-                        isDeleteFirmwareInProgress = false
-                    }
-                }
-            },
-            // The firmware images cannot be deleted while a distribution is in progress.
-            enabled = availableEntries == 0 && !phase.isBusy,
-            isOnClickActionInProgress = isDeleteFirmwareInProgress
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Refresh,
@@ -172,11 +146,28 @@ internal fun CapabilitiesContent(
                             contentDescription = null
                         )
                     } else {
-                        Icon(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            imageVector = Icons.Outlined.WarningAmber,
-                            tint = Color(red = 1f, green = 0.6f, blue = 0f),
-                            contentDescription = null
+                        MeshIconButton(
+                            modifier = Modifier.padding(end = 8.dp),
+                            buttonIcon = Icons.Rounded.SdCardAlert,
+                            buttonIconTint = Color(red = 1f, green = 0.6f, blue = 0f),
+                            onClick = {
+                                scope.launch {
+                                    isDeleteFirmwareInProgress = true
+                                    try {
+                                        distributionStatus = send(
+                                            model,
+                                            FirmwareDistributionFirmwareDeleteAll()
+                                        ) as? FirmwareDistributionFirmwareStatus
+                                    } catch (e: Exception) {
+                                        error = e
+                                    } finally {
+                                        isDeleteFirmwareInProgress = false
+                                    }
+                                }
+                            },
+                            // The firmware images cannot be deleted while a distribution is in progress.
+                            enabled = availableEntries == 0 && !phase.isBusy,
+                            isOnClickActionInProgress = isDeleteFirmwareInProgress
                         )
                     }
                 }

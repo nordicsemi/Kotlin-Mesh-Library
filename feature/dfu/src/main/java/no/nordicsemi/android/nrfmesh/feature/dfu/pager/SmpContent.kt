@@ -142,9 +142,7 @@ internal fun SmpContent(
                             )
                 ) {
                     CapabilitiesContent(
-                        selectedKey = selectedKey,
                         phase = firmwareDistributionStatus.phase,
-                        messageState = messageState,
                         capabilitiesStatus = capabilitiesStatus,
                         model = node.model(modelId = firmwareDistributionServer) ?: return,
                         send = send,
