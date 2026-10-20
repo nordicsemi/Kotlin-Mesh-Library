@@ -64,3 +64,6 @@ include(":mesh:bearer-gatt")
 if (file("../Android-nRF-Connect-Device-Manager").exists()) {
     includeBuild("../Android-nRF-Connect-Device-Manager")
 }
+if (file("../Kotlin-BLE-Library").exists()) {
+    includeBuild("../Kotlin-BLE-Library")
+}
