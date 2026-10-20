@@ -2,6 +2,7 @@ package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,12 +13,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.ui.view.CircularIcon
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
+import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSession
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
@@ -55,12 +57,12 @@ internal fun Page5(
     LaunchedEffect(session) {
         viewModel.start(session = session)
     }
-    val scope = rememberCoroutineScope()
-    var isCancelDialogShown by rememberSaveable { mutableStateOf(false) }
     // Once the image is on the Distributor, the distribution continues without the phone.
     LaunchedEffect(uiState.upload is UploadState.Completed) {
         onUploadCompletedChanged(uiState.upload is UploadState.Completed)
     }
+    val scope = rememberCoroutineScope()
+    var isCancelDialogShown by rememberSaveable { mutableStateOf(false) }
     Column(modifier = Modifier.fillMaxSize()) {
         // The progress is scrollable, while the button stays at the bottom of the screen.
         Column(
@@ -76,11 +78,15 @@ internal fun Page5(
                 receiverNames = uiState.receiverNames
             )
         }
-        CancelButton(
-            isCancelling = uiState.isCancelling,
-            error = uiState.cancelError,
-            onClick = { isCancelDialogShown = true }
-        )
+        if (uiState.distribution == DistributionState.Completed) {
+            CloseButton(onClick = onCancelled)
+        } else {
+            CancelButton(
+                isCancelling = uiState.isCancelling,
+                error = uiState.cancelError,
+                onClick = { isCancelDialogShown = true }
+            )
+        }
     }
     if (isCancelDialogShown) {
         MeshAlertDialog(
@@ -104,31 +110,60 @@ internal fun Page5(
 }
 
 /**
+ * A button that closes the screen once the firmware update has completed.
+ *
+ * @param onClick Invoked when the button is clicked.
+ */
+@Composable
+private fun CloseButton(onClick: () -> Unit) {
+    val color = Color(red = 0.18f, green = 0.55f, blue = 0.25f)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        MeshOutlinedButton(
+            buttonIcon = Icons.Outlined.CheckCircle,
+            buttonIconTint = color,
+            text = stringResource(R.string.label_close),
+            textColor = color,
+            border = BorderStroke(width = 1.dp, color = color),
+            onClick = onClick
+        )
+    }
+}
+
+/**
  * A button that cancels the whole firmware update, that is the upload and the distribution.
  *
- * @param isCancelling Whether the firmware update is being cancelled.
- * @param error        The reason why the firmware update could not be cancelled, if it failed.
+ * @param isCancelling Whether the firmware update is being canceled.
+ * @param error        The reason why the firmware update could not be canceled, if it failed.
  * @param onClick      Invoked when the button is clicked.
  */
 @Composable
 private fun CancelButton(isCancelling: Boolean, error: String?, onClick: () -> Unit) {
     val color = MaterialTheme.colorScheme.error
-    OutlinedButton(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp),
-        onClick = onClick,
-        enabled = !isCancelling,
-        border = BorderStroke(
-            width = 1.dp,
-            color = color.copy(alpha = if (isCancelling) 0.38f else 1f)
-        ),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = color)
+        contentAlignment = Alignment.Center
     ) {
-        Text(
+        MeshOutlinedButton(
+            isOnClickActionInProgress = isCancelling,
+            buttonIcon = Icons.Outlined.Cancel,
+            buttonIconTint = color,
             text = stringResource(
                 if (isCancelling) R.string.label_cancelling else R.string.label_cancel_update
-            )
+            ),
+            textColor = color,
+            border = BorderStroke(
+                width = 1.dp,
+                color = color.copy(alpha = if (isCancelling) 0.38f else 1f)
+            ),
+            enabled = !isCancelling,
+            onClick = onClick
         )
     }
     error?.let {
