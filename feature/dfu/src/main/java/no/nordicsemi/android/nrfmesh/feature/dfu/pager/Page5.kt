@@ -3,9 +3,13 @@ package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.FileUpload
@@ -49,13 +53,21 @@ internal fun Page5(session: DfuSession, onCancelled: () -> Unit) {
     }
     val scope = rememberCoroutineScope()
     var isCancelDialogShown by rememberSaveable { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
-        UploadProgress(upload = uiState.upload)
-        DistributionProgress(
-            distribution = uiState.distribution,
-            receivers = uiState.receivers,
-            receiverNames = uiState.receiverNames
-        )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // The progress is scrollable, while the button stays at the bottom of the screen.
+        Column(
+            modifier = Modifier
+                .weight(weight = 1f)
+                .verticalScroll(state = rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+        ) {
+            UploadProgress(upload = uiState.upload)
+            DistributionProgress(
+                distribution = uiState.distribution,
+                receivers = uiState.receivers,
+                receiverNames = uiState.receiverNames
+            )
+        }
         CancelButton(
             isCancelling = uiState.isCancelling,
             error = uiState.cancelError,
@@ -69,15 +81,15 @@ internal fun Page5(session: DfuSession, onCancelled: () -> Unit) {
             iconColor = MaterialTheme.colorScheme.error,
             title = stringResource(R.string.label_cancel_update_title),
             text = stringResource(R.string.label_cancel_update_message),
-            confirmButtonText = stringResource(R.string.label_cancel_update),
+            confirmButtonText = stringResource(R.string.label_confirm),
             onConfirmClick = {
                 isCancelDialogShown = false
                 scope.launch {
-                    // The screen is closed when the firmware update has been cancelled.
+                    // The screen is closed when the firmware update has been canceled.
                     if (viewModel.cancel()) onCancelled()
                 }
             },
-            dismissButtonText = stringResource(R.string.label_keep_updating),
+            dismissButtonText = stringResource(R.string.label_cancel),
             onDismissClick = { isCancelDialogShown = false }
         )
     }
@@ -148,7 +160,7 @@ private fun UploadProgress(upload: UploadState) {
             if (upload is UploadState.Uploading) {
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp)
+                        .padding(end = 16.dp)
                         .size(24.dp),
                     progress = { upload.progress }
                 )
@@ -163,8 +175,8 @@ private fun DistributionProgress(
     receivers: List<Receiver>,
     receiverNames: Map<UShort, String>,
 ) {
-    SectionTitle(title = stringResource(R.string.label_distribution_progress))
     if (distribution != DistributionState.Idle) {
+        SectionTitle(title = stringResource(R.string.label_distribution_progress))
         ElevatedCardItem(
             imageVector = Icons.Outlined.PlayArrow,
             title = stringResource(R.string.label_firmware_distribution),
@@ -208,7 +220,11 @@ private fun ReceiverItem(name: String, receiver: Receiver) {
     val status = receiver.status
     Column {
         ElevatedCardItem(
-            leadingIcon = { CircularIcon(painter = painterResource(R.drawable.ic_mesh)) },
+            leadingIcon = {
+                Spacer(modifier = Modifier.size(size = 16.dp))
+                CircularIcon(painter = painterResource(R.drawable.ic_mesh))
+                Spacer(modifier = Modifier.size(size = 16.dp))
+            },
             title = name,
             subtitle = when (status) {
                 Receiver.Status.Idle -> stringResource(R.string.label_receiver_idle)
@@ -226,7 +242,7 @@ private fun ReceiverItem(name: String, receiver: Receiver) {
                 if (status is Receiver.Status.Distribution) {
                     CircularProgressIndicator(
                         modifier = Modifier
-                            .padding(horizontal = 16.dp)
+                            .padding(end = 16.dp)
                             .size(24.dp),
                         progress = { status.progress / 100f },
                     )

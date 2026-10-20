@@ -110,7 +110,12 @@ internal fun FirmwareUpdateScreen(
                         .fillMaxWidth(fraction = if (!isCompactWidth()) 0.5f else 1f)
                         .fillMaxHeight()
                         .padding(horizontal = 16.dp)
-                        .verticalScroll(state = rememberScrollState()),
+                        // The last page scrolls its content on its own, to keep its button at the
+                        // bottom of the screen.
+                        .then(
+                            if (page == LAST_PAGE) Modifier
+                            else Modifier.verticalScroll(state = rememberScrollState())
+                        ),
                     content = {
                         when (page) {
                             0 -> Page0(
