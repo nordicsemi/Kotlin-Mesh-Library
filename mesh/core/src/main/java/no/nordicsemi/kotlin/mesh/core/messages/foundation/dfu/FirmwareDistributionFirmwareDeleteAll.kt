@@ -12,6 +12,8 @@ class FirmwareDistributionFirmwareDeleteAll : AcknowledgedApplicationMessage {
     override val responseOpCode: UInt = FirmwareDistributionFirmwareStatus.opCode
     override val parameters = null
 
+    override fun toString() = "FirmwareDistributionFirmwareDeleteAll()"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8326u
 
