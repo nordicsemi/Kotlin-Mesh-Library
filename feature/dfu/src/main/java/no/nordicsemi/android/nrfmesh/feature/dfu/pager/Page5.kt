@@ -248,12 +248,19 @@ private fun ReceiverItem(name: String, receiver: Receiver) {
             },
             titleAction = {
                 if (status is Receiver.Status.Distribution) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .size(24.dp),
-                        progress = { status.progress / 100f },
-                    )
+                    val modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(24.dp)
+                    // The progress is unknown until the receiver reports that it has received
+                    // some of the image.
+                    if (status.progress > 0) {
+                        CircularProgressIndicator(
+                            modifier = modifier,
+                            progress = { status.progress / 100f },
+                        )
+                    } else {
+                        CircularProgressIndicator(modifier = modifier)
+                    }
                 }
             }
         )
