@@ -1,16 +1,27 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -18,17 +29,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.ui.view.CircularIcon
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
-import no.nordicsemi.android.nrfmesh.core.ui.MeshItem
+import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSession
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
-import no.nordicsemi.kotlin.mesh.core.model.Node
 
 @Composable
-internal fun Page5(session: DfuSession) {
+internal fun Page5(session: DfuSession, onCancelled: () -> Unit) {
     val viewModel = hiltViewModel<Page5ViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     // The image is uploaded to the Distributor and distributed when the page is shown, or the
@@ -36,13 +47,76 @@ internal fun Page5(session: DfuSession) {
     LaunchedEffect(session) {
         viewModel.start(session = session)
     }
+    val scope = rememberCoroutineScope()
+    var isCancelDialogShown by rememberSaveable { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
         UploadProgress(upload = uiState.upload)
         DistributionProgress(
-            distributor = uiState.distributor ?: return,
             distribution = uiState.distribution,
             receivers = uiState.receivers,
             receiverNames = uiState.receiverNames
+        )
+        CancelButton(
+            isCancelling = uiState.isCancelling,
+            error = uiState.cancelError,
+            onClick = { isCancelDialogShown = true }
+        )
+    }
+    if (isCancelDialogShown) {
+        MeshAlertDialog(
+            onDismissRequest = { isCancelDialogShown = false },
+            icon = Icons.Outlined.Cancel,
+            iconColor = MaterialTheme.colorScheme.error,
+            title = stringResource(R.string.label_cancel_update_title),
+            text = stringResource(R.string.label_cancel_update_message),
+            confirmButtonText = stringResource(R.string.label_cancel_update),
+            onConfirmClick = {
+                isCancelDialogShown = false
+                scope.launch {
+                    // The screen is closed when the firmware update has been cancelled.
+                    if (viewModel.cancel()) onCancelled()
+                }
+            },
+            dismissButtonText = stringResource(R.string.label_keep_updating),
+            onDismissClick = { isCancelDialogShown = false }
+        )
+    }
+}
+
+/**
+ * A button that cancels the whole firmware update, that is the upload and the distribution.
+ *
+ * @param isCancelling Whether the firmware update is being cancelled.
+ * @param error        The reason why the firmware update could not be cancelled, if it failed.
+ * @param onClick      Invoked when the button is clicked.
+ */
+@Composable
+private fun CancelButton(isCancelling: Boolean, error: String?, onClick: () -> Unit) {
+    val color = MaterialTheme.colorScheme.error
+    OutlinedButton(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        onClick = onClick,
+        enabled = !isCancelling,
+        border = BorderStroke(
+            width = 1.dp,
+            color = color.copy(alpha = if (isCancelling) 0.38f else 1f)
+        ),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = color)
+    ) {
+        Text(
+            text = stringResource(
+                if (isCancelling) R.string.label_cancelling else R.string.label_cancel_update
+            )
+        )
+    }
+    error?.let {
+        Text(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            text = stringResource(R.string.label_cancel_failed, it),
+            color = color,
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }
@@ -69,46 +143,35 @@ private fun UploadProgress(upload: UploadState) {
         subtitleTextColor = when (upload) {
             is UploadState.Failed -> MaterialTheme.colorScheme.error
             else -> Color.Unspecified
+        },
+        titleAction = {
+            if (upload is UploadState.Uploading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .size(24.dp),
+                    progress = { upload.progress }
+                )
+            }
         }
     )
-    if (upload is UploadState.Uploading) {
-        LinearProgressIndicator(
-            progress = { upload.progress },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
 }
 
 @Composable
 private fun DistributionProgress(
-    distributor: Node,
     distribution: DistributionState,
     receivers: List<Receiver>,
     receiverNames: Map<UShort, String>,
 ) {
     SectionTitle(title = stringResource(R.string.label_distribution_progress))
-    MeshItem(
-        modifier = Modifier.fillMaxWidth(),
-        icon = {
-            CircularIcon(painter = painterResource(R.drawable.ic_mesh))
-        },
-        title = distributor.name,
-        subtitle = distributor.primaryUnicastAddress.address
-            .toHexString(
-                format = HexFormat {
-                    number.prefix = "Address: 0x"
-                    upperCase = true
-                }
-            ),
-        onClick = { }
-    )
     if (distribution != DistributionState.Idle) {
         ElevatedCardItem(
             imageVector = Icons.Outlined.PlayArrow,
             title = stringResource(R.string.label_firmware_distribution),
             subtitle = when (distribution) {
                 DistributionState.Idle,
-                DistributionState.Starting -> stringResource(R.string.label_starting_distribution)
+                DistributionState.Starting,
+                    -> stringResource(R.string.label_starting_distribution)
 
                 is DistributionState.Started -> stringResource(R.string.label_distribution_started)
                 DistributionState.Completed -> stringResource(R.string.label_distribution_completed)
@@ -144,11 +207,8 @@ private fun DistributionProgress(
 private fun ReceiverItem(name: String, receiver: Receiver) {
     val status = receiver.status
     Column {
-        MeshItem(
-            modifier = Modifier.fillMaxWidth(),
-            icon = {
-                CircularIcon(painter = painterResource(R.drawable.ic_mesh))
-            },
+        ElevatedCardItem(
+            leadingIcon = { CircularIcon(painter = painterResource(R.drawable.ic_mesh)) },
             title = name,
             subtitle = when (status) {
                 Receiver.Status.Idle -> stringResource(R.string.label_receiver_idle)
@@ -162,13 +222,16 @@ private fun ReceiverItem(name: String, receiver: Receiver) {
                 Receiver.Status.Applied -> stringResource(R.string.label_receiver_applied)
                 Receiver.Status.Failure -> stringResource(R.string.label_receiver_failed)
             },
-            onClick = { }
+            titleAction = {
+                if (status is Receiver.Status.Distribution) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .size(24.dp),
+                        progress = { status.progress / 100f },
+                    )
+                }
+            }
         )
-        if (status is Receiver.Status.Distribution) {
-            LinearProgressIndicator(
-                progress = { status.progress / 100f },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
     }
 }

@@ -93,6 +93,12 @@
     <string name="label_distribution_failed">Distribution failed: %1$s</string>
     <string name="label_distribution_completed">Distribution completed</string>
     <string name="label_receivers">Receivers</string>
+    <string name="label_cancel_update">Cancel update</string>
+    <string name="label_cancelling">Cancelling…</string>
+    <string name="label_cancel_update_title">Cancel firmware update?</string>
+    <string name="label_cancel_update_message">The upload of the image will be stopped and the distribution to the receivers will be cancelled.</string>
+    <string name="label_keep_updating">Keep updating</string>
+    <string name="label_cancel_failed">Cancelling failed: %1$s</string>
     <string name="label_receiver_idle">Idle</string>
     <string name="label_receiver_distributing">Distributing… %1$d%% (%2$.1f B/s)</string>
     <string name="label_receiver_verified">Verified</string>

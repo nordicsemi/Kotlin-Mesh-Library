@@ -94,10 +94,10 @@ internal fun FirmwareUpdateScreen(
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-    ) {
+    ) { paddingValues ->
         HorizontalPager(
             modifier = Modifier
-                .padding(paddingValues = it),
+                .padding(paddingValues = paddingValues),
             state = pagerState,
             userScrollEnabled = false
         ) { page ->
@@ -134,12 +134,12 @@ internal fun FirmwareUpdateScreen(
                             )
 
                             2 -> Page2(
-                                    index = session.keyIndex,
+                                index = session.keyIndex,
                                 maxReceiversListSize = session.maxReceiversListSize,
-                                    snackbarHostState = snackbarHostState,
-                                    onUpdatePackageChanged = onUpdatePackageChanged,
-                                    onReceiversSelected = onReceiversChanged
-                                )
+                                snackbarHostState = snackbarHostState,
+                                onUpdatePackageChanged = onUpdatePackageChanged,
+                                onReceiversSelected = onReceiversChanged
+                            )
 
                             3 -> Page3(onDfuParametersChanged = onDfuParametersChanged)
 
@@ -148,9 +148,10 @@ internal fun FirmwareUpdateScreen(
                                 onTasksCompleted = { tasksCompleted = it }
                             )
 
-                            5 -> Page5(session = session)
+                            5 -> Page5(session = session, onCancelled = onBackClick)
                         }
-                        Row(
+                        // The last page has its own button, that cancels the firmware update.
+                        if (page != LAST_PAGE) Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 16.dp),
@@ -176,6 +177,7 @@ internal fun FirmwareUpdateScreen(
                                                     true -> 3
                                                     false -> 0
                                                 }
+
                                                 else -> pagerState.currentPage - 1
                                             }
                                         )

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,7 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.RetrievedUpdatePhase
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCancel
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionReceiversGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionReceiversList
@@ -38,19 +40,19 @@ import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
-import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import javax.inject.Inject
 import kotlin.math.max
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 internal class Page5ViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
     val uiState: StateFlow<Page5ScreenUiState>
-        field = MutableStateFlow(Page5ScreenUiState(distributor = repository.proxyFilter.proxy))
+        field = MutableStateFlow(Page5ScreenUiState())
     private lateinit var network: MeshNetwork
     private var startedSession: DfuSession? = null
     private var uploadJob: Job? = null
@@ -76,7 +78,7 @@ internal class Page5ViewModel @Inject internal constructor(
      * followed.
      *
      * Nothing is done if the same session has already been started, i.e. after a configuration
-     * change. The work is cancelled with the view model.
+     * change. The work is canceled with the view model.
      */
     internal fun start(session: DfuSession) {
         val updatePackage = session.updatePackage
@@ -90,6 +92,43 @@ internal class Page5ViewModel @Inject internal constructor(
                 updatePackage != null -> uploadAndDistribute(session, updatePackage)
                 else -> monitorDistribution(firmwareSize = ongoingFirmwareSize ?: return@launch)
             }
+        }
+    }
+
+    /**
+     * Cancels the firmware update.
+     *
+     * The upload of the image and the polling of the progress are stopped, and, if the distribution
+     * was started, the Distributor is asked to cancel it.
+     *
+     * @return True if the firmware update was canceled, false if the Distributor could not cancel
+     *         the distribution, see [Page5ScreenUiState.cancelError].
+     */
+    internal suspend fun cancel(): Boolean {
+        uiState.update { it.copy(isCancelling = true, cancelError = null) }
+        // Stopping the collection of the upload cancels the upload.
+        uploadJob?.cancelAndJoin()
+        uploadJob = null
+        return try {
+            // The distribution may have been started even if the response was not received yet.
+            if (uiState.value.distribution != DistributionState.Idle) {
+                val response = repository.send(
+                    model = distributionServer(),
+                    ackedMessage = FirmwareDistributionCancel()
+                ) as? FirmwareDistributionStatus
+                    ?: throw IllegalStateException("No response received")
+                if (response.status != FirmwareDistributionMessageStatus.SUCCESS) {
+                    throw IllegalStateException(response.status.toString())
+                }
+            }
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            uiState.update { it.copy(cancelError = e.message ?: "$e") }
+            false
+        } finally {
+            uiState.update { it.copy(isCancelling = false) }
         }
     }
 
@@ -166,7 +205,7 @@ internal class Page5ViewModel @Inject internal constructor(
                             start = SystemClock.elapsedRealtime() - elapsedMillis
                         }
                 }
-                delay(POLL_INTERVAL_MILLIS)
+                delay(POLL_INTERVAL)
             }
         } catch (e: CancellationException) {
             throw e
@@ -285,9 +324,9 @@ internal class Page5ViewModel @Inject internal constructor(
     private suspend fun pollDistribution(session: DfuSession, imageSize: Int) {
         val start = SystemClock.elapsedRealtime()
         // Give the Distributor some time to start the transfer.
-        delay(POLL_INTERVAL_MILLIS)
+        delay(POLL_INTERVAL)
         while (pollDistributionProgress(imageSize = imageSize, start = start)) {
-            delay(POLL_INTERVAL_MILLIS)
+            delay(POLL_INTERVAL)
         }
     }
 
@@ -447,14 +486,6 @@ internal class Page5ViewModel @Inject internal constructor(
         }
     }
 
-    private companion object {
-        /** The interval of reading the distribution progress. */
-        const val POLL_INTERVAL_MILLIS = 10_000L
-
-        /** The number of receivers read from the Distributor at a time. */
-        const val PAGE_SIZE = 10
-    }
-
     /**
      * Creates a new slot for the image on the Distributor and uploads the image to it.
      *
@@ -555,6 +586,14 @@ internal class Page5ViewModel @Inject internal constructor(
             ?.groupValues?.get(1)?.toIntOrNull()
             ?: throw IllegalStateException("Adding slot failed. Invalid response: ${output ?: "Empty"}")
     }
+
+    private companion object {
+        /** The interval of reading the distribution progress. */
+        val POLL_INTERVAL = 10.seconds
+
+        /** The number of receivers read from the Distributor at a time. */
+        const val PAGE_SIZE = 10
+    }
 }
 
 /** The state of the distribution of the firmware image from the Distributor to the receivers. */
@@ -610,9 +649,10 @@ internal sealed interface UploadState {
 
 internal data class Page5ScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
-    val distributor: Node?,
     val upload: UploadState = UploadState.Idle,
     val distribution: DistributionState = DistributionState.Idle,
     val receivers: List<Receiver> = emptyList(),
     val receiverNames: Map<UShort, String> = emptyMap(),
+    val isCancelling: Boolean = false,
+    val cancelError: String? = null,
 )
