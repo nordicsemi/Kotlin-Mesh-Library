@@ -112,7 +112,11 @@ internal fun NodeScreen(
 ) {
     val scope = rememberCoroutineScope()
     val pullToRefreshState = rememberPullToRefreshState()
-    var showConfigurationTasks by rememberSaveable { mutableStateOf(tasks.isNotEmpty()) }
+    // The state is reset when tasks are enqueued, so that the sheet is shown even if the screen was
+    // composed before they were.
+    var showConfigurationTasks by rememberSaveable(tasks.size) {
+        mutableStateOf(tasks.isNotEmpty())
+    }
     val reconfigBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     PullToRefreshBox(
         modifier = Modifier.fillMaxSize(),
