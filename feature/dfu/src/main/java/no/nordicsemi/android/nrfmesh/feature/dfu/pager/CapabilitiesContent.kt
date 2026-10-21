@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.material.icons.rounded.SdCardAlert
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -106,7 +104,7 @@ internal fun CapabilitiesContent(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     imageVector = when (it.maxReceiversCount > 0u) {
                         true -> Icons.Outlined.CheckCircle
-                        else -> Icons.Outlined.WarningAmber
+                        else -> Icons.Rounded.WarningAmber
                     },
                     tint = when (it.maxReceiversCount > 0u) {
                         true -> Color.Green
@@ -148,7 +146,7 @@ internal fun CapabilitiesContent(
                     } else {
                         MeshIconButton(
                             modifier = Modifier.padding(end = 8.dp),
-                            buttonIcon = Icons.Rounded.SdCardAlert,
+                            buttonIcon = Icons.Rounded.WarningAmber,
                             buttonIconTint = Color(red = 1f, green = 0.6f, blue = 0f),
                             onClick = {
                                 scope.launch {
@@ -207,7 +205,7 @@ internal fun CapabilitiesContent(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     imageVector = when (it.maxUploadSpace > 0u) {
                         true -> Icons.Outlined.CheckCircle
-                        else -> Icons.Outlined.WarningAmber
+                        else -> Icons.Rounded.WarningAmber
                     },
                     tint = when (it.maxUploadSpace > 0u) {
                         true -> Color.Green
@@ -232,7 +230,7 @@ internal fun CapabilitiesContent(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     imageVector = when (it.remainingUploadSpace > 0u) {
                         true -> Icons.Outlined.CheckCircle
-                        else -> Icons.Outlined.WarningAmber
+                        else -> Icons.Rounded.WarningAmber
                     },
                     tint = when (it.remainingUploadSpace > 0u) {
                         true -> Color.Green
