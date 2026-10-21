@@ -29,7 +29,9 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 import no.nordicsemi.kotlin.mesh.core.messages.RetrievedUpdatePhase
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionApply
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCancel
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionReceiversGet
@@ -56,6 +58,7 @@ internal class Page5ViewModel @Inject internal constructor(
     private lateinit var network: MeshNetwork
     private var startedSession: DfuSession? = null
     private var uploadJob: Job? = null
+    private var applyJob: Job? = null
 
     init {
         observeNetwork()
@@ -109,6 +112,8 @@ internal class Page5ViewModel @Inject internal constructor(
         // Stopping the collection of the upload cancels the upload.
         uploadJob?.cancelAndJoin()
         uploadJob = null
+        applyJob?.cancelAndJoin()
+        applyJob = null
         return try {
             // The distribution may have been started even if the response was not received yet.
             if (uiState.value.distribution != DistributionState.Idle) {
@@ -129,6 +134,40 @@ internal class Page5ViewModel @Inject internal constructor(
             false
         } finally {
             uiState.update { it.copy(isCancelling = false) }
+        }
+    }
+
+    /**
+     * Applies the firmware update on the receivers, that have verified the image.
+     *
+     * This is only needed if the update policy is verify only, see [Page5ScreenUiState.updatePolicy].
+     * Once the Distributor has accepted the request, the progress of the receivers is polled until
+     * all of them have applied the update or failed.
+     */
+    internal fun apply() {
+        if (uiState.value.apply is ApplyState.Applying) return
+        applyJob = viewModelScope.launch {
+            uiState.update { it.copy(apply = ApplyState.Applying) }
+            try {
+                val response = repository.send(
+                    model = distributionServer(),
+                    ackedMessage = FirmwareDistributionApply()
+                ) as? FirmwareDistributionStatus
+                    ?: throw IllegalStateException("No response received")
+                if (response.status != FirmwareDistributionMessageStatus.SUCCESS) {
+                    throw IllegalStateException(response.status.toString())
+                }
+                uiState.update { it.copy(apply = ApplyState.Applied) }
+                // The receivers are verified until they start applying the update.
+                do {
+                    delay(POLL_INTERVAL)
+                    val _ = pollDistributionProgress(imageSize = 0, start = null)
+                } while (uiState.value.receivers.any { it.status is Receiver.Status.Verified })
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                uiState.update { it.copy(apply = ApplyState.Failed(message = e.message ?: "$e")) }
+            }
         }
     }
 
@@ -180,7 +219,12 @@ internal class Page5ViewModel @Inject internal constructor(
                 ackedMessage = FirmwareDistributionGet()
             ) as? FirmwareDistributionStatus
                 ?: throw IllegalStateException("No response received")
-            uiState.update { it.copy(distribution = DistributionState.Started(phase = response.phase)) }
+            uiState.update {
+                it.copy(
+                    distribution = DistributionState.Started(phase = response.phase),
+                    updatePolicy = response.updatePolicy
+                )
+            }
 
             // The speed is not known, until the progress is received. The distribution to a group
             // is much faster per receiver than the one to every receiver separately.
@@ -293,6 +337,7 @@ internal class Page5ViewModel @Inject internal constructor(
         uiState.update {
             it.copy(
                 distribution = DistributionState.Started(phase = response.phase),
+                updatePolicy = response.updatePolicy ?: parameters.policy,
                 receivers = session.receivers.map { receiver ->
                     receiver.copy(status = Receiver.Status.Distribution(progress = 0, speedBytesPerSecond = 0f))
                 },
@@ -655,4 +700,23 @@ internal data class Page5ScreenUiState(
     val receiverNames: Map<UShort, String> = emptyMap(),
     val isCancelling: Boolean = false,
     val cancelError: String? = null,
+    // The update policy of the distribution, as reported by the Distributor.
+    val updatePolicy: FirmwareUpdatePolicy? = null,
+    val apply: ApplyState = ApplyState.Idle,
 )
+
+/** The state of applying the firmware update on the receivers. */
+internal sealed interface ApplyState {
+
+    /** The update has not been applied. */
+    data object Idle : ApplyState
+
+    /** The Distributor is asked to apply the update. */
+    data object Applying : ApplyState
+
+    /** The Distributor has accepted the request to apply the update. */
+    data object Applied : ApplyState
+
+    /** Applying the update failed. */
+    data class Failed(val message: String) : ApplyState
+}

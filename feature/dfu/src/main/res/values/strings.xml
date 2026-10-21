@@ -93,6 +93,8 @@
     <string name="label_distribution_failed">Distribution failed: %1$s</string>
     <string name="label_distribution_completed">Distribution completed</string>
     <string name="label_receivers">Receivers</string>
+    <string name="label_apply">Apply</string>
+    <string name="label_apply_failed">Applying the update failed: %1$s</string>
     <string name="label_close">Close</string>
     <string name="label_cancel_update">Cancel update</string>
     <string name="label_cancelling">Cancelling…</string>

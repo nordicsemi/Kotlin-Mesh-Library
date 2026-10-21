@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSession
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 
 @Composable
 internal fun Page5(
@@ -78,6 +80,16 @@ internal fun Page5(
                 receiverNames = uiState.receiverNames
             )
         }
+        // The update has to be applied, if the receivers only verify the image.
+        if (uiState.updatePolicy == FirmwareUpdatePolicy.VERIFY_ONLY) {
+            ApplyButton(
+                isEnabled = uiState.distribution == DistributionState.Completed &&
+                        (uiState.apply is ApplyState.Idle || uiState.apply is ApplyState.Failed),
+                isApplying = uiState.apply is ApplyState.Applying,
+                error = (uiState.apply as? ApplyState.Failed)?.message,
+                onClick = viewModel::apply
+            )
+        }
         if (uiState.distribution == DistributionState.Completed) {
             CloseButton(onClick = onCancelled)
         } else {
@@ -105,6 +117,45 @@ internal fun Page5(
             },
             dismissButtonText = stringResource(R.string.label_cancel),
             onDismissClick = { isCancelDialogShown = false }
+        )
+    }
+}
+
+/**
+ * A button that applies the firmware update on the receivers, which have verified the image.
+ *
+ * @param isEnabled  Whether the button is enabled, that is once the distribution has completed.
+ * @param isApplying Whether the Distributor is being asked to apply the update.
+ * @param error      The reason why the update could not be applied, if it failed.
+ * @param onClick    Invoked when the button is clicked.
+ */
+@Composable
+private fun ApplyButton(
+    isEnabled: Boolean,
+    isApplying: Boolean,
+    error: String?,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        MeshOutlinedButton(
+            isOnClickActionInProgress = isApplying,
+            buttonIcon = Icons.Outlined.SystemUpdate,
+            text = stringResource(R.string.label_apply),
+            enabled = isEnabled,
+            onClick = onClick
+        )
+    }
+    error?.let {
+        Text(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            text = stringResource(R.string.label_apply_failed, it),
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }
@@ -292,6 +343,7 @@ private fun ReceiverItem(name: String, receiver: Receiver) {
                         CircularProgressIndicator(
                             modifier = modifier,
                             progress = { status.progress / 100f },
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         )
                     } else {
                         CircularProgressIndicator(modifier = modifier)

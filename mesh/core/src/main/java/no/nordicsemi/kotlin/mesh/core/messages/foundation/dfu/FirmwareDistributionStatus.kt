@@ -2,17 +2,18 @@
 
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
+import no.nordicsemi.kotlin.data.ByteOrder
 import no.nordicsemi.kotlin.data.and
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.shl
 import no.nordicsemi.kotlin.data.shr
 import no.nordicsemi.kotlin.data.toByteArray
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.BLOBMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
-import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
 import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.DistributionMulticastAddress
@@ -21,7 +22,6 @@ import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
-import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * The Firmware Distribution Status message is an unacknowledged message sent by a Firmware
@@ -162,7 +162,7 @@ class FirmwareDistributionStatus internal constructor(
                 "Application Key Index: $applicationKeyIndex, " +
                 "ttl: $ttl, Distribution Timeout Base: $distributionTimeoutBase, " +
                 "Distribution TransferMode: $distributionTransferMode, " +
-                "Update Policy: $updatePolicy, Firmware Image Index: $firmwareImageIndex)"
+                "Update Policy: ${updatePolicy?.debugDescription}, Firmware Image Index: $firmwareImageIndex)"
     }
 
     companion object Initializer : BLOBMessageInitializer {
