@@ -898,6 +898,10 @@ class CoreDataRepository @Inject constructor(
         nodeToReconfigure = node
     }
 
+    fun resetNodeForReconfiguration() {
+        nodeToReconfigure = null
+    }
+
     companion object {
         val SMP_SERVICE = Uuid.parse("8D53DC1D-1DB7-4CD3-868B-8A527460AA84")
     }

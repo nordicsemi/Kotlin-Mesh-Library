@@ -6,7 +6,11 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +26,7 @@ import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.NodeIdentityStatus
 import no.nordicsemi.android.nrfmesh.core.common.NotStarted
 import no.nordicsemi.android.nrfmesh.core.common.Sending
+import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
 import no.nordicsemi.android.nrfmesh.core.common.unknownApplicationKeys
 import no.nordicsemi.android.nrfmesh.core.common.unknownNetworkKeys
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -40,12 +45,16 @@ import kotlin.uuid.Uuid
 @HiltViewModel(assistedFactory = NodeViewModel.Factory::class)
 internal class NodeViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
+    @param:IoDispatcher ioDispatcher: CoroutineDispatcher,
     @Assisted uuid: String,
 ) : ViewModel() {
+    // The configuration is executed in its own scope, so that it does not run on the main thread.
+    private val configurationScope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
     private lateinit var meshNetwork: MeshNetwork
     private lateinit var selectedNode: Node
     private val nodeUuid = Uuid.parse(uuidString = uuid)
     private val messenger = repository.messengers.messenger(uuid = nodeUuid)
+        ?: repository.messengers.create(uuid = nodeUuid)
     private var configurationJob: Job? = null
 
     private val _uiState = MutableStateFlow(NodeScreenUiState())
@@ -58,8 +67,8 @@ internal class NodeViewModel @AssistedInject internal constructor(
     }
 
     override fun onCleared() {
-        configurationJob?.cancel()
-        messenger?.clear()
+        configurationScope.cancel()
+        messenger.clear()
     }
 
     private fun observeNetworkChanges() {
@@ -89,9 +98,9 @@ internal class NodeViewModel @AssistedInject internal constructor(
      * Observes messenger to handle incoming messages from the repository.
      */
     private fun observeMessenger() {
-        messenger?.meshTaskFlow
-            ?.onEach { tasks -> _uiState.update { it.copy(tasks = tasks.toList()) } }
-            ?.launchIn(scope = viewModelScope)
+        messenger.meshTaskFlow
+            .onEach { tasks -> _uiState.update { it.copy(tasks = tasks.toList()) } }
+            .launchIn(scope = viewModelScope)
     }
 
     /**
@@ -103,40 +112,46 @@ internal class NodeViewModel @AssistedInject internal constructor(
                 if (it.connectionState is NetworkConnectionState.Connected) {
                     // Add a small delay to ensure proxy filter is set up before sending the message.
                     if (!selectedNode.isCompositionDataReceived) {
-                        messenger?.run{
-                            // Enqueue reconfiguration tasks in the node view model
-                            delay(timeMillis = 1000)
-                            repository.nodeToReconfigure?.let {
-                                enqueueReconfiguration(
-                                    messenger = messenger,
-                                    originalNode = it,
-                                    meshNetwork = meshNetwork,
-                                    target = selectedNode
-                                )
-                            }
+                        messenger.run {
                             if (configurationJob?.isActive != true) {
-                                configurationJob = viewModelScope.launch { execute() }
+                                configurationJob = configurationScope.launch {
+                                    delay(timeMillis = 1000)
+                                    // Execute the previously enqueued tasks
+                                    execute()
+                                    // Enqueue reconfiguration tasks in the node view model
+                                    repository.nodeToReconfigure?.let { originalNode ->
+                                        enqueueReconfiguration(
+                                            messenger = messenger,
+                                            originalNode = originalNode,
+                                            meshNetwork = meshNetwork,
+                                            target = selectedNode
+                                        )
+                                        execute()
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-            .launchIn(scope = viewModelScope)
+            .launchIn(scope = configurationScope)
     }
 
     internal fun onReconfigCompletePressed() {
         configurationJob?.cancel()
-        messenger?.clear()
+        messenger.clear()
+        repository.resetNodeForReconfiguration()
     }
 
     internal fun onCancelPressed() {
         configurationJob?.cancel()
-        messenger?.clear()
+        messenger.clear()
+        repository.resetNodeForReconfiguration()
     }
 
     internal fun onRetryPressed() {
         configurationJob?.cancel()
-        configurationJob = viewModelScope.launch { messenger?.retry() }
+        configurationJob = configurationScope.launch { messenger.retry() }
     }
 
     /**
