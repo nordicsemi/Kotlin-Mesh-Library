@@ -456,7 +456,7 @@ class SensorCadence(
     /** The Sensor Cadence encoded as it is sent over the mesh network. */
     internal val data: ByteArray
         get() = byteArrayOf(
-            ((fastCadencePeriodDivisor.toUInt() shl 1) or statusTriggerDelta.type.toUInt()).toByte()
+            ((statusTriggerDelta.type.toUInt() shl 7) or (fastCadencePeriodDivisor.toUInt())).toByte()
         ) + statusTriggerDelta.data +
                 byteArrayOf(statusMinIntervalValue.toByte()) +
                 fastCadenceLow.data + fastCadenceHigh.data
@@ -515,10 +515,11 @@ class SensorCadence(
             if (parameters.size - offset < 6) {
                 return null
             }
-            val divisor = (parameters[offset].toUByte().toUInt() shr 1).toUByte()
+            val divisor = (parameters[offset].toUByte().toUInt() and 0x7Fu).toUByte()
+            val triggerType = parameters[offset].toUByte().toUInt() shr 7
             val remaining = parameters.size - offset - 1
 
-            return when (parameters[offset].toUInt() and 0x01u) {
+            return when (triggerType) {
                 // The Status Trigger Delta Down, Up, Fast Cadence Low and High fields all have
                 // the same length. Status Min Interval takes 1 octet.
                 0x00u -> {
