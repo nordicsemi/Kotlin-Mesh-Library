@@ -267,7 +267,7 @@ class Messenger(private val meshNetworkManager: MeshNetworkManager) {
  * @param messenger          Messenger to be used.
  * @param meshNetwork        MeshNetwork to be used.
  * @param originalNode       Original Node from which the configuration should be derived from
- * @param target            New Node.
+ * @param target             New Node.
  */
 fun enqueueReconfiguration(
     messenger: Messenger,
@@ -379,6 +379,8 @@ fun enqueueReconfiguration(
             }
         meshNetwork.applicationKeys
             .knownTo(this)
+            // The application keys that are already known by the target are not added again.
+            .filter { !target.knows(key = it) }
             .forEach {
                 messenger.enqueueTask(
                     task = ConfigTask(
