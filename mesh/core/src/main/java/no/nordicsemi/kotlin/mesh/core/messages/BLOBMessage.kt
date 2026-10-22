@@ -102,11 +102,18 @@ enum class TransferMode(val value: UByte) {
 
     /**
      * Push BLOB Transfer mode.
+     * The client controls the flow of data and actively transmits all chunks within a block to
+     * the receiving server(s) using unicast or multicast address.
      */
     PUSH(0x01u),
 
     /**
      * Pull BLOB Transfer mode.
+     *
+     * The server controls the flow of data by requesting chunks as it
+     * is ready to process them. An example of a primary use would be when transferring data to Low
+     * Power Nodes (LPNs), allowing them to manage incoming traffic and avoid overflowing the Friend
+     * Queue.
      */
     PULL(0x02u);
 
