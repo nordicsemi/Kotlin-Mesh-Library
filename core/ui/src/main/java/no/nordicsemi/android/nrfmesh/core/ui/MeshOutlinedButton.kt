@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
@@ -27,6 +28,8 @@ import androidx.compose.ui.unit.dp
  * @param text                      Text to be shown on the button.
  * @param onClick                   Action to be performed on button click.
  * @param enabled                   Flag to enable or disable the button.
+ * @param minWidth                  Minimum width of the button, so that different buttons can be
+ *                                  given the same width.
  *
  */
 @Composable
@@ -40,9 +43,10 @@ fun MeshOutlinedButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
     border: BorderStroke? = ButtonDefaults.outlinedButtonBorder(enabled = enabled),
+    minWidth: Dp = 120.dp,
 ) {
     OutlinedButton(
-        modifier = modifier.widthIn(min = 120.dp),
+        modifier = modifier.widthIn(min = minWidth),
         contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
         border = border,
         enabled = enabled,

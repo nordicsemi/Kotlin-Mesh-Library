@@ -19,7 +19,8 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +50,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 
 @Composable
 internal fun Page5(
+    snackbarHostState: SnackbarHostState,
     session: DfuSession,
     onUploadCompletedChanged: (Boolean) -> Unit,
     onCancelled: () -> Unit,
@@ -63,6 +65,27 @@ internal fun Page5(
     // Once the image is on the Distributor, the distribution continues without the phone.
     LaunchedEffect(uiState.upload is UploadState.Completed) {
         onUploadCompletedChanged(uiState.upload is UploadState.Completed)
+    }
+    // Failures are reported in a snackbar.
+    val cancelFailedMessage = uiState.cancelError
+        ?.let { stringResource(R.string.label_cancel_failed, it) }
+    LaunchedEffect(cancelFailedMessage) {
+        cancelFailedMessage?.let {
+            snackbarHostState.run {
+                currentSnackbarData?.dismiss()
+                showSnackbar(message = it, duration = SnackbarDuration.Long)
+            }
+        }
+    }
+    val applyFailedMessage = (uiState.apply as? ApplyState.Failed)
+        ?.let { stringResource(R.string.label_apply_failed, it.message) }
+    LaunchedEffect(applyFailedMessage) {
+        applyFailedMessage?.let {
+            snackbarHostState.run {
+                currentSnackbarData?.dismiss()
+                showSnackbar(message = it, duration = SnackbarDuration.Long)
+            }
+        }
     }
     val scope = rememberCoroutineScope()
     var isCancelDialogShown by rememberSaveable { mutableStateOf(false) }
@@ -87,7 +110,6 @@ internal fun Page5(
                 isEnabled = uiState.distribution == DistributionState.Completed &&
                         (uiState.apply is ApplyState.Idle || uiState.apply is ApplyState.Failed),
                 isApplying = uiState.apply is ApplyState.Applying,
-                error = (uiState.apply as? ApplyState.Failed)?.message,
                 onClick = viewModel::apply
             )
         }
@@ -96,7 +118,6 @@ internal fun Page5(
         } else {
             CancelButton(
                 isCancelling = uiState.isCancelling,
-                error = uiState.cancelError,
                 onClick = { isCancelDialogShown = true }
             )
         }
@@ -127,14 +148,12 @@ internal fun Page5(
  *
  * @param isEnabled  Whether the button is enabled, that is once the distribution has completed.
  * @param isApplying Whether the Distributor is being asked to apply the update.
- * @param error      The reason why the update could not be applied, if it failed.
  * @param onClick    Invoked when the button is clicked.
  */
 @Composable
 private fun ApplyButton(
     isEnabled: Boolean,
     isApplying: Boolean,
-    error: String?,
     onClick: () -> Unit,
 ) {
     Box(
@@ -148,15 +167,8 @@ private fun ApplyButton(
             buttonIcon = Icons.Outlined.SystemUpdate,
             text = stringResource(R.string.label_apply),
             enabled = isEnabled,
+            minWidth = ACTION_BUTTON_MIN_WIDTH,
             onClick = onClick
-        )
-    }
-    error?.let {
-        Text(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            text = stringResource(R.string.label_apply_failed, it),
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall
         )
     }
 }
@@ -181,6 +193,7 @@ private fun CloseButton(onClick: () -> Unit) {
             text = stringResource(R.string.label_close),
             textColor = color,
             border = BorderStroke(width = 1.dp, color = color),
+            minWidth = ACTION_BUTTON_MIN_WIDTH,
             onClick = onClick
         )
     }
@@ -190,11 +203,10 @@ private fun CloseButton(onClick: () -> Unit) {
  * A button that cancels the whole firmware update, that is the upload and the distribution.
  *
  * @param isCancelling Whether the firmware update is being canceled.
- * @param error        The reason why the firmware update could not be canceled, if it failed.
  * @param onClick      Invoked when the button is clicked.
  */
 @Composable
-private fun CancelButton(isCancelling: Boolean, error: String?, onClick: () -> Unit) {
+private fun CancelButton(isCancelling: Boolean, onClick: () -> Unit) {
     val color = MaterialTheme.colorScheme.error
     Box(
         modifier = Modifier
@@ -215,21 +227,14 @@ private fun CancelButton(isCancelling: Boolean, error: String?, onClick: () -> U
                 color = color.copy(alpha = if (isCancelling) 0.38f else 1f)
             ),
             enabled = !isCancelling,
+            minWidth = ACTION_BUTTON_MIN_WIDTH,
             onClick = onClick
-        )
-    }
-    error?.let {
-        Text(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            text = stringResource(R.string.label_cancel_failed, it),
-            color = color,
-            style = MaterialTheme.typography.bodySmall
         )
     }
 }
 
 @Composable
-private fun UploadProgress(upload: UploadState) {
+private fun UploadProgress(upload: UploadState, distributorName: String?) {
     SectionTitle(title = stringResource(R.string.label_upload_progress))
     ElevatedCardItem(
         imageVector = Icons.Outlined.FileUpload,

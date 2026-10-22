@@ -161,6 +161,7 @@ internal fun FirmwareUpdateScreen(
                             )
 
                             5 -> Page5(
+                                snackbarHostState = snackbarHostState,
                                 session = session,
                                 onUploadCompletedChanged = { isUploadCompleted = it },
                                 onCancelled = onBackClick
