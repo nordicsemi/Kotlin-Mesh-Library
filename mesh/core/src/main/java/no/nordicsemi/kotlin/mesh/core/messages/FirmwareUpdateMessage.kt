@@ -3,13 +3,13 @@
 package no.nordicsemi.kotlin.mesh.core.messages
 
 import kotlinx.serialization.Serializable
+import no.nordicsemi.kotlin.data.ByteOrder
 import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareUpdateCancel
 import no.nordicsemi.kotlin.mesh.core.model.serialization.URLSerializer
 import java.net.URL
-import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * The Firmware ID state identifies a firmware image on the Node or on any subsystem within the Node.
@@ -412,8 +412,8 @@ enum class FirmwareUpdatePhase(val value: UByte) {
  * The Retrieved Update Phase field identifies the phase of the firmware update on the Firmware
  * Update Server.
  *
- * The value of the Retrieved Update Phase field is either the retrieved value of the Update Phase s
- * tate or a value set by the client.
+ * The value of the Retrieved Update Phase field is either the retrieved value of the Update Phase
+ * state or a value set by the client.
  */
 enum class RetrievedUpdatePhase(internal val value: UByte) {
     IDLE(0x0u),
