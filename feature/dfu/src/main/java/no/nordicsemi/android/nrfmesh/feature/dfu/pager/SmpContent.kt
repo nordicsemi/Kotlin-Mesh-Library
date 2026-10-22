@@ -135,9 +135,9 @@ internal fun SmpContent(
                     (firmwareDistributionStatus?.phase == FirmwareDistributionPhase.IDLE ||
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.FAILED ||
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.COMPLETED ||
+                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE ||
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
-                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE ||
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.APPLYING_UPDATE
                             )
                 ) {
