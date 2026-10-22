@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -73,7 +74,7 @@ internal fun Page5(
                 .verticalScroll(state = rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(space = 8.dp)
         ) {
-            UploadProgress(upload = uiState.upload)
+            UploadProgress(upload = uiState.upload, distributorName = uiState.distributorName)
             DistributionProgress(
                 distribution = uiState.distribution,
                 receivers = uiState.receivers,
@@ -243,7 +244,10 @@ private fun UploadProgress(upload: UploadState) {
                 upload.speedBytesPerSecond / 1000f
             )
 
-            is UploadState.Completed -> stringResource(R.string.label_upload_completed)
+            is UploadState.Completed -> distributorName
+                ?.let { stringResource(R.string.label_upload_completed_to, it) }
+                ?: stringResource(R.string.label_upload_completed)
+
             is UploadState.Failed -> stringResource(R.string.label_upload_failed, upload.message)
         },
         subtitleTextColor = when (upload) {
@@ -269,29 +273,27 @@ private fun DistributionProgress(
     receivers: List<Receiver>,
     receiverNames: Map<UShort, String>,
 ) {
-    if (distribution != DistributionState.Idle) {
-        SectionTitle(title = stringResource(R.string.label_distribution_progress))
-        ElevatedCardItem(
-            imageVector = Icons.Outlined.PlayArrow,
-            title = stringResource(R.string.label_firmware_distribution),
-            subtitle = when (distribution) {
-                DistributionState.Idle,
-                DistributionState.Starting,
-                    -> stringResource(R.string.label_starting_distribution)
-
-                is DistributionState.Started -> stringResource(R.string.label_distribution_started)
-                DistributionState.Completed -> stringResource(R.string.label_distribution_completed)
-                is DistributionState.Failed -> stringResource(
-                    R.string.label_distribution_failed,
-                    distribution.message
-                )
-            },
-            subtitleTextColor = when (distribution) {
-                is DistributionState.Failed -> MaterialTheme.colorScheme.error
-                else -> Color.Unspecified
-            }
-        )
-    }
+    SectionTitle(title = stringResource(R.string.label_distribution_progress))
+    ElevatedCardItem(
+        // The distribution is shown before it starts, greyed out, to show what to expect.
+        modifier = Modifier.alpha(alpha = if (distribution == DistributionState.Idle) DISABLED_ALPHA else 1f),
+        imageVector = Icons.Outlined.PlayArrow,
+        title = stringResource(R.string.label_firmware_distribution),
+        subtitle = when (distribution) {
+            DistributionState.Idle -> stringResource(R.string.label_distribution_waiting)
+            DistributionState.Starting -> stringResource(R.string.label_starting_distribution)
+            is DistributionState.Started -> stringResource(R.string.label_distribution_started)
+            DistributionState.Completed -> stringResource(R.string.label_distribution_completed)
+            is DistributionState.Failed -> stringResource(
+                R.string.label_distribution_failed,
+                distribution.message
+            )
+        },
+        subtitleTextColor = when (distribution) {
+            is DistributionState.Failed -> MaterialTheme.colorScheme.error
+            else -> Color.Unspecified
+        }
+    )
     if (receivers.isNotEmpty()) {
         SectionTitle(title = stringResource(R.string.label_receivers))
         receivers.forEach { receiver ->
@@ -312,7 +314,7 @@ private fun DistributionProgress(
 @Composable
 private fun ReceiverItem(name: String, receiver: Receiver) {
     val status = receiver.status
-    Column {
+    Column(modifier = Modifier.alpha(alpha = if (status == Receiver.Status.Idle) DISABLED_ALPHA else 1f)) {
         ElevatedCardItem(
             leadingIcon = {
                 Spacer(modifier = Modifier.size(size = 16.dp))
@@ -353,3 +355,9 @@ private fun ReceiverItem(name: String, receiver: Receiver) {
         )
     }
 }
+
+/** The minimum width of the apply, cancel and close buttons, so that they look the same. */
+private val ACTION_BUTTON_MIN_WIDTH = 200.dp
+
+/** The alpha of the items that are not active yet. */
+private const val DISABLED_ALPHA = 0.38f

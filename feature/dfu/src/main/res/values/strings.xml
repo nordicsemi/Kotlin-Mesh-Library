@@ -86,9 +86,11 @@
     <string name="label_reading_parameters">Reading parameters…</string>
     <string name="label_uploading_image">Uploading image… %1$d%% (%2$.1f kB/s)</string>
     <string name="label_upload_completed">Image uploaded to the Distributor</string>
+    <string name="label_upload_completed_to">Image uploaded to %1$s</string>
     <string name="label_upload_failed">Upload failed: %1$s</string>
     <string name="label_firmware_distribution">Firmware Distribution</string>
     <string name="label_starting_distribution">Starting distribution…</string>
+    <string name="label_distribution_waiting">Waiting for the image to be uploaded</string>
     <string name="label_distribution_started">Distribution started</string>
     <string name="label_distribution_failed">Distribution failed: %1$s</string>
     <string name="label_distribution_completed">Distribution completed</string>

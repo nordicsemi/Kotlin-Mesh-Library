@@ -89,6 +89,20 @@ internal class Page5ViewModel @Inject internal constructor(
         if (updatePackage == null && ongoingFirmwareSize == null) return
         if (session == startedSession) return
         startedSession = session
+        uiState.update { it.copy(distributorName = repository.proxyFilter.proxy?.name) }
+        // The receivers are known before the distribution starts, so they can be shown right away.
+        if (updatePackage != null) {
+            val network = repository.meshNetwork
+            uiState.update {
+                it.copy(
+                    receivers = session.receivers,
+                    receiverNames = session.receivers.associate { receiver ->
+                        receiver.address.address to
+                                (network?.node(address = receiver.address)?.name ?: "Unknown")
+                    }
+                )
+            }
+        }
         uploadJob?.cancel()
         uploadJob = viewModelScope.launch {
             when {
@@ -698,6 +712,8 @@ internal data class Page5ScreenUiState(
     val distribution: DistributionState = DistributionState.Idle,
     val receivers: List<Receiver> = emptyList(),
     val receiverNames: Map<UShort, String> = emptyMap(),
+    // The name of the Distributor, which the image is uploaded to.
+    val distributorName: String? = null,
     val isCancelling: Boolean = false,
     val cancelError: String? = null,
     // The update policy of the distribution, as reported by the Distributor.
