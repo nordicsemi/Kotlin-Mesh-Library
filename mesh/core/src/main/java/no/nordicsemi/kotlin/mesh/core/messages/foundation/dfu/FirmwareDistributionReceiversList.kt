@@ -1,17 +1,20 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 
+import no.nordicsemi.kotlin.data.ByteOrder
+import no.nordicsemi.kotlin.data.and
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.or
 import no.nordicsemi.kotlin.data.shl
 import no.nordicsemi.kotlin.data.shr
 import no.nordicsemi.kotlin.data.toByteArray
+import no.nordicsemi.kotlin.data.ushr
 import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.BLOBTransferMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdateMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.RetrievedUpdatePhase
 import no.nordicsemi.kotlin.mesh.core.model.Address
-import no.nordicsemi.kotlin.data.ByteOrder
+import kotlin.experimental.or
 
 
 /**
@@ -84,7 +87,8 @@ class FirmwareDistributionReceiversList(
         },
     )
 
-    override fun toString() = "FirmwareDistributionReceiversList(totalCount: $totalCount, firstIndex: $firstIndex, receivers: $receivers)"
+    override fun toString() =
+        "FirmwareDistributionReceiversList(totalCount: $totalCount, firstIndex: $firstIndex, receivers: $receivers)"
 
     /**
      * Defines the structure of an entry from the Distribution Receivers List state.
@@ -132,27 +136,25 @@ class FirmwareDistributionReceiversList(
                         (params[i].toInt() and 0xFF) or
                                 ((params[i + 1].toInt() and 0x7F) shl 8)
 
-                    val phaseValue =
-                        ((params[i + 1].toInt() ushr 7) or
-                                ((params[i + 2].toInt() and 0x07) shl 1))
+                    val phaseValue = ((params[i + 1] ushr 7) or ((params[i + 2] and 0x07) shl 1))
 
-                    val phase =
-                        RetrievedUpdatePhase.from(value = phaseValue.toUByte()) ?: return@let null
-                    val updateStateValue = (params[i + 2].toInt() ushr 3) and 0x07
+                    val phase = RetrievedUpdatePhase
+                        .from(value = phaseValue.toUByte())
+                        ?: return@let null
+                    val updateStateValue = (params[i + 2] ushr 3) and 0x07
 
-                    val updateStatus =
-                        FirmwareUpdateMessageStatus.from(value = updateStateValue.toUByte())
-                            ?: return@let null
+                    val updateStatus = FirmwareUpdateMessageStatus
+                        .from(value = updateStateValue.toUByte())
+                        ?: return@let null
 
                     val transferStateValue =
-                        ((params[i + 2].toInt() ushr 6) or
-                                ((params[i + 3].toInt() and 0x03) shl 2))
+                        ((params[i + 2] ushr 6) or ((params[i + 3] and 0x03) shl 2))
 
-                    val transferStatus =
-                        BLOBTransferMessageStatus.from(value = transferStateValue.toUByte())
-                            ?: return@let null
+                    val transferStatus = BLOBTransferMessageStatus
+                        .from(value = transferStateValue.toUByte())
+                        ?: return@let null
 
-                    val transferProgress = ((params[i + 3].toInt() ushr 2) * 2)
+                    val transferProgress = ((params[i + 3] ushr 2) * 2)
 
                     val imageIndex = params[i + 4]
 
