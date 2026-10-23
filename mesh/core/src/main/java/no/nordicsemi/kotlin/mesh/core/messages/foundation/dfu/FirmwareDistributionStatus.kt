@@ -79,24 +79,22 @@ class FirmwareDistributionStatus internal constructor(
     /**
      * Convenience constructor to create a FirmwareDistributionStatus message.
      *
-     * @param phase                    Phase of the firmware image distribution.
-     * @param multicastAddress         Multicast Address used in a Firmware Image Distribution. The
-     *                                 value of the Distribution Multicast Address field shall be a
-     *                                 [GroupAddress], [FixedGroupAddress] or a [VirtualAddress].
-     * @param firmwareImageIndex       Index of the firmware image in the Firmware Images List state
-     *                                 to use during firmware image distribution.
-     * @param multicastAddress         [DistributionMulticastAddress] can be [GroupAddress],
-     *                                 [FixedGroupAddress], [VirtualAddress] and [UnassignedAddress]
-     *                                 used in a firmware image distribution.
-     * @param applicationKeyIndex      Index of the application key used in a firmware image distribution.
-     * @param ttl                      Time To Live (TTL) value used in a firmware image distribution.
-     * @param distributionTransferMode Transfer mode used in a firmware image distribution.
-     * @param updatePolicy             Update policy used in a firmware image distribution.
-     * @param distributionTimeoutBase  Base timeout value used in a firmware image distribution.
+     * @param status FirmwareDistributionMessageStatus of the message.
      */
     constructor(status: FirmwareDistributionMessageStatus) : this(
         status = status,
-        phase = FirmwareDistributionPhase.IDLE,
+        phase = FirmwareDistributionPhase.IDLE
+    )
+
+    /**
+     * Convenience constructor to create a FirmwareDistributionStatus message.
+     *
+     * @param status FirmwareDistributionMessageStatus of the message.
+     * @param phase  FirmwareDistributionPhase of the message.
+     */
+    constructor(status: FirmwareDistributionMessageStatus, phase: FirmwareDistributionPhase) : this(
+        status = status,
+        phase = phase,
         firmwareImageIndex = null,
         multicastAddress = null,
         applicationKeyIndex = null,
@@ -116,9 +114,6 @@ class FirmwareDistributionStatus internal constructor(
      *                                      [VirtualAddress].
      * @param firmwareImageIndex            Index of the firmware image in the Firmware Images List
      *                                      state to use during firmware image distribution.
-     * @param multicastAddress              [DistributionMulticastAddress] can be [GroupAddress],
-     *                                      [FixedGroupAddress], [VirtualAddress] and
-     *                                      [UnassignedAddress] used in a firmware image distribution.
      * @param applicationKeyIndex           Index of the application key used in a firmware image
      *                                      distribution.
      * @param ttl                           Time To Live (TTL) value used in a firmware image distribution.
@@ -158,7 +153,14 @@ class FirmwareDistributionStatus internal constructor(
 
     override fun toString(): String {
         return "FirmwareDistributionStatus(status: $status, phase: $phase, " +
-                "Multicast Address: $multicastAddress, " +
+                "Multicast Address: ${
+                    multicastAddress?.toHexString(
+                        format = HexFormat {
+                            number.prefix = "0x"
+                            upperCase = true
+                        }
+                    )
+                }, " +
                 "Application Key Index: $applicationKeyIndex, " +
                 "ttl: $ttl, Distribution Timeout Base: $distributionTimeoutBase, " +
                 "Distribution TransferMode: $distributionTransferMode, " +
@@ -204,7 +206,11 @@ class FirmwareDistributionStatus internal constructor(
                         order = ByteOrder.LITTLE_ENDIAN
                     )
                 )
-            } else FirmwareDistributionStatus(status = status)
+            } else FirmwareDistributionStatus(
+                status = status,
+                phase = FirmwareDistributionPhase.from(value = params[1].toUByte())
+                    ?: return@let null
+            )
         }
     }
 }

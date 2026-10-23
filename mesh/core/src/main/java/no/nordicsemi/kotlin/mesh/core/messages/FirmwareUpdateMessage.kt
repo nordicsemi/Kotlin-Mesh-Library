@@ -324,6 +324,8 @@ enum class FirmwareDistributionMessageStatus(val value: UByte) {
             SUSPEND_FAILED -> "Suspend Failed"
         }
 
+    override fun toString() = debugDescription
+
     internal companion object {
 
         /**

@@ -12,6 +12,8 @@ class FirmwareDistributionCancel : AcknowledgedApplicationMessage {
     override val responseOpCode = FirmwareDistributionStatus.opCode
     override val parameters = null
 
+    override fun toString() = "FirmwareDistributionCancel()"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode = 0x831Bu
 

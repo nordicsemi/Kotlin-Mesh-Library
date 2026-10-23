@@ -57,17 +57,15 @@ class FirmwareDistributionStart internal constructor(
     override val responseOpCode: UInt = FirmwareDistributionStatus.opCode
 
     override val parameters: ByteArray
-        get() {
-            val data = applicationKeyIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    ttl.toByteArray() +
-                    distributionTimeoutBase.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                    ((distributionTransferMode.value) or (updatePolicy.value shl 2)).toByteArray() +
-                    firmwareImageIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            return when {
-                labelUuid != null -> data + labelUuid.toByteArray()
-                else -> data + address!!.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
-            }
-        }
+        get() = applicationKeyIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                ttl.toByteArray() +
+                distributionTimeoutBase.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                ((distributionTransferMode.value) or (updatePolicy.value shl 2)).toByteArray() +
+                firmwareImageIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                when {
+                    labelUuid != null -> labelUuid.toByteArray()
+                    else -> address!!.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+                }
 
     /**
      * Convenience constructor to create a FirmwareDistributionStart message.
@@ -283,6 +281,21 @@ class FirmwareDistributionStart internal constructor(
 
     )
 
+    override fun toString() =
+        "FirmwareDistributionStart(applicationKeyIndex: $applicationKeyIndex, " +
+                "ttl: $ttl, distributionTimeoutBase: $distributionTimeoutBase, " +
+                "distributionTransferMode: ${distributionTransferMode.debugDescription}, " +
+                "updatePolicy: ${updatePolicy.debugDescription}, " +
+                "firmwareImageIndex: $firmwareImageIndex, " +
+                // A virtual address is given by its label UUID.
+                "address: ${
+                    address?.toHexString(
+                        format = HexFormat {
+                            number.prefix = "0x"; upperCase = true
+                        }
+                    ) ?: labelUuid
+                })"
+
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode: UInt = 0x8319u
 
@@ -310,7 +323,9 @@ class FirmwareDistributionStart internal constructor(
                             offset = 6,
                             order = ByteOrder.LITTLE_ENDIAN
                         ),
-                        virtualAddress = VirtualAddress(Uuid.fromByteArray(params.sliceArray(indices = 8 until 24)))
+                        virtualAddress = VirtualAddress(
+                            uuid = Uuid.fromByteArray(params.sliceArray(indices = 8 until 24))
+                        )
                     )
                 } else {
                     FirmwareDistributionStart(
@@ -333,10 +348,7 @@ class FirmwareDistributionStart internal constructor(
                             offset = 6,
                             order = ByteOrder.LITTLE_ENDIAN
                         ),
-                        address = params.getUShort(
-                            offset = 6,
-                            order = ByteOrder.LITTLE_ENDIAN
-                        )
+                        address = params.getUShort(offset = 8, order = ByteOrder.LITTLE_ENDIAN)
                     )
                 }
             }
