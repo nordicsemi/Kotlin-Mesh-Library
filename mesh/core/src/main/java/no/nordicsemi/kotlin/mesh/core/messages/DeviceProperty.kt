@@ -10,7 +10,7 @@ import no.nordicsemi.kotlin.data.getShort
 import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
 import java.math.BigDecimal
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 

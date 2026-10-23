@@ -5,7 +5,6 @@ package no.nordicsemi.kotlin.mesh.core.layers.network
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.getUuid
 import no.nordicsemi.kotlin.mesh.core.oob.OobInformation
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -17,7 +16,6 @@ import kotlin.uuid.Uuid
  * @property uriHash           URI hash.
  * @property beaconType        Type of beacon.
  */
-@OptIn(ExperimentalUuidApi::class)
 internal class UnprovisionedDeviceBeacon(
     override val pdu: ByteArray,
     val deviceUuid: Uuid,
@@ -40,7 +38,6 @@ internal object UnprovisionedDeviceBeaconDecoder {
      * @param pdu Unprovisioned device beacon PDU.
      * @return an Unprovisioned Device beacon or null otherwise.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun decode(pdu: ByteArray): UnprovisionedDeviceBeacon? = when {
         pdu.size > 1 -> when (BeaconType.from(pdu[0].toUByte())) {
             BeaconType.UNPROVISIONED_DEVICE -> {

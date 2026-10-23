@@ -18,10 +18,8 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Provisioner
 import no.nordicsemi.kotlin.mesh.core.model.Range
 import no.nordicsemi.kotlin.mesh.core.model.UnicastRange
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @HiltViewModel(assistedFactory = UnicastRangesViewModel.Factory::class)
 internal class UnicastRangesViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
@@ -37,7 +35,6 @@ internal class UnicastRangesViewModel @AssistedInject internal constructor(
         observeNetwork()
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun observeNetwork() {
         repository.networkEvents
             .map { repository.meshNetwork }
@@ -79,7 +76,6 @@ internal class UnicastRangesViewModel @AssistedInject internal constructor(
 
     @AssistedFactory
     interface Factory {
-        @OptIn(ExperimentalUuidApi::class)
         fun create(uuid: Uuid): UnicastRangesViewModel
     }
 }

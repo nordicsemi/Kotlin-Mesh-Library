@@ -6,7 +6,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import no.nordicsemi.kotlin.mesh.core.ModelEventHandler
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Represents Bluetooth mesh model contained in an element in a node.
@@ -167,9 +166,6 @@ class Model internal constructor(
             ?.filter { it.isBoundTo(this) }
             ?: emptyList()
 
-    val supportsApplicationKeyBinding: Boolean
-        get() = !requiresDeviceKey
-
     val supportsDeviceKey: Boolean
         get() = requiresDeviceKey || isOpcodesAggregatorServer || isOpcodesAggregatorClient
 
@@ -229,7 +225,10 @@ class Model internal constructor(
     @Transient
     var eventHandler: ModelEventHandler? = null
 
-    val supportsModelPublication: Boolean?
+    val supportsApplicationKeyBinding: Boolean
+        get() = !requiresDeviceKey
+
+    val supportsModelPublication: Boolean
         get() = when ((modelId as? SigModelId)?.modelIdentifier) {
             // Foundation
             CONFIGURATION_SERVER_MODEL_ID,
@@ -334,11 +333,21 @@ class Model internal constructor(
             LIGHT_LC_SETUP_SERVER_MODEL_ID,
             LIGHT_LC_CLIENT_MODEL_ID,
                 -> true
+            // BLOB Transfer
+            BLOB_TRANSFER_SERVER_MODEL_ID,
+            BLOB_TRANSFER_CLIENT_MODEL_ID,
+                -> false
+            // Device Firmware Update
+            FIRMWARE_UPDATE_SERVER_MODEL_ID,
+            FIRMWARE_UPDATE_CLIENT_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID,
+            FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID,
+                -> false
 
-            else -> null
+            else -> false
         }
 
-    val supportsModelSubscription: Boolean?
+    val supportsModelSubscription: Boolean
         get() = when ((modelId as? SigModelId)?.modelIdentifier) {
             // Foundation
             CONFIGURATION_SERVER_MODEL_ID,
@@ -428,8 +437,16 @@ class Model internal constructor(
             LIGHT_LC_SETUP_SERVER_MODEL_ID,
             LIGHT_LC_CLIENT_MODEL_ID,
                 -> true
+            // BLOB Transfer
+            BLOB_TRANSFER_SERVER_MODEL_ID -> true
+            BLOB_TRANSFER_CLIENT_MODEL_ID -> false
+            // Device Firmware Update
+            FIRMWARE_UPDATE_SERVER_MODEL_ID -> true
+            FIRMWARE_UPDATE_CLIENT_MODEL_ID -> false
+            FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID -> true
+            FIRMWARE_DISTRIBUTION_CLIENT_MODEL_ID -> false
 
-            else -> null
+            else -> false
         }
 
     val directBaseModels: List<Model>
@@ -580,6 +597,24 @@ class Model internal constructor(
     }
 
     /**
+     * Returns true if the given Application Key index is bound to the model
+     */
+    fun isBound(index: KeyIndex) = boundApplicationKey(index) != null
+
+    /**
+     * Returns true if the given Application Key is bound to the model
+     */
+    fun isBound(key: ApplicationKey) = isBound(index = key.index)
+
+    /**
+     * Returns the bound application key for a given key index
+     *
+     * @param index Application key index.
+     * @return Bound application key or null if the key index is not bound to the model
+     */
+    fun boundApplicationKey(index: KeyIndex) = boundApplicationKeys.find { it.index == index }
+
+    /**
      * Sets the [Publish] settings for this model.
      *
      * @param publish Publish settings.
@@ -704,7 +739,6 @@ class Model internal constructor(
      * @param model Model to check if this model extends.
      * @return true if this model extends the given model, false otherwise.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun extends(model: Model): Boolean {
         val parentElement = parentElement ?: return false
         val otherParentElement = model.parentElement ?: return false
@@ -732,7 +766,6 @@ class Model internal constructor(
      * @param model Model to check if this model extends.
      * @return true if this model extends the given model, false otherwise.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun extendsDirectly(model: Model): Boolean {
         // Ensure models are on the same node
         val parentElement = parentElement ?: return false

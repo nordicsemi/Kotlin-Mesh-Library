@@ -167,7 +167,7 @@ private fun RelayFeature(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (relayRetransmit) {
-                    null -> stringResource(R.string.unknown)
+                    null -> stringResource(R.string.label_unknown)
                     else -> pluralStringResource(
                         R.plurals.label_transmissions_count,
                         retransmissions.roundToInt(),
@@ -192,7 +192,7 @@ private fun RelayFeature(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (relayRetransmit) {
-                    null -> stringResource(R.string.unknown)
+                    null -> stringResource(R.string.label_unknown)
                     else -> stringResource(R.string.label_time_ms, interval.roundToInt())
                 },
                 textAlign = TextAlign.End
@@ -269,7 +269,7 @@ private fun NetworkTransmit(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (networkTransmit) {
-                    null -> stringResource(R.string.unknown)
+                    null -> stringResource(R.string.label_unknown)
                     else -> pluralStringResource(
                         R.plurals.label_transmissions_count,
                         transmissions.roundToInt(),
@@ -292,7 +292,7 @@ private fun NetworkTransmit(
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
                 text = when (networkTransmit) {
-                    null -> stringResource(R.string.unknown)
+                    null -> stringResource(R.string.label_unknown)
                     else -> stringResource(R.string.label_time_ms, interval.roundToInt())
                 },
                 textAlign = TextAlign.End

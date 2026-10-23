@@ -11,7 +11,6 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import no.nordicsemi.kotlin.mesh.core.util.Utils
 import no.nordicsemi.kotlin.mesh.core.util.Utils.encode
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Serializer used to serialize and deserialize address objects in mesh cdb json.
@@ -29,7 +28,7 @@ internal object MeshAddressSerializer : KSerializer<MeshAddress> {
         )
     }
 
-    @OptIn(ExperimentalStdlibApi::class, ExperimentalUuidApi::class)
+    @OptIn(ExperimentalStdlibApi::class)
     override fun serialize(encoder: Encoder, value: MeshAddress) {
         encoder.encodeString(
             value = when (value) {
@@ -43,7 +42,6 @@ internal object MeshAddressSerializer : KSerializer<MeshAddress> {
      * Parses the 4-character or a 32-character hexadecimal string to a Mesh address.
      * @param hexAddress Hex address.
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun parse(hexAddress: String): MeshAddress = hexAddress.takeIf {
         it.length == 4
     }?.let { it ->

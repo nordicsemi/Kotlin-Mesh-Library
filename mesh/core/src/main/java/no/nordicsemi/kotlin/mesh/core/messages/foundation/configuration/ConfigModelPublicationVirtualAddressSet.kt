@@ -19,10 +19,9 @@ import no.nordicsemi.kotlin.mesh.core.model.StepResolution
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.experimental.and
 import kotlin.experimental.or
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * This message is used to set the publication state of a model.
@@ -32,7 +31,6 @@ import kotlin.uuid.ExperimentalUuidApi
  * @property elementAddress        The target element address.
  * @property publish               Contains the publication state with a VirtualAddress.
  */
-@OptIn(ExperimentalUuidApi::class)
 data class ConfigModelPublicationVirtualAddressSet(
     override val elementAddress: UnicastAddress,
     override val companyIdentifier: UShort?,

@@ -12,8 +12,7 @@ import no.nordicsemi.kotlin.mesh.core.model.ModelId
 import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
-import java.nio.ByteOrder
-import kotlin.uuid.ExperimentalUuidApi
+import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.uuid.Uuid
 
 
@@ -294,6 +293,7 @@ interface ConfigNetAndAppKeyMessage : ConfigNetKeyMessage, ConfigAppKeyMessage {
      *
      * @property networkKeyIndex The Network Key Index.
      * @property applicationKeyIndex The Application Key Index.
+     * @constructor Constructs a ConfigNetKeyAndAppKeyIndex.
      */
     data class ConfigNetKeyAndAppKeyIndex(
         val networkKeyIndex: KeyIndex,
@@ -367,7 +367,7 @@ interface ConfigAnyModelMessage : ConfigModelMessage {
 }
 
 /**
- * A base interface for a app key bind model message to a model.
+ * A base interface for an app key bind model message to a model.
  */
 interface ConfigAnyAppKeyModelMessage : ConfigAnyModelMessage, ConfigAppKeyMessage
 
@@ -403,7 +403,6 @@ interface ConfigAnyModelAddressMessage : ConfigAddressMessage, ConfigAnyModelMes
  *
  * @property virtualLabel Value of the 128-bt Virtual Label UUID.
  */
-@OptIn(ExperimentalUuidApi::class)
 interface ConfigVirtualLabelMessage : ConfigMessage {
     val virtualLabel: Uuid
 }

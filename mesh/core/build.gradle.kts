@@ -1,12 +1,12 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.nordic.kotlin)
+    alias(libs.plugins.nordic.publish.jvm)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.nordic.nexus.jvm)
 }
 
 group = "no.nordicsemi.kotlin.mesh"
 
-nordicNexusPublishing {
+nordicPublishing {
     POM_ARTIFACT_ID = "core"
     POM_NAME = "Bluetooth Mesh Core Library"
     POM_DESCRIPTION = "Provides a complete set of Bluetooth Mesh features for the Kotlin Mesh Library."

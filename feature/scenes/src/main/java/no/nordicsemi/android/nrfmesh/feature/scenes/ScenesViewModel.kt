@@ -12,8 +12,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
-import no.nordicsemi.android.nrfmesh.core.data.models.SceneData
-import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
+import no.nordicsemi.android.nrfmesh.core.data.ui.SceneData
 import no.nordicsemi.kotlin.mesh.core.exception.NoSceneNumberAvailable
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber

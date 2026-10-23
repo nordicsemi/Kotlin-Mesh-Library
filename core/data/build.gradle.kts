@@ -1,6 +1,7 @@
 plugins {
     // https://github.com/NordicSemiconductor/Android-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidFeatureConventionPlugin.kt
-    alias(libs.plugins.nordic.feature)
+    alias(libs.plugins.nordic.android.library)
+    alias(libs.plugins.nordic.feature.hilt.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.wire)
 }
@@ -18,6 +19,9 @@ dependencies {
     implementation(nordic.permissions.ble)
     implementation(nordic.kotlin.data)
     implementation(nordic.blek.client.android)
+    implementation(nordic.mcumgr.core.ktx)
+    implementation(nordic.mcumgr.ble2)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation("androidx.datastore:datastore-core:1.2.1")
     implementation("androidx.datastore:datastore-preferences:1.2.1")

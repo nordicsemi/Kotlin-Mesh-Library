@@ -1,6 +1,7 @@
 plugins {
     // https://github.com/NordicSemiconductor/Android-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidLibraryComposeConventionPlugin.kt
-    alias(libs.plugins.nordic.library.compose)
+    alias(libs.plugins.nordic.android.library)
+    alias(libs.plugins.nordic.feature.compose)
 }
 
 android {
@@ -12,12 +13,10 @@ dependencies {
     api(libs.androidx.compose.material.icons.extended)
     implementation(nordic.logger)
     implementation(nordic.log.timber)
+    api("androidx.compose.material3:material3:1.4.0")
 
     implementation(project(":core:common"))
     implementation(project(":core:navigation"))
-
-    implementation("androidx.compose.material3:material3:1.4.0")
-
     implementation(project(":mesh:core"))
 
     testImplementation(libs.junit4)

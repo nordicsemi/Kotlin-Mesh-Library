@@ -1,7 +1,7 @@
 package no.nordicsemi.kotlin.mesh.crypto
 
 import no.nordicsemi.kotlin.data.toByteArray
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 sealed class SecurityCredentials {
 

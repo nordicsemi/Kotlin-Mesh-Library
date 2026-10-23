@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -31,15 +32,15 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNo
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 @HiltViewModel(assistedFactory = ModelViewModel.Factory::class)
 internal class ModelViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,
-    @Assisted("address") private val address: Int,
-    @Assisted("modelId") private val modelId: Int,
+    @Assisted("address") address: Int,
+    @Assisted("modelId") modelId: Int,
 ) : ViewModel() {
+    private val unicastAddress = address.toUShort()
+    private val modelIdentifier = modelId.toUInt()
     private lateinit var meshNetwork: MeshNetwork
     private lateinit var selectedNode: Node
     private lateinit var selectedModel: Model
@@ -55,15 +56,17 @@ internal class ModelViewModel @AssistedInject internal constructor(
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
             .onEach { network ->
-                val modelState = network
-                    .element(elementAddress = address.toUShort())
-                    ?.model(modelId = modelId.toUInt())
-                    ?.let { model ->
-                        selectedNode = model.parentElement!!.parentNode!!
-                        ModelState.Success(model = model)
-                    } ?: ModelState.Error(Throwable("Element containing node not found"))
+                selectedModel = network.element(elementAddress = unicastAddress)
+                    ?.model(modelId = modelIdentifier)
+                    ?: throw IllegalStateException("Model not found")
+                selectedNode = selectedModel.parentElement?.parentNode
+                    ?: throw IllegalStateException("Node not found")
                 _uiState.update { state ->
-                    state.copy(modelState = modelState)
+                    state.copy(
+                        modelState = ModelState.Success(
+                            model = selectedModel
+                        )
+                    )
                 }
                 meshNetwork = network // update the local network instance
             }
@@ -210,6 +213,14 @@ internal class ModelViewModel @AssistedInject internal constructor(
             }
         }
     }
+
+    internal suspend fun send(
+        model: Model,
+        message: AcknowledgedMeshMessage,
+    ) = repository.send(model = model, ackedMessage = message)
+
+    @Suppress("UNUSED_PARAMETER")
+    internal fun startPairing(context: Context) = repository.startPairing()
 
     internal fun resetMessageState() {
         _uiState.update { state -> state.copy(messageState = NotStarted) }

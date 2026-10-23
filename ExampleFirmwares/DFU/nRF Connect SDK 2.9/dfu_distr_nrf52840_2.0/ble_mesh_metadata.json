@@ -1,0 +1,44 @@
+{
+    "sign_version": {
+        "major": 2,
+        "minor": 0,
+        "revision": 0,
+        "build_number": 0
+    },
+    "binary_size": 456426,
+    "core_type": 1,
+    "composition_data": {
+        "cid": 89,
+        "pid": 0,
+        "vid": 0,
+        "crpl": 10,
+        "features": 7,
+        "elements": [
+            {
+                "location": 1,
+                "sig_models": [
+                    0,
+                    2,
+                    5121,
+                    5123,
+                    5120,
+                    5124
+                ],
+                "vendor_models": [
+                    5832718
+                ]
+            },
+            {
+                "location": 2,
+                "sig_models": [
+                    5120,
+                    5122
+                ],
+                "vendor_models": []
+            }
+        ]
+    },
+    "composition_hash": 3155069765,
+    "encoded_metadata": "0200000000000000eaf60601458b0ebc0200",
+    "firmware_id": "59000200000000000000"
+}

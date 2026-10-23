@@ -3,8 +3,8 @@
 package no.nordicsemi.kotlin.mesh.core.messages.health
 
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 
 /**
  * A Health Period Status is an unacknowledged message used to report the
@@ -12,7 +12,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
  *
  * @property fastPeriodDivisor The Health Fast Period Divisor state.
  */
-class HealthPeriodStatus(val fastPeriodDivisor: UByte) : MeshResponse, UnacknowledgedMeshMessage {
+class HealthPeriodStatus(val fastPeriodDivisor: UByte) : ApplicationResponse, UnacknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray = byteArrayOf(fastPeriodDivisor.toByte())
 

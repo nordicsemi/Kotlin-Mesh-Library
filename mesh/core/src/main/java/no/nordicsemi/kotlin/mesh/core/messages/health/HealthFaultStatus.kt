@@ -5,9 +5,9 @@ package no.nordicsemi.kotlin.mesh.core.messages.health
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * A Health Fault Status is an unacknowledged message used to report the current
@@ -22,7 +22,7 @@ class HealthFaultStatus(
     val testId: UByte,
     val companyIdentifier: UShort,
     val faults: List<HealthFault> = listOf(),
-) : MeshResponse, UnacknowledgedMeshMessage {
+) : ApplicationResponse, UnacknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray =
         byteArrayOf(testId.toByte()) +

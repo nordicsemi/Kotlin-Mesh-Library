@@ -34,7 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
-import no.nordicsemi.android.nrfmesh.core.data.models.ApplicationKeyData
+import no.nordicsemi.android.nrfmesh.core.data.ui.ApplicationKeyData
 import no.nordicsemi.android.nrfmesh.core.ui.ApplicationKeyRow
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField

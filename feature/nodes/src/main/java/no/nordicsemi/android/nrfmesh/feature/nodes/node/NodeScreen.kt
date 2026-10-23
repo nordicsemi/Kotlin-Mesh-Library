@@ -85,10 +85,9 @@ import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 import java.util.Locale.ROOT
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun NodeScreen(
     messageState: MessageState,
@@ -113,7 +112,11 @@ internal fun NodeScreen(
 ) {
     val scope = rememberCoroutineScope()
     val pullToRefreshState = rememberPullToRefreshState()
-    var showConfigurationTasks by rememberSaveable { mutableStateOf(tasks.isNotEmpty()) }
+    // The state is reset when tasks are enqueued, so that the sheet is shown even if the screen was
+    // composed before they were.
+    var showConfigurationTasks by rememberSaveable(tasks.size) {
+        mutableStateOf(tasks.isNotEmpty())
+    }
     val reconfigBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     PullToRefreshBox(
         modifier = Modifier.fillMaxSize(),
@@ -145,7 +148,7 @@ internal fun NodeScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 title = stringResource(id = R.string.title_keys)
             )
-            DeviceKeyRow(deviceKey = nodeData.deviceKey ?: stringResource(R.string.unknown))
+            DeviceKeyRow(deviceKey = nodeData.deviceKey ?: stringResource(R.string.label_unknown))
             NetworkKeysRow(
                 count = nodeData.netKeys.size,
                 isSelected = selectedItem == ClickableNodeInfoItem.NetworkKeys
@@ -353,6 +356,7 @@ private fun ApplicationKeysRow(
             true -> CardDefaults.outlinedCardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
+
             else -> CardDefaults.outlinedCardColors()
         },
         onClick = onApplicationKeysClicked,
@@ -400,8 +404,7 @@ private fun CompanyIdentifier(companyIdentifier: UShort?) {
                             upperCase = true
                         }
                     ).uppercase()
-            }
-            ?: stringResource(R.string.unknown),
+            } ?: stringResource(R.string.label_unknown)
     )
 }
 
@@ -417,7 +420,7 @@ private fun ProductIdentifier(productIdentifier: UShort?) {
                 number.prefix = "0x"
                 upperCase = true
             }
-        ) ?: stringResource(R.string.unknown),
+        ) ?: stringResource(R.string.label_unknown)
     )
 }
 
@@ -433,7 +436,7 @@ private fun ProductVersion(productVersion: UShort?) {
                 number.prefix = "0x"
                 upperCase = true
             }
-        ) ?: stringResource(R.string.unknown),
+        ) ?: stringResource(R.string.label_unknown,)
     )
 }
 
@@ -444,7 +447,7 @@ private fun ReplayProtectionCount(replayProtectionCount: UShort?) {
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.SafetyCheck,
         title = stringResource(R.string.label_replay_protection_count),
-        subtitle = "${replayProtectionCount ?: stringResource(R.string.unknown)}",
+        subtitle = "${replayProtectionCount ?: stringResource(R.string.label_unknown)}",
     )
 }
 
@@ -654,21 +657,4 @@ private fun RemoveNode(
             }
         )
     }
-}
-
-@Composable
-fun TaskStatus.color() = when (this) {
-    is TaskStatus.Idle -> Color.Gray
-    is TaskStatus.InProgress -> Color.Blue
-    is TaskStatus.Skipped -> Color.Gray
-    is TaskStatus.Completed -> Color.Green
-    is TaskStatus.Error -> Color.Red
-}
-
-fun TaskStatus.description() = when (this) {
-    TaskStatus.Idle -> "Waiting..."
-    TaskStatus.InProgress -> "In progress"
-    TaskStatus.Skipped -> "Skipped"
-    TaskStatus.Completed -> "Success"
-    is TaskStatus.Error -> error
 }

@@ -5,8 +5,8 @@ package no.nordicsemi.kotlin.mesh.core.messages.health
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * A Health Fault Clear Unacknowledged is an unacknowledged message used to clear the
@@ -16,7 +16,7 @@ import java.nio.ByteOrder
  */
 class HealthFaultClearUnacknowledged(
     val companyIdentifier: UShort
-) : UnacknowledgedMeshMessage {
+) : UnacknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray = companyIdentifier.toByteArray(ByteOrder.LITTLE_ENDIAN)
 

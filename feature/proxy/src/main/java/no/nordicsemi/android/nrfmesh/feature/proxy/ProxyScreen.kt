@@ -95,7 +95,6 @@ import no.nordicsemi.kotlin.mesh.core.model.element
 import no.nordicsemi.kotlin.mesh.core.model.fixedGroupAddresses
 import no.nordicsemi.kotlin.mesh.core.util.networkIdentity
 import no.nordicsemi.kotlin.mesh.core.util.nodeIdentity
-import kotlin.uuid.ExperimentalUuidApi
 
 @Composable
 internal fun ProxyScreen(
@@ -103,8 +102,9 @@ internal fun ProxyScreen(
     onBluetoothEnabled: (Boolean) -> Unit,
     onLocationEnabled: (Boolean) -> Unit,
     onAutoConnectToggled: (Boolean) -> Unit,
-    onScanResultSelected: (ScanResult) -> Unit,
+    onConnectClicked: () -> Unit,
     onDisconnectClicked: () -> Unit,
+    onScanResultSelected: (ScanResult) -> Unit,
     send: (ProxyConfigurationMessage) -> Unit,
     resetMessageState: () -> Unit,
 ) {
@@ -119,8 +119,9 @@ internal fun ProxyScreen(
             onBluetoothEnabled = onBluetoothEnabled,
             onLocationEnabled = onLocationEnabled,
             onAutoConnectToggled = onAutoConnectToggled,
-            onScanResultSelected = onScanResultSelected,
+            onConnectClicked = onConnectClicked,
             onDisconnectClicked = onDisconnectClicked,
+            onScanResultSelected = onScanResultSelected,
             send = send,
             resetMessageState = resetMessageState
         )
@@ -144,6 +145,7 @@ private fun ProxyContent(
     onLocationEnabled: (Boolean) -> Unit,
     onAutoConnectToggled: (Boolean) -> Unit,
     onScanResultSelected: (ScanResult) -> Unit,
+    onConnectClicked: () -> Unit,
     onDisconnectClicked: () -> Unit,
     send: (ProxyConfigurationMessage) -> Unit,
     resetMessageState: () -> Unit,
@@ -161,8 +163,9 @@ private fun ProxyContent(
                     networkKeys = network.networkKeys,
                     proxyConnectionState = proxyConnectionState,
                     onAutoConnectToggled = onAutoConnectToggled,
-                    onScanResultSelected = onScanResultSelected,
-                    onDisconnectClicked = onDisconnectClicked
+                    onConnectClicked = onConnectClicked,
+                    onDisconnectClicked = onDisconnectClicked,
+                    onScanResultSelected = onScanResultSelected
                 )
                 FilterSection(
                     network = network,
@@ -179,13 +182,14 @@ private fun ProxyContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProxyFilterInfo(
     nodes: List<Node>,
     networkKeys: List<NetworkKey>,
     proxyConnectionState: ProxyConnectionState,
     onAutoConnectToggled: (Boolean) -> Unit,
+    onConnectClicked: () -> Unit,
     onDisconnectClicked: () -> Unit,
     onScanResultSelected: (ScanResult) -> Unit,
 ) {
@@ -195,7 +199,7 @@ private fun ProxyFilterInfo(
     AutomaticConnectionRow(
         proxyConnectionState = proxyConnectionState,
         onAutoConnectToggled = onAutoConnectToggled,
-        onConnectClicked = { showProxyScannerSheet = true },
+        onConnectClicked = onConnectClicked,
         onDisconnectClicked = onDisconnectClicked
     )
     if (showProxyScannerSheet)

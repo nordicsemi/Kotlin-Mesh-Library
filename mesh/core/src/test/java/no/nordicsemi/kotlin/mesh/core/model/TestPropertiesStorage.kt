@@ -1,9 +1,7 @@
-@file:OptIn(ExperimentalUuidApi::class)
 
 package no.nordicsemi.kotlin.mesh.core.model
 
 import no.nordicsemi.kotlin.mesh.core.SecurePropertiesStorage
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**

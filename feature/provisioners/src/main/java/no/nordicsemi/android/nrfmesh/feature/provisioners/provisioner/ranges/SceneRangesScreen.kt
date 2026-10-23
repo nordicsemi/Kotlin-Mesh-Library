@@ -20,10 +20,9 @@ import no.nordicsemi.kotlin.mesh.core.model.SceneRange
 import no.nordicsemi.kotlin.mesh.core.model.minus
 import no.nordicsemi.kotlin.mesh.core.model.overlaps
 import no.nordicsemi.kotlin.mesh.core.model.plus
-import kotlin.uuid.ExperimentalUuidApi
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SceneRangesScreen(
     snackbarHostState: SnackbarHostState,

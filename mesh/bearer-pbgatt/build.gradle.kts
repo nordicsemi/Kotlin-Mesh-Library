@@ -1,11 +1,11 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.nordic.nexus.jvm)
+    alias(libs.plugins.nordic.kotlin)
+    alias(libs.plugins.nordic.publish.jvm)
 }
 
 group = "no.nordicsemi.kotlin.mesh"
 
-nordicNexusPublishing {
+nordicPublishing {
     POM_ARTIFACT_ID = "bearer-pbgatt"
     POM_NAME = "PB-GATT extension for Bluetooth Mesh"
     POM_DESCRIPTION = "Provides a GATT implementation of the Provisioning bearer for the Kotlin Mesh Library."

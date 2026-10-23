@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.convertToString
-import no.nordicsemi.android.nrfmesh.core.data.models.ProvisionerData
+import no.nordicsemi.android.nrfmesh.core.data.ui.ProvisionerData
 import no.nordicsemi.android.nrfmesh.core.ui.AddressRangeLegendsForProvisioner
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
@@ -71,9 +71,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Provisioner
 import no.nordicsemi.kotlin.mesh.core.model.SceneRange
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.UnicastRange
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 internal fun ProvisionerScreen(
     snackbarHostState: SnackbarHostState,
@@ -103,7 +101,6 @@ internal fun ProvisionerScreen(
     }
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun ProvisionerContent(
     snackbarHostState: SnackbarHostState,
@@ -207,7 +204,6 @@ fun Name(
     )
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun UnicastAddress(
     snackbarHostState: SnackbarHostState,

@@ -16,10 +16,9 @@ import no.nordicsemi.android.nrfmesh.core.data.GenericOnOffState
 import no.nordicsemi.android.nrfmesh.core.data.ProtoSceneStatesDataStore
 import no.nordicsemi.android.nrfmesh.core.data.SceneState
 import no.nordicsemi.android.nrfmesh.core.data.SceneStates
-import no.nordicsemi.android.nrfmesh.core.data.models.SceneNumber
+import no.nordicsemi.android.nrfmesh.core.data.ui.SceneNumber
 import java.io.InputStream
 import java.io.OutputStream
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class SceneStatesDataStoreStorage @Inject constructor(
@@ -28,7 +27,6 @@ class SceneStatesDataStoreStorage @Inject constructor(
 ) : GenericOnOffStateStorage, GenericLevelStateStorage {
      private val scope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
 
-    @OptIn(ExperimentalUuidApi::class)
     private suspend fun sceneStates(uuid: Uuid, sceneNumber: SceneNumber) = store.data
         .firstOrNull()
         ?.sceneStates
@@ -41,7 +39,7 @@ class SceneStatesDataStoreStorage @Inject constructor(
     /**
      * Creates a default [ProtoSceneStatesDataStore] with a single entry for the given [uuid].
      */
-    @OptIn(ExperimentalUuidApi::class, ExperimentalStdlibApi::class)
+    @OptIn(ExperimentalStdlibApi::class)
     private fun createSceneStatesDataStore(
         uuid: Uuid,
         sceneNumber: SceneNumber,
@@ -70,7 +68,7 @@ class SceneStatesDataStoreStorage @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class, ExperimentalStdlibApi::class)
+    @OptIn(ExperimentalStdlibApi::class)
     override fun storeGenericOnOffState(
         uuid: Uuid,
         sceneNumber: SceneNumber,
@@ -101,7 +99,6 @@ class SceneStatesDataStoreStorage @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun readGenericOnOffState(
         uuid: Uuid,
         sceneNumber: SceneNumber,
@@ -111,7 +108,6 @@ class SceneStatesDataStoreStorage @Inject constructor(
         ?.genericOnOffStates[sceneNumber.toInt()]
         ?.on == true
 
-    @OptIn(ExperimentalUuidApi::class)
     override fun storeGenericLevelState(
         uuid: Uuid,
         sceneNumber: SceneNumber,
@@ -142,7 +138,6 @@ class SceneStatesDataStoreStorage @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun readGenericLevelState(
         uuid: Uuid,
         sceneNumber: SceneNumber,

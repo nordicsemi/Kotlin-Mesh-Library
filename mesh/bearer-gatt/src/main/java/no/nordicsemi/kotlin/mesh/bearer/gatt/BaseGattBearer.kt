@@ -14,12 +14,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.kotlin.ble.client.CentralManager
 import no.nordicsemi.kotlin.ble.client.Peripheral
 import no.nordicsemi.kotlin.ble.client.RemoteCharacteristic
 import no.nordicsemi.kotlin.ble.client.RemoteService
+import no.nordicsemi.kotlin.ble.client.RemoteServices
 import no.nordicsemi.kotlin.ble.client.ScanResult
 import no.nordicsemi.kotlin.ble.core.WriteType
 import no.nordicsemi.kotlin.mesh.bearer.BearerError
@@ -33,7 +35,6 @@ import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Base implementation of the GATT Proxy Bearer.
@@ -87,7 +88,6 @@ abstract class BaseGattBearer<
      *
      * @param services List of remote services discovered on the peripheral.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun configureGatt(services: List<RemoteService>?) {
         var dataInChar: RemoteCharacteristic? = null
         var dataOutChar: RemoteCharacteristic? = null
@@ -116,7 +116,6 @@ abstract class BaseGattBearer<
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun open() {
         // Avoid multiple opens if already observing services
         if (servicesObserver != null) return
@@ -127,6 +126,8 @@ abstract class BaseGattBearer<
             var suspended = true
             // Start observing the discovered services
             servicesObserver = peripheral.services()
+                // Only the discovered state carries services, in any other state they are unknown.
+                .map { (it as? RemoteServices.Discovered)?.services }
                 .onEach { services ->
                     configureGatt(services = services)
                     if (suspended && services != null) {
@@ -147,7 +148,6 @@ abstract class BaseGattBearer<
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     protected open suspend fun configurePeripheral(peripheral: P) {
         // Empty
     }

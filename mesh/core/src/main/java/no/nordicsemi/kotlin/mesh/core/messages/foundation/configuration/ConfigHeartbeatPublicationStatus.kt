@@ -20,7 +20,7 @@ import no.nordicsemi.kotlin.mesh.core.model.RemainingHeartbeatPublicationCount
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
 import no.nordicsemi.kotlin.mesh.core.model.toRemainingPublicationCount
 import no.nordicsemi.kotlin.mesh.core.model.toUShort
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message contains the Heartbeat Publication status of an element. This is sent in response to

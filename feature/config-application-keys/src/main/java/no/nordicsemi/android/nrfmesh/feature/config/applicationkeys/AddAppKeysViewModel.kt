@@ -27,10 +27,8 @@ import no.nordicsemi.kotlin.mesh.core.messages.ConfigResponse
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @HiltViewModel(assistedFactory = AddAppKeysViewModel.Factory::class)
 internal class AddAppKeysViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,

@@ -11,7 +11,6 @@ import no.nordicsemi.kotlin.mesh.core.exception.DoesNotBelongToNetwork
 import no.nordicsemi.kotlin.mesh.core.exception.OverlappingProvisionerRanges
 import no.nordicsemi.kotlin.mesh.core.exception.RangeAlreadyAllocated
 import no.nordicsemi.kotlin.mesh.core.model.serialization.UuidSerializer
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -37,7 +36,6 @@ import kotlin.uuid.Uuid
  * @constructor Creates a Provisioner object.
  */
 @ConsistentCopyVisibility
-@OptIn(ExperimentalUuidApi::class)
 @Suppress("unused")
 @Serializable
 data class Provisioner internal constructor(

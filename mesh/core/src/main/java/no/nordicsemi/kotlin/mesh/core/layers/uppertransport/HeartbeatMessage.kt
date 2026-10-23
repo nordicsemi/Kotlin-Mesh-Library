@@ -11,7 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.model.HeartbeatDestination
 import no.nordicsemi.kotlin.mesh.core.model.HeartbeatPublication
 import no.nordicsemi.kotlin.mesh.core.model.IvIndex
 import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * Defines a HeartbeatMessage
