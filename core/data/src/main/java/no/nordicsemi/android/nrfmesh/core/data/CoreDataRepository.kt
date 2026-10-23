@@ -843,6 +843,11 @@ class CoreDataRepository @Inject constructor(
         }
     }
 
+    private val _isPairing = MutableStateFlow(false)
+
+    /** Whether the LE pairing with the connected proxy is in progress. */
+    val isPairing = _isPairing.asStateFlow()
+
     /**
      * Starts the LE pairing with the connected proxy.
      *
@@ -853,6 +858,7 @@ class CoreDataRepository @Inject constructor(
     fun startPairing() {
         if (pairingJob?.isActive == true) return
         val transport = bleMcuMgrTransport() ?: return
+        _isPairing.value = true
         pairingJob = ioScope.launch {
             try {
                 transport.connect()
@@ -877,7 +883,7 @@ class CoreDataRepository @Inject constructor(
                     level = LogLevel.APPLICATION
                 )
             }
-        }
+        }.also { job -> job.invokeOnCompletion { _isPairing.value = false } }
     }
 
     private fun releaseMcuMgrTransport() {

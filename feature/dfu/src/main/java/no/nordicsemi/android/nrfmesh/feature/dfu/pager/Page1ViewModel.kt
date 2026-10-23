@@ -1,13 +1,15 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -17,18 +19,19 @@ import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository.Companion.SMP_SERVICE
 import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
-import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.RemoteServices
+import no.nordicsemi.kotlin.ble.core.BondState
+import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
-import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
-import no.nordicsemi.kotlin.mesh.core.model.Model
-import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
+import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
+import no.nordicsemi.kotlin.mesh.core.model.Model
+import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import javax.inject.Inject
 
@@ -40,12 +43,47 @@ internal class Page1ViewModel @Inject internal constructor(
     private val _uiState = MutableStateFlow(Page1ScreenUiState())
     internal val uiState = _uiState.asStateFlow()
     private lateinit var network: MeshNetwork
+    private var bondStateJob: Job? = null
 
     init {
         observeNetwork()
         observeProxyConnectionState()
         observeProxyFilterState()
         observeSmpState()
+        observeBondState()
+        observePairingState()
+    }
+
+    private fun observePairingState() {
+        repository.isPairing
+            .onEach { isPairing -> _uiState.update { it.copy(isPairing = isPairing) } }
+            .launchIn(scope = viewModelScope)
+    }
+
+    /**
+     * Observes the bond state of the connected proxy, so that the page knows as soon as the device
+     * is bonded, either already, or after the pairing.
+     *
+     * The peripheral depends on the connected proxy, so the bond state is observed again whenever
+     * the proxy gets connected.
+     */
+    private fun observeBondState() {
+        repository.proxyConnectionStateFlow
+            .map { it.connectionState is NetworkConnectionState.Connected }
+            .distinctUntilChanged()
+            .onEach { isConnected ->
+                bondStateJob?.cancel()
+                bondStateJob = null
+                if (isConnected) {
+                    bondStateJob = repository.getPeripheral()
+                        ?.bondState
+                        ?.onEach { bondState ->
+                            _uiState.update { it.copy(isBonded = bondState == BondState.BONDED) }
+                        }
+                        ?.launchIn(scope = viewModelScope)
+                }
+            }
+            .launchIn(scope = viewModelScope)
     }
 
     private fun observeSmpState() {
@@ -130,9 +168,11 @@ internal class Page1ViewModel @Inject internal constructor(
             .launchIn(scope = viewModelScope)
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    internal fun startPairing(context: Context) = repository.startPairing()
+    internal fun startPairing() = repository.startPairing()
 
+    /**
+     * Sends the message to the model, binding an application key to it first, if none is bound.
+     */
     internal suspend fun send(
         model: Model,
         message: AcknowledgedMeshMessage,
@@ -156,16 +196,6 @@ internal class Page1ViewModel @Inject internal constructor(
             ?: throw IllegalStateException("Node not found")
         val key = node.applicationKeys.firstOrNull() ?: addApplicationKey(node = node)
 
-internal data class Page1ScreenUiState(
-    val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
-    val messageState: MessageState = NotStarted,
-    val name: String? = null,
-    val unicastAddress: UnicastAddress? = null,
-    val node: Node? = null,
-    val isBonded: Boolean? = false,
-)    /**
-     * Sends the message to the model, binding an application key to it first, if none is bound.
-     */
         val response = repository.send(
             node = node,
             message = ConfigModelAppBind(model = model, applicationKey = key)
@@ -195,3 +225,12 @@ internal data class Page1ScreenUiState(
         return key
     }
 }
+internal data class Page1ScreenUiState(
+    val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
+    val messageState: MessageState = NotStarted,
+    val name: String? = null,
+    val unicastAddress: UnicastAddress? = null,
+    val node: Node? = null,
+    val isBonded: Boolean? = false,
+    val isPairing: Boolean = false,
+)

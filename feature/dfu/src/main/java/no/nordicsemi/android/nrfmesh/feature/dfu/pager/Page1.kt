@@ -86,10 +86,12 @@ internal fun Page1(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit) {
                         ?.takeIf { it.status == 0.toUByte() }
                         ?.let {
                             passKey = it.passKey
-                            viewModel.startPairing(context)
+                            viewModel.startPairing()
                         }
                 }
             },
+            // A new request would change the passkey of the pairing that is in progress.
+            enabled = !uiState.isPairing && !shouldShowProgressIcon,
             isOnClickActionInProgress = shouldShowProgressIcon
         )
     }
@@ -125,7 +127,7 @@ internal fun Page1(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit) {
                     ?.let {
                         passKey = it.passKey
                         println("Starting pairing")
-                        viewModel.startPairing(context)
+                        viewModel.startPairing()
                     }
             } catch (e: Exception) {
                 error = e
