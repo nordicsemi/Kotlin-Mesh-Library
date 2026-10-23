@@ -85,7 +85,8 @@ internal fun SmpContent(
     firmwareDistributionStatus: FirmwareDistributionStatus?,
     capabilitiesStatus: FirmwareDistributionCapabilitiesStatus?,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
-    enableNextStage: () -> Unit,
+    onDistributionStatusChanged: (FirmwareDistributionStatus) -> Unit,
+    onNextStageEnabledChanged: (Boolean) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -128,6 +129,7 @@ internal fun SmpContent(
                     connectionState = connectionState,
                     model = node.model(modelId = firmwareDistributionServer) ?: return,
                     firmwareDistributionStatus = firmwareDistributionStatus,
+                    onDistributionStatusChanged = onDistributionStatusChanged,
                     selectedKey = selectedKey,
                     send = send
                 )
@@ -138,6 +140,7 @@ internal fun SmpContent(
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE ||
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
+                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.CANCELING_UPDATE ||
                             firmwareDistributionStatus?.phase == FirmwareDistributionPhase.APPLYING_UPDATE
                             )
                 ) {
@@ -146,7 +149,8 @@ internal fun SmpContent(
                         capabilitiesStatus = capabilitiesStatus,
                         model = node.model(modelId = firmwareDistributionServer) ?: return,
                         send = send,
-                        enableNextStage = enableNextStage
+                        onDistributionStatusChanged = onDistributionStatusChanged,
+                        onNextStageEnabledChanged = onNextStageEnabledChanged
                     )
                 }
             }
@@ -539,11 +543,13 @@ private fun DistributorStatus(
     connectionState: NetworkConnectionState,
     model: Model,
     firmwareDistributionStatus: FirmwareDistributionStatus?,
+    onDistributionStatusChanged: (FirmwareDistributionStatus) -> Unit,
     selectedKey: ApplicationKey?,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
     val scope = rememberCoroutineScope()
-    var distributionStatus by remember { mutableStateOf(firmwareDistributionStatus) }
+    // The status is kept by the page, so that the other sections can use it as well.
+    val distributionStatus = firmwareDistributionStatus
     var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
     //var phaseValue by remember(key1 = phase) { mutableStateOf(phase) }
     Row(
@@ -559,11 +565,10 @@ private fun DistributorStatus(
             onClick = dropUnlessResumed {
                 scope.launch {
                     try {
-                        distributionStatus = send(
+                        (send(
                             model,
                             FirmwareDistributionGet()
-                        ) as? FirmwareDistributionStatus
-                        //phaseValue = distributionStatus?.phase
+                        ) as? FirmwareDistributionStatus)?.let(onDistributionStatusChanged)
                     } catch (e: Exception) {
                         error = e
                     }
@@ -610,12 +615,12 @@ private fun DistributorStatus(
                                 .padding(end = 16.dp)
                                 .size(size = 24.dp)
                         )
-                    } else if (distributionStatus?.phase == FirmwareDistributionPhase.IDLE ||
-                        distributionStatus?.phase == FirmwareDistributionPhase.FAILED ||
-                        distributionStatus?.phase == FirmwareDistributionPhase.COMPLETED ||
-                        distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
-                        distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
-                        distributionStatus?.phase == FirmwareDistributionPhase.APPLYING_UPDATE
+                    } else if (distributionStatus.phase == FirmwareDistributionPhase.IDLE ||
+                        distributionStatus.phase == FirmwareDistributionPhase.FAILED ||
+                        distributionStatus.phase == FirmwareDistributionPhase.COMPLETED ||
+                        distributionStatus.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
+                        distributionStatus.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
+                        distributionStatus.phase == FirmwareDistributionPhase.APPLYING_UPDATE
                     ) {
                         Icon(
                             modifier = Modifier.padding(horizontal = 16.dp),
@@ -623,7 +628,7 @@ private fun DistributorStatus(
                             tint = Color.Green,
                             contentDescription = null
                         )
-                    } else if (distributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE) {
+                    } else if (distributionStatus.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE) {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .padding(end = 16.dp)
@@ -645,17 +650,4 @@ private fun DistributorStatus(
             }
         }
     )
-    LaunchedEffect(selectedKey) {
-        if (selectedKey != null && distributionStatus == null) {
-            try {
-                distributionStatus = send(
-                    model,
-                    FirmwareDistributionGet()
-                ) as? FirmwareDistributionStatus
-                //phaseValue = distributionStatus?.phase
-            } catch (e: Exception) {
-                error = e
-            }
-        }
-    }
 }

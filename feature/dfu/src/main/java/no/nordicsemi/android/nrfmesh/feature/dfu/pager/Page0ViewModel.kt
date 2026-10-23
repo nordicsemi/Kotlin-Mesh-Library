@@ -187,21 +187,24 @@ internal class Page0ViewModel @Inject internal constructor(
                                         if (appKeyList.applicationKeyIndexes.isNotEmpty()) {
                                             val key = model.boundApplicationKeys.firstOrNull()
                                             _uiState.update { it.copy(selectedKey = key) }
+                                            // The status and the capabilities are read separately, as the
+                                            // status may have been refreshed by the user already.
                                             if (_uiState.value.distributionStatus == null && key != null) {
                                                 val distributionStatus = send(
                                                     model = model,
                                                     message = FirmwareDistributionGet()
                                                 ) as? FirmwareDistributionStatus
+                                                _uiState.update { state ->
+                                                    state.copy(distributionStatus = distributionStatus)
+                                                }
+                                            }
+                                            if (_uiState.value.capabilitiesStatus == null && key != null) {
                                                 val capabilitiesStatus = send(
                                                     model = model,
                                                     message = FirmwareDistributionCapabilitiesGet()
                                                 ) as? FirmwareDistributionCapabilitiesStatus
                                                 _uiState.update { state ->
-                                                    state.copy(
-                                                        selectedKey = key,
-                                                        capabilitiesStatus = capabilitiesStatus,
-                                                        distributionStatus = distributionStatus
-                                                    )
+                                                    state.copy(capabilitiesStatus = capabilitiesStatus)
                                                 }
                                             }
                                         }
@@ -250,6 +253,13 @@ internal class Page0ViewModel @Inject internal constructor(
             ?.boundApplicationKeys
             ?.any { it.index == key.index }
         _uiState.update { it.copy(selectedKey = key) }
+    }
+
+    /**
+     * Invoked when the status of the distribution, i.e. its phase, was changed.
+     */
+    internal fun onDistributionStatusChanged(status: FirmwareDistributionStatus) {
+        _uiState.update { it.copy(distributionStatus = status) }
     }
 
     internal suspend fun send(

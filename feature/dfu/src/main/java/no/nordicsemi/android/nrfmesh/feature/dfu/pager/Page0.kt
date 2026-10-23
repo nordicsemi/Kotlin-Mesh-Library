@@ -51,6 +51,7 @@ internal fun Page0(
     onGattProxyClicked: () -> Unit,
     onBindAppKeysClicked: (Model) -> Unit,
     onKeySelected: (KeyIndex) -> Unit,
+    onKeyDeselected: () -> Unit,
     onMaxReceiversListSizeChanged: (Int) -> Unit,
     onOngoingDistributionChanged: (OngoingDistribution?) -> Unit,
 ) {
@@ -134,9 +135,11 @@ internal fun Page0(
                 firmwareDistributionStatus = uiState.distributionStatus,
                 capabilitiesStatus = uiState.capabilitiesStatus,
                 send = viewModel::send,
-                enableNextStage = {
-                    uiState.selectedKey?.let {
-                        onKeySelected(it.index)
+                onDistributionStatusChanged = viewModel::onDistributionStatusChanged,
+                onNextStageEnabledChanged = { isEnabled ->
+                    when (isEnabled) {
+                        true -> uiState.selectedKey?.let { onKeySelected(it.index) }
+                        false -> onKeyDeselected()
                     }
                 }
             )

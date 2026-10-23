@@ -129,6 +129,7 @@ internal fun FirmwareUpdateScreen(
                                 onGattProxyClicked = onGattProxyClicked,
                                 onBindAppKeysClicked = onBindAppKeysClicked,
                                 onKeySelected = { index -> onKeyIndexChanged(index.toInt()) },
+                                onKeyDeselected = { onKeyIndexChanged(-1) },
                                 onMaxReceiversListSizeChanged = onMaxReceiversListSizeChanged,
                                 onOngoingDistributionChanged = { ongoing ->
                                     ongoing?.let { onKeyIndexChanged(it.keyIndex) }

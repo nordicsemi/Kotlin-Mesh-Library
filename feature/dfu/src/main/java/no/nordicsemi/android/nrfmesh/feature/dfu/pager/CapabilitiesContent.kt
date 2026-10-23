@@ -12,7 +12,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,13 +33,16 @@ import no.nordicsemi.android.nrfmesh.core.ui.RemainingUploadSpace
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCancel
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionCapabilitiesStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareDeleteAll
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareGetByIndex
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionFirmwareStatus
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionStatus
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
 @Composable
@@ -49,7 +51,8 @@ internal fun CapabilitiesContent(
     capabilitiesStatus: FirmwareDistributionCapabilitiesStatus?,
     model: Model,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
-    enableNextStage: () -> Unit,
+    onDistributionStatusChanged: (FirmwareDistributionStatus) -> Unit,
+    onNextStageEnabledChanged: (Boolean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var distributionStatus by remember { mutableStateOf<FirmwareDistributionFirmwareStatus?>(null) }
@@ -57,14 +60,31 @@ internal fun CapabilitiesContent(
     var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
     var isCapabilitiesRequestInProgress by rememberSaveable { mutableStateOf(false) }
     var isDeleteFirmwareInProgress by rememberSaveable { mutableStateOf(false) }
-    val availableEntries by remember {
-        derivedStateOf {
-            if (distributionStatus != null && capabilitiesStatus != null) {
-                (capabilitiesStatus!!.maxFirmwareImagesListSize - distributionStatus!!.entryCount).toInt()
-            } else {
-                null
-            }
+    // Not remembered, as the capabilities state is recreated when the capabilities change, and a
+    // remembered value would keep reading the previous state.
+    val availableEntries = capabilitiesStatus?.let { capabilities ->
+        distributionStatus?.let { (capabilities.maxFirmwareImagesListSize - it.entryCount).toInt() }
+    }
+    // The phases, in which the distribution has to be canceled before the Distributor is idle again.
+    val needsReset = phase == FirmwareDistributionPhase.COMPLETED ||
+            phase == FirmwareDistributionPhase.FAILED ||
+            phase == FirmwareDistributionPhase.APPLYING_UPDATE
+    val isTransferInProgress = phase == FirmwareDistributionPhase.TRANSFER_ACTIVE ||
+            phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
+            phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED
+
+    /** Reads the number of the stored firmware images from the Distributor. */
+    suspend fun readStoredImages() {
+        val status = send(model, FirmwareDistributionFirmwareGetByIndex(imageIndex = 0u))
+                as? FirmwareDistributionFirmwareStatus
+            ?: throw IllegalStateException("No response received")
+        // No stored images is reported as firmware not found.
+        if (status.status != FirmwareDistributionMessageStatus.SUCCESS &&
+            status.status != FirmwareDistributionMessageStatus.FIRMWARE_NOT_FOUND
+        ) {
+            throw IllegalStateException(status.status.toString())
         }
+        distributionStatus = status
     }
 
     Row(
@@ -85,6 +105,7 @@ internal fun CapabilitiesContent(
                             model,
                             FirmwareDistributionCapabilitiesGet()
                         ) as? FirmwareDistributionCapabilitiesStatus
+                        readStoredImages()
                     } catch (e: Exception) {
                         error = e
                     } finally {
@@ -136,7 +157,7 @@ internal fun CapabilitiesContent(
                 )
             } else {
                 availableEntries?.let {
-                    if (it > 0) {
+                    if (it > 0 && !needsReset) {
                         Icon(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             imageVector = Icons.Outlined.CheckCircle,
@@ -152,10 +173,25 @@ internal fun CapabilitiesContent(
                                 scope.launch {
                                     isDeleteFirmwareInProgress = true
                                     try {
-                                        distributionStatus = send(
-                                            model,
-                                            FirmwareDistributionFirmwareDeleteAll()
-                                        ) as? FirmwareDistributionFirmwareStatus
+                                        // The distribution that is over has to be canceled first, so
+                                        // that the Distributor is idle again.
+                                        if (needsReset) {
+                                            (send(model, FirmwareDistributionCancel())
+                                                    as? FirmwareDistributionStatus)
+                                                ?.let(onDistributionStatusChanged)
+                                        }
+                                        // The stored images are deleted when there is no space left.
+                                        if (availableEntries == 0) {
+                                            distributionStatus = send(
+                                                model,
+                                                FirmwareDistributionFirmwareDeleteAll()
+                                            ) as? FirmwareDistributionFirmwareStatus
+                                            // The remaining upload space has changed.
+                                            capabilitiesStatus = send(
+                                                model,
+                                                FirmwareDistributionCapabilitiesGet()
+                                            ) as? FirmwareDistributionCapabilitiesStatus
+                                        }
                                     } catch (e: Exception) {
                                         error = e
                                     } finally {
@@ -163,8 +199,8 @@ internal fun CapabilitiesContent(
                                     }
                                 }
                             },
-                            // The firmware images cannot be deleted while a distribution is in progress.
-                            enabled = availableEntries == 0 && !phase.isBusy,
+                            // The Distributor cannot be freed while a distribution is in progress.
+                            enabled = !phase.isBusy,
                             isOnClickActionInProgress = isDeleteFirmwareInProgress
                         )
                     }
@@ -250,10 +286,7 @@ internal fun CapabilitiesContent(
     LaunchedEffect(capabilitiesStatus == null) {
         if (capabilitiesStatus != null) {
             try {
-                distributionStatus = send(
-                    model,
-                    FirmwareDistributionFirmwareGetByIndex(imageIndex = 0u)
-                ) as? FirmwareDistributionFirmwareStatus
+                readStoredImages()
             } catch (e: Exception) {
                 error = e
             } finally {
@@ -262,11 +295,24 @@ internal fun CapabilitiesContent(
         }
     }
 
-    LaunchedEffect(availableEntries) {
-        availableEntries?.takeIf {
-            it > 0
-        }?.let {
-            enableNextStage()
-        }
+    // A new firmware update can be started if the Distributor is idle, and there is space for the
+    // image and a free slot, or the space is not used yet. A distribution that is in progress can
+    // be followed.
+    val storedImages = distributionStatus?.entryCount
+    val isNextStageSupported = capabilitiesStatus?.let { capabilities ->
+        storedImages != null && (
+                isTransferInProgress || (
+                        phase == FirmwareDistributionPhase.IDLE &&
+                                capabilities.maxFirmwareImageSize > 0u &&
+                                capabilities.maxUploadSpace > 0u &&
+                                capabilities.remainingUploadSpace > 0u && (
+                                capabilities.remainingUploadSpace == capabilities.maxUploadSpace ||
+                                        capabilities.maxFirmwareImagesListSize > storedImages
+                                )
+                        )
+                )
+    } ?: false
+    LaunchedEffect(isNextStageSupported) {
+        onNextStageEnabledChanged(isNextStageSupported)
     }
 }
