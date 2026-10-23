@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.common.name
 import no.nordicsemi.android.nrfmesh.core.data.isDestinedToLocalNode
+import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.kotlin.mesh.core.MeshNetworkManager
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
@@ -433,7 +434,7 @@ fun enqueueReconfiguration(
                                     messenger.enqueueTask(
                                         task = ConfigTask(
                                             icon = Icons.Outlined.AddLink,
-                                            label = "Bind ${key.name} to ${targetModel.name}",
+                                            label = "Bind ${key.name} to ${targetModel.name()}",
                                             message = ConfigModelAppBind(
                                                 model = targetModel,
                                                 applicationKey = key
@@ -506,7 +507,7 @@ fun enqueueReconfiguration(
                                     messenger.enqueueTask(
                                         task = ConfigTask(
                                             icon = Icons.Outlined.GroupWork,
-                                            label = "Subscribe ${targetModel.name} to ${
+                                            label = "Subscribe ${targetModel.name()} to ${
                                                 if (address is FixedGroupAddress) {
                                                     address.name()
                                                 } else {
