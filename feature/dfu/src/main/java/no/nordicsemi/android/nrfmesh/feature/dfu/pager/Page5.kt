@@ -235,7 +235,10 @@ private fun CancelButton(isCancelling: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun UploadProgress(upload: UploadState, distributorName: String?) {
-    SectionTitle(title = stringResource(R.string.label_upload_progress))
+    SectionTitle(
+        modifier = Modifier.padding(top = 8.dp),
+        title = stringResource(R.string.label_upload_progress)
+    )
     ElevatedCardItem(
         imageVector = Icons.Outlined.FileUpload,
         title = stringResource(R.string.label_firmware_upload),
