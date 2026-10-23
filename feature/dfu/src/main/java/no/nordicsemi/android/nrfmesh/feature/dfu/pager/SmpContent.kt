@@ -26,11 +26,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -629,12 +627,11 @@ private fun DistributorStatus(
                             contentDescription = null
                         )
                     } else if (distributionStatus.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .padding(end = 16.dp)
-                                .size(size = 24.dp),
-                            strokeWidth = 3.dp,
-                            color = Color.Green
+                        Icon(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            imageVector = Icons.Rounded.WarningAmber,
+                            tint = Color(red = 1f, green = 0.6f, blue = 0f),
+                            contentDescription = null
                         )
                     } else {
                         Icon(
