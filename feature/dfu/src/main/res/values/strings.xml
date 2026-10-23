@@ -77,6 +77,7 @@
     <string name="label_ttl">TTL</string>
     <string name="label_mode">Mode</string>
     <string name="label_disabled">Disabled</string>
+    <string name="label_virtual_address_not_supported">Virtual addresses are not supported</string>
     <string name="label_disabled_multicast_rationale">Messages will not be sent to multicast address</string>
     <string name="label_multicast_distribution_rationale">Firmware Update Server and BLOB Server models on target nodes will get automatically subscribed to the selected group.</string>
     <string name="label_upload_progress">Upload Progress</string>

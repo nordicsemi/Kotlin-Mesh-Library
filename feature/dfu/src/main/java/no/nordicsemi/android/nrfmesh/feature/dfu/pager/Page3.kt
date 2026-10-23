@@ -31,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -49,6 +50,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.TransferMode
 import no.nordicsemi.kotlin.mesh.core.model.DistributionMulticastAddress
 import no.nordicsemi.kotlin.mesh.core.model.Group
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
+import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -290,14 +292,20 @@ private fun MulticastDistribution(
         }
     )
     group.forEach {
+        // The Distributor does not accept a virtual address as the distribution address.
+        val isSupported = it.address !is VirtualAddress
         ElevatedCardItem(
             modifier = Modifier
-                .padding(top = 8.dp),
+                .padding(top = 8.dp)
+                .alpha(alpha = if (isSupported) 1f else 0.38f),
             imageVector = Icons.Outlined.GroupWork,
             title = it.name,
+            subtitle = if (isSupported) null
+            else stringResource(R.string.label_virtual_address_not_supported),
             titleAction = {
                 RadioButton(
                     selected = it.address == address,
+                    enabled = isSupported,
                     onClick = { onMulticastAddressChanged(it.address as DistributionMulticastAddress) }
                 )
             }
