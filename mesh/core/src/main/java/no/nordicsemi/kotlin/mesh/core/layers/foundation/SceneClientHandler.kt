@@ -5,9 +5,14 @@ import no.nordicsemi.kotlin.mesh.core.ModelEvent
 import no.nordicsemi.kotlin.mesh.core.ModelEventHandler
 import no.nordicsemi.kotlin.mesh.core.messages.HasInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatus
 
 class SceneClientHandler : ModelEventHandler() {
-    override val messageTypes: Map<UInt, HasInitializer> = mapOf()
+    override val messageTypes: Map<UInt, HasInitializer> = mapOf(
+        SceneStatus.opCode to SceneStatus,
+        SceneRegisterStatus.opCode to SceneRegisterStatus,
+    )
     override val isSubscriptionSupported: Boolean = true
     override val publicationMessageComposer: MessageComposer? = null
 
