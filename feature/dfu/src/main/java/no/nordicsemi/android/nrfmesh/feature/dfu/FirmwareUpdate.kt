@@ -116,58 +116,65 @@ internal fun FirmwareUpdateScreen(
                     modifier = Modifier
                         .fillMaxWidth(fraction = if (!isCompactWidth()) 0.5f else 1f)
                         .fillMaxHeight()
-                        .padding(horizontal = 16.dp)
-                        // The last page scrolls its content on its own, to keep its button at the
-                        // bottom of the screen.
-                        .then(
-                            if (page == LAST_PAGE) Modifier
-                            else Modifier.verticalScroll(state = rememberScrollState())
-                        ),
+                        .padding(horizontal = 16.dp),
                     content = {
-                        when (page) {
-                            0 -> Page0(
-                                onGattProxyClicked = onGattProxyClicked,
-                                onBindAppKeysClicked = onBindAppKeysClicked,
-                                onKeySelected = { index -> onKeyIndexChanged(index.toInt()) },
-                                onKeyDeselected = { onKeyIndexChanged(-1) },
-                                onMaxReceiversListSizeChanged = onMaxReceiversListSizeChanged,
-                                onOngoingDistributionChanged = { ongoing ->
-                                    ongoing?.let { onKeyIndexChanged(it.keyIndex) }
-                                    onOngoingFirmwareSizeChanged(ongoing?.firmwareSize)
+                        // The page takes the space above the buttons, which stay at the bottom of
+                        // the screen. The last page scrolls its content on its own.
+                        Column(
+                            modifier = Modifier
+                                .weight(weight = 1f)
+                                .fillMaxWidth()
+                                .then(
+                                    if (page == LAST_PAGE) Modifier
+                                    else Modifier.verticalScroll(state = rememberScrollState())
+                                ),
+                            content = {
+                                when (page) {
+                                    0 -> Page0(
+                                        onGattProxyClicked = onGattProxyClicked,
+                                        onBindAppKeysClicked = onBindAppKeysClicked,
+                                        onKeySelected = { index -> onKeyIndexChanged(index.toInt()) },
+                                        onKeyDeselected = { onKeyIndexChanged(-1) },
+                                        onMaxReceiversListSizeChanged = onMaxReceiversListSizeChanged,
+                                        onOngoingDistributionChanged = { ongoing ->
+                                            ongoing?.let { onKeyIndexChanged(it.keyIndex) }
+                                            onOngoingFirmwareSizeChanged(ongoing?.firmwareSize)
+                                        }
+                                    )
+
+                                    1 -> Page1(
+                                        goToNext = dropUnlessResumed {
+                                            scope.launch {
+                                                pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
+                                            }
+                                        },
+                                        onBondedChanged = { isPaired = it }
+                                    )
+
+                                    2 -> Page2(
+                                        index = session.keyIndex,
+                                        maxReceiversListSize = session.maxReceiversListSize,
+                                        snackbarHostState = snackbarHostState,
+                                        onUpdatePackageChanged = onUpdatePackageChanged,
+                                        onReceiversSelected = onReceiversChanged
+                                    )
+
+                                    3 -> Page3(onDfuParametersChanged = onDfuParametersChanged)
+
+                                    4 -> Page4(
+                                        session = session,
+                                        onTasksCompleted = { tasksCompleted = it }
+                                    )
+
+                                    5 -> Page5(
+                                        snackbarHostState = snackbarHostState,
+                                        session = session,
+                                        onUploadCompletedChanged = { isUploadCompleted = it },
+                                        onCancelled = onBackClick
+                                    )
                                 }
-                            )
-
-                            1 -> Page1(
-                                goToNext = dropUnlessResumed {
-                                    scope.launch {
-                                        pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
-                                    }
-                                },
-                                onBondedChanged = { isPaired = it }
-                            )
-
-                            2 -> Page2(
-                                index = session.keyIndex,
-                                maxReceiversListSize = session.maxReceiversListSize,
-                                snackbarHostState = snackbarHostState,
-                                onUpdatePackageChanged = onUpdatePackageChanged,
-                                onReceiversSelected = onReceiversChanged
-                            )
-
-                            3 -> Page3(onDfuParametersChanged = onDfuParametersChanged)
-
-                            4 -> Page4(
-                                session = session,
-                                onTasksCompleted = { tasksCompleted = it }
-                            )
-
-                            5 -> Page5(
-                                snackbarHostState = snackbarHostState,
-                                session = session,
-                                onUploadCompletedChanged = { isUploadCompleted = it },
-                                onCancelled = onBackClick
-                            )
-                        }
+                            }
+                        )
                         // The last page has its own button, that cancels the firmware update.
                         if (page != LAST_PAGE) Row(
                             modifier = Modifier
