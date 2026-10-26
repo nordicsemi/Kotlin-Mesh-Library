@@ -1,10 +1,13 @@
-package no.nordicsemi.android.nrfmesh.core.data.bearer
+package no.nordicsemi.kotlin.mesh.bearer.gatt
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -24,17 +27,15 @@ import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshService
  * Provisioning service, which only differ by their UUIDs.
  *
  * Once the service has been discovered, the profile subscribes to the Data Out characteristic and
- * forwards every notification to [onNotification]. The Data In characteristic is then available
+ * emits every notification to [notifications]. The Data In characteristic is then available
  * for sending the data, until the service is invalidated or the device disconnects.
  *
  * @param meshService    The mesh service the profile is attached to.
  * @param name           Name of the profile, used in the logs of the BLE library.
- * @param onNotification Invoked with the value of every notification of the Data Out characteristic.
  */
 abstract class MeshServiceProfile(
     private val meshService: MeshService,
     name: String,
-    private val onNotification: suspend (ByteArray) -> Unit,
 ) : Profile.Simple(serviceUuid = meshService.uuid, name = name) {
 
     /** The state of the mesh service on the device the profile is attached to. */
@@ -53,6 +54,11 @@ abstract class MeshServiceProfile(
 
     /** The state of the mesh service. */
     val state: StateFlow<State> = _state.asStateFlow()
+
+    private val _notifications = MutableSharedFlow<ByteArray>(extraBufferCapacity = 64)
+
+    /** The values of the notifications of the Data Out characteristic. */
+    val notifications: Flow<ByteArray> = _notifications.asSharedFlow()
 
     /** The Data In characteristic used to send data, or null if the service is not open. */
     @Volatile
@@ -77,7 +83,7 @@ abstract class MeshServiceProfile(
             .subscribe { subscribed.complete(Unit) }
             // Fails if subscribing is not permitted, i.e. OperationFailedException.
             .catch { subscribed.completeExceptionally(it) }
-            .onEach { onNotification(it) }
+            .onEach { _notifications.emit(it) }
             .launchIn(this)
         try {
             // Make sure the notifications are enabled before reporting the service as open.
@@ -131,26 +137,18 @@ abstract class MeshServiceProfile(
  * Profile of the Mesh Proxy service, used to exchange network PDUs, mesh beacons and proxy
  * configuration messages with a GATT proxy node.
  *
- * @param onNotification Invoked with the value of every notification of the Data Out characteristic.
  */
-class MeshProxyProfile(
-    onNotification: suspend (ByteArray) -> Unit,
-) : MeshServiceProfile(
+class MeshProxyProfile : MeshServiceProfile(
     meshService = MeshProxyService,
-    name = "Mesh Proxy",
-    onNotification = onNotification
+    name = "Mesh Proxy"
 )
 
 /**
  * Profile of the Mesh Provisioning service, used to exchange provisioning PDUs with an
  * unprovisioned device over PB-GATT.
  *
- * @param onNotification Invoked with the value of every notification of the Data Out characteristic.
  */
-class MeshProvisioningProfile(
-    onNotification: suspend (ByteArray) -> Unit,
-) : MeshServiceProfile(
+class MeshProvisioningProfile : MeshServiceProfile(
     meshService = MeshProvisioningService,
-    name = "Mesh Provisioning",
-    onNotification = onNotification
+    name = "Mesh Provisioning"
 )

@@ -3,9 +3,10 @@ package no.nordicsemi.android.nrfmesh.core.data.bearer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
+import no.nordicsemi.kotlin.ble.client.android.ConjunctionFilterScope
 import no.nordicsemi.kotlin.ble.client.android.Peripheral
-import no.nordicsemi.kotlin.mesh.bearer.PduTypes
-import no.nordicsemi.kotlin.mesh.bearer.provisioning.ProvisioningBearer
+import no.nordicsemi.kotlin.ble.client.android.ScanResult
+import no.nordicsemi.kotlin.mesh.bearer.pbgatt.PbGattBearerImpl
 
 /**
  * Android implementation of the PB-GATT bearer, used to provision an unprovisioned device.
@@ -18,10 +19,22 @@ class AndroidPbGattBearer(
     centralManager: CentralManager,
     peripheral: Peripheral,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-) : MeshProfileBearer(
+) : PbGattBearerImpl<
+        String,
+        CentralManager,
+        Peripheral,
+        Peripheral.Executor,
+        ConjunctionFilterScope,
+        ScanResult
+        >(
     centralManager = centralManager,
     peripheral = peripheral,
-    profileFactory = ::MeshProvisioningProfile,
-    supportedTypes = arrayOf(PduTypes.ProvisioningPdu),
     ioDispatcher = ioDispatcher
-), ProvisioningBearer
+) {
+    override suspend fun connect() = centralManager.connect(
+        peripheral = peripheral,
+        options = CentralManager.ConnectionOptions.Direct(
+            automaticallyRequestHighestValueLength = true
+        )
+    )
+}
