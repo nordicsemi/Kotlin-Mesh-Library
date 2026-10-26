@@ -24,7 +24,7 @@ import kotlin.uuid.Uuid
 class SceneStatesDataStoreStorage @Inject constructor(
     private val store: DataStore<ProtoSceneStatesDataStore>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : GenericOnOffStateStorage, GenericLevelStateStorage {
+) : GenericOnOffStateStorage, GenericLevelStateStorage, SceneRegisterStorage {
      private val scope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
 
     private suspend fun sceneStates(uuid: Uuid, sceneNumber: SceneNumber) = store.data
@@ -102,8 +102,8 @@ class SceneStatesDataStoreStorage @Inject constructor(
         sceneNumber: SceneNumber,
         elementIndex: Int,
     ) = sceneStates(uuid = uuid, sceneNumber = sceneNumber)
-        .states[elementIndex]
-        ?.genericOnOffStates[sceneNumber.toInt()]
+        .states[sceneNumber.toInt()]
+        ?.genericOnOffStates[elementIndex]
         ?.on == true
 
     override fun storeGenericLevelState(
@@ -141,11 +141,56 @@ class SceneStatesDataStoreStorage @Inject constructor(
         sceneNumber: SceneNumber,
         elementIndex: Int,
     ) = sceneStates(uuid = uuid, sceneNumber = sceneNumber)
-        .states[elementIndex]
-        ?.genericLevelStates[sceneNumber.toInt()]
+        .states[sceneNumber.toInt()]
+        ?.genericLevelStates[elementIndex]
         ?.level
         ?.toUShort()
         ?: 0u
+
+    override suspend fun readScenes(uuid: Uuid) = store.data
+        .firstOrNull()
+        ?.sceneStates
+        ?.get(uuid.toString())
+        ?.states
+        ?.keys
+        ?.map { it.toUShort() }
+        ?.sorted()
+        ?: emptyList()
+
+    override fun storeScene(uuid: Uuid, sceneNumber: SceneNumber) {
+        scope.launch {
+            store.updateData {
+                val states = it.sceneStates[uuid.toString()] ?: SceneStates(states = mapOf())
+                if (states.states.containsKey(sceneNumber.toInt())) return@updateData it
+                val updatedStates = states.states.plus(
+                    sceneNumber.toInt() to SceneState(
+                        genericOnOffStates = mapOf(),
+                        genericLevelStates = mapOf()
+                    )
+                )
+                it.copy(
+                    sceneStates = it.sceneStates.plus(
+                        uuid.toString() to states.copy(states = updatedStates)
+                    )
+                )
+            }
+        }
+    }
+
+    override fun deleteScene(uuid: Uuid, sceneNumber: SceneNumber) {
+        scope.launch {
+            store.updateData {
+                val states = it.sceneStates[uuid.toString()] ?: return@updateData it
+                it.copy(
+                    sceneStates = it.sceneStates.plus(
+                        uuid.toString() to states.copy(
+                            states = states.states.minus(sceneNumber.toInt())
+                        )
+                    )
+                )
+            }
+        }
+    }
 }
 
 /**

@@ -41,6 +41,8 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.data.model.SceneServer
+import no.nordicsemi.android.nrfmesh.core.data.model.SceneSetupServer
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.PairingInitiatorClient
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.SimpleOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEventHandler
@@ -285,13 +287,24 @@ class CoreDataRepository @Inject constructor(
      */
     private fun onMeshNetworkChanged() {
         val defaultTransitionTimeServer = GenericDefaultTransitionTimeServer()
+        val sceneServer = SceneServer(
+            ioDispatcher = ioDispatcher,
+            storage = storage,
+            defaultTransitionTimeServer = defaultTransitionTimeServer
+        )
         // Sets up the local Elements on the phone
         val element0 = Element(
             _name = "Primary Element",
             location = Location.FIRST,
             _models = mutableListOf(
-                Model(modelId = SigModelId(modelIdentifier = Model.SCENE_SERVER_MODEL_ID)),
-                Model(modelId = SigModelId(modelIdentifier = Model.SCENE_SETUP_SERVER_MODEL_ID)),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.SCENE_SERVER_MODEL_ID),
+                    handler = sceneServer
+                ),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.SCENE_SETUP_SERVER_MODEL_ID),
+                    handler = SceneSetupServer(server = sceneServer)
+                ),
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.SENSOR_CLIENT_MODEL_ID),
                     handler = SensorClientEventHandler()
