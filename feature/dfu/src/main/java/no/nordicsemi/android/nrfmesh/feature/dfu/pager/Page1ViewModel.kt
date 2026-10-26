@@ -20,7 +20,7 @@ import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository.Companion.SMP_
 import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.kotlin.ble.client.RemoteServices
-import no.nordicsemi.kotlin.ble.core.BondState
+import no.nordicsemi.kotlin.ble.client.android.BondState
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
@@ -78,7 +78,7 @@ internal class Page1ViewModel @Inject internal constructor(
                     bondStateJob = repository.getPeripheral()
                         ?.bondState
                         ?.onEach { bondState ->
-                            _uiState.update { it.copy(isBonded = bondState == BondState.BONDED) }
+                            _uiState.update { it.copy(isBonded = bondState is BondState.Bonded) }
                         }
                         ?.launchIn(scope = viewModelScope)
                 }
