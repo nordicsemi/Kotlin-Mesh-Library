@@ -3,9 +3,12 @@ package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Password
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,6 +101,16 @@ internal fun Page1(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit) {
     ElevatedCardItem(
         imageVector = Icons.Outlined.Password,
         title = stringResource(R.string.label_pass_key),
+        // Shown while the pairing is requested and until the device is bonded.
+        titleAction = {
+            if (shouldShowProgressIcon || uiState.isPairing) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(size = 24.dp)
+                )
+            }
+        },
         subtitle = passKey?.toString() ?: stringResource(R.string.label_unknown)
     )
 
