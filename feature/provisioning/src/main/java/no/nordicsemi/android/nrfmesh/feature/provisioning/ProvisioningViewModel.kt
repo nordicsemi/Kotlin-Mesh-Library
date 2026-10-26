@@ -32,6 +32,7 @@ import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisionerState.Provi
 import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisionerState.Scanning
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.ScanResult
+import no.nordicsemi.kotlin.log.Log
 import no.nordicsemi.kotlin.mesh.bearer.BearerEvent
 import no.nordicsemi.kotlin.mesh.bearer.provisioning.ProvisioningBearer
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigCompositionDataGet
@@ -114,9 +115,22 @@ class ProvisioningViewModel @Inject constructor(
         val device = UnprovisionedDevice
             .from(advertisementData = scanResult.advertisingData.raw)
 
+        scanResult.peripheral.logger = Log.Sink { _, level, _, _, message ->
+            if (level >= Log.Level.DEBUG) {
+                repository.logger.log(
+                    message = { message() },
+                    category = LogCategory.BEARER,
+                    level = LogLevel.APPLICATION
+                )
+            }
+        }
+
         // Store the selected results.
-        pbBearer = AndroidPbGattBearer(centralManager, scanResult.peripheral, dispatcher)
-            .apply { logger = repository.logger }
+        pbBearer = AndroidPbGattBearer(
+            centralManager = centralManager,
+            peripheral = scanResult.peripheral,
+            ioDispatcher = dispatcher
+        ).apply { logger = repository.logger }
         unprovisionedDevice = device
         originalNode = meshNetwork.node(uuid = device.uuid)
 
@@ -225,10 +239,8 @@ class ProvisioningViewModel @Inject constructor(
             .drop(1)
             .onEach { event ->
                 when (event) {
-                    is BearerEvent.Opened -> {
-                        _uiState.update {
-                            it.copy(provisionerState = Connected(unprovisionedDevice = unprovisionedDevice))
-                        }
+                    is BearerEvent.Opened -> _uiState.update {
+                        it.copy(provisionerState = Connected(unprovisionedDevice = unprovisionedDevice))
                     }
 
                     is BearerEvent.Closed -> {
