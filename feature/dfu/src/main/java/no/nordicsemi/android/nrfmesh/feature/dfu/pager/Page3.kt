@@ -134,7 +134,7 @@ fun TimeoutSlider(
     ).map { it.toUShort() }
 
     val index = allowedValues.indexOf(timeout).coerceAtLeast(0)
-    val timeoutValue = rememberSaveable (inputs = arrayOf(timeout, ttl)) {
+    val timeoutValue = rememberSaveable(inputs = arrayOf(timeout, ttl)) {
         formatTimeout(timeoutBase = timeout, ttl = ttl)
     }
 
@@ -172,7 +172,7 @@ fun TimeoutSlider(
 private fun formatTimeout(timeoutBase: UShort, ttl: UByte): String {
     val timeout = (10L * (timeoutBase.toLong() + 2)).seconds + (100L * ttl.toLong()).milliseconds
     return timeout.toComponents { days, hours, minutes, seconds, nanoseconds ->
-        val ms = nanoseconds / 1_000_000
+        // val ms = nanoseconds / 1_000_000
         buildList {
             if (days > 0) add("$days d")
             if (hours > 0) add("$hours hrs")
@@ -300,8 +300,18 @@ private fun MulticastDistribution(
                 .alpha(alpha = if (isSupported) 1f else 0.38f),
             imageVector = Icons.Outlined.GroupWork,
             title = it.name,
-            subtitle = if (isSupported) null
-            else stringResource(R.string.label_virtual_address_not_supported),
+            subtitle = it.address.let { groupAddress ->
+                when (groupAddress) {
+                    is VirtualAddress -> groupAddress.uuid.toString().uppercase()
+                    else ->
+                        groupAddress.address.toHexString(
+                            format = HexFormat {
+                                number.prefix = "0x"
+                                upperCase = true
+                            }
+                        )
+                }
+            },
             titleAction = {
                 RadioButton(
                     selected = it.address == address,
@@ -312,7 +322,9 @@ private fun MulticastDistribution(
         )
     }
     Text(
-        modifier = Modifier.padding(horizontal = 8.dp).padding(top = 8.dp),
+        modifier = Modifier
+            .padding(horizontal = 8.dp)
+            .padding(top = 8.dp),
         text = stringResource(R.string.label_multicast_distribution_rationale),
         style = MaterialTheme.typography.bodySmall
     )
