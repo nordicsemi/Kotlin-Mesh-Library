@@ -10,8 +10,8 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,7 +154,7 @@ abstract class BaseGattBearer<
                 // device disconnected, as a job only completes once its children have. Cancel it,
                 // otherwise it is run again, next to the profile of the next bearer, as soon as
                 // the services of the same peripheral are discovered.
-                coroutineContext.cancelChildren()
+                cancel()
                 // Fail anyone still waiting for the bearer to open, this is a no-op if it is
                 // already completed.
                 ready.completeExceptionally(BearerError.Closed())
