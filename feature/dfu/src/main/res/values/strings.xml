@@ -112,7 +112,7 @@
     <string name="label_receiver_applied">Applied</string>
     <string name="label_receiver_failed">Failed</string>
     <string name="label_distribution_progress">Distribution Progress</string>
-    <string name="label_no_file">Select a firmware file</string>
+    <string name="label_no_file">No firmware selected</string>
     <string name="label_configuration_required">Configuration Required, application key \"%1$s\" is not bound to the Firmware Update Server model.\nDo you want to configure the node automatically?</string>
     <string name="label_confirm">Confirm</string>
     <string name="label_receivers_limit_exceeded">%1$d receivers are selected, but the Distributor supports up to %2$d. Deselect some to continue.</string>
