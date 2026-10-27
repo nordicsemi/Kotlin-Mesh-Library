@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material.icons.outlined.Bluetooth
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Close
@@ -18,6 +17,7 @@ import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.VpnKey
+import androidx.compose.material.icons.rounded.SettingsBluetooth
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -169,7 +169,7 @@ private fun GattProxy(
         )
         MeshIconButton(
             onClick = onGattProxyClicked,
-            buttonIcon = Icons.Outlined.Bluetooth,
+            buttonIcon = Icons.Rounded.SettingsBluetooth,
             isOnClickActionInProgress = connectionState is NetworkConnectionState.Connecting,
             enabled = connectionState !is NetworkConnectionState.Connecting
         )
