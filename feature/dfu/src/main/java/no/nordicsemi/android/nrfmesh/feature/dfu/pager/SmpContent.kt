@@ -614,6 +614,7 @@ private fun DistributorStatus(
                     } else if (distributionStatus.phase == FirmwareDistributionPhase.IDLE ||
                         distributionStatus.phase == FirmwareDistributionPhase.FAILED ||
                         distributionStatus.phase == FirmwareDistributionPhase.COMPLETED ||
+                        distributionStatus.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE ||
                         distributionStatus.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
                         distributionStatus.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
                         distributionStatus.phase == FirmwareDistributionPhase.APPLYING_UPDATE
@@ -622,13 +623,6 @@ private fun DistributorStatus(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             imageVector = Icons.Outlined.CheckCircle,
                             tint = Color.Green,
-                            contentDescription = null
-                        )
-                    } else if (distributionStatus.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE) {
-                        Icon(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            imageVector = Icons.Rounded.WarningAmber,
-                            tint = Color(red = 1f, green = 0.6f, blue = 0f),
                             contentDescription = null
                         )
                     } else {
