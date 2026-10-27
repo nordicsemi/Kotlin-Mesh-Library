@@ -65,14 +65,14 @@ import java.io.FileInputStream
 import java.net.URL
 import java.util.zip.ZipInputStream
 
-@HiltViewModel(assistedFactory = Page2ViewModel.Factory::class)
-internal class Page2ViewModel @AssistedInject internal constructor(
+@HiltViewModel(assistedFactory = FirmwareSelectionViewModel.Factory::class)
+internal class FirmwareSelectionViewModel @AssistedInject internal constructor(
     @ApplicationContext private val context: Context,
     private val repository: CoreDataRepository,
     @Assisted private val index: Int,
 ) : ViewModel() {
-    internal val uiState: StateFlow<Page2ScreenUiState>
-        field = MutableStateFlow(Page2ScreenUiState())
+    internal val uiState: StateFlow<FirmwareSelectionScreenUiState>
+        field = MutableStateFlow(FirmwareSelectionScreenUiState())
     private lateinit var network: MeshNetwork
     private val json = Json {
         ignoreUnknownKeys = true    // Ignores the keys not available in the mesh network mode.
@@ -158,7 +158,7 @@ internal class Page2ViewModel @AssistedInject internal constructor(
      * when another node gets connected. It is shown as disconnected until the same node is
      * connected again.
      */
-    private fun Page2ScreenUiState.withProxy(): Page2ScreenUiState {
+    private fun FirmwareSelectionScreenUiState.withProxy(): FirmwareSelectionScreenUiState {
         val connected = when (proxyConnectionState.connectionState) {
             is NetworkConnectionState.Connected -> repository.proxyFilter.proxy
             else -> null
@@ -631,11 +631,11 @@ internal class Page2ViewModel @AssistedInject internal constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(index: Int): Page2ViewModel
+        fun create(index: Int): FirmwareSelectionViewModel
     }
 }
 
-internal data class Page2ScreenUiState(
+internal data class FirmwareSelectionScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val messageState: MessageState = NotStarted,
     val proxy: Node? = null,

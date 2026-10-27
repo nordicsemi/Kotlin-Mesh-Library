@@ -55,11 +55,11 @@ import javax.inject.Inject
 import kotlin.uuid.Uuid
 
 @HiltViewModel
-internal class Page4ViewModel @Inject internal constructor(
+internal class NodeConfigurationViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
-    val uiState: StateFlow<Page4ScreenUiState>
-        field = MutableStateFlow(Page4ScreenUiState())
+    val uiState: StateFlow<NodeConfigurationScreenUiState>
+        field = MutableStateFlow(NodeConfigurationScreenUiState())
     private lateinit var network: MeshNetwork
     private var enqueuedSession: DfuSession? = null
     private var executionJob: Job? = null
@@ -225,7 +225,7 @@ internal class Page4ViewModel @Inject internal constructor(
         }
 
         // Finally, add Receivers. The number of receivers is limited to 10 per message. Maximum
-        // number is ensured by the Page2, which disallowed selecting higher number of receivers
+        // number is ensured by the FirmwareSelection, which disallowed selecting higher number of receivers
         // than Distributor's limit
         // As the Back button is enabled and the user can go back to modify the list of Receivers,
         // we need to clear the list of receivers first.
@@ -391,7 +391,7 @@ internal class Page4ViewModel @Inject internal constructor(
     }
 }
 
-internal data class Page4ScreenUiState(
+internal data class NodeConfigurationScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val messageState: MessageState = NotStarted,
     val targets: List<Uuid> = emptyList(),

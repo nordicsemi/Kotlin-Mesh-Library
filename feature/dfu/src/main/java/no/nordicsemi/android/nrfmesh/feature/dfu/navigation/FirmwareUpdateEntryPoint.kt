@@ -14,7 +14,7 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.ScannerKey
 import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSessionViewModel
-import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page4ViewModel
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.NodeConfigurationViewModel
 import no.nordicsemi.android.nrfmesh.feature.dfu.FirmwareUpdateScreen
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
 
@@ -35,7 +35,7 @@ fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
         )
     ) {
         val sessionViewModel = hiltViewModel<DfuSessionViewModel>()
-        val page4ViewModel = hiltViewModel<Page4ViewModel>()
+        val nodeConfigurationViewModel = hiltViewModel<NodeConfigurationViewModel>()
         viewModel = sessionViewModel
         val uiState by sessionViewModel.uiState.collectAsStateWithLifecycle()
         val session by sessionViewModel.session.collectAsStateWithLifecycle()
@@ -53,7 +53,7 @@ fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
             onUpdatePackageChanged = { sessionViewModel.setUpdatePackage(updatePackage = it) },
             onDfuParametersChanged = { sessionViewModel.setDfuParameters(dfuParameters = it) },
             onBackClick = { navigator.navigate(key = NodesKey) },
-            onClearTasks = page4ViewModel::clear
+            onClearTasks = nodeConfigurationViewModel::clear
         )
     }
     dfuBindAppKeysEntry(

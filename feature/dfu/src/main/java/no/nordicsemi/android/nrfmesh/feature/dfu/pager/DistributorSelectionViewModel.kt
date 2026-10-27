@@ -45,11 +45,11 @@ import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import javax.inject.Inject
 
 @HiltViewModel
-internal class Page0ViewModel @Inject internal constructor(
+internal class DistributorSelectionViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
     private val centralManager: CentralManager,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(Page0ScreenUiState())
+    private val _uiState = MutableStateFlow(DistributorSelectionScreenUiState())
     internal val uiState = _uiState.asStateFlow()
     private lateinit var network: MeshNetwork
 
@@ -289,7 +289,7 @@ internal class Page0ViewModel @Inject internal constructor(
     }
 }
 
-internal data class Page0ScreenUiState(
+internal data class DistributorSelectionScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val messageState: MessageState = NotStarted,
     val name: String? = null,

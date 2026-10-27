@@ -80,7 +80,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Node
 import java.util.Locale
 
 @Composable
-internal fun Page2(
+internal fun FirmwareSelection(
     index: Int,
     maxReceiversListSize: Int,
     snackbarHostState: SnackbarHostState,
@@ -90,7 +90,7 @@ internal fun Page2(
 ) {
     // The state of the targets depends on the selected application key, so a different view model
     // is used for every key.
-    val viewModel = hiltViewModel<Page2ViewModel, Page2ViewModel.Factory>(
+    val viewModel = hiltViewModel<FirmwareSelectionViewModel, FirmwareSelectionViewModel.Factory>(
         key = "firmware-selection"
     ) { factory ->
         factory.create(index = index)

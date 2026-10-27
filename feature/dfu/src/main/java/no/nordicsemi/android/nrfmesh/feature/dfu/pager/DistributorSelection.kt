@@ -44,7 +44,7 @@ private val ongoingPhases = setOf(
 )
 
 @Composable
-internal fun Page0(
+internal fun DistributorSelection(
     option: FirmwareUpdateOptions,
     onOptionChanged: (FirmwareUpdateOptions) -> Unit,
     onGattProxyClicked: () -> Unit,
@@ -54,7 +54,7 @@ internal fun Page0(
     onMaxReceiversListSizeChanged: (Int) -> Unit,
     onOngoingDistributionChanged: (OngoingDistribution?) -> Unit,
 ) {
-    val viewModel = hiltViewModel<Page0ViewModel>()
+    val viewModel = hiltViewModel<DistributorSelectionViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     // If the Distributor is already distributing a firmware image, there is nothing to set up, the

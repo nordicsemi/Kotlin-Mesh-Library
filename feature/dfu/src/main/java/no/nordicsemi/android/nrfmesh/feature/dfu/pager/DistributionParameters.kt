@@ -56,8 +56,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-internal fun Page3(onDfuParametersChanged: (DfuParameters) -> Unit) {
-    val viewModel = hiltViewModel<Page3ViewModel>()
+internal fun DistributionParameters(onDfuParametersChanged: (DfuParameters) -> Unit) {
+    val viewModel = hiltViewModel<DistributionParametersViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(uiState.dfuParameters) {
         onDfuParametersChanged(uiState.dfuParameters)

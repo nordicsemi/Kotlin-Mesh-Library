@@ -43,20 +43,17 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.ui.view.NordicAppBar
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
-import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page0
-import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page1
-import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page2
-import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page3
-import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page4
-import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Page5
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Distribution
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.DistributionParameters
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.DistributorSelection
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.FirmwareSelection
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.LePairing
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.NodeConfiguration
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.DfuParameters
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
-
-/** Index of the last page of the firmware update pager, which shows the distribution. */
-private const val LAST_PAGE = 5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +73,8 @@ internal fun FirmwareUpdateScreen(
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val pagerState = rememberPagerState(pageCount = { LAST_PAGE + 1 })
+    val pagerState = rememberPagerState(pageCount = { FirmwareUpdateStep.entries.size })
+    val currentStep = FirmwareUpdateStep.entries[pagerState.currentPage]
     var isPaired by rememberSaveable { mutableStateOf(false) }
     var tasksCompleted by rememberSaveable { mutableStateOf(false) }
     var isUploadCompleted by rememberSaveable { mutableStateOf(false) }
@@ -86,11 +84,11 @@ internal fun FirmwareUpdateScreen(
     // cannot proceed from the firmware selection if another node is connected. Only SMP is
     // supported, so the user cannot proceed from the first page with any other option.
     val enableNext = session.canProceed(
-        page = pagerState.currentPage,
+        step = currentStep,
         isPaired = isPaired,
         tasksCompleted = tasksCompleted
-    ) && (pagerState.currentPage != 2 || isDistributorConnected) &&
-            (pagerState.currentPage != 0 || option == FirmwareUpdateOptions.SMP)
+    ) && (currentStep != FirmwareUpdateStep.FirmwareSelection || isDistributorConnected) &&
+            (currentStep != FirmwareUpdateStep.DistributorSelection || option == FirmwareUpdateOptions.SMP)
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -99,7 +97,7 @@ internal fun FirmwareUpdateScreen(
                 showBackButton = true,
                 // Once the image is uploaded, the screen can be minimized as the distribution
                 // continues on the Distributor.
-                backButtonIcon = when (pagerState.currentPage == LAST_PAGE && isUploadCompleted) {
+                backButtonIcon = when (currentStep == FirmwareUpdateStep.last && isUploadCompleted) {
                     true -> Icons.Outlined.KeyboardArrowDown
                     false -> Icons.Outlined.Close
                 },
@@ -113,7 +111,8 @@ internal fun FirmwareUpdateScreen(
                 .padding(paddingValues = paddingValues),
             state = pagerState,
             userScrollEnabled = false
-        ) { page ->
+        ) { pageIndex ->
+            val step = FirmwareUpdateStep.entries[pageIndex]
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -131,12 +130,12 @@ internal fun FirmwareUpdateScreen(
                                 .weight(weight = 1f)
                                 .fillMaxWidth()
                                 .then(
-                                    if (page == LAST_PAGE) Modifier
+                                    if (step == FirmwareUpdateStep.last) Modifier
                                     else Modifier.verticalScroll(state = rememberScrollState())
                                 ),
                             content = {
-                                when (page) {
-                                    0 -> Page0(
+                                when (step) {
+                                    FirmwareUpdateStep.DistributorSelection -> DistributorSelection(
                                         option = option,
                                         onOptionChanged = { option = it },
                                         onGattProxyClicked = onGattProxyClicked,
@@ -150,7 +149,7 @@ internal fun FirmwareUpdateScreen(
                                         }
                                     )
 
-                                    1 -> Page1(
+                                    FirmwareUpdateStep.LePairing -> LePairing(
                                         goToNext = dropUnlessResumed {
                                             scope.launch {
                                                 pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
@@ -159,7 +158,7 @@ internal fun FirmwareUpdateScreen(
                                         onBondedChanged = { isPaired = it }
                                     )
 
-                                    2 -> Page2(
+                                    FirmwareUpdateStep.FirmwareSelection -> FirmwareSelection(
                                         index = session.keyIndex,
                                         maxReceiversListSize = session.maxReceiversListSize,
                                         snackbarHostState = snackbarHostState,
@@ -168,14 +167,14 @@ internal fun FirmwareUpdateScreen(
                                         onDistributorConnectedChanged = { isDistributorConnected = it }
                                     )
 
-                                    3 -> Page3(onDfuParametersChanged = onDfuParametersChanged)
+                                    FirmwareUpdateStep.DistributionParameters -> DistributionParameters(onDfuParametersChanged = onDfuParametersChanged)
 
-                                    4 -> Page4(
+                                    FirmwareUpdateStep.NodeConfiguration -> NodeConfiguration(
                                         session = session,
                                         onTasksCompleted = { tasksCompleted = it }
                                     )
 
-                                    5 -> Page5(
+                                    FirmwareUpdateStep.Distribution -> Distribution(
                                         snackbarHostState = snackbarHostState,
                                         session = session,
                                         onUploadCompletedChanged = { isUploadCompleted = it },
@@ -185,7 +184,7 @@ internal fun FirmwareUpdateScreen(
                             }
                         )
                         // The last page has its own button, that cancels the firmware update.
-                        if (page != LAST_PAGE) Row(
+                        if (step != FirmwareUpdateStep.last) Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 16.dp),
@@ -198,18 +197,19 @@ internal fun FirmwareUpdateScreen(
                                 onClick = dropUnlessResumed {
                                     // The tasks enqueued on the last page are discarded when
                                     // navigating back, they are enqueued again when returning.
-                                    if (pagerState.currentPage == 4) onClearTasks()
+                                    if (currentStep == FirmwareUpdateStep.NodeConfiguration) onClearTasks()
                                     scope.launch {
                                         pagerState.requestScrollToPage(
-                                            page = when (pagerState.currentPage) {
-                                                // Page 1 (LE pairing) is skipped when going back.
-                                                2 -> 0
-                                                // Page 4 (tasks) is skipped when going back. If the
-                                                // pages before were not used, i.e. a distribution
+                                            page = when (currentStep) {
+                                                // LE pairing is skipped when going back.
+                                                FirmwareUpdateStep.FirmwareSelection ->
+                                                    FirmwareUpdateStep.DistributorSelection.ordinal
+                                                // Node configuration is skipped when going back. If
+                                                // the pages before were not used, i.e. a distribution
                                                 // was already running, go to the first page.
-                                                5 -> when (session.keyIndex >= 0 && session.receivers.isNotEmpty()) {
-                                                    true -> 3
-                                                    false -> 0
+                                                FirmwareUpdateStep.Distribution -> when (session.keyIndex >= 0 && session.receivers.isNotEmpty()) {
+                                                    true -> FirmwareUpdateStep.DistributionParameters.ordinal
+                                                    false -> FirmwareUpdateStep.DistributorSelection.ordinal
                                                 }
 
                                                 else -> pagerState.currentPage - 1
@@ -217,7 +217,7 @@ internal fun FirmwareUpdateScreen(
                                         )
                                     }
                                 },
-                                enabled = pagerState.currentPage > 0,
+                                enabled = currentStep != FirmwareUpdateStep.DistributorSelection,
                                 content = {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
@@ -232,16 +232,18 @@ internal fun FirmwareUpdateScreen(
                                     .widthIn(min = 80.dp)
                                     .weight(weight = 1f),
                                 onClick = dropUnlessResumed {
-                                    // The tasks enqueued on page 4 have been executed, they are
-                                    // cleared so they are not duplicated when page 4 is shown again.
-                                    if (pagerState.currentPage == 4) onClearTasks()
+                                    // The tasks enqueued on the node configuration page have been
+                                    // executed, they are cleared so they are not duplicated when it
+                                    // is shown again.
+                                    if (currentStep == FirmwareUpdateStep.NodeConfiguration) onClearTasks()
                                     scope.launch {
                                         pagerState.requestScrollToPage(
                                             page = when {
                                                 // A distribution that is in progress can only be
                                                 // followed on the last page.
-                                                pagerState.currentPage == 0 &&
-                                                        session.ongoingFirmwareSize != null -> LAST_PAGE
+                                                currentStep == FirmwareUpdateStep.DistributorSelection &&
+                                                        session.ongoingFirmwareSize != null ->
+                                                    FirmwareUpdateStep.last.ordinal
 
                                                 else -> pagerState.currentPage + 1
                                             }

@@ -49,13 +49,13 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
 
 @Composable
-internal fun Page5(
+internal fun Distribution(
     snackbarHostState: SnackbarHostState,
     session: DfuSession,
     onUploadCompletedChanged: (Boolean) -> Unit,
     onCancelled: () -> Unit,
 ) {
-    val viewModel = hiltViewModel<Page5ViewModel>()
+    val viewModel = hiltViewModel<DistributionViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     // The image is uploaded to the Distributor and distributed when the page is shown, or the
     // distribution that is already in progress is followed.

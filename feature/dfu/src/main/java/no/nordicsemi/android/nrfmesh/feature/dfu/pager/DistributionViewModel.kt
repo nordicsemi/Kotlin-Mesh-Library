@@ -50,11 +50,11 @@ import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
-internal class Page5ViewModel @Inject internal constructor(
+internal class DistributionViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
-    val uiState: StateFlow<Page5ScreenUiState>
-        field = MutableStateFlow(Page5ScreenUiState())
+    val uiState: StateFlow<DistributionScreenUiState>
+        field = MutableStateFlow(DistributionScreenUiState())
     private lateinit var network: MeshNetwork
     private var startedSession: DfuSession? = null
     private var uploadJob: Job? = null
@@ -119,7 +119,7 @@ internal class Page5ViewModel @Inject internal constructor(
      * was started, the Distributor is asked to cancel it.
      *
      * @return True if the firmware update was canceled, false if the Distributor could not cancel
-     *         the distribution, see [Page5ScreenUiState.cancelError].
+     *         the distribution, see [DistributionScreenUiState.cancelError].
      */
     internal suspend fun cancel(): Boolean {
         uiState.update { it.copy(isCancelling = true, cancelError = null) }
@@ -154,7 +154,7 @@ internal class Page5ViewModel @Inject internal constructor(
     /**
      * Applies the firmware update on the receivers, that have verified the image.
      *
-     * This is only needed if the update policy is verify only, see [Page5ScreenUiState.updatePolicy].
+     * This is only needed if the update policy is verify only, see [DistributionScreenUiState.updatePolicy].
      * Once the Distributor has accepted the request, the progress of the receivers is polled until
      * all of them have applied the update or failed.
      */
@@ -706,7 +706,7 @@ internal sealed interface UploadState {
     data class Failed(val message: String) : UploadState
 }
 
-internal data class Page5ScreenUiState(
+internal data class DistributionScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val upload: UploadState = UploadState.Idle,
     val distribution: DistributionState = DistributionState.Idle,

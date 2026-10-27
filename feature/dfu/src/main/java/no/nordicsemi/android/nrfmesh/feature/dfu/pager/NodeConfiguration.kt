@@ -15,8 +15,8 @@ import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSession
 
 @Composable
-internal fun Page4(session: DfuSession, onTasksCompleted: (Boolean) -> Unit) {
-    val viewModel = hiltViewModel<Page4ViewModel>()
+internal fun NodeConfiguration(session: DfuSession, onTasksCompleted: (Boolean) -> Unit) {
+    val viewModel = hiltViewModel<NodeConfigurationViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(session) {
         viewModel.enqueue(session = session)

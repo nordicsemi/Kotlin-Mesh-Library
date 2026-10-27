@@ -40,12 +40,12 @@ import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.models.R
 
 @Composable
-internal fun Page1(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit) {
+internal fun LePairing(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit) {
     val context = LocalContext.current
     val resources = LocalResources.current
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
-    val viewModel = hiltViewModel<Page1ViewModel>()
+    val viewModel = hiltViewModel<LePairingViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var status by remember { mutableStateOf<PairingResponse?>(null) }
     var error by rememberSaveable { mutableStateOf<Throwable?>(null) }

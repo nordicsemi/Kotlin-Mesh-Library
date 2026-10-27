@@ -123,28 +123,32 @@ internal data class DfuSession(
     val dfuParameters: DfuParameters = DfuParameters(),
 ) {
     /**
-     * Returns whether the user has made the selections required to leave the given page.
+     * Returns whether the user has made the selections required to leave the given step.
      *
-     * @param page           Index of the page in the firmware update pager.
-     * @param isPaired       Whether the proxy is bonded, which is the outcome of the LE pairing on
-     *                       page 1.
-     * @param tasksCompleted Whether all the tasks enqueued on page 4 have completed.
+     * @param step           Step of the firmware update.
+     * @param isPaired       Whether the proxy is bonded, which is the outcome of the LE pairing.
+     * @param tasksCompleted Whether all the tasks enqueued on the node configuration page have
+     *                       completed.
      */
-    fun canProceed(page: Int, isPaired: Boolean, tasksCompleted: Boolean): Boolean = when (page) {
+    fun canProceed(
+        step: FirmwareUpdateStep,
+        isPaired: Boolean,
+        tasksCompleted: Boolean
+    ): Boolean = when (step) {
         // A key is selected once the distributor's capabilities have been retrieved.
-        0 -> keyIndex >= 0
+        FirmwareUpdateStep.DistributorSelection -> keyIndex >= 0
         // LE Pairing, the device must be bonded, either already or after pairing.
-        1 -> isPaired
+        FirmwareUpdateStep.LePairing -> isPaired
         // A firmware package and at least one receiver must be selected, but not more receivers
         // than the distributor can hold.
-        2 -> updatePackage != null &&
+        FirmwareUpdateStep.FirmwareSelection -> updatePackage != null &&
                 receivers.isNotEmpty() &&
                 receivers.size <= maxReceiversListSize
         // Distribution parameters always have valid defaults.
-        3 -> dfuParameters.ttl <= 127u
+        FirmwareUpdateStep.DistributionParameters -> dfuParameters.ttl <= 127u
         // All the enqueued tasks must have completed before the distribution can start.
-        4 -> tasksCompleted
+        FirmwareUpdateStep.NodeConfiguration -> tasksCompleted
         // Last page.
-        else -> false
+        FirmwareUpdateStep.Distribution -> false
     }
 }
