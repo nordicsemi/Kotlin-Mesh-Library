@@ -313,7 +313,10 @@ internal fun CapabilitiesContent(
                         )
                 )
     } ?: false
-    LaunchedEffect(isNextStageSupported) {
-        onNextStageEnabledChanged(isNextStageSupported)
+    // The stored images are read each time this content is shown, until then the result is not
+    // known, so the key stays selected, otherwise Next would be disabled and enabled again.
+    val isLoading = capabilitiesStatus != null && storedImages == null
+    LaunchedEffect(isNextStageSupported, isLoading) {
+        if (!isLoading) onNextStageEnabledChanged(isNextStageSupported)
     }
 }
