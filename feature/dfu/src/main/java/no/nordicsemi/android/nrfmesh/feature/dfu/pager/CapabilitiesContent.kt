@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.CircularProgressIndicator
@@ -167,8 +168,8 @@ internal fun CapabilitiesContent(
                     } else {
                         MeshIconButton(
                             modifier = Modifier.padding(end = 8.dp),
-                            buttonIcon = Icons.Rounded.WarningAmber,
-                            buttonIconTint = Color(red = 1f, green = 0.6f, blue = 0f),
+                            buttonIcon = Icons.Outlined.DeleteForever,
+                            buttonIconTint = Color.Red,
                             onClick = {
                                 scope.launch {
                                     isDeleteFirmwareInProgress = true
