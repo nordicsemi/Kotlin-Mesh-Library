@@ -29,6 +29,7 @@ import no.nordicsemi.android.nrfmesh.core.common.Sending
 import no.nordicsemi.android.nrfmesh.core.common.blobTransferServer
 import no.nordicsemi.android.nrfmesh.core.common.firmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
+import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
 import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
 import no.nordicsemi.android.nrfmesh.core.data.checkForUpdates
 import no.nordicsemi.android.nrfmesh.core.data.downloadFirmware
@@ -40,7 +41,6 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.util.Target
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.TargetState
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.ZipPackage
-import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigResponse
@@ -118,16 +118,14 @@ internal class Page2ViewModel @AssistedInject internal constructor(
                                                 )
                                             }
                                     }
-                                    .sortedBy { it.node.uuid == repository.proxyFilter.proxy?.uuid },
-                                proxy = repository.proxyFilter.proxy
-                            )
+                                    .sortedBy { it.node.uuid == repository.proxyFilter.proxy?.uuid }
+                            ).withProxy()
                         }
 
                         else -> state.copy(
                             targets = state.targets
-                                .sortedBy { it.node.uuid == repository.proxyFilter.proxy?.uuid },
-                            proxy = repository.proxyFilter.proxy
-                        )
+                                .sortedBy { it.node.uuid == repository.proxyFilter.proxy?.uuid }
+                        ).withProxy()
                     }
                 }
             }
@@ -140,9 +138,36 @@ internal class Page2ViewModel @AssistedInject internal constructor(
     private fun observeProxyConnectionState() {
         repository.proxyConnectionStateFlow
             .onEach { proxyConnectionState ->
-                uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
+                uiState.update {
+                    it.copy(proxyConnectionState = proxyConnectionState).withProxy()
+                }
             }
             .launchIn(scope = viewModelScope)
+    }
+
+    /**
+     * Locks the Distributor to the node that is connected now, which is the node that was chosen
+     * on the previous pages.
+     */
+    internal fun lockDistributor() = uiState.update { it.copy(proxy = null).withProxy() }
+
+    /**
+     * Updates the Distributor and whether it is connected.
+     *
+     * The Distributor is the first connected proxy, and it is kept when the connection drops or
+     * when another node gets connected. It is shown as disconnected until the same node is
+     * connected again.
+     */
+    private fun Page2ScreenUiState.withProxy(): Page2ScreenUiState {
+        val connected = when (proxyConnectionState.connectionState) {
+            is NetworkConnectionState.Connected -> repository.proxyFilter.proxy
+            else -> null
+        }
+        val distributor = proxy ?: connected
+        return copy(
+            proxy = distributor,
+            isProxyConnected = connected != null && connected.uuid == distributor?.uuid
+        )
     }
 
     /**
@@ -150,18 +175,10 @@ internal class Page2ViewModel @AssistedInject internal constructor(
      */
     private fun observeProxyFilterState() {
         repository.proxyFilter.proxyFilterStateFlow
-            .onEach { filterState ->
-                // We update the state here because the proxy state updates confirm that the node is
-                // connected and ready to send messages
-                when (filterState) {
-                    is ProxyFilterState.ProxyFilterUpdateAcknowledged,
-                    is ProxyFilterState.ProxyFilterLimitReached,
-                        -> {
-                    }
-
-                    else -> {
-                    }
-                }
+            .onEach {
+                // The proxy node is known once the proxy has replied to the filter messages, and
+                // it is cleared when the proxy disconnects.
+                uiState.update { it.withProxy() }
             }
             .launchIn(scope = viewModelScope)
     }
@@ -622,6 +639,7 @@ internal data class Page2ScreenUiState(
     val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
     val messageState: MessageState = NotStarted,
     val proxy: Node? = null,
+    val isProxyConnected: Boolean = false,
     val targets: List<Target> = emptyList(),
     val updatePackage: UpdatePackage? = null,
     val applicationKeyName: String? = null,

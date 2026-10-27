@@ -80,11 +80,14 @@ internal fun FirmwareUpdateScreen(
     var isPaired by rememberSaveable { mutableStateOf(false) }
     var tasksCompleted by rememberSaveable { mutableStateOf(false) }
     var isUploadCompleted by rememberSaveable { mutableStateOf(false) }
+    var isDistributorConnected by rememberSaveable { mutableStateOf(false) }
+    // The firmware can only be distributed through the Distributor that was chosen, so the user
+    // cannot proceed from the firmware selection if another node is connected.
     val enableNext = session.canProceed(
         page = pagerState.currentPage,
         isPaired = isPaired,
         tasksCompleted = tasksCompleted
-    )
+    ) && (pagerState.currentPage != 2 || isDistributorConnected)
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -156,7 +159,8 @@ internal fun FirmwareUpdateScreen(
                                         maxReceiversListSize = session.maxReceiversListSize,
                                         snackbarHostState = snackbarHostState,
                                         onUpdatePackageChanged = onUpdatePackageChanged,
-                                        onReceiversSelected = onReceiversChanged
+                                        onReceiversSelected = onReceiversChanged,
+                                        onDistributorConnectedChanged = { isDistributorConnected = it }
                                     )
 
                                     3 -> Page3(onDfuParametersChanged = onDfuParametersChanged)

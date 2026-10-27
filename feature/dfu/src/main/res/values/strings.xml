@@ -53,6 +53,7 @@
     <string name="label_available_space">Max available space is %d bytes.</string>
     <string name="document_type">application/json</string>
     <string name="label_available_target_nodes">Available Target Nodes</string>
+    <string name="label_distributor">Distributor</string>
     <string name="label_node_firmware_details_description">Tap a node to view its firmware details.</string>
     <string name="label_image_firmware_details_description">Tap an image to check the firmware compatibility and select it to update.</string>
     <string name="label_target_nodes_description">These nodes contain Firmware Update Server and BLOB Transfer Server models.</string>

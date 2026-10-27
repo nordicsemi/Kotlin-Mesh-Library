@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
@@ -48,8 +49,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
@@ -73,6 +76,7 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.util.Status
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Target
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.TargetState
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
+import no.nordicsemi.kotlin.mesh.core.model.Node
 import java.util.Locale
 
 @Composable
@@ -82,6 +86,7 @@ internal fun Page2(
     snackbarHostState: SnackbarHostState,
     onUpdatePackageChanged: (UpdatePackage?) -> Unit,
     onReceiversSelected: (List<Receiver>) -> Unit,
+    onDistributorConnectedChanged: (Boolean) -> Unit,
 ) {
     // The state of the targets depends on the selected application key, so a different view model
     // is used for every key.
@@ -109,6 +114,8 @@ internal fun Page2(
         messageState = uiState.messageState,
         metadata = uiState.updatePackage?.metadata,
         targets = uiState.targets,
+        distributor = uiState.proxy,
+        isDistributorConnected = uiState.isProxyConnected,
         selectedReceiversCount = selectedReceivers.size,
         maxReceiversListSize = maxReceiversListSize,
         applicationKeyName = uiState.applicationKeyName,
@@ -117,6 +124,11 @@ internal fun Page2(
         downloadFirmwareUpdate = viewModel::downloadFirmwareUpdate,
         configure = viewModel::configure
     )
+    // The Distributor is the node that is connected when the page is shown.
+    LaunchedEffect(Unit) { viewModel.lockDistributor() }
+    LaunchedEffect(uiState.isProxyConnected) {
+        onDistributorConnectedChanged(uiState.isProxyConnected)
+    }
     LaunchedEffect(uiState.updatePackage) {
         onUpdatePackageChanged(uiState.updatePackage)
     }
@@ -209,6 +221,8 @@ private fun TargetNodes(
     snackbarHostState: SnackbarHostState,
     messageState: MessageState,
     targets: List<Target>,
+    distributor: Node?,
+    isDistributorConnected: Boolean,
     selectedReceiversCount: Int,
     maxReceiversListSize: Int,
     applicationKeyName: String?,
@@ -220,6 +234,9 @@ private fun TargetNodes(
 ) {
     val scope = rememberCoroutineScope()
     val resources = LocalResources.current
+    // The connected Distributor is also a target, but it is shown in a section of its own.
+    val distributorTarget = targets.firstOrNull { it.node.uuid == distributor?.uuid }
+    val availableTargets = targets.filter { it.node.uuid != distributor?.uuid }
     var isRequestInProgress by rememberSaveable { mutableStateOf(false) }
     var isSelectAllInProgress by rememberSaveable { mutableStateOf(false) }
     // Expanded state of the rows is kept here so that it can also be changed by Select All. A row
@@ -255,7 +272,7 @@ private fun TargetNodes(
                             isSelectAllInProgress = true
                             isRequestInProgress = true
                             try {
-                                loop@ for (target in targets) {
+                                loop@ for (target in availableTargets) {
                                     if (target.isSelected)
                                         continue@loop
                                     val newTarget = loadFirmwareInformation(
@@ -303,39 +320,44 @@ private fun TargetNodes(
                         }
                     }
                 },
-                enabled = metadata != null && targets.isNotEmpty() && !isRequestInProgress,
+                enabled = metadata != null && availableTargets.isNotEmpty() && !isRequestInProgress,
                 isOnClickActionInProgress = isRequestInProgress && isSelectAllInProgress
             )
         }
-        when (targets.isEmpty()) {
+        // The Distributor can only hold a limited number of receivers, the selection cannot be
+        // used until it fits.
+        if (selectedReceiversCount > maxReceiversListSize) {
+            Spacer(modifier = Modifier.size(size = 8.dp))
+            Text(
+                modifier = Modifier.padding(horizontal = 8.dp),
+                text = stringResource(
+                    R.string.label_receivers_limit_exceeded,
+                    selectedReceiversCount,
+                    maxReceiversListSize
+                ),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        when (availableTargets.isEmpty()) {
             true -> MeshNoItemsAvailable(
-                modifier = Modifier.fillMaxSize(),
+                modifier = when (distributorTarget) {
+                    null -> Modifier.fillMaxSize()
+                    else -> Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                },
                 imageVector = Icons.Outlined.AutoAwesome,
                 title = stringResource(R.string.label_no_nodes_available)
             )
 
             false -> {
-                // The Distributor can only hold a limited number of receivers, the selection
-                // cannot be used until it fits.
-                if (selectedReceiversCount > maxReceiversListSize) {
-                    Spacer(modifier = Modifier.size(size = 8.dp))
-                    Text(
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        text = stringResource(
-                            R.string.label_receivers_limit_exceeded,
-                            selectedReceiversCount,
-                            maxReceiversListSize
-                        ),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
                 Spacer(modifier = Modifier.size(size = 8.dp))
                 Text(
                     text = stringResource(R.string.label_target_nodes_description),
                     style = MaterialTheme.typography.bodySmall
                 )
-                targets.forEach { target ->
+                availableTargets.forEach { target ->
                     key(target.node.uuid.toString()) {
                         TargetNode(
                             snackbarHostState = snackbarHostState,
@@ -368,14 +390,43 @@ private fun TargetNodes(
                     text = stringResource(R.string.label_image_firmware_details_description),
                     style = MaterialTheme.typography.bodySmall
                 )
-                Spacer(modifier = Modifier.size(size = 8.dp))
-                Text(
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    text = stringResource(R.string.label_distributor_update_description),
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Spacer(modifier = Modifier.size(size = 8.dp))
             }
+        }
+        distributorTarget?.let { target ->
+            Spacer(modifier = Modifier.size(size = 16.dp))
+            SectionTitle(title = stringResource(R.string.label_distributor))
+            key(target.node.uuid.toString()) {
+                // A Distributor that is no longer connected is greyed out and cannot be used.
+                Box(modifier = Modifier.alpha(alpha = if (isDistributorConnected) 1f else 0.38f)) {
+                    TargetNode(
+                        snackbarHostState = snackbarHostState,
+                        messageState = messageState,
+                        target = target,
+                        applicationKeyName = applicationKeyName,
+                        metadata = metadata,
+                        isExpanded = expandedTargets[target.node.uuid.toString()]
+                            ?: target.isSelected,
+                        onExpandStateChanged = {
+                            expandedTargets[target.node.uuid.toString()] = it
+                        },
+                        isRequestInProgress = isRequestInProgress,
+                        downloadFirmwareInformation = downloadFirmwareInformation,
+                        checkCompatibility = checkCompatibility,
+                        downloadFirmwareUpdate = downloadFirmwareUpdate,
+                        configure = configure
+                    )
+                    if (!isDistributorConnected) {
+                        Box(modifier = Modifier.matchParentSize().pointerInput(Unit) {})
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.size(size = 8.dp))
+            Text(
+                modifier = Modifier.padding(horizontal = 8.dp),
+                text = stringResource(R.string.label_distributor_update_description),
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(modifier = Modifier.size(size = 8.dp))
         }
     }
 }
