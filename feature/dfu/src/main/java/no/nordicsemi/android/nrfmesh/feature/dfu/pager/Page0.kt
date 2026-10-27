@@ -78,6 +78,13 @@ internal fun Page0(
             }
         )
     }
+    // A node without the Firmware Distribution Server model cannot be used as the Distributor, so
+    // a key selected before connecting to it is no longer valid.
+    LaunchedEffect(uiState.isDistributorServerModelSupported) {
+        if (uiState.isDistributorServerModelSupported == false) {
+            onKeyDeselected()
+        }
+    }
     // The size of the receivers list is needed to limit the number of selected receivers.
     LaunchedEffect(uiState.capabilitiesStatus) {
         onMaxReceiversListSizeChanged(uiState.capabilitiesStatus?.maxReceiversCount?.toInt() ?: 0)
