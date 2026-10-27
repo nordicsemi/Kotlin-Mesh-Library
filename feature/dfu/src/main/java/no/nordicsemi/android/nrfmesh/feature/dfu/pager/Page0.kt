@@ -126,7 +126,6 @@ internal fun Page0(
     when (option) {
         FirmwareUpdateOptions.SMP -> {
             SmpContent(
-                snackbarHostState = snackbarHostState,
                 messageState = uiState.messageState,
                 connectionState = uiState.proxyConnectionState.connectionState,
                 node = uiState.node,
