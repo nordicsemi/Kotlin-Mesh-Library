@@ -81,13 +81,16 @@ internal fun FirmwareUpdateScreen(
     var tasksCompleted by rememberSaveable { mutableStateOf(false) }
     var isUploadCompleted by rememberSaveable { mutableStateOf(false) }
     var isDistributorConnected by rememberSaveable { mutableStateOf(false) }
+    var option by rememberSaveable { mutableStateOf(FirmwareUpdateOptions.SMP) }
     // The firmware can only be distributed through the Distributor that was chosen, so the user
-    // cannot proceed from the firmware selection if another node is connected.
+    // cannot proceed from the firmware selection if another node is connected. Only SMP is
+    // supported, so the user cannot proceed from the first page with any other option.
     val enableNext = session.canProceed(
         page = pagerState.currentPage,
         isPaired = isPaired,
         tasksCompleted = tasksCompleted
-    ) && (pagerState.currentPage != 2 || isDistributorConnected)
+    ) && (pagerState.currentPage != 2 || isDistributorConnected) &&
+            (pagerState.currentPage != 0 || option == FirmwareUpdateOptions.SMP)
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -134,6 +137,8 @@ internal fun FirmwareUpdateScreen(
                             content = {
                                 when (page) {
                                     0 -> Page0(
+                                        option = option,
+                                        onOptionChanged = { option = it },
                                         onGattProxyClicked = onGattProxyClicked,
                                         onBindAppKeysClicked = onBindAppKeysClicked,
                                         onKeySelected = { index -> onKeyIndexChanged(index.toInt()) },
