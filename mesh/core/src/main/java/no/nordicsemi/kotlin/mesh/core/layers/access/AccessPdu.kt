@@ -134,7 +134,7 @@ internal data class AccessPdu(
                     userInitiated = false,
                     source = pdu.source,
                     destination = pdu.destination,
-                    opCode = (octet0.toUShort() shl 8 or octet1.toUShort()).toUInt() and 0x0000FFFFu,
+                    opCode = (octet0.toUByte().toUInt() shl 8) or octet1.toUByte().toUInt(),
                     parameters = pdu.accessPdu.copyOfRange(
                         fromIndex = 2, toIndex = pdu.accessPdu.size
                     ),
