@@ -226,7 +226,8 @@ internal class DistributionViewModel @Inject internal constructor(
      *
      * If the Distributor is one of the receivers, it restarts to apply the update on itself, so the
      * connection to it is lost and the progress of the distribution can no longer be followed. This
-     * is not a failure of the distribution, unless the Distributor rejected it.
+     * is not a failure of the distribution, unless the Distributor rejected it. The distribution is
+     * assumed to be completed and all the receivers that did not finish are shown at 100%.
      */
     private fun onDistributionError(e: Exception) {
         val isDistributorReceiver = { receiver: Receiver ->
@@ -236,19 +237,22 @@ internal class DistributionViewModel @Inject internal constructor(
                 e !is DistributionRejectedException
         uiState.update {
             when (progressLost) {
-                // The Distributor has received the whole image, as it restarted to apply it.
+                // The distribution is assumed to be completed, so the receivers that were still
+                // receiving the image are shown as done, instead of stopping at the last progress.
                 true -> it.copy(
                     distribution = DistributionState.ProgressLost,
                     receivers = it.receivers.map { receiver ->
-                        when (isDistributorReceiver(receiver)) {
-                            true -> receiver.copy(
+                        when (receiver.status) {
+                            Receiver.Status.Verified,
+                            Receiver.Status.Applied,
+                            Receiver.Status.Failure -> receiver
+
+                            else -> receiver.copy(
                                 status = Receiver.Status.Distribution(
                                     progress = 100,
                                     speedBytesPerSecond = 0f
                                 )
                             )
-
-                            false -> receiver
                         }
                     }
                 )
@@ -528,6 +532,20 @@ internal class DistributionViewModel @Inject internal constructor(
                                     )
                                 )
                             } else receiver
+
+                        // The whole image has been received, the receiver is verifying it.
+                        RetrievedUpdatePhase.VERIFYING_UPDATE ->
+                            receiver.copy(
+                                status = Receiver.Status.Distribution(
+                                    progress = 100,
+                                    speedBytesPerSecond = calculateSpeed(
+                                        progress = 100,
+                                        imageSize = imageSize,
+                                        start = start,
+                                        estimatedSpeed = estimatedSpeed
+                                    )
+                                )
+                            )
 
                         RetrievedUpdatePhase.VERIFICATION_SUCCEEDED ->
                             receiver.copy(status = Receiver.Status.Verified)
