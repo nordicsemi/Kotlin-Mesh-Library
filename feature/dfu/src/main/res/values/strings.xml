@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="label_gatt_proxy">Gatt Proxy</string>
+    <string name="label_gatt_proxy">GATT Proxy</string>
     <string name="label_name">Name</string>
     <string name="label_unicast_name">Unicast Address</string>
     <string name="label_unicast_address">Unicast Address\n</string>
