@@ -88,11 +88,6 @@ internal fun SmpContent(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(space = 8.dp)
     ) {
-        Text(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            text = stringResource(R.string.label_dfu_over_smp_rationale),
-            style = MaterialTheme.typography.bodySmall
-        )
         GattProxy(
             connectionState = connectionState,
             name = name,

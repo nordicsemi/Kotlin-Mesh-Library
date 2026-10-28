@@ -117,4 +117,5 @@
     <string name="label_confirm">Confirm</string>
     <string name="label_receivers_limit_exceeded">%1$d receivers are selected, but the Distributor supports up to %2$d. Deselect some to continue.</string>
     <string name="label_cancel">Cancel</string>
+    <string name="label_more_information">More information</string>
 </resources>
