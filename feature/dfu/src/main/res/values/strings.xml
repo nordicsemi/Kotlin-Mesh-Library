@@ -111,6 +111,7 @@
     <string name="label_receiver_verified">Verified</string>
     <string name="label_receiver_applied">Applied</string>
     <string name="label_receiver_failed">Failed</string>
+    <string name="label_receiver_distributed">Distributed %1$d%%</string>
     <string name="label_distribution_progress">Distribution Progress</string>
     <string name="label_no_file">No firmware selected</string>
     <string name="label_configuration_required">Configuration Required, application key \"%1$s\" is not bound to the Firmware Update Server model.\nDo you want to configure the node automatically?</string>

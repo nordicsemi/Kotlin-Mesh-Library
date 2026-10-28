@@ -42,6 +42,7 @@ import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
+import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
@@ -59,6 +60,10 @@ internal class DistributionViewModel @Inject internal constructor(
     private var startedSession: DfuSession? = null
     private var uploadJob: Job? = null
     private var applyJob: Job? = null
+
+    // The node that the image is uploaded to. It is kept as the connection to it is lost, when it
+    // restarts to apply the update on itself.
+    private var distributor: Node? = null
 
     init {
         observeNetwork()
@@ -89,7 +94,8 @@ internal class DistributionViewModel @Inject internal constructor(
         if (updatePackage == null && ongoingFirmwareSize == null) return
         if (session == startedSession) return
         startedSession = session
-        uiState.update { it.copy(distributorName = repository.proxyFilter.proxy?.name) }
+        distributor = repository.proxyFilter.proxy
+        uiState.update { it.copy(distributorName = distributor?.name) }
         // The receivers are known before the distribution starts, so they can be shown right away.
         if (updatePackage != null) {
             val network = repository.meshNetwork
@@ -211,8 +217,43 @@ internal class DistributionViewModel @Inject internal constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            uiState.update {
-                it.copy(distribution = DistributionState.Failed(message = e.message ?: "$e"))
+            onDistributionError(e)
+        }
+    }
+
+    /**
+     * Updates the state after the distribution could not be started or followed.
+     *
+     * If the Distributor is one of the receivers, it restarts to apply the update on itself, so the
+     * connection to it is lost and the progress of the distribution can no longer be followed. This
+     * is not a failure of the distribution, unless the Distributor rejected it.
+     */
+    private fun onDistributionError(e: Exception) {
+        val isDistributorReceiver = { receiver: Receiver ->
+            distributor?.let { network.node(address = receiver.address)?.uuid == it.uuid } == true
+        }
+        val progressLost = uiState.value.receivers.any(isDistributorReceiver) &&
+                e !is DistributionRejectedException
+        uiState.update {
+            when (progressLost) {
+                // The Distributor has received the whole image, as it restarted to apply it.
+                true -> it.copy(
+                    distribution = DistributionState.ProgressLost,
+                    receivers = it.receivers.map { receiver ->
+                        when (isDistributorReceiver(receiver)) {
+                            true -> receiver.copy(
+                                status = Receiver.Status.Distribution(
+                                    progress = 100,
+                                    speedBytesPerSecond = 0f
+                                )
+                            )
+
+                            false -> receiver
+                        }
+                    }
+                )
+
+                false -> it.copy(distribution = DistributionState.Failed(message = e.message ?: "$e"))
             }
         }
     }
@@ -268,9 +309,7 @@ internal class DistributionViewModel @Inject internal constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            uiState.update {
-                it.copy(distribution = DistributionState.Failed(message = e.message ?: "$e"))
-            }
+            onDistributionError(e)
         }
     }
 
@@ -345,7 +384,7 @@ internal class DistributionViewModel @Inject internal constructor(
                 as? FirmwareDistributionStatus
             ?: throw IllegalStateException("No response received")
         if (response.status != FirmwareDistributionMessageStatus.SUCCESS) {
-            throw IllegalStateException(response.status.toString())
+            throw DistributionRejectedException(response.status.toString())
         }
         // The receivers are now being updated by the Distributor.
         uiState.update {
@@ -675,7 +714,17 @@ internal sealed interface DistributionState {
 
     /** The distribution could not be started, or it failed. */
     data class Failed(val message: String) : DistributionState
+
+    /**
+     * The distribution was started, but its progress is no longer known. This happens if the
+     * Distributor is one of the receivers, as it restarts to apply the update on itself and the
+     * connection to it is lost.
+     */
+    data object ProgressLost : DistributionState
 }
+
+/** Thrown when the Distributor rejects the request to start the distribution. */
+private class DistributionRejectedException(message: String) : IllegalStateException(message)
 
 /** The state of the upload of the firmware image to the Distributor. */
 internal sealed interface UploadState {

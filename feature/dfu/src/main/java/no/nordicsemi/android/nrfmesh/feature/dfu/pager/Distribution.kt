@@ -14,8 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.DeliveryDining
 import androidx.compose.material.icons.outlined.FileUpload
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -113,7 +113,11 @@ internal fun Distribution(
                 onClick = viewModel::apply
             )
         }
-        if (uiState.distribution == DistributionState.Completed) {
+        // The progress of the distribution is lost when the Distributor restarts to apply the update
+        // on itself, there is nothing to cancel as the image has been uploaded.
+        if (uiState.distribution == DistributionState.Completed ||
+            uiState.distribution == DistributionState.ProgressLost
+        ) {
             CloseButton(onClick = onCancelled)
         } else {
             CancelButton(
@@ -284,13 +288,21 @@ private fun DistributionProgress(
     SectionTitle(title = stringResource(R.string.label_distribution_progress))
     ElevatedCardItem(
         // The distribution is shown before it starts, greyed out, to show what to expect.
-        modifier = Modifier.alpha(alpha = if (distribution == DistributionState.Idle) DISABLED_ALPHA else 1f),
-        imageVector = Icons.Outlined.PlayArrow,
+        modifier = Modifier.alpha(
+            alpha = when (distribution) {
+                DistributionState.Idle -> DISABLED_ALPHA
+                else -> 1f
+            }
+        ),
+        imageVector = Icons.Outlined.DeliveryDining,
         title = stringResource(R.string.label_firmware_distribution),
         subtitle = when (distribution) {
             DistributionState.Idle -> stringResource(R.string.label_distribution_waiting)
             DistributionState.Starting -> stringResource(R.string.label_starting_distribution)
             is DistributionState.Started -> stringResource(R.string.label_distribution_started)
+            // The Distributor disconnects when it restarts to apply the image, so the distribution
+            // is assumed to have completed.
+            DistributionState.ProgressLost,
             DistributionState.Completed -> stringResource(R.string.label_distribution_completed)
             is DistributionState.Failed -> stringResource(
                 R.string.label_distribution_failed,
@@ -313,16 +325,18 @@ private fun DistributionProgress(
                             upperCase = true
                         }
                     ),
-                receiver = receiver
+                receiver = receiver,
+                isProgressLost = distribution == DistributionState.ProgressLost
             )
         }
     }
 }
 
 @Composable
-private fun ReceiverItem(name: String, receiver: Receiver) {
+private fun ReceiverItem(name: String, receiver: Receiver, isProgressLost: Boolean) {
     val status = receiver.status
-    Column(modifier = Modifier.alpha(alpha = if (status == Receiver.Status.Idle) DISABLED_ALPHA else 1f)) {
+    val isGreyedOut = !isProgressLost && status == Receiver.Status.Idle
+    Column(modifier = Modifier.alpha(alpha = if (isGreyedOut) DISABLED_ALPHA else 1f)) {
         ElevatedCardItem(
             leadingIcon = {
                 Spacer(modifier = Modifier.size(size = 16.dp))
@@ -332,18 +346,22 @@ private fun ReceiverItem(name: String, receiver: Receiver) {
             title = name,
             subtitle = when (status) {
                 Receiver.Status.Idle -> stringResource(R.string.label_receiver_idle)
-                is Receiver.Status.Distribution -> stringResource(
-                    R.string.label_receiver_distributing,
-                    status.progress,
-                    status.speedBytesPerSecond
-                )
+                // The speed is unknown when the connection to the Distributor was lost.
+                is Receiver.Status.Distribution -> when (isProgressLost) {
+                    true -> stringResource(R.string.label_receiver_distributed, status.progress)
+                    false -> stringResource(
+                        R.string.label_receiver_distributing,
+                        status.progress,
+                        status.speedBytesPerSecond
+                    )
+                }
 
                 Receiver.Status.Verified -> stringResource(R.string.label_receiver_verified)
                 Receiver.Status.Applied -> stringResource(R.string.label_receiver_applied)
                 Receiver.Status.Failure -> stringResource(R.string.label_receiver_failed)
             },
             titleAction = {
-                if (status is Receiver.Status.Distribution) {
+                if (status is Receiver.Status.Distribution && !isProgressLost) {
                     val modifier = Modifier
                         .padding(end = 16.dp)
                         .size(24.dp)
