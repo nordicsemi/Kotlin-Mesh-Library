@@ -238,6 +238,8 @@ private fun TargetNodes(
     val availableTargets = targets.filter { it.node.uuid != distributor?.uuid }
     var isRequestInProgress by rememberSaveable { mutableStateOf(false) }
     var isSelectAllInProgress by rememberSaveable { mutableStateOf(false) }
+    // Whether the select all in progress is for the Distributor, so only its button shows progress.
+    var isDistributorSelectionInProgress by rememberSaveable { mutableStateOf(false) }
     // Expanded state of the rows is kept here so that it can also be changed by Select All. A row
     // without an entry is expanded if the target has a selected firmware entry.
     val expandedTargets = rememberSaveable(
@@ -253,6 +255,79 @@ private fun TargetNodes(
             }
         )
     ) { mutableStateMapOf<String, Boolean>() }
+    // Selects all the given targets, or deselects them if they are all selected already.
+    fun toggleSelection(targets: List<Target>) {
+        val isAllSelected = targets.isNotEmpty() && targets.all { it.isSelected }
+        metadata?.let { metadata ->
+            scope.launch {
+                isDistributorSelectionInProgress = targets.any { it.node.uuid == distributor?.uuid }
+                isSelectAllInProgress = true
+                isRequestInProgress = true
+                try {
+                    if (isAllSelected) targets.forEach { target ->
+                        val ready = target.targetState as? TargetState.Ready
+                            ?: return@forEach
+                        ready.entries.forEachIndexed { index, entry ->
+                            if (entry.isSelected) selectFirmwareEntry(
+                                snackbarHostState = snackbarHostState,
+                                resources = resources,
+                                checked = false,
+                                target = target,
+                                indexOfEntry = index,
+                                entry = entry,
+                                metadata = metadata,
+                                checkCompatibility = checkCompatibility,
+                                downloadFirmwareUpdate = downloadFirmwareUpdate
+                            )
+                        }
+                    } else loop@ for (target in targets) {
+                        if (target.isSelected)
+                            continue@loop
+                        val newTarget = loadFirmwareInformation(
+                            resources = resources,
+                            snackbarHostState = snackbarHostState,
+                            applicationKeyName = applicationKeyName,
+                            target = target,
+                            isExpanded = target.isSelected,
+                            onExpandStateChanged = {
+                                expandedTargets[target.node.uuid.toString()] = it
+                            },
+                            onConfigurationRequired = { isSelectAllInProgress = it },
+                            downloadFirmwareInformation = downloadFirmwareInformation,
+                            configure = configure
+                        ) ?: target
+                        if (newTarget.targetState is TargetState.Ready) {
+                            expandedTargets[target.node.uuid.toString()] = true
+                            newTarget.targetState.entries.forEachIndexed { index, entry ->
+                                selectFirmwareEntry(
+                                    snackbarHostState = snackbarHostState,
+                                    resources = resources,
+                                    checked = true,
+                                    target = newTarget,
+                                    indexOfEntry = index,
+                                    entry = entry,
+                                    metadata = metadata,
+                                    checkCompatibility = checkCompatibility,
+                                    downloadFirmwareUpdate = downloadFirmwareUpdate
+                                )
+                            }
+                        }
+                    }
+                } catch (ex: Exception) {
+                    snackbarHostState.run {
+                        currentSnackbarData?.dismiss()
+                        showSnackbar(
+                            message = "Error while ${if (isAllSelected) "deselecting" else "selecting"} all targets: ${ex.message}",
+                            withDismissAction = true
+                        )
+                    }
+                } finally {
+                    isSelectAllInProgress = false
+                    isRequestInProgress = false
+                }
+            }
+        }
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -263,85 +338,13 @@ private fun TargetNodes(
                 modifier = Modifier.weight(weight = 1f),
                 title = stringResource(R.string.label_available_target_nodes)
             )
-            // Select all is checked once every available target is selected, and it deselects them.
-            val isAllSelected = availableTargets.isNotEmpty() && availableTargets.all { it.isSelected }
             MeshIconButton(
-                buttonIcon = when (isAllSelected) {
-                    true -> Icons.Outlined.CheckBox
-                    false -> Icons.Outlined.CheckBoxOutlineBlank
-                },
-                onClick = {
-                    metadata?.let { metadata ->
-                        scope.launch {
-                            isSelectAllInProgress = true
-                            isRequestInProgress = true
-                            try {
-                                if (isAllSelected) availableTargets.forEach { target ->
-                                    val ready = target.targetState as? TargetState.Ready
-                                        ?: return@forEach
-                                    ready.entries.forEachIndexed { index, entry ->
-                                        if (entry.isSelected) selectFirmwareEntry(
-                                            snackbarHostState = snackbarHostState,
-                                            resources = resources,
-                                            checked = false,
-                                            target = target,
-                                            indexOfEntry = index,
-                                            entry = entry,
-                                            metadata = metadata,
-                                            checkCompatibility = checkCompatibility,
-                                            downloadFirmwareUpdate = downloadFirmwareUpdate
-                                        )
-                                    }
-                                } else loop@ for (target in availableTargets) {
-                                    if (target.isSelected)
-                                        continue@loop
-                                    val newTarget = loadFirmwareInformation(
-                                        resources = resources,
-                                        snackbarHostState = snackbarHostState,
-                                        applicationKeyName = applicationKeyName,
-                                        target = target,
-                                        isExpanded = target.isSelected,
-                                        onExpandStateChanged = {
-                                            expandedTargets[target.node.uuid.toString()] = it
-                                        },
-                                        onConfigurationRequired = { isSelectAllInProgress = it },
-                                        downloadFirmwareInformation = downloadFirmwareInformation,
-                                        configure = configure
-                                    ) ?: target
-                                    if (newTarget.targetState is TargetState.Ready) {
-                                        expandedTargets[target.node.uuid.toString()] = true
-                                        newTarget.targetState.entries.forEachIndexed { index, entry ->
-                                            selectFirmwareEntry(
-                                                snackbarHostState = snackbarHostState,
-                                                resources = resources,
-                                                checked = true,
-                                                target = newTarget,
-                                                indexOfEntry = index,
-                                                entry = entry,
-                                                metadata = metadata,
-                                                checkCompatibility = checkCompatibility,
-                                                downloadFirmwareUpdate = downloadFirmwareUpdate
-                                            )
-                                        }
-                                    }
-                                }
-                            } catch (ex: Exception) {
-                                snackbarHostState.run {
-                                    currentSnackbarData?.dismiss()
-                                    showSnackbar(
-                                        message = "Error while ${if (isAllSelected) "deselecting" else "selecting"} all targets: ${ex.message}",
-                                        withDismissAction = true
-                                    )
-                                }
-                            } finally {
-                                isSelectAllInProgress = false
-                                isRequestInProgress = false
-                            }
-                        }
-                    }
-                },
-                enabled = metadata != null && availableTargets.isNotEmpty() && !isRequestInProgress,
-                isOnClickActionInProgress = isRequestInProgress && isSelectAllInProgress
+                buttonIcon = selectionIcon(targets = availableTargets),
+                onClick = { toggleSelection(availableTargets) },
+                enabled = metadata != null && availableTargets.isNotEmpty() && !isRequestInProgress &&
+                        !messageState.isInProgress(),
+                isOnClickActionInProgress = isRequestInProgress && isSelectAllInProgress &&
+                        !isDistributorSelectionInProgress
             )
         }
         // The Distributor can only hold a limited number of receivers, the selection cannot be
@@ -390,6 +393,7 @@ private fun TargetNodes(
                                 expandedTargets[target.node.uuid.toString()] = it
                             },
                             isRequestInProgress = isRequestInProgress,
+                            isRequestProgressVisible = isRequestInProgress && !isDistributorSelectionInProgress,
                             downloadFirmwareInformation = downloadFirmwareInformation,
                             checkCompatibility = checkCompatibility,
                             downloadFirmwareUpdate = downloadFirmwareUpdate,
@@ -413,7 +417,24 @@ private fun TargetNodes(
         }
         distributorTarget?.let { target ->
             Spacer(modifier = Modifier.size(size = 16.dp))
-            SectionTitle(title = stringResource(R.string.label_distributor))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SectionTitle(
+                    modifier = Modifier.weight(weight = 1f),
+                    title = stringResource(R.string.label_distributor)
+                )
+                MeshIconButton(
+                    buttonIcon = selectionIcon(targets = listOf(target)),
+                    onClick = { toggleSelection(listOf(target)) },
+                    enabled = metadata != null && isDistributorConnected && !isRequestInProgress &&
+                            !messageState.isInProgress(),
+                    isOnClickActionInProgress = isRequestInProgress && isSelectAllInProgress &&
+                            isDistributorSelectionInProgress
+                )
+            }
             key(target.node.uuid.toString()) {
                 // A Distributor that is no longer connected is greyed out and cannot be used.
                 Box(modifier = Modifier.alpha(alpha = if (isDistributorConnected) 1f else 0.38f)) {
@@ -429,6 +450,7 @@ private fun TargetNodes(
                             expandedTargets[target.node.uuid.toString()] = it
                         },
                         isRequestInProgress = isRequestInProgress,
+                        isRequestProgressVisible = isRequestInProgress && isDistributorSelectionInProgress,
                         downloadFirmwareInformation = downloadFirmwareInformation,
                         checkCompatibility = checkCompatibility,
                         downloadFirmwareUpdate = downloadFirmwareUpdate,
@@ -460,6 +482,7 @@ private fun TargetNode(
     isExpanded: Boolean,
     onExpandStateChanged: (Boolean) -> Unit,
     isRequestInProgress: Boolean,
+    isRequestProgressVisible: Boolean,
     downloadFirmwareInformation: suspend (Target) -> Target,
     checkCompatibility: suspend (Target, Int, FirmwareEntry, Metadata, Boolean) -> Unit,
     downloadFirmwareUpdate: suspend (Target, Int, FirmwareEntry) -> Unit,
@@ -475,7 +498,10 @@ private fun TargetNode(
                 snackbarHostState = snackbarHostState,
                 metadata = metadata,
                 target = target,
-                isRequestInProgress = isRequestInProgress,
+                // The checkboxes are also disabled while a message is in progress, as only one
+                // message can be sent at a time.
+                isRequestInProgress = isRequestInProgress || messageState.isInProgress(),
+                isRequestProgressVisible = isRequestProgressVisible,
                 checkCompatibility = checkCompatibility,
                 downloadFirmwareUpdate = downloadFirmwareUpdate
             )
@@ -494,6 +520,7 @@ private fun TargetNode(
                     applicationKeyName = applicationKeyName,
                     target = target,
                     isExpanded = isExpanded,
+                    isRequestInProgress = isRequestInProgress,
                     onExpandStateChanged = onExpandStateChanged,
                     downloadFirmwareInformation = downloadFirmwareInformation,
                     configure = configure
@@ -512,6 +539,7 @@ private fun ExpandRowAction(
     applicationKeyName: String?,
     target: Target,
     isExpanded: Boolean,
+    isRequestInProgress: Boolean,
     onExpandStateChanged: (Boolean) -> Unit,
     downloadFirmwareInformation: suspend (Target) -> Target,
     configure: suspend (Target) -> Unit,
@@ -557,7 +585,7 @@ private fun ExpandRowAction(
             }
         },
         isOnClickActionInProgress = isConfiguring,
-        enabled = !messageState.isInProgress() && !isConfiguring
+        enabled = !messageState.isInProgress() && !isConfiguring && !isRequestInProgress
     )
 }
 
@@ -621,6 +649,7 @@ private fun Images(
     metadata: Metadata?,
     target: Target,
     isRequestInProgress: Boolean,
+    isRequestProgressVisible: Boolean,
     checkCompatibility: suspend (Target, Int, FirmwareEntry, Metadata, Boolean) -> Unit,
     downloadFirmwareUpdate: suspend (Target, Int, FirmwareEntry) -> Unit,
 ) {
@@ -636,6 +665,7 @@ private fun Images(
                 indexOfEntry = indexOfEntry,
                 entry = entry,
                 isRequestInProgress = isRequestInProgress,
+                isRequestProgressVisible = isRequestProgressVisible,
                 checkCompatibility = checkCompatibility,
                 downloadFirmwareUpdate = downloadFirmwareUpdate
             )
@@ -651,6 +681,7 @@ private fun ImageRow(
     indexOfEntry: Int,
     entry: FirmwareEntry,
     isRequestInProgress: Boolean,
+    isRequestProgressVisible: Boolean,
     checkCompatibility: suspend (Target, Int, FirmwareEntry, Metadata, Boolean) -> Unit,
     downloadFirmwareUpdate: suspend (Target, Int, FirmwareEntry) -> Unit,
 ) {
@@ -677,7 +708,7 @@ private fun ImageRow(
             title = title,
             titleAction = {
                 when {
-                    isCompatibilityCheckInProgress || isRequestInProgress ->
+                    isCompatibilityCheckInProgress || isRequestProgressVisible ->
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .padding(end = 16.dp)
@@ -834,4 +865,10 @@ private suspend fun selectFirmwareEntry(
                 }
             }
     }
+}
+
+/** The icon of the select all button, which is checked when all the given targets are selected. */
+private fun selectionIcon(targets: List<Target>) = when (targets.isNotEmpty() && targets.all { it.isSelected }) {
+    true -> Icons.Outlined.CheckBox
+    false -> Icons.Outlined.CheckBoxOutlineBlank
 }
