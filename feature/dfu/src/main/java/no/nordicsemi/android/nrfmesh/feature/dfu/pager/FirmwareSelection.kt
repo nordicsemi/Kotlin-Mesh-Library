@@ -86,6 +86,7 @@ internal fun FirmwareSelection(
     onUpdatePackageChanged: (UpdatePackage?) -> Unit,
     onReceiversSelected: (List<Receiver>) -> Unit,
     onDistributorConnectedChanged: (Boolean) -> Unit,
+    onDistributorWithTargetsChanged: (String?) -> Unit,
 ) {
     // The state of the targets depends on the selected application key, so a different view model
     // is used for every key.
@@ -133,6 +134,17 @@ internal fun FirmwareSelection(
     }
     LaunchedEffect(selectedReceivers) {
         onReceiversSelected(selectedReceivers)
+    }
+    // The name of the Distributor, if it is selected in addition to other targets.
+    val selectedTargets = uiState.targets.filter { it.isSelected }
+    val distributorWithTargets = uiState.proxy
+        ?.takeIf { distributor ->
+            selectedTargets.any { it.node.uuid == distributor.uuid } &&
+                    selectedTargets.any { it.node.uuid != distributor.uuid }
+        }
+        ?.name
+    LaunchedEffect(distributorWithTargets) {
+        onDistributorWithTargetsChanged(distributorWithTargets)
     }
 }
 

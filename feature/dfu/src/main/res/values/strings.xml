@@ -57,6 +57,8 @@
     <string name="label_node_firmware_details_description">Tap a node to view its firmware details.</string>
     <string name="label_image_firmware_details_description">Tap an image to check the firmware compatibility and select it to update.</string>
     <string name="label_target_nodes_description">These nodes contain Firmware Update Server and BLOB Transfer Server models.</string>
+    <string name="label_distributor_selected_title">Distributor selected</string>
+    <string name="label_distributor_selected_message">%1$s is selected as a target. Updating the distributor may restart the device, which can cause the distribution to the rest of the targets fail.\n\nDo you want to continue?</string>
     <string name="label_distributor_update_description">Updating firmware on the distributor is instantaneous. When selected, no other nodes will be updated.</string>
     <string name="label_metadata">Metadata</string>
     <string name="label_compatibility">Compatibility</string>

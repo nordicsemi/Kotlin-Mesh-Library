@@ -21,8 +21,10 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -42,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.ui.view.NordicAppBar
+import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.Distribution
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.DistributionParameters
@@ -80,6 +83,9 @@ internal fun FirmwareUpdateScreen(
     var isUploadCompleted by rememberSaveable { mutableStateOf(false) }
     var isDistributorConnected by rememberSaveable { mutableStateOf(false) }
     var option by rememberSaveable { mutableStateOf(FirmwareUpdateOptions.SMP) }
+    // The name of the Distributor, when it is selected in addition to other targets.
+    var distributorWithTargets by rememberSaveable { mutableStateOf<String?>(null) }
+    var isDistributorWarningVisible by rememberSaveable { mutableStateOf(false) }
     // The firmware can only be distributed through the Distributor that was chosen, so the user
     // cannot proceed from the firmware selection if another node is connected. Only SMP is
     // supported, so the user cannot proceed from the first page with any other option.
@@ -89,6 +95,40 @@ internal fun FirmwareUpdateScreen(
         tasksCompleted = tasksCompleted
     ) && (currentStep != FirmwareUpdateStep.FirmwareSelection || isDistributorConnected) &&
             (currentStep != FirmwareUpdateStep.DistributorSelection || option == FirmwareUpdateOptions.SMP)
+    fun goToNextStep() {
+        // The tasks enqueued on the node configuration page have been executed, they are cleared
+        // so they are not duplicated when it is shown again.
+        if (currentStep == FirmwareUpdateStep.NodeConfiguration) onClearTasks()
+        scope.launch {
+            pagerState.requestScrollToPage(
+                page = when {
+                    // A distribution that is in progress can only be followed on the last page.
+                    currentStep == FirmwareUpdateStep.DistributorSelection &&
+                            session.ongoingFirmwareSize != null ->
+                        FirmwareUpdateStep.last.ordinal
+
+                    else -> pagerState.currentPage + 1
+                }
+            )
+        }
+    }
+    if (isDistributorWarningVisible) MeshAlertDialog(
+        onDismissRequest = { isDistributorWarningVisible = false },
+        icon = Icons.Rounded.WarningAmber,
+        iconColor = MaterialTheme.colorScheme.error,
+        title = stringResource(R.string.label_distributor_selected_title),
+        text = stringResource(
+            R.string.label_distributor_selected_message,
+            distributorWithTargets.orEmpty()
+        ),
+        confirmButtonText = stringResource(android.R.string.ok),
+        onConfirmClick = {
+            isDistributorWarningVisible = false
+            goToNextStep()
+        },
+        dismissButtonText = stringResource(R.string.label_cancel),
+        onDismissClick = { isDistributorWarningVisible = false }
+    )
     Scaffold(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
@@ -164,7 +204,8 @@ internal fun FirmwareUpdateScreen(
                                         snackbarHostState = snackbarHostState,
                                         onUpdatePackageChanged = onUpdatePackageChanged,
                                         onReceiversSelected = onReceiversChanged,
-                                        onDistributorConnectedChanged = { isDistributorConnected = it }
+                                        onDistributorConnectedChanged = { isDistributorConnected = it },
+                                        onDistributorWithTargetsChanged = { distributorWithTargets = it }
                                     )
 
                                     FirmwareUpdateStep.DistributionParameters -> DistributionParameters(onDfuParametersChanged = onDfuParametersChanged)
@@ -232,23 +273,12 @@ internal fun FirmwareUpdateScreen(
                                     .widthIn(min = 80.dp)
                                     .weight(weight = 1f),
                                 onClick = dropUnlessResumed {
-                                    // The tasks enqueued on the node configuration page have been
-                                    // executed, they are cleared so they are not duplicated when it
-                                    // is shown again.
-                                    if (currentStep == FirmwareUpdateStep.NodeConfiguration) onClearTasks()
-                                    scope.launch {
-                                        pagerState.requestScrollToPage(
-                                            page = when {
-                                                // A distribution that is in progress can only be
-                                                // followed on the last page.
-                                                currentStep == FirmwareUpdateStep.DistributorSelection &&
-                                                        session.ongoingFirmwareSize != null ->
-                                                    FirmwareUpdateStep.last.ordinal
-
-                                                else -> pagerState.currentPage + 1
-                                            }
-                                        )
-                                    }
+                                    // Updating the Distributor with other targets can make it
+                                    // restart, so the user has to confirm it.
+                                    if (currentStep == FirmwareUpdateStep.FirmwareSelection &&
+                                        distributorWithTargets != null
+                                    ) isDistributorWarningVisible = true
+                                    else goToNextStep()
                                 },
                                 enabled = enableNext,
                                 content = {
