@@ -15,17 +15,20 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Upload
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
@@ -241,15 +244,16 @@ private fun NetworkContent(
                     },
                     actions = {
                         if (appState.navigationState.currentKey is NodesKey) {
-                            IconButton(
+                            TextButton(
                                 onClick = dropUnlessResumed {
                                     navigator.navigate(key = FirmwareUpdateKey)
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Download,
-                                    contentDescription = null
+                                },
+                                // Same color as the other actions of the app bar.
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = LocalContentColor.current
                                 )
+                            ) {
+                                Text(text = stringResource(R.string.label_update))
                             }
                         }
                         // We have to consider two conditions when displaying the dropdown in the settings screen

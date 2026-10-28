@@ -6,6 +6,7 @@
     <string name="label_nav_bar_proxy">Proxy</string>
     <string name="label_nav_bar_settings">Settings</string>
     <string name="label_import">Import</string>
+    <string name="label_update">Update</string>
     <string name="label_reset_network">Reset</string>
     <string name="title_scanning">Scanning</string>
     <string name="label_model_id">Name</string>
