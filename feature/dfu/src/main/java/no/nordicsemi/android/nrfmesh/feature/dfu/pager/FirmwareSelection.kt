@@ -19,12 +19,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountTree
-import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.CheckBox
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
 import androidx.compose.material.icons.outlined.DeveloperBoard
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Numbers
-import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.SubdirectoryArrowRight
@@ -66,7 +66,6 @@ import no.nordicsemi.android.common.ui.view.CircularIcon
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
-import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.FirmwareEntry
@@ -264,15 +263,36 @@ private fun TargetNodes(
                 modifier = Modifier.weight(weight = 1f),
                 title = stringResource(R.string.label_available_target_nodes)
             )
+            // Select all is checked once every available target is selected, and it deselects them.
+            val isAllSelected = availableTargets.isNotEmpty() && availableTargets.all { it.isSelected }
             MeshIconButton(
-                buttonIcon = Icons.Outlined.SelectAll,
+                buttonIcon = when (isAllSelected) {
+                    true -> Icons.Outlined.CheckBox
+                    false -> Icons.Outlined.CheckBoxOutlineBlank
+                },
                 onClick = {
                     metadata?.let { metadata ->
                         scope.launch {
                             isSelectAllInProgress = true
                             isRequestInProgress = true
                             try {
-                                loop@ for (target in availableTargets) {
+                                if (isAllSelected) availableTargets.forEach { target ->
+                                    val ready = target.targetState as? TargetState.Ready
+                                        ?: return@forEach
+                                    ready.entries.forEachIndexed { index, entry ->
+                                        if (entry.isSelected) selectFirmwareEntry(
+                                            snackbarHostState = snackbarHostState,
+                                            resources = resources,
+                                            checked = false,
+                                            target = target,
+                                            indexOfEntry = index,
+                                            entry = entry,
+                                            metadata = metadata,
+                                            checkCompatibility = checkCompatibility,
+                                            downloadFirmwareUpdate = downloadFirmwareUpdate
+                                        )
+                                    }
+                                } else loop@ for (target in availableTargets) {
                                     if (target.isSelected)
                                         continue@loop
                                     val newTarget = loadFirmwareInformation(
@@ -309,7 +329,7 @@ private fun TargetNodes(
                                 snackbarHostState.run {
                                     currentSnackbarData?.dismiss()
                                     showSnackbar(
-                                        message = "Error while selecting all targets: ${ex.message}",
+                                        message = "Error while ${if (isAllSelected) "deselecting" else "selecting"} all targets: ${ex.message}",
                                         withDismissAction = true
                                     )
                                 }
@@ -340,14 +360,13 @@ private fun TargetNodes(
             )
         }
         when (availableTargets.isEmpty()) {
-            true -> MeshNoItemsAvailable(
-                modifier = when (distributorTarget) {
-                    null -> Modifier.fillMaxSize()
-                    else -> Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
+            true -> ElevatedCardItem(
+                modifier = Modifier.padding(top = 8.dp),
+                leadingIcon = {
+                    Spacer(modifier = Modifier.size(size = 16.dp))
+                    CircularIcon(painter = painterResource(R.drawable.ic_mesh))
+                    Spacer(modifier = Modifier.size(size = 16.dp))
                 },
-                imageVector = Icons.Outlined.AutoAwesome,
                 title = stringResource(R.string.label_no_nodes_available)
             )
 
