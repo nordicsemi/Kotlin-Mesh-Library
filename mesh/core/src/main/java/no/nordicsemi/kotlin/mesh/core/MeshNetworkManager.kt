@@ -1140,11 +1140,14 @@ class MeshNetworkManager(
      * @throws IllegalStateException This method throws when the mesh network has not been created.
      */
     @Throws(NoNetwork::class, IllegalStateException::class)
-    suspend fun send(message: ProxyConfigurationMessage): ProxyConfigurationMessage =
-        networkManager?.send(message) ?: run {
+    suspend fun send(message: ProxyConfigurationMessage): ProxyConfigurationMessage? {
+        val networkManager = networkManager ?: run {
             logger?.e(category = LogCategory.PROXY) { "Mesh Network not created" }
             throw NoNetwork()
         }
+        return networkManager.send(message)
+    }
+
 
     /**
      * Observes network manager events.
