@@ -14,8 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.DeliveryDining
 import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -294,7 +294,7 @@ private fun DistributionProgress(
                 else -> 1f
             }
         ),
-        imageVector = Icons.Outlined.DeliveryDining,
+        imageVector = Icons.Outlined.LocalShipping,
         title = stringResource(R.string.label_firmware_distribution),
         subtitle = when (distribution) {
             DistributionState.Idle -> stringResource(R.string.label_distribution_waiting)
@@ -303,7 +303,8 @@ private fun DistributionProgress(
             // The Distributor disconnects when it restarts to apply the image, so the distribution
             // is assumed to have completed.
             DistributionState.ProgressLost,
-            DistributionState.Completed -> stringResource(R.string.label_distribution_completed)
+            DistributionState.Completed,
+                -> stringResource(R.string.label_distribution_completed)
             is DistributionState.Failed -> stringResource(
                 R.string.label_distribution_failed,
                 distribution.message
@@ -367,14 +368,14 @@ private fun ReceiverItem(name: String, receiver: Receiver, isProgressLost: Boole
                         .size(24.dp)
                     // The progress is unknown until the receiver reports that it has received
                     // some of the image.
-                    if (status.progress > 0) {
-                        CircularProgressIndicator(
+                    when (status.progress > 0) {
+                        true -> CircularProgressIndicator(
                             modifier = modifier,
                             progress = { status.progress / 100f },
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         )
-                    } else {
-                        CircularProgressIndicator(modifier = modifier)
+
+                        else -> CircularProgressIndicator(modifier = modifier)
                     }
                 }
             }
