@@ -15,17 +15,20 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Upload
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
@@ -46,6 +49,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.launch
@@ -53,20 +57,24 @@ import no.nordicsemi.android.common.theme.nordicSun
 import no.nordicsemi.android.common.ui.view.NordicAppBar
 import no.nordicsemi.android.nrfmesh.MeshAppState
 import no.nordicsemi.android.nrfmesh.R
+import no.nordicsemi.android.nrfmesh.core.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
+import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.toEntries
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
+import no.nordicsemi.android.nrfmesh.feature.dfu.navigation.firmwareUpdateEntry
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.exportEntry
 import no.nordicsemi.android.nrfmesh.feature.groups.navigation.groupsEntry
 import no.nordicsemi.android.nrfmesh.feature.nodes.navigation.nodesEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.provisioningEntry
 import no.nordicsemi.android.nrfmesh.feature.proxy.navigation.proxyEntry
+import no.nordicsemi.android.nrfmesh.feature.scanner.navigation.scannerEntry
 import no.nordicsemi.android.nrfmesh.feature.settings.navigation.settingsEntry
 import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.ProvisionerSelectorKey
 import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.provisionerSelectorEntry
@@ -76,7 +84,6 @@ import no.nordicsemi.android.nrfmesh.network.util.title
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import kotlin.time.ExperimentalTime
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Composable
@@ -145,7 +152,6 @@ internal fun NetworkScreen(
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalStdlibApi::class,
-    ExperimentalUuidApi::class,
     ExperimentalMaterial3AdaptiveApi::class,
     ExperimentalTime::class
 )
@@ -193,6 +199,7 @@ private fun NetworkContent(
             }
         }
     ) {
+        val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
         val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
         val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
         val entryProvider = entryProvider {
@@ -206,13 +213,15 @@ private fun NetworkContent(
             )
             provisioningEntry(appState = appState, navigator = navigator)
             groupsEntry(appState = appState, navigator = navigator)
-            proxyEntry()
+            proxyEntry(navigator = navigator)
             settingsEntry(appState = appState, navigator = navigator)
             exportEntry(appState = appState, navigator = navigator)
             provisionerSelectorEntry(navigator = navigator)
+            firmwareUpdateEntry(navigator = navigator)
+            scannerEntry(navigator = navigator )
         }
         val entries = appState.navigationState.toEntries(entryProvider = entryProvider)
-        val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy)
+        val sceneStrategies = listOf(listDetailStrategy, bottomSheetStrategy, dialogStrategy)
         val sceneState = rememberSceneState(
             entries = entries, sceneStrategies = sceneStrategies, onBack = navigator::goBack
         )
@@ -234,6 +243,19 @@ private fun NetworkContent(
                         repeat(entries.size - scene.previousEntries.size) { navigator.goBack() }
                     },
                     actions = {
+                        if (appState.navigationState.currentKey is NodesKey) {
+                            TextButton(
+                                onClick = dropUnlessResumed {
+                                    navigator.navigate(key = FirmwareUpdateKey)
+                                },
+                                // Same color as the other actions of the app bar.
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = LocalContentColor.current
+                                )
+                            ) {
+                                Text(text = stringResource(R.string.label_update))
+                            }
+                        }
                         // We have to consider two conditions when displaying the dropdown in the settings screen
                         // 1. Current key destination is settings key
                         // 2. For non-compact width devices the dropdown must be displayed irrespective of where you

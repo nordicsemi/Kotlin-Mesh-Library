@@ -6,8 +6,8 @@ import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.SensorCadence
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is used to set the Sensor Cadence state of a sensor. This message is not acknowledged.
@@ -18,7 +18,7 @@ import java.nio.ByteOrder
 class SensorCadenceSetUnacknowledged(
     override val propertyId: UShort,
     val cadence: SensorCadence,
-) : UnacknowledgedMeshMessage, SensorPropertyMessage {
+) : UnacknowledgedApplicationMessage, SensorPropertyMessage {
     override val opCode = Initializer.opCode
 
     override val parameters = propertyId.toByteArray(order = ByteOrder.LITTLE_ENDIAN) + cadence.data

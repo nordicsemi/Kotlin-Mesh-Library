@@ -20,9 +20,7 @@ import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.kotlin.mesh.core.model.Element
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import kotlin.uuid.ExperimentalUuidApi
 
-@OptIn(ExperimentalUuidApi::class)
 @HiltViewModel(assistedFactory = ElementViewModel.Factory::class)
 internal class ElementViewModel @AssistedInject internal constructor(
     private val repository: CoreDataRepository,

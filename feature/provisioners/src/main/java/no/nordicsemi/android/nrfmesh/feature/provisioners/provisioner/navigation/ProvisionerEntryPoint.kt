@@ -19,16 +19,14 @@ import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.nav
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.navigation.groupRangesEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.navigation.sceneRangesEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.navigation.unicastRangesEntry
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 @Serializable
 data class ProvisionerContentKey(val uuid: String) : NavKey {
     constructor(uuid: Uuid) : this(uuid = uuid.toString())
 }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 fun EntryProviderScope<NavKey>.provisionerEntry(appState: AppState, navigator: Navigator) {
     entry<ProvisionerContentKey>(
         metadata = ListDetailSceneStrategy.extraPane(

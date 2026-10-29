@@ -13,7 +13,6 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.GroupRangesScreen
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.GroupRangesViewModel
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
@@ -21,8 +20,7 @@ data class GroupRangesContentKey(val uuid: String) : NavKey {
 }
 
 @OptIn(
-    ExperimentalMaterial3AdaptiveApi::class, ExperimentalUuidApi::class,
-    ExperimentalMaterial3Api::class
+    ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class
 )
 fun EntryProviderScope<NavKey>.groupRangesEntry(appState: AppState, navigator: Navigator) {
     entry<GroupRangesContentKey>(

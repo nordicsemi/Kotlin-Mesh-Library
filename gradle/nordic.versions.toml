@@ -1,0 +1,33 @@
+[versions]
+common = "2.12.0"     # https://github.com/nordicsemi/Android-Common-Libraries
+blek = "2.0.0-beta09"
+log = "2.6.0"
+util = "1.2.0"
+mcumgr = "3.5.0-alpha01"       # https://github.com/nordicsemi/Android-nRF-Connect-Device-Manager
+
+[libraries]
+blek-client-core = { group = "no.nordicsemi.kotlin.ble", name = "client-core", version.ref = "blek" }
+blek-client-core-android = { group = "no.nordicsemi.kotlin.ble", name = "client-core-android", version.ref = "blek" }
+blek-client-android = { group = "no.nordicsemi.kotlin.ble", name = "client-android", version.ref = "blek" }
+
+# Kotlin logging facade
+kotlin-log = { group = "no.nordicsemi.kotlin", name = "log", version.ref = "util" }
+kotlin-log-timber = { group = "no.nordicsemi.kotlin", name = "log-timber", version.ref = "util" }
+
+# Nordic Kotlin data library, released together with the logging facade
+kotlin-data = { group = "no.nordicsemi.kotlin", name = "data", version.ref = "util" }
+
+# Timber -> nRF Logger integration
+log-timber = { group = "no.nordicsemi.android", name = "log-timber", version.ref = "log" }
+
+# MCUmgr and DFU for nRF Connect SDK
+mcumgr-core = { group = "no.nordicsemi.android", name = "mcumgr-core", version.ref = "mcumgr" }
+mcumgr-core-ktx = { group = "no.nordicsemi.android", name = "mcumgr-core-ktx", version.ref = "mcumgr" }
+mcumgr-ble2 = { group = "no.nordicsemi.android", name = "mcumgr-ble2", version.ref = "mcumgr" }
+
+# Nordic Common Libraries
+logger = { group = "no.nordicsemi.android.common", name = "logger", version.ref = "common" }
+permissions-ble = { group = "no.nordicsemi.android.common", name = "permissions-ble", version.ref = "common" }
+scanner-ble = { group = "no.nordicsemi.android.common", name = "scanner-ble", version.ref = "common" }
+theme = { group = "no.nordicsemi.android.common", name = "theme", version.ref = "common" }
+ui = { group = "no.nordicsemi.android.common", name = "ui", version.ref = "common" }

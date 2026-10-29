@@ -15,7 +15,6 @@ import no.nordicsemi.android.nrfmesh.core.common.ConfigurationProperty
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.network.util.ImportState
 import javax.inject.Inject
-import kotlin.uuid.ExperimentalUuidApi
 
 @HiltViewModel
 class NetworkWizardViewModel @Inject constructor(
@@ -225,7 +224,6 @@ class NetworkWizardViewModel @Inject constructor(
      * @param uri                  URI of the file.
      * @param contentResolver      Content resolver.
      */
-    @OptIn(ExperimentalUuidApi::class)
     internal fun importNetwork(uri: Uri, contentResolver: ContentResolver) {
         viewModelScope.launch {
             runCatching {

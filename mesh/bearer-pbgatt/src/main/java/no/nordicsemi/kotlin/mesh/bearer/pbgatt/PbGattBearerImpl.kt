@@ -8,13 +8,16 @@ import no.nordicsemi.kotlin.ble.client.Peripheral
 import no.nordicsemi.kotlin.ble.client.ScanResult
 import no.nordicsemi.kotlin.mesh.bearer.PduTypes
 import no.nordicsemi.kotlin.mesh.bearer.gatt.BaseGattBearer
-import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProvisioningService
+import no.nordicsemi.kotlin.mesh.bearer.gatt.MeshProvisioningProfile
+import no.nordicsemi.kotlin.mesh.bearer.gatt.MeshServiceProfile
 import no.nordicsemi.kotlin.mesh.bearer.provisioning.ProvisioningBearer
 
 /**
  * Responsible for receiving and sending mesh provisioning messages to and from the GATT Proxy Node.
  *
- * @param supportedTypes    List of supported PDU types.
+ * @param centralManager Central manager used to connect to the peripheral.
+ * @param peripheral     Peripheral to connect to.
+ * @param ioDispatcher   Coroutine dispatcher used by the bearer.
  */
 open class PbGattBearerImpl<
         ID : Any,
@@ -32,6 +35,6 @@ open class PbGattBearerImpl<
     peripheral = peripheral,
     ioDispatcher = ioDispatcher
 ), ProvisioningBearer {
-    final override val meshService: MeshProvisioningService = MeshProvisioningService
     final override val supportedTypes: Array<PduTypes> = arrayOf(PduTypes.ProvisioningPdu)
+    final override val profile: MeshServiceProfile = MeshProvisioningProfile()
 }

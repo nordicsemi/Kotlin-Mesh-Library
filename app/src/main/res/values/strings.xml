@@ -6,6 +6,7 @@
     <string name="label_nav_bar_proxy">Proxy</string>
     <string name="label_nav_bar_settings">Settings</string>
     <string name="label_import">Import</string>
+    <string name="label_update">Update</string>
     <string name="label_reset_network">Reset</string>
     <string name="title_scanning">Scanning</string>
     <string name="label_model_id">Name</string>
@@ -54,4 +55,5 @@
     <string name="label_unknown_error_while_importing">Unknown error occurred while importing a Network.</string>
     <string name="label_error_while_importing_a_network">Error while importing a network: \n\n%1$s</string>
     <string name="label_developer_settings">Developer Settings</string>
+    <string name="label_firmware_update">Firmware Update</string>
 </resources>

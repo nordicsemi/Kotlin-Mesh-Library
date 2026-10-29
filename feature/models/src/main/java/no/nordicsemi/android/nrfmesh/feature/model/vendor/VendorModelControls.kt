@@ -33,10 +33,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.nrfmesh.core.common.Completed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
-import no.nordicsemi.android.nrfmesh.core.data.meshnetwork.simpleonoff.messages.SimpleOnOffGet
-import no.nordicsemi.android.nrfmesh.core.data.meshnetwork.simpleonoff.messages.SimpleOnOffStatus
-import no.nordicsemi.android.nrfmesh.core.data.meshnetwork.vendor.AcknowledgedVendorMessageImpl
-import no.nordicsemi.android.nrfmesh.core.data.meshnetwork.vendor.UnacknowledgedVendorMessageImpl
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.message.SimpleOnOffGet
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.message.SimpleOnOffStatus
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.message.RuntimeAcknowledgedVendorMessage
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.message.RuntimeUnacknowledgedVendorMessage
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedHexTextField
 import no.nordicsemi.android.nrfmesh.core.ui.MeshSingleLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -303,7 +303,7 @@ private fun Request(
                 modifier = Modifier.align(alignment = Alignment.End),
                 onClick = {
                     val message = if (acknowledged) {
-                        AcknowledgedVendorMessageImpl(
+                        RuntimeAcknowledgedVendorMessage(
                             modelId = model.modelId as VendorModelId,
                             vendorOpCode = opCode.text.toUByte(radix = 16),
                             parameters = if (parameters.text.isNotEmpty()) {
@@ -319,7 +319,7 @@ private fun Request(
                             }
                         )
                     } else {
-                        UnacknowledgedVendorMessageImpl(
+                        RuntimeUnacknowledgedVendorMessage(
                             modelId = model.modelId as VendorModelId,
                             vendorOpCode = opCode.text.toUByte(radix = 16),
                             parameters = if (parameters.text.isNotEmpty()) {

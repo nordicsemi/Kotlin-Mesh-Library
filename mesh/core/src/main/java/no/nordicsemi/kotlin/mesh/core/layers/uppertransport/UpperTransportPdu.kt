@@ -17,7 +17,6 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import no.nordicsemi.kotlin.mesh.core.model.boundTo
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * UpperTransportPdu defines the credentials used to encrypt a message.
@@ -72,7 +71,6 @@ internal class UpperTransportPdu(
          * @param virtualGroup  Virtual group address if the message is a virtual group message.
          * @return an UpperTransportPdu or null if the pdu could not be decoded.
          */
-        @OptIn(ExperimentalUuidApi::class)
         fun init(message: AccessMessage, key: ByteArray, virtualGroup: Group?): UpperTransportPdu? {
             val micSize = message.transportMicSize.toInt()
             val encryptedData = message.upperTransportPdu
@@ -125,7 +123,6 @@ internal class UpperTransportPdu(
          * @param ivIndex       Current IV Index.
          * @return              an UpperTransportPdu.
          */
-        @OptIn(ExperimentalUuidApi::class)
         fun init(
             pdu: AccessPdu,
             keySet: KeySet,

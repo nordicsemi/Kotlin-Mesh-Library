@@ -24,7 +24,6 @@ import no.nordicsemi.kotlin.mesh.crypto.Algorithms
 import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
 import no.nordicsemi.kotlin.mesh.provisioning.bearer.send
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Provisioning manager is responsible for provisioning new devices to a mesh network.
@@ -87,7 +86,6 @@ class ProvisioningManager(
      * @throws ProvisioningError If the provisioning process failed.
      * @throws BearerError.Closed If the bearer is closed.
      */
-    @OptIn(ExperimentalUuidApi::class)
     @Throws(
         UnsupportedDevice::class,
         NoAddressAvailable::class,

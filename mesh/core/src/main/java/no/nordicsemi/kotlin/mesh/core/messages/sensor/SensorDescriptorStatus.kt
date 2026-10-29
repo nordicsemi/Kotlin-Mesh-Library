@@ -3,11 +3,11 @@ package no.nordicsemi.kotlin.mesh.core.messages.sensor
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
-import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.ApplicationResponse
 import no.nordicsemi.kotlin.mesh.core.messages.SensorDescriptor
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is a response to a [SensorDescriptorGet] and contains the Sensor Descriptor states
@@ -17,7 +17,7 @@ import java.nio.ByteOrder
  */
 class SensorDescriptorStatus(
     val result: Result,
-) : MeshResponse, UnacknowledgedMeshMessage {
+) : ApplicationResponse, UnacknowledgedApplicationMessage {
     override val opCode = Initializer.opCode
     override val parameters = when (result) {
         is Result.PropertyNotFound -> result.propertyId.toByteArray(order = ByteOrder.LITTLE_ENDIAN)

@@ -12,12 +12,10 @@ import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisioningScreen
 import no.nordicsemi.android.nrfmesh.feature.provisioning.ProvisioningViewModel
-import kotlin.uuid.ExperimentalUuidApi
 
 @Serializable
 data object ProvisioningKey : NavKey
 
-@OptIn(ExperimentalUuidApi::class)
 fun EntryProviderScope<NavKey>.provisioningEntry(
     appState: AppState,
     navigator: Navigator,

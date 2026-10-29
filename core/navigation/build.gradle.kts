@@ -1,6 +1,7 @@
 plugins {
     // https://github.com/NordicSemiconductor/Android-Gradle-Plugins/blob/main/plugins/src/main/kotlin/AndroidLibraryComposeConventionPlugin.kt
-    alias(libs.plugins.nordic.library.compose)
+    alias(libs.plugins.nordic.android.library)
+    alias(libs.plugins.nordic.feature.hilt.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -17,7 +18,6 @@ kotlin {
 dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-
     implementation(libs.kotlinx.serialization.json)
 
     implementation(project(":core:common"))
@@ -28,7 +28,7 @@ dependencies {
     api("androidx.compose.material3:material3-window-size-class:1.4.0")
 
     // Navigation3
-    api("androidx.compose.material3.adaptive:adaptive-navigation3:1.3.0-alpha08")
-    api("androidx.navigation3:navigation3-runtime:1.1.0")
-    api("androidx.lifecycle:lifecycle-viewmodel-navigation3-android:2.10.0")
+    api("androidx.compose.material3.adaptive:adaptive-navigation3:1.3.0-rc01")
+    api("androidx.navigation3:navigation3-runtime:1.1.3")
+    api("androidx.lifecycle:lifecycle-viewmodel-navigation3-android:2.11.0")
 }

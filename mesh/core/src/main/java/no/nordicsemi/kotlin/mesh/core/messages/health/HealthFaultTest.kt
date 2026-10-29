@@ -4,9 +4,9 @@ package no.nordicsemi.kotlin.mesh.core.messages.health
 
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * A Health Fault Test is an acknowledged message used to invoke a self-test of an element.
@@ -17,7 +17,7 @@ import java.nio.ByteOrder
 class HealthFaultTest(
     val testId: UByte,
     val companyIdentifier: UShort
-) : AcknowledgedMeshMessage {
+) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode: UInt = HealthFaultStatus.opCode
     override val parameters: ByteArray = byteArrayOf(testId.toByte()) +

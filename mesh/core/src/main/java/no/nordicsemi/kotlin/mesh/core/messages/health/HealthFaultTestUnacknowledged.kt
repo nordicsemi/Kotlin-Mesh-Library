@@ -5,8 +5,8 @@ package no.nordicsemi.kotlin.mesh.core.messages.health
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.HealthMessageInitializer
-import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * A Health Fault Test Unacknowledged is an unacknowledged message used to invoke
@@ -18,7 +18,7 @@ import java.nio.ByteOrder
 class HealthFaultTestUnacknowledged(
     val testId: UByte,
     val companyIdentifier: UShort
-) : UnacknowledgedMeshMessage {
+) : UnacknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val parameters: ByteArray = byteArrayOf(testId.toByte()) +
             companyIdentifier.toByteArray(ByteOrder.LITTLE_ENDIAN)

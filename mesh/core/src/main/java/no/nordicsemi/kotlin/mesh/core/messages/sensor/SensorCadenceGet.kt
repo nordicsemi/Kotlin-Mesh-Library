@@ -2,11 +2,11 @@ package no.nordicsemi.kotlin.mesh.core.messages.sensor
 
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
-import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.SensorMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
-import java.nio.ByteOrder
+import no.nordicsemi.kotlin.data.ByteOrder
 
 /**
  * This message is used to request the Sensor Cadence state of a sensor. The response received to
@@ -16,7 +16,7 @@ import java.nio.ByteOrder
  */
 class SensorCadenceGet(
     override val propertyId: UShort,
-) : AcknowledgedMeshMessage, SensorPropertyMessage {
+) : AcknowledgedApplicationMessage, SensorPropertyMessage {
     override val opCode = Initializer.opCode
     override val responseOpCode = SensorCadenceStatus.opCode
     override val parameters = propertyId.toByteArray(order = ByteOrder.LITTLE_ENDIAN)

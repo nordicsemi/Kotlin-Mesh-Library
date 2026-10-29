@@ -10,7 +10,6 @@ import no.nordicsemi.kotlin.mesh.core.exception.KeyInUse
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork.Companion.onChange
 import no.nordicsemi.kotlin.mesh.core.model.serialization.KeySerializer
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Application Keys are used to secure communications at the upper transport layer.
@@ -91,7 +90,6 @@ data class ApplicationKey internal constructor(
 
     internal var oldAid: Byte? = null
 
-    @OptIn(ExperimentalUuidApi::class)
     val isInUse: Boolean
         get() = network?.run {
             nodes.filter { it.uuid != localProvisioner?.uuid }

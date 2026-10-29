@@ -1,0 +1,45 @@
+package no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
+
+import no.nordicsemi.kotlin.data.getUShort
+import no.nordicsemi.kotlin.data.toByteArray
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
+import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
+import no.nordicsemi.kotlin.data.ByteOrder
+
+/**
+ * Firmware Distribution Receivers Get message is an acknowledged message sent by the Firmware
+ * Distribution Client to get the firmware distribution status of each Target Node.
+ *
+ * @property firstIndex   Index of the first firmware image.
+ * @property entriesLimit Number of firmware images.
+ */
+class FirmwareDistributionReceiversGet(
+    val firstIndex: UShort,
+    val entriesLimit: UShort
+) : AcknowledgedApplicationMessage {
+    override val opCode: UInt = Initializer.opCode
+    override val responseOpCode: UInt = FirmwareDistributionReceiversList.opCode
+    override val parameters = firstIndex.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+            entriesLimit.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+
+    override fun toString() = "FirmwareDistributionReceiversGet()"
+
+    companion object Initializer : FirmwareDistributionMessageInitializer {
+        override val opCode: UInt = 0x8314u
+
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.size == 4 }
+            ?.let { params ->
+                FirmwareDistributionReceiversGet(
+                    firstIndex = params.getUShort(
+                        offset = 0,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    ),
+                    entriesLimit = params.getUShort(
+                        offset = 2,
+                        order = ByteOrder.LITTLE_ENDIAN
+                    )
+                )
+            }
+    }
+}

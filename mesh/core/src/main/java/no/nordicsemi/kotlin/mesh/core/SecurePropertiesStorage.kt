@@ -4,7 +4,6 @@ package no.nordicsemi.kotlin.mesh.core
 
 import no.nordicsemi.kotlin.mesh.core.model.IvIndex
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -23,7 +22,6 @@ interface SecurePropertiesStorage {
      * @param uuid Uuid of the mesh network.
      * @return IV Index.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun ivIndex(uuid: Uuid): IvIndex
 
     /**
@@ -32,7 +30,6 @@ interface SecurePropertiesStorage {
      * @param uuid     Uuid of the mesh network.
      * @param ivIndex  IV Index.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun storeIvIndex(uuid: Uuid, ivIndex: IvIndex)
 
     /**
@@ -43,7 +40,6 @@ interface SecurePropertiesStorage {
      * @param address Unicast address of the node or the element.
      * @return next SEQ number to be used.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun nextSequenceNumber(uuid: Uuid, address: UnicastAddress): UInt
 
     /**
@@ -55,7 +51,6 @@ interface SecurePropertiesStorage {
      * @param address        Unicast address of the node or the element.
      * @param sequenceNumber Sequence number to be stored.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun storeNextSequenceNumber(uuid: Uuid, address: UnicastAddress, sequenceNumber: UInt)
 
     /**
@@ -65,7 +60,6 @@ interface SecurePropertiesStorage {
      *
      * @param address Unicast address of the node or the element.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun resetSequenceNumber(uuid: Uuid, address: UnicastAddress)
 
     /**
@@ -76,7 +70,6 @@ interface SecurePropertiesStorage {
      * @return last SeqAuth value or null if no message has ever been received from the given source
      *         address.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun lastSeqAuthValue(uuid: Uuid, source: UnicastAddress): ULong?
 
     /**
@@ -86,7 +79,6 @@ interface SecurePropertiesStorage {
      * @param lastSeqAuth Last SeqAuth value.
      * @param source      Source address.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun storeLastSeqAuthValue(uuid: Uuid, source: UnicastAddress, lastSeqAuth: ULong)
 
     /**
@@ -97,7 +89,6 @@ interface SecurePropertiesStorage {
      * @return previous SeqAuth value or null if no more than 1 message has ever been received from
      *         the given source address.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun previousSeqAuthValue(uuid: Uuid, source: UnicastAddress): ULong?
 
     /**
@@ -107,7 +98,6 @@ interface SecurePropertiesStorage {
      * @param seqAuth SeqAuth value.
      * @param source  Source address.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun storePreviousSeqAuthValue(uuid: Uuid, source: UnicastAddress, seqAuth: ULong)
 
     /**
@@ -117,7 +107,6 @@ interface SecurePropertiesStorage {
      * @param uuid                 Uuid of the network.
      * @param localProvisionerUuid Local provisioner Uuid.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun storeLocalProvisioner(uuid: Uuid, localProvisionerUuid: Uuid)
 
     /**
@@ -125,7 +114,6 @@ interface SecurePropertiesStorage {
      *
      * @param uuid Uuid of the Network.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun localProvisioner(uuid: Uuid): String?
 }
 

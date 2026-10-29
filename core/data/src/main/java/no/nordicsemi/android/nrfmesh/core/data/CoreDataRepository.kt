@@ -27,22 +27,28 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import no.nordicsemi.android.mcumgr.McuMgrTransport
+import no.nordicsemi.android.mcumgr.ble.McuMgrBleTransport
+import no.nordicsemi.android.mcumgr.exception.McuMgrErrorException
+import no.nordicsemi.android.mcumgr.exception.McuMgrException
 import no.nordicsemi.android.nrfmesh.core.common.Configuration
+import no.nordicsemi.android.nrfmesh.core.common.NORDIC_SEMICONDUCTOR_COMPANY_ID
 import no.nordicsemi.android.nrfmesh.core.common.Utils.toAndroidLogLevel
+import no.nordicsemi.android.nrfmesh.core.common.VendorModelIds
 import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
-import no.nordicsemi.android.nrfmesh.core.data.VendorModelIds.LE_PAIRING_INITIATOR
 import no.nordicsemi.android.nrfmesh.core.data.bearer.AndroidGattBearer
 import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
-import no.nordicsemi.android.nrfmesh.core.data.meshnetwork.simpleonoff.SimpleOnOffClientHandler
-import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericDefaultTransitionTimeServer
-import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericOnOffClientEventHandler
-import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.PairingInitiatorClient
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.SimpleOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEventHandler
 import no.nordicsemi.android.nrfmesh.core.data.storage.SceneStatesDataStoreStorage
 import no.nordicsemi.kotlin.ble.client.android.CentralManager
 import no.nordicsemi.kotlin.ble.client.android.Peripheral
-import no.nordicsemi.kotlin.ble.client.exception.BluetoothUnavailableException
 import no.nordicsemi.kotlin.ble.client.exception.ScanningException
+import no.nordicsemi.kotlin.ble.core.exception.BluetoothUnavailableException
 import no.nordicsemi.kotlin.ble.core.exception.ManagerClosedException
 import no.nordicsemi.kotlin.mesh.bearer.BearerEvent
 import no.nordicsemi.kotlin.mesh.bearer.MeshBearer
@@ -86,7 +92,6 @@ import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 private object PreferenceKeys {
@@ -102,6 +107,8 @@ class CoreDataRepository @Inject constructor(
     private val storage: SceneStatesDataStoreStorage,
     private val centralManager: CentralManager,
 ) {
+    var nodeToReconfigure: Node? = null
+        private set
     private var _proxyConnectionStateFlow = MutableStateFlow(ProxyConnectionState())
     val proxyConnectionStateFlow = _proxyConnectionStateFlow.asStateFlow()
     private val isAutoConnectEnabled: Boolean
@@ -117,6 +124,14 @@ class CoreDataRepository @Inject constructor(
     private var meshBearer: MeshBearer? = null
     private var bearerStateObserverJob: Job? = null
 
+    // The Mcu Manager transport of the connected proxy, shared by the screens, so that the same
+    // transport can be used during a DFU session.
+    private var mcuMgrTransport: McuMgrBleTransport? = null
+    private var mcuMgrTransportIdentifier: String? = null
+    private var pairingJob: Job? = null
+    val identifier: String?
+        get() = (meshBearer as? AndroidGattBearer)?.identifier
+
     val proxyFilter: ProxyFilter
         get() = meshNetworkManager.proxyFilter
     val ivUpdateTestMode: Boolean
@@ -124,7 +139,7 @@ class CoreDataRepository @Inject constructor(
 
     private val ioScope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
 
-    val messengers = Messengers(meshNetworkManager = meshNetworkManager, scope = ioScope)
+    val messengers = Messengers(meshNetworkManager = meshNetworkManager)
 
     private var connectivityJob: Job? = null
 
@@ -145,6 +160,7 @@ class CoreDataRepository @Inject constructor(
     fun close() {
         connectivityJob?.cancel()
         bearerStateObserverJob?.cancel()
+        releaseMcuMgrTransport()
         ioScope.launch {
             withContext(NonCancellable) {
                 meshBearer?.close()
@@ -203,7 +219,6 @@ class CoreDataRepository @Inject constructor(
      * @param configuration Initial network configuration.
      * @return The new network instance.
      */
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun createNewMeshNetwork(
         configuration: Configuration = Configuration.Empty,
     ) = withContext(context = ioDispatcher) {
@@ -226,7 +241,7 @@ class CoreDataRepository @Inject constructor(
             networkKeys = configuration.generateNetworkKeys()
         ).also { meshNetwork ->
             configuration.generateApplicationKeys().forEachIndexed { index, key ->
-                meshNetwork.add(
+                val _ = meshNetwork.add(
                     name = "Application Key ${index + 1}",
                     key = key,
                     boundNetworkKey = meshNetwork.networkKeys.first()
@@ -253,7 +268,7 @@ class CoreDataRepository @Inject constructor(
                 val sceneAddress = meshNetwork.nextAvailableScene(
                     provisioner = meshNetwork.provisioners.first()
                 ) ?: continue
-                meshNetwork.add(name = "Scene $scene", number = sceneAddress)
+                val _ = meshNetwork.add(name = "Scene $scene", number = sceneAddress)
             }
         }.also {
             onMeshNetworkChanged()
@@ -277,7 +292,10 @@ class CoreDataRepository @Inject constructor(
             _models = mutableListOf(
                 Model(modelId = SigModelId(modelIdentifier = Model.SCENE_SERVER_MODEL_ID)),
                 Model(modelId = SigModelId(modelIdentifier = Model.SCENE_SETUP_SERVER_MODEL_ID)),
-                Model(modelId = SigModelId(modelIdentifier = Model.SENSOR_CLIENT_MODEL_ID), handler = SensorClientEventHandler()),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.SENSOR_CLIENT_MODEL_ID),
+                    handler = SensorClientEventHandler()
+                ),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_POWER_ON_OFF_CLIENT_MODEL_ID)),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_SERVER_MODEL_ID)),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_CLIENT_MODEL_ID)),
@@ -293,16 +311,17 @@ class CoreDataRepository @Inject constructor(
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_LEVEL_SERVER_MODEL_ID)),
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.GENERIC_ON_OFF_CLIENT_MODEL_ID),
-                    handler = GenericOnOffClientEventHandler()
+                    handler = GenericOnOffClient()
                 ),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_LEVEL_CLIENT_MODEL_ID)),
                 Model(modelId = SigModelId(modelIdentifier = Model.LIGHT_LC_CLIENT_MODEL_ID)),
                 // Nordic Pairing Initiator model
                 Model(
                     modelId = VendorModelId(
-                        modelIdentifier = LE_PAIRING_INITIATOR,
+                        modelIdentifier = VendorModelIds.LE_PAIRING_INITIATOR,
                         companyIdentifier = NORDIC_SEMICONDUCTOR_COMPANY_ID
-                    )
+                    ),
+                    handler = PairingInitiatorClient()
                 ),
                 // A simple vendor model
                 Model(
@@ -310,7 +329,7 @@ class CoreDataRepository @Inject constructor(
                         modelIdentifier = VendorModelIds.SIMPLE_ON_OFF_CLIENT_MODEL_ID,
                         companyIdentifier = NORDIC_SEMICONDUCTOR_COMPANY_ID
                     ),
-                    handler = SimpleOnOffClientHandler(this)
+                    handler = SimpleOnOffClient(this)
                 )
             )
         )
@@ -354,7 +373,7 @@ class CoreDataRepository @Inject constructor(
                     bufferedReader.readText()
                 }
             } ?: ""
-            meshNetworkManager.import(array = networkJson.encodeToByteArray())
+            val _ = meshNetworkManager.import(array = networkJson.encodeToByteArray())
             onMeshNetworkChanged()
             save()
         }
@@ -438,7 +457,6 @@ class CoreDataRepository @Inject constructor(
     /**
      * Enables or disables automatic connectivity to a proxy node.
      *
-     * @param meshNetwork Mesh network required to match a proxy node.
      * @param enabled     True to enable, false to disable.
      */
     suspend fun toggleAutomaticConnection(enabled: Boolean): Unit =
@@ -459,10 +477,7 @@ class CoreDataRepository @Inject constructor(
 
     /**
      * Starts automatic connectivity to the proxy node.
-     *
-     * @param meshNetwork Mesh network required to match the proxy node.
      */
-    @OptIn(ExperimentalUuidApi::class)
     private fun startAutomaticConnectivity() {
         // Make sure we don't start this multiple times.
         if (connectivityJob != null) {
@@ -480,7 +495,7 @@ class CoreDataRepository @Inject constructor(
                 open(bearer)
                 awaitDisconnection(bearer)
                 // Added a delay of 1500 seconds to avoid any reconnects
-                // Clarify this against scan results from gatt proxy
+                // Clarify this against scan results from GATT proxy
                 delay(1500.milliseconds)
             }
             connectivityJob = null
@@ -504,7 +519,6 @@ class CoreDataRepository @Inject constructor(
      * @throws NoNetwork If the mesh network has not been initialized.
      * @throws DoesNotBelongToNetwork If the mesh network doesn't contain a node with the given UUID.
      */
-    @OptIn(ExperimentalUuidApi::class)
     fun connect(uuid: Uuid) {
         val meshNetwork = requireNotNull(meshNetwork) { throw NoNetwork() }
         val node = requireNotNull(meshNetwork.node(uuid = uuid)) { throw DoesNotBelongToNetwork() }
@@ -541,6 +555,25 @@ class CoreDataRepository @Inject constructor(
     }
 
     /**
+     * Changes the connected bearer to the given peripheral.
+     *
+     * @param peripheral Peripheral to connect to.
+     */
+    fun changeProxy(peripheral: Peripheral){
+        ioScope.launch {
+            // When disconnecting we should stop the automatic connectivity, if not the app will
+            // reconnect again. The stored setting is not changed.
+            cancelAutomaticConnectivity()
+            closeBearer()
+            val bearer = createGattProxyBearer(peripheral)
+            open(bearer)
+            if(isAutoConnectEnabled) {
+                startAutomaticConnectivity()
+            }
+        }
+    }
+
+    /**
      * Scans for the proxy node.
      *
      * @param address An optional Unicast Address of the Node.
@@ -551,7 +584,6 @@ class CoreDataRepository @Inject constructor(
      * @throws SecurityException If the permission to scan is denied.
      * @throws ScanningException If an error occurred while starting the scan.
      */
-    @OptIn(ExperimentalUuidApi::class)
     private suspend fun scanForGattProxy(address: UnicastAddress? = null): MeshBearer {
         val meshNetwork = requireNotNull(meshNetwork)
         val peripheral = centralManager
@@ -635,6 +667,7 @@ class CoreDataRepository @Inject constructor(
 
                     is BearerEvent.Closed -> {
                         meshBearer = null
+                        releaseMcuMgrTransport()
                         meshNetworkManager.proxyFilter.proxyDidDisconnect()
 
                         _proxyConnectionStateFlow.update {
@@ -651,7 +684,7 @@ class CoreDataRepository @Inject constructor(
         try {
             // This will suspend until the bearer is open.
             bearer.open()
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             logger.log(
                 message = { "Failed to open bearer: ${e.message}" },
                 category = LogCategory.BEARER,
@@ -681,6 +714,7 @@ class CoreDataRepository @Inject constructor(
             meshBearer?.close()
             meshBearer = null
             bearerStateObserverJob?.cancel()
+            releaseMcuMgrTransport()
         }
     }
 
@@ -716,15 +750,18 @@ class CoreDataRepository @Inject constructor(
     suspend fun send(model: Model, unackedMessage: UnacknowledgedMeshMessage) = withContext(
         context = ioDispatcher
     ) {
+        val meshNetwork = requireNotNull(meshNetwork)
         val parentElement = requireNotNull(model.parentElement)
         meshNetworkManager.send(
             model = model,
             message = unackedMessage,
-            initialTtl = if (isDestinedToLocalNode(parentElement.unicastAddress)) {
-                1.toUByte() // Use TTL 1 for messages destined to the local node
-            } else {
-                null
-            }
+            initialTtl = when (isDestinedToLocalNode(
+                meshNetwork = meshNetwork,
+                destination = parentElement.unicastAddress
+            )) {
+                true -> 1.toUByte() // Use TTL 1 for messages destined to the local node
+                else -> null
+            },
         )
     }
 
@@ -746,23 +783,28 @@ class CoreDataRepository @Inject constructor(
      * @param model        Destination model.
      * @param ackedMessage Unacknowledged mesh message to be sent.
      */
-    suspend fun send(model: Model, ackedMessage: AcknowledgedMeshMessage) = withContext(
+    suspend fun send(
+        model: Model,
+        ackedMessage: AcknowledgedMeshMessage,
+        applicationKey: ApplicationKey? = null,
+    ) = withContext(
         context = ioDispatcher
     ) {
+        val meshNetwork = requireNotNull(meshNetwork)
         val parentElement = requireNotNull(model.parentElement)
         meshNetworkManager.send(
             model = model,
             message = ackedMessage,
-            initialTtl = if (isDestinedToLocalNode(parentElement.unicastAddress)) {
-                1.toUByte() // Use TTL 1 for messages destined to the local node
-            } else {
-                null
-            }
+            initialTtl = when (isDestinedToLocalNode(
+                meshNetwork = meshNetwork,
+                destination = parentElement.unicastAddress
+            )) {
+                true -> 1.toUByte() // Use TTL 1 for messages destined to the local node
+                else -> null
+            },
+            applicationKey = applicationKey
         )
     }
-
-    private fun isDestinedToLocalNode(destination: UnicastAddress) =
-        requireNotNull(meshNetwork).node(destination)?.isLocalProvisioner == true
 
     /**
      * Creates provisioner name based on the provisioner device model.
@@ -774,6 +816,129 @@ class CoreDataRepository @Inject constructor(
 
     fun toggleIvUpdateTestMode(flag: Boolean) {
         meshNetworkManager.networkParameters.ivUpdateTestMode = flag
+    }
+
+    /**
+     * Returns the Mcu Manager transport of the connected proxy.
+     *
+     * The transport is created the first time it is requested for a proxy and then reused, so the
+     * same transport, and connection, can be used by the screens during a DFU session. It is
+     * released when the proxy disconnects.
+     *
+     * @return The transport or null if the repository is not connected to a proxy.
+     */
+    fun mcuMgrTransport(): McuMgrTransport? = bleMcuMgrTransport()
+
+    private fun bleMcuMgrTransport(): McuMgrBleTransport? {
+        val identifier = identifier ?: return null
+        mcuMgrTransport
+            ?.takeIf { mcuMgrTransportIdentifier == identifier }
+            ?.let { return it }
+        val peripheral = centralManager.getPeripheralById(id = identifier) ?: return null
+        // The transport of a previous proxy cannot be reused.
+        releaseMcuMgrTransport()
+        return McuMgrBleTransport(centralManager, peripheral, ioScope).also {
+            mcuMgrTransport = it
+            mcuMgrTransportIdentifier = identifier
+        }
+    }
+
+    private val _isPairing = MutableStateFlow(false)
+
+    /** Whether the LE pairing with the connected proxy is in progress. */
+    val isPairing = _isPairing.asStateFlow()
+
+    /**
+     * Starts the LE pairing with the connected proxy.
+     *
+     * The shared Mcu Manager transport connects, and the device bonds, when the first request is
+     * sent. Reading the Mcu Manager parameters is used for that. Nothing is done if the pairing
+     * is already in progress or if the repository is not connected to a proxy.
+     */
+    fun startPairing() {
+        if (pairingJob?.isActive == true) return
+        val transport = bleMcuMgrTransport() ?: return
+        _isPairing.value = true
+        pairingJob = ioScope.launch {
+            try {
+                transport.connect()
+                logger.log(
+                    message = { "McuManagerTransport connected" },
+                    category = LogCategory.MODEL,
+                    level = LogLevel.APPLICATION
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: McuMgrErrorException) {
+                // The device responded with an error, so it is connected.
+                logger.log(
+                    message = { "McuManagerTransport connected, error response: ${e.message}" },
+                    category = LogCategory.MODEL,
+                    level = LogLevel.APPLICATION
+                )
+            } catch (e: McuMgrException) {
+                logger.log(
+                    message = { "Error in McuManagerTransport in LePairingResponder: ${e.message}" },
+                    category = LogCategory.MODEL,
+                    level = LogLevel.APPLICATION
+                )
+            }
+        }.also { job -> job.invokeOnCompletion { _isPairing.value = false } }
+    }
+
+    /**
+     * Connects the shared Mcu Manager transport of the connected proxy.
+     *
+     * The connection only succeeds if the link is encrypted, so the device bonds, or uses an
+     * existing bond, while connecting. This suspends until the connection is established or fails,
+     * which can take as long as the user needs to enter the pass key. If it fails, the transport is
+     * released so that the next attempt starts with a new one.
+     *
+     * @throws IllegalStateException if the repository is not connected to a proxy.
+     * @throws McuMgrException if the connection failed.
+     */
+    suspend fun connectMcuMgrTransport() {
+        val transport = bleMcuMgrTransport()
+            ?: throw IllegalStateException("Not connected to a proxy")
+        try {
+            transport.connect()
+        } catch (e: McuMgrErrorException) {
+            // The device responded with an error, so it is connected.
+            logger.log(
+                message = { "McuManagerTransport connected, error response: ${e.message}" },
+                category = LogCategory.MODEL,
+                level = LogLevel.APPLICATION
+            )
+        } catch (e: Throwable) {
+            releaseMcuMgrTransport()
+            throw e
+        }
+    }
+
+    private fun releaseMcuMgrTransport() {
+        pairingJob?.cancel()
+        mcuMgrTransport?.release()
+        mcuMgrTransport = null
+        mcuMgrTransportIdentifier = null
+    }
+
+    /**
+     * Gets the peripheral with the given identifier.
+     */
+    fun getPeripheral(): Peripheral? = identifier?.let {
+        centralManager.getPeripheralById(id = it)
+    }
+
+    fun selectNodeForReconfiguration(node: Node) {
+        nodeToReconfigure = node
+    }
+
+    fun resetNodeForReconfiguration() {
+        nodeToReconfigure = null
+    }
+
+    companion object {
+        val SMP_SERVICE = Uuid.parse("8D53DC1D-1DB7-4CD3-868B-8A527460AA84")
     }
 }
 
@@ -788,3 +953,9 @@ data class ProxyConnectionState(
     val autoConnect: Boolean = false, // Auto connect is disabled due to missing permissions
     val connectionState: NetworkConnectionState = NetworkConnectionState.Disconnected,
 )
+
+/**
+ * Checks if the given destination address is destined to the local node.
+ */
+fun isDestinedToLocalNode(meshNetwork: MeshNetwork, destination: UnicastAddress) =
+    meshNetwork.node(destination)?.isLocalProvisioner == true

@@ -7,7 +7,6 @@ import no.nordicsemi.kotlin.data.HexString
 import no.nordicsemi.kotlin.data.toUuid
 import no.nordicsemi.kotlin.mesh.core.model.serialization.MeshAddressSerializer
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -55,7 +54,7 @@ sealed interface HasAddress {
      *
      * @return The hex string representation of the address.
      */
-    fun toHexString(): HexString
+    fun toHexString(addPrefix: Boolean = true): HexString
 }
 
 /**
@@ -68,10 +67,12 @@ sealed class MeshAddress : HasAddress {
     override fun toString(): String = toHexString()
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun toHexString(): HexString = address.toHexString(
+    override fun toHexString(addPrefix: Boolean): HexString = address.toHexString(
         HexFormat {
             number {
-                prefix = "0x"
+                if (addPrefix) {
+                    prefix = "0x"
+                }
                 minLength = 4
                 upperCase = true
             }
@@ -116,7 +117,6 @@ sealed class MeshAddress : HasAddress {
          *
          * @param uuid Uuid Label.
          */
-        @OptIn(ExperimentalUuidApi::class)
         fun create(uuid: Uuid) = VirtualAddress(uuid = uuid)
     }
 }
@@ -131,7 +131,8 @@ object UnassignedAddress : MeshAddress(),
     SubscriptionAddress,
     HeartbeatSubscriptionSource,
     HeartbeatPublicationDestination,
-    HeartbeatSubscriptionDestination {
+    HeartbeatSubscriptionDestination,
+    DistributionMulticastAddress {
     override val address = unassignedAddress
 
     fun isValid(address: Address): Boolean = address == unassignedAddress
@@ -153,12 +154,13 @@ data class UnicastAddress(
     HeartbeatPublicationDestination,
     HeartbeatSubscriptionSource,
     HeartbeatSubscriptionDestination,
-    ProxyFilterAddress {
+    ProxyFilterAddress,
+    DistributionMulticastAddress {
 
     constructor(address: Int) : this(address = address.toUShort())
 
     init {
-        require(isValid(address)) {
+        require(isValid(address = address)) {
             "A valid unicast address must range from $minUnicastAddress to $maxUnicastAddress!"
         }
     }
@@ -188,15 +190,13 @@ data class UnicastAddress(
 
 /**
  * A virtual address represents a set of destination addresses. Each virtual address logically
- * represents a Label Uuid,
- * which is a 128-bit value that does not have to be managed centrally. One or more elements may be
- * programmed to publish or subscribe to a Label Uuid. The Label Uuid is not transmitted and shall
- * be used as the Additional Data field of the message integrity check value in the upper transport
- * layer.
+ * represents a Label Uuid, which is a 128-bit value that does not have to be managed centrally. One
+ * or more elements may be programmed to publish or subscribe to a Label Uuid. The Label Uuid is not
+ * transmitted and shall be used as the Additional Data field of the message integrity check value
+ * in the upper transport layer.
  *
  * @property Uuid     Uuid label of the virtual address.
  */
-@OptIn(ExperimentalUuidApi::class)
 @Serializable(with = MeshAddressSerializer::class)
 data class VirtualAddress(
     val uuid: Uuid,
@@ -206,9 +206,9 @@ data class VirtualAddress(
     PublicationAddress,
     SubscriptionAddress,
     HeartbeatPublicationDestination,
-    ProxyFilterAddress {
+    ProxyFilterAddress,
+    DistributionMulticastAddress {
 
-    @OptIn(ExperimentalUuidApi::class)
     override val address: Address = Crypto.createVirtualAddress(uuid = uuid)
 
     /**
@@ -216,10 +216,20 @@ data class VirtualAddress(
      * @param label Byte array containing the Uuid label.
      * @throws IllegalArgumentException If the byte array containing the label is not 16 bytes long.
      */
-    @OptIn(ExperimentalUuidApi::class)
     constructor(label: ByteArray) : this(uuid = label.toUuid())
 
     operator fun compareTo(o: VirtualAddress) = address.compareTo(other = o.address)
+
+    companion object {
+        /**
+         * Checks if the given address is a valid virtual address.
+         *
+         * @param address Address to check.
+         * @return True if the given address is a valid virtual address, false otherwise.
+         */
+        fun isValid(address: Address) = address in minVirtualAddress..maxVirtualAddress
+    }
+
 }
 
 /**
@@ -241,12 +251,13 @@ data class GroupAddress(
     SubscriptionAddress,
     HeartbeatPublicationDestination,
     HeartbeatSubscriptionDestination,
-    ProxyFilterAddress {
+    ProxyFilterAddress,
+    DistributionMulticastAddress {
 
     constructor(address: Int) : this(address = address.toUShort())
 
     init {
-        require(isValid(address)) {
+        require(isValid(address = address)) {
             "A valid group address must range from $minGroupAddress to $maxGroupAddress!"
         }
     }
@@ -273,8 +284,39 @@ data class GroupAddress(
  * fixed. Fixed group addresses are in the range of 0xFF00 through 0xFFFF.
  */
 @Serializable
-sealed class FixedGroupAddress(override val address: Address) : MeshAddress(), ProxyFilterAddress,
-    PublicationAddress, HeartbeatSubscriptionDestination, HeartbeatPublicationDestination
+sealed class FixedGroupAddress(
+    override val address: Address,
+) : MeshAddress(),
+    ProxyFilterAddress,
+    PublicationAddress,
+    HeartbeatSubscriptionDestination,
+    HeartbeatPublicationDestination,
+    DistributionMulticastAddress {
+    companion object {
+
+        /**
+         * Checks if the given address is a fixed group address.
+         *
+         * @param address Address to check.
+         * @return True if the given address is a fixed group address, false otherwise.
+         */
+        fun isValid(address: Address) = address == allProxies ||
+                address == allFriends ||
+                address == allRelays ||
+                address == allNodes
+
+        fun create(address: Address): FixedGroupAddress = when (address) {
+            allProxies -> AllProxies
+            allFriends -> AllFriends
+            allRelays -> AllRelays
+            allNodes -> AllNodes
+            else -> throw IllegalArgumentException(
+                "Unable to create a Fixed Group Address with the given address value!"
+            )
+        }
+
+    }
+}
 
 /**
  * A message sent to the all-proxies address shall be processed by the primary element of all nodes
@@ -382,3 +424,16 @@ sealed interface ParentGroupAddress : HasAddress
  */
 @Serializable(with = MeshAddressSerializer::class)
 sealed interface ProxyFilterAddress : HasAddress
+
+/**
+ * An address type that can be a [GroupAddress], [FixedGroupAddress], [VirtualAddress] or an
+ * [UnassignedAddress] that would be used as Multicast Address in Firmware Distribution in Mesh DFU.
+ */
+sealed interface DistributionMulticastAddress : HasAddress {
+    companion object {
+        fun isValid(address: Address) = UnassignedAddress.isValid(address = address) ||
+                GroupAddress.isValid(address = address) ||
+                VirtualAddress.isValid(address = address) ||
+                FixedGroupAddress.isValid(address = address)
+    }
+}

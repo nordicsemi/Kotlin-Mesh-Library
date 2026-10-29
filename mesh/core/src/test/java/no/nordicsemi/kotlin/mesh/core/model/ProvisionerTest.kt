@@ -2,10 +2,8 @@ package no.nordicsemi.kotlin.mesh.core.model
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 class ProvisionerTest {
 
     private val provisioner = Provisioner(Uuid.random())

@@ -16,7 +16,6 @@ import no.nordicsemi.kotlin.mesh.core.model.serialization.KeySerializer
 import no.nordicsemi.kotlin.mesh.core.model.serialization.UShortAsStringSerializer
 import no.nordicsemi.kotlin.mesh.core.model.serialization.UuidSerializer
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
@@ -86,7 +85,6 @@ import kotlin.uuid.Uuid
  * @constructor                         Creates a mesh node.
  */
 @ConsistentCopyVisibility
-@OptIn(ExperimentalUuidApi::class)
 @Serializable
 data class Node internal constructor(
     @SerialName(value = "UUID")
@@ -776,6 +774,43 @@ data class Node internal constructor(
     fun element(address: MeshAddress) = if (address is UnicastAddress)
         element(address.address)
     else null
+
+    /**
+     * Returns the model with the given model ID.
+     *
+     * @param modelId Model ID.
+     * @return Model or null if not found.
+     */
+    fun model(modelId: ModelId) = model(modelId = modelId.id)
+
+    /**
+     * Returns a list of models with the given model ID.
+     *
+     * @param modelId Model ID.
+     * @return List of models or empty list if not found.
+     */
+    fun models(modelId: ModelId) = models(modelId = modelId.id)
+
+    /**
+     * Returns the model with the given model ID.
+     *
+     * @param modelId Model ID.
+     * @return Model or null if not found.
+     */
+    fun model(modelId: UInt) = elements
+        .flatMap { it.models }
+        .firstOrNull { it.modelId.id == modelId }
+
+    /**
+     * Returns a list of models with the given model ID.
+     *
+     * @param modelId Model ID.
+     * @return List of models or empty list if not found.
+     */
+    fun models(modelId: UInt) = elements
+        .flatMap { it.models }
+        .filter { it.modelId.id == modelId }
+
 
     /**
      * Checks if the given Application Key known by the node.
