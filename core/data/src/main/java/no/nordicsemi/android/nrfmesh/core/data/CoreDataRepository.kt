@@ -886,6 +886,35 @@ class CoreDataRepository @Inject constructor(
         }.also { job -> job.invokeOnCompletion { _isPairing.value = false } }
     }
 
+    /**
+     * Connects the shared Mcu Manager transport of the connected proxy.
+     *
+     * The connection only succeeds if the link is encrypted, so the device bonds, or uses an
+     * existing bond, while connecting. This suspends until the connection is established or fails,
+     * which can take as long as the user needs to enter the pass key. If it fails, the transport is
+     * released so that the next attempt starts with a new one.
+     *
+     * @throws IllegalStateException if the repository is not connected to a proxy.
+     * @throws McuMgrException if the connection failed.
+     */
+    suspend fun connectMcuMgrTransport() {
+        val transport = bleMcuMgrTransport()
+            ?: throw IllegalStateException("Not connected to a proxy")
+        try {
+            transport.connect()
+        } catch (e: McuMgrErrorException) {
+            // The device responded with an error, so it is connected.
+            logger.log(
+                message = { "McuManagerTransport connected, error response: ${e.message}" },
+                category = LogCategory.MODEL,
+                level = LogLevel.APPLICATION
+            )
+        } catch (e: Throwable) {
+            releaseMcuMgrTransport()
+            throw e
+        }
+    }
+
     private fun releaseMcuMgrTransport() {
         pairingJob?.cancel()
         mcuMgrTransport?.release()

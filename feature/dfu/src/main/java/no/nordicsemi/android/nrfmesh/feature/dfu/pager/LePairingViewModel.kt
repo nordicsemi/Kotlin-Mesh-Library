@@ -3,172 +3,119 @@ package no.nordicsemi.android.nrfmesh.feature.dfu.pager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import no.nordicsemi.android.nrfmesh.core.common.MessageState
-import no.nordicsemi.android.nrfmesh.core.common.NotStarted
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import no.nordicsemi.android.nrfmesh.core.common.lePairingResponder
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
-import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository.Companion.SMP_SERVICE
-import no.nordicsemi.android.nrfmesh.core.data.NetworkConnectionState
-import no.nordicsemi.android.nrfmesh.core.data.ProxyConnectionState
-import no.nordicsemi.kotlin.ble.client.RemoteServices
-import no.nordicsemi.kotlin.ble.client.android.BondState
-import no.nordicsemi.kotlin.ble.client.android.CentralManager
-import no.nordicsemi.kotlin.mesh.core.ProxyFilterState
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.message.PairingRequest
+import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.message.PairingResponse
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
-import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+
+/**
+ * Time given to the connection to complete before assuming that the device is not bonded yet and
+ * that the pass key has to be entered by the user.
+ */
+private val BONDED_CONNECTION_DELAY = 500.milliseconds
 
 @HiltViewModel
 internal class LePairingViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
-    private val centralManager: CentralManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LePairingScreenUiState())
     internal val uiState = _uiState.asStateFlow()
-    private lateinit var network: MeshNetwork
-    private var bondStateJob: Job? = null
+    private var pairingJob: Job? = null
 
-    init {
-        observeNetwork()
-        observeProxyConnectionState()
-        observeProxyFilterState()
-        observeSmpState()
-        observeBondState()
-        observePairingState()
-    }
-
-    private fun observePairingState() {
-        repository.isPairing
-            .onEach { isPairing -> _uiState.update { it.copy(isPairing = isPairing) } }
-            .launchIn(scope = viewModelScope)
+    /**
+     * Pairs with the connected proxy.
+     *
+     * The Mcu Manager transport is connected first, which requires an encrypted link. The bond
+     * state of the phone is not used, as a bond that is stored on the phone may be stale.
+     *
+     * If the connection completes within [BONDED_CONNECTION_DELAY] the device was bonded already
+     * and the state becomes [PairingState.Paired]. Otherwise, the device is waiting for the pass
+     * key to be entered, so a [PairingRequest] is sent to the LE Pairing Responder model, if the
+     * node has one, and the pass key is shown for the user to enter in the pairing dialog. The
+     * connection is then awaited with no timeout.
+     *
+     * Nothing is done if the pairing is already in progress.
+     */
+    internal fun pair() {
+        if (pairingJob?.isActive == true) return
+        // Updated before launching, so that a previous result is never seen when the page is shown.
+        _uiState.update { it.copy(passKey = null, state = PairingState.Connecting) }
+        pairingJob = viewModelScope.launch {
+            val connection = async {
+                try {
+                    repository.connectMcuMgrTransport()
+                    Result.success(Unit)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+            // Waiting for the result does not cancel the connection if the delay expires.
+            val result = withTimeoutOrNull(BONDED_CONNECTION_DELAY) { connection.await() }
+                ?: run {
+                    // The device is not bonded, the user has to enter the pass key in the pairing
+                    // dialog of the system.
+                    _uiState.update { it.copy(state = PairingState.RequestingPassKey) }
+                    try {
+                        requestPassKey()?.let { passKey ->
+                            _uiState.update { it.copy(passKey = passKey) }
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        // The connection is canceled so that a retry starts a new one.
+                        connection.cancel()
+                        _uiState.update { it.copy(state = PairingState.RequestFailed(error = e)) }
+                        return@launch
+                    }
+                    _uiState.update { it.copy(state = PairingState.Connecting) }
+                    connection.await()
+                }
+            _uiState.update {
+                it.copy(
+                    state = result.fold(
+                        onSuccess = { PairingState.Paired },
+                        onFailure = { error -> PairingState.ConnectionFailed(error = error) }
+                    )
+                )
+            }
+        }
     }
 
     /**
-     * Observes the bond state of the connected proxy, so that the page knows as soon as the device
-     * is bonded, either already, or after the pairing.
+     * Requests the pass key from the LE Pairing Responder model of the connected proxy.
      *
-     * The peripheral depends on the connected proxy, so the bond state is observed again whenever
-     * the proxy gets connected.
+     * @return The pass key, or null if the node does not have the model.
+     * @throws IllegalStateException if no response was received, or the request was rejected.
      */
-    private fun observeBondState() {
-        repository.proxyConnectionStateFlow
-            .map { it.connectionState is NetworkConnectionState.Connected }
-            .distinctUntilChanged()
-            .onEach { isConnected ->
-                bondStateJob?.cancel()
-                bondStateJob = null
-                if (isConnected) {
-                    bondStateJob = repository.getPeripheral()
-                        ?.bondState
-                        ?.onEach { bondState ->
-                            _uiState.update { it.copy(isBonded = bondState is BondState.Bonded) }
-                        }
-                        ?.launchIn(scope = viewModelScope)
-                }
-            }
-            .launchIn(scope = viewModelScope)
+    private suspend fun requestPassKey(): Int? {
+        val model = repository.proxyFilter.proxy?.model(modelId = lePairingResponder) ?: return null
+        val response = send(model = model, message = PairingRequest()) as? PairingResponse
+            ?: throw IllegalStateException("No response received")
+        if (response.status != 0.toUByte()) {
+            throw IllegalStateException("Pairing request failed, status ${response.status}")
+        }
+        return response.passKey
     }
-
-    private fun observeSmpState() {
-        repository.getPeripheral()
-            ?.services()
-            // Only the discovered state carries services.
-            ?.filterIsInstance<RemoteServices.Discovered>()
-            ?.onEach { discovered ->
-                val service = discovered.services.firstOrNull { it.uuid == SMP_SERVICE }
-                if (service != null) {
-                    _uiState.update { state ->
-                        state.copy(
-                            isBonded = centralManager
-                                .getBondedPeripherals()
-                                .any { p -> p.identifier == repository.identifier }
-                        )
-                    }
-                }
-            }?.launchIn(scope = viewModelScope)
-    }
-
-    private fun observeNetwork() {
-        repository.networkEvents
-            .mapNotNull { repository.meshNetwork }
-            .onEach { network = it }
-            .launchIn(scope = viewModelScope)
-    }
-
-    private fun observeProxyConnectionState() {
-        repository.proxyConnectionStateFlow
-            .onEach { proxyConnectionState ->
-                val state = proxyConnectionState.connectionState
-                _uiState.update {
-                    it.copy(
-                        proxyConnectionState = proxyConnectionState,
-                        name = when (state) {
-                            is NetworkConnectionState.Connecting -> state.name
-                            is NetworkConnectionState.Connected -> state.name
-                            NetworkConnectionState.Disconnected,
-                            NetworkConnectionState.Scanning,
-                                -> null
-                        },
-                        unicastAddress = repository.proxyFilter.proxy?.primaryUnicastAddress,
-                        isBonded = when (state) {
-                            is NetworkConnectionState.Connected -> centralManager
-                                .getBondedPeripherals()
-                                .any { p -> p.identifier == repository.identifier }
-
-                            else -> null
-                        }
-                    )
-                }
-            }
-            .launchIn(scope = viewModelScope)
-    }
-
-    private fun observeProxyFilterState() {
-        repository.proxyFilter.proxyFilterStateFlow
-            .onEach { filterState ->
-                // We update the state here because the proxy state updates confirm that the node is
-                // connected and ready to send messages
-                when (filterState) {
-                    is ProxyFilterState.ProxyFilterUpdateAcknowledged,
-                    is ProxyFilterState.ProxyFilterLimitReached,
-                        -> {
-                        val isBonded = centralManager.getBondedPeripherals()
-                            .any { p -> p.identifier == repository.identifier }
-                        _uiState.update { state ->
-                            state.copy(
-                                node = repository.proxyFilter.proxy,
-                                unicastAddress = repository.proxyFilter.proxy?.primaryUnicastAddress,
-                                isBonded = isBonded
-                            )
-                        }
-                    }
-
-                    else -> {
-
-                    }
-                }
-            }
-            .launchIn(scope = viewModelScope)
-    }
-
-    internal fun startPairing() = repository.startPairing()
 
     /**
      * Sends the message to the model, binding an application key to it first, if none is bound.
@@ -225,12 +172,32 @@ internal class LePairingViewModel @Inject internal constructor(
         return key
     }
 }
+
 internal data class LePairingScreenUiState(
-    val proxyConnectionState: ProxyConnectionState = ProxyConnectionState(),
-    val messageState: MessageState = NotStarted,
-    val name: String? = null,
-    val unicastAddress: UnicastAddress? = null,
-    val node: Node? = null,
-    val isBonded: Boolean? = false,
-    val isPairing: Boolean = false,
+    val passKey: Int? = null,
+    val state: PairingState = PairingState.Idle,
 )
+
+/** The state of the pairing with the proxy. */
+internal sealed interface PairingState {
+    /** Nothing is in progress. */
+    data object Idle : PairingState
+
+    /** The pass key is requested from the LE Pairing Responder. */
+    data object RequestingPassKey : PairingState
+
+    /** The Mcu Manager transport is connecting, which pairs the devices if they are not paired. */
+    data object Connecting : PairingState
+
+    /** The connection with an encrypted link was established. */
+    data object Paired : PairingState
+
+    /** The pair request was not answered or was rejected. */
+    data class RequestFailed(val error: Throwable) : PairingState
+
+    /** The connection failed, e.g. due to an invalid key or a stale bond. */
+    data class ConnectionFailed(val error: Throwable) : PairingState
+
+    val isInProgress: Boolean
+        get() = this is RequestingPassKey || this is Connecting
+}

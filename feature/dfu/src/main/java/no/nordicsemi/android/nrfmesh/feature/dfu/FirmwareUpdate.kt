@@ -41,7 +41,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.dropUnlessResumed
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.common.ui.view.NordicAppBar
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
@@ -51,7 +53,9 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.pager.DistributionParameters
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.DistributorSelection
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.FirmwareSelection
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.LePairing
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.LePairingViewModel
 import no.nordicsemi.android.nrfmesh.feature.dfu.pager.NodeConfiguration
+import no.nordicsemi.android.nrfmesh.feature.dfu.pager.PairingState
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.DfuParameters
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
@@ -79,6 +83,10 @@ internal fun FirmwareUpdateScreen(
     val pagerState = rememberPagerState(pageCount = { FirmwareUpdateStep.entries.size })
     val currentStep = FirmwareUpdateStep.entries[pagerState.currentPage]
     var isPaired by rememberSaveable { mutableStateOf(false) }
+    var isLePairingSupported by rememberSaveable { mutableStateOf(false) }
+    // Whether it is being checked if the device is already paired, before the next page is shown.
+    var isCheckingPairing by remember { mutableStateOf(false) }
+    val lePairingViewModel = hiltViewModel<LePairingViewModel>()
     var tasksCompleted by rememberSaveable { mutableStateOf(false) }
     var isUploadCompleted by rememberSaveable { mutableStateOf(false) }
     var isDistributorConnected by rememberSaveable { mutableStateOf(false) }
@@ -94,22 +102,46 @@ internal fun FirmwareUpdateScreen(
         isPaired = isPaired,
         tasksCompleted = tasksCompleted
     ) && (currentStep != FirmwareUpdateStep.FirmwareSelection || isDistributorConnected) &&
-            (currentStep != FirmwareUpdateStep.DistributorSelection || option == FirmwareUpdateOptions.SMP)
+            (currentStep != FirmwareUpdateStep.DistributorSelection || option == FirmwareUpdateOptions.SMP) &&
+            !isCheckingPairing
     fun goToNextStep() {
         // The tasks enqueued on the node configuration page have been executed, they are cleared
         // so they are not duplicated when it is shown again.
         if (currentStep == FirmwareUpdateStep.NodeConfiguration) onClearTasks()
         scope.launch {
-            pagerState.requestScrollToPage(
-                page = when {
-                    // A distribution that is in progress can only be followed on the last page.
-                    currentStep == FirmwareUpdateStep.DistributorSelection &&
-                            session.ongoingFirmwareSize != null ->
-                        FirmwareUpdateStep.last.ordinal
+            val page = when {
+                // A distribution that is in progress can only be followed on the last page.
+                currentStep == FirmwareUpdateStep.DistributorSelection &&
+                        session.ongoingFirmwareSize != null ->
+                    FirmwareUpdateStep.last.ordinal
 
-                    else -> pagerState.currentPage + 1
+                // Without the LE Pairing Responder model there is nothing to pair with.
+                currentStep == FirmwareUpdateStep.DistributorSelection &&
+                        !isLePairingSupported ->
+                    FirmwareUpdateStep.FirmwareSelection.ordinal
+
+                // The LE Pairing page is only shown if the device is not paired yet, so it doesn't
+                // appear and disappear when the device is already bonded.
+                currentStep == FirmwareUpdateStep.DistributorSelection -> {
+                    isCheckingPairing = true
+                    try {
+                        lePairingViewModel.pair()
+                        // Pairing starts as connecting, until it is known if the pass key is needed.
+                        val state = lePairingViewModel.uiState
+                            .first { it.state != PairingState.Connecting }
+                            .state
+                        when (state) {
+                            PairingState.Paired -> FirmwareUpdateStep.FirmwareSelection.ordinal
+                            else -> FirmwareUpdateStep.LePairing.ordinal
+                        }
+                    } finally {
+                        isCheckingPairing = false
+                    }
                 }
-            )
+
+                else -> pagerState.currentPage + 1
+            }
+            pagerState.requestScrollToPage(page = page)
         }
     }
     if (isDistributorWarningVisible) MeshAlertDialog(
@@ -183,6 +215,7 @@ internal fun FirmwareUpdateScreen(
                                         onKeySelected = { index -> onKeyIndexChanged(index.toInt()) },
                                         onKeyDeselected = { onKeyIndexChanged(-1) },
                                         onMaxReceiversListSizeChanged = onMaxReceiversListSizeChanged,
+                                        onLePairingSupportedChanged = { isLePairingSupported = it },
                                         onOngoingDistributionChanged = { ongoing ->
                                             ongoing?.let { onKeyIndexChanged(it.keyIndex) }
                                             onOngoingFirmwareSizeChanged(ongoing?.firmwareSize)
@@ -195,7 +228,7 @@ internal fun FirmwareUpdateScreen(
                                                 pagerState.requestScrollToPage(page = pagerState.currentPage + 1)
                                             }
                                         },
-                                        onBondedChanged = { isPaired = it }
+                                        onPairedChanged = { isPaired = it }
                                     )
 
                                     FirmwareUpdateStep.FirmwareSelection -> FirmwareSelection(

@@ -68,6 +68,7 @@ internal fun DistributorSelection(
     onKeyDeselected: () -> Unit,
     onMaxReceiversListSizeChanged: (Int) -> Unit,
     onOngoingDistributionChanged: (OngoingDistribution?) -> Unit,
+    onLePairingSupportedChanged: (Boolean) -> Unit,
 ) {
     val viewModel = hiltViewModel<DistributorSelectionViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -98,6 +99,10 @@ internal fun DistributorSelection(
         if (uiState.isDistributorServerModelSupported == false) {
             onKeyDeselected()
         }
+    }
+    // Without the LE Pairing Responder model, there is nothing to pair with.
+    LaunchedEffect(uiState.isLePairingSupported) {
+        onLePairingSupportedChanged(uiState.isLePairingSupported == true)
     }
     // The size of the receivers list is needed to limit the number of selected receivers.
     LaunchedEffect(uiState.capabilitiesStatus) {

@@ -12,45 +12,32 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.compose.dropUnlessResumed
-import kotlinx.coroutines.launch
-import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
-import no.nordicsemi.android.nrfmesh.core.common.lePairingResponder
-import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.message.PairingRequest
-import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.message.PairingResponse
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
-import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.models.R
 
 @Composable
-internal fun LePairing(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit) {
-    val context = LocalContext.current
+internal fun LePairing(goToNext: () -> Unit, onPairedChanged: (Boolean) -> Unit) {
     val resources = LocalResources.current
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     val viewModel = hiltViewModel<LePairingViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var status by remember { mutableStateOf<PairingResponse?>(null) }
-    var error by rememberSaveable { mutableStateOf<Throwable?>(null) }
-    var shouldShowProgressIcon by rememberSaveable { mutableStateOf(false) }
-    var passKey by rememberSaveable { mutableStateOf<Int?>(null) }
+    val state = uiState.state
+    // The bond state of the phone is not used, as it may not be correct. Pairing is attempted every
+    // time the page is shown.
+    LaunchedEffect(Unit) { viewModel.pair() }
     Row(
         modifier = Modifier.fillMaxSize(),
         verticalAlignment = Alignment.CenterVertically,
@@ -62,48 +49,18 @@ internal fun LePairing(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit)
         )
         MeshIconButton(
             buttonIcon = Icons.Outlined.Refresh,
-            onClick = dropUnlessResumed {
-                scope.launch {
-                    shouldShowProgressIcon = true
-                    try {
-                        status = viewModel.send(
-                            model = uiState.node?.model(modelId = lePairingResponder)
-                                ?: throw IllegalStateException("Le Pairing Responder Model not found"),
-                            message = PairingRequest()
-                        ) as PairingResponse?
-                    } catch (e: Exception) {
-                        error = e
-                    } finally {
-                        shouldShowProgressIcon = false
-                    }
-                    passKey = status?.let {
-                        copyToClipboard(
-                            scope = scope,
-                            clipboard = clipboard,
-                            text = it.passKey.toString(),
-                            label = resources.getString(R.string.label_pass_key)
-                        )
-                        it.passKey
-                    }
-                    status
-                        ?.takeIf { it.status == 0.toUByte() }
-                        ?.let {
-                            passKey = it.passKey
-                            viewModel.startPairing()
-                        }
-                }
-            },
-            // A new request would change the passkey of the pairing that is in progress.
-            enabled = !uiState.isPairing && !shouldShowProgressIcon,
-            isOnClickActionInProgress = shouldShowProgressIcon
+            onClick = viewModel::pair,
+            // A new request would change the pass key of the pairing that is in progress.
+            enabled = !state.isInProgress,
+            isOnClickActionInProgress = state.isInProgress
         )
     }
     ElevatedCardItem(
         imageVector = Icons.Outlined.Password,
         title = stringResource(R.string.label_pass_key),
-        // Shown while the pairing is requested and until the device is bonded.
+        // Shown while the pairing is in progress.
         titleAction = {
-            if (shouldShowProgressIcon || uiState.isPairing) {
+            if (state.isInProgress) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .padding(end = 16.dp)
@@ -111,42 +68,21 @@ internal fun LePairing(goToNext: () -> Unit, onBondedChanged: (Boolean) -> Unit)
                 )
             }
         },
-        subtitle = passKey?.toString() ?: stringResource(R.string.label_unknown)
+        subtitle = uiState.passKey?.toString() ?: stringResource(R.string.label_unknown)
     )
-
-    error?.let {
-        MeshMessageStatusDialog(
-            text = it.describe(),
-            showDismissButton = true,
-            onDismissRequest = { error = null },
-        )
-    }
-    LaunchedEffect(uiState.isBonded) {
-        // Pairing is done when the proxy is bonded, null means that the proxy is not connected.
-        onBondedChanged(uiState.isBonded == true)
-        if (uiState.isBonded == true) {
-            goToNext()
-        } else if (uiState.isBonded == false) {
-            shouldShowProgressIcon = true
-            try {
-                status = viewModel.send(
-                    model = uiState.node?.model(modelId = lePairingResponder)
-                        ?: throw IllegalStateException("Le Pairing Responder Model not found"),
-                    message = PairingRequest()
-                ) as PairingResponse?
-                passKey = status?.passKey
-                status
-                    ?.takeIf { it.status == 0.toUByte() }
-                    ?.let {
-                        passKey = it.passKey
-                        println("Starting pairing")
-                        viewModel.startPairing()
-                    }
-            } catch (e: Exception) {
-                error = e
-            } finally {
-                shouldShowProgressIcon = false
-            }
+    // The pass key is copied so that it can be pasted in the pairing dialog of the system.
+    LaunchedEffect(uiState.passKey) {
+        uiState.passKey?.let {
+            copyToClipboard(
+                scope = scope,
+                clipboard = clipboard,
+                text = it.toString(),
+                label = resources.getString(R.string.label_pass_key)
+            )
         }
+    }
+    LaunchedEffect(state) {
+        onPairedChanged(state is PairingState.Paired)
+        if (state is PairingState.Paired) goToNext()
     }
 }
