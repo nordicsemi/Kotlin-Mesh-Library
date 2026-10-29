@@ -31,8 +31,8 @@ sealed class ModelId {
     fun toHex(prefix0x: Boolean = false) = when (id and 0xFFFF0000u) {
         0u -> "%04X".format(id.toShort())
         else -> "%08X".format(id.toInt())
-    }.also {
-        return if (prefix0x) "0x$it" else it
+    }.let {
+        if (prefix0x) "0x$it" else it
     }
 
     companion object {
@@ -147,9 +147,9 @@ class VendorModelId(
     }
 
     override fun equals(other: Any?): Boolean {
-        if (other !is SigModelId)
+        if (other !is VendorModelId)
             return false
-        return modelIdentifier == other.modelIdentifier
+        return id == other.id
     }
 
     override fun hashCode(): Int {
