@@ -65,7 +65,6 @@ suspend fun checkForUpdates(url: URL): UpdatedFirmwareInformation? = try {
  */
 suspend fun downloadFirmware(context: Context, url: URL, firmwareId: FirmwareId): File {
     val updatedUrl = url.toString()
-        .replace(oldValue = "192.168.0.173", newValue = "10.0.0.104")
         .toUri()
         .let { uri ->
             URI(
