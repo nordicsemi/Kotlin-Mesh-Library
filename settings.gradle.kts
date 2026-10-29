@@ -12,15 +12,10 @@ dependencyResolutionManagement {
         mavenLocal()
         google()
         mavenCentral()
-        maven(url = "https://jitpack.io")
-        maven(url = "https://androidx.dev/storage/compose-compiler/repository/")
     }
     versionCatalogs {
         create("libs") {
-            from("no.nordicsemi.gradle:version-catalog:3.3-2")
-            // The catalog ships androidx.hilt 1.2.0, which does not contain the
-            // androidx.hilt.lifecycle.viewmodel.compose package used by the view models.
-            version("androidxHilt", "1.3.0")
+            from("no.nordicsemi.gradle:version-catalog:3.3.1-1")
         }
         create("nordic") {
             from(files("gradle/nordic.versions.toml"))
@@ -61,9 +56,9 @@ include(":mesh:bearer-provisioning")
 include(":mesh:bearer-pbgatt")
 include(":mesh:bearer-gatt")
 
-if (file("../Android-nRF-Connect-Device-Manager").exists()) {
-    includeBuild("../Android-nRF-Connect-Device-Manager")
-}
-if (file("../Kotlin-BLE-Library").exists()) {
-    includeBuild("../Kotlin-BLE-Library")
-}
+// if (file("../Android-nRF-Connect-Device-Manager").exists()) {
+//     includeBuild("../Android-nRF-Connect-Device-Manager")
+// }
+// if (file("../Kotlin-BLE-Library").exists()) {
+//     includeBuild("../Kotlin-BLE-Library")
+// }
