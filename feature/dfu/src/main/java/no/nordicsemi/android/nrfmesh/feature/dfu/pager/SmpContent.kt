@@ -103,47 +103,38 @@ internal fun SmpContent(
             connectionState = connectionState,
             isDistributorServerModelSupported = isDistributorServerModelSupported
         )
-        if (isSmpServiceSupported != null && isDistributorServerModelSupported != null && isLePairingSupported != null) {
-            if (!isSmpServiceSupported || !isDistributorServerModelSupported || !isLePairingSupported) {
-                ReadMore()
-            } else if (node != null) {
-                BoundApplicationKeys(
-                    messageState = messageState,
-                    model = node.model(modelId = firmwareDistributionServer) ?: return,
-                    selectedKey = selectedKey,
-                    onBindAppKeyClicked = onBindAppKeysClicked,
-                    onApplicationKeyClicked = onApplicationKeyClicked,
-                    send = send
-                )
-                DistributorStatus(
-                    messageState = messageState,
-                    connectionState = connectionState,
-                    model = node.model(modelId = firmwareDistributionServer) ?: return,
-                    firmwareDistributionStatus = firmwareDistributionStatus,
+        // LE Pairing is not required to show the distributor phase, bound keys and the capabilities.
+        if (isSmpServiceSupported == false || isDistributorServerModelSupported == false) {
+            ReadMore()
+        } else if (isSmpServiceSupported == true && isDistributorServerModelSupported == true) {
+            val model = node?.model(modelId = firmwareDistributionServer) ?: return
+            BoundApplicationKeys(
+                messageState = messageState,
+                model = model,
+                selectedKey = selectedKey,
+                onBindAppKeyClicked = onBindAppKeysClicked,
+                onApplicationKeyClicked = onApplicationKeyClicked,
+                send = send
+            )
+            DistributorStatus(
+                messageState = messageState,
+                connectionState = connectionState,
+                model = model,
+                firmwareDistributionStatus = firmwareDistributionStatus,
+                onDistributionStatusChanged = onDistributionStatusChanged,
+                selectedKey = selectedKey,
+                send = send
+            )
+            // The capabilities can be read in any phase once a key is selected.
+            if (selectedKey != null && firmwareDistributionStatus != null) {
+                CapabilitiesContent(
+                    phase = firmwareDistributionStatus.phase,
+                    capabilitiesStatus = capabilitiesStatus,
+                    model = model,
+                    send = send,
                     onDistributionStatusChanged = onDistributionStatusChanged,
-                    selectedKey = selectedKey,
-                    send = send
+                    onNextStageEnabledChanged = onNextStageEnabledChanged
                 )
-                if (selectedKey != null &&
-                    (firmwareDistributionStatus?.phase == FirmwareDistributionPhase.IDLE ||
-                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.FAILED ||
-                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.COMPLETED ||
-                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_ACTIVE ||
-                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUCCESS ||
-                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.TRANSFER_SUSPENDED ||
-                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.CANCELING_UPDATE ||
-                            firmwareDistributionStatus?.phase == FirmwareDistributionPhase.APPLYING_UPDATE
-                            )
-                ) {
-                    CapabilitiesContent(
-                        phase = firmwareDistributionStatus.phase,
-                        capabilitiesStatus = capabilitiesStatus,
-                        model = node.model(modelId = firmwareDistributionServer) ?: return,
-                        send = send,
-                        onDistributionStatusChanged = onDistributionStatusChanged,
-                        onNextStageEnabledChanged = onNextStageEnabledChanged
-                    )
-                }
             }
         }
     }
