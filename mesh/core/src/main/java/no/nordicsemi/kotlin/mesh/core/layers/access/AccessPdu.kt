@@ -2,11 +2,12 @@
 
 package no.nordicsemi.kotlin.mesh.core.layers.access
 
+import no.nordicsemi.kotlin.data.ByteOrder
 import no.nordicsemi.kotlin.data.IntFormat
 import no.nordicsemi.kotlin.data.getUInt
+import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.hasBitCleared
 import no.nordicsemi.kotlin.data.or
-import no.nordicsemi.kotlin.data.shl
 import no.nordicsemi.kotlin.mesh.core.layers.uppertransport.UpperTransportPdu
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessageSecurity
@@ -59,10 +60,10 @@ internal data class AccessPdu(
                     }
                 })
             }" + (
-                parameters
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { ", parameters: 0x${parameters.toHexString(HexFormat.UpperCase)})"}
-                    ?: ")"
+            parameters
+                .takeIf { it.isNotEmpty() }
+                ?.let { ", parameters: 0x${parameters.toHexString(HexFormat.UpperCase)})" }
+                ?: ")"
             )
 
     override fun equals(other: Any?): Boolean {
@@ -134,7 +135,9 @@ internal data class AccessPdu(
                     userInitiated = false,
                     source = pdu.source,
                     destination = pdu.destination,
-                    opCode = (octet0.toUShort() shl 8 or octet1.toUShort()).toUInt() and 0x0000FFFFu,
+                    opCode = pdu.accessPdu
+                        .getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
+                        .toUInt(),
                     parameters = pdu.accessPdu.copyOfRange(
                         fromIndex = 2, toIndex = pdu.accessPdu.size
                     ),
