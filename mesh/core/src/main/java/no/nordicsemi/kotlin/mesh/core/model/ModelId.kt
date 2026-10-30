@@ -59,10 +59,21 @@ sealed class ModelId {
         /**
          * Converts a [HexString] encoded model ID to a [ModelId].
          *
+         * The type is determined by the length of the string, 4 hex digits for a Bluetooth SIG
+         * model and 8 hex digits for a vendor model. An optional "0x" prefix is ignored.
+         *
          * @return [ModelId] instance.
+         * @throws NumberFormatException if the string is not 4 or 8 hex digits long.
          */
         @Throws(NumberFormatException::class)
-        fun HexString.decode(): ModelId = toUInt(radix = 16).decode()
+        fun HexString.decode(): ModelId {
+            val hex = removePrefix(prefix = "0x").removePrefix(prefix = "0X")
+            return when (hex.length) {
+                4 -> SigModelId(modelIdentifier = hex.toUShort(radix = 16))
+                8 -> VendorModelId(id = hex.toUInt(radix = 16))
+                else -> throw NumberFormatException("Invalid model ID: $this")
+            }
+        }
 
         /**
          * Converts a [UInt] encoded model ID to a [ModelId].

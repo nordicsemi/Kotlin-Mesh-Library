@@ -38,7 +38,7 @@ class ModelIdTest {
 
     @Test(expected = NumberFormatException::class)
     fun testDecodeInvalidHexStringFails() {
-        "XYZ".decode()
+        val _ = "XYZ".decode()
     }
 
     @Test
@@ -62,6 +62,45 @@ class ModelIdTest {
     fun testToHexWithPrefix() {
         assertEquals("0x1000", SigModelId(0x1000u).toHex(prefix0x = true))
         assertEquals("0x00590001", VendorModelId(0x00590001u).toHex(prefix0x = true))
+    }
+
+    @Test
+    fun testVendorModelIdWithZeroCompanyIdentifier() {
+        val modelId = VendorModelId(0x00001234u)
+        assertEquals(0x0000u.toUShort(), modelId.companyIdentifier)
+        assertEquals(0x1234u.toUShort(), modelId.modelIdentifier)
+        assertEquals("00001234", modelId.toHex())
+        assertEquals("0x00001234", modelId.toHex(prefix0x = true))
+        // The type is determined by the length of the hex string.
+        assertIs<VendorModelId>("00001234".decode())
+        assertEquals(modelId, "00001234".decode())
+    }
+
+    @Test
+    fun testVendorModelIdWithZeroCompanyIdentifierRoundTrip() {
+        val modelId = VendorModelId(0x00001234u)
+        val json = Json.encodeToString(ModelId.serializer(), modelId)
+        assertEquals("\"00001234\"", json)
+        assertEquals(modelId, Json.decodeFromString(ModelId.serializer(), json))
+    }
+
+    @Test
+    fun testDecodeWithPrefix() {
+        assertEquals(SigModelId(0x1000u), "0x1000".decode())
+        assertEquals(SigModelId(0xABCDu), "0XABCD".decode())
+        assertEquals(VendorModelId(0x00590001u), "0x00590001".decode())
+        assertEquals(VendorModelId(0x00001234u), "0x00001234".decode())
+    }
+
+    @Test
+    fun testDecodeRoundTripsToHexWithPrefix() {
+        listOf(SigModelId(0xABCDu), VendorModelId(0x00001234u), VendorModelId(0xFE590001u))
+            .forEach { assertEquals(it, it.toHex(prefix0x = true).decode()) }
+    }
+
+    @Test(expected = NumberFormatException::class)
+    fun testDecodeInvalidLengthFails() {
+        val _ = "123456".decode()
     }
 
     @Test
@@ -108,11 +147,11 @@ class ModelIdTest {
     fun testDeserialization() {
         assertEquals(
             SigModelId(0x1000u),
-            Json.decodeFromString(ModelId.serializer(), "\"1000\"")
+            "1000".decode()
         )
         assertEquals(
             VendorModelId(0x00590001u),
-            Json.decodeFromString(ModelId.serializer(), "\"00590001\"")
+            "00590001".decode()
         )
     }
 }
