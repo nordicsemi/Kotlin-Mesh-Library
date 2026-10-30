@@ -66,7 +66,7 @@ sealed class ModelId {
          * @throws NumberFormatException if the string is not 4 or 8 hex digits long.
          */
         @Throws(NumberFormatException::class)
-        fun HexString.decode(): ModelId {
+        internal fun HexString.decode(): ModelId {
             val hex = removePrefix(prefix = "0x").removePrefix(prefix = "0X")
             return when (hex.length) {
                 4 -> SigModelId(modelIdentifier = hex.toUShort(radix = 16))
@@ -131,7 +131,7 @@ class SigModelId(val modelIdentifier: UShort) : ModelId() {
  * @property companyIdentifier  16-bit company identifier.
  */
 @Serializable
-class VendorModelId(
+class VendorModelId internal constructor(
     @SerialName(value = "modelId")
     override val id: UInt,
 ) : ModelId() {
@@ -148,32 +148,31 @@ class VendorModelId(
     constructor(
         modelIdentifier: UShort,
         companyIdentifier: UShort,
-    ) : this((modelIdentifier.toUInt()) or (companyIdentifier.toUInt() shl 16))
+    ) : this(id = (modelIdentifier.toUInt()) or (companyIdentifier.toUInt() shl 16))
 
     @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
         return "VendorModelId(${
-                    modelIdentifier.toHexString(
-                        format = HexFormat {
-                            number {
-                                prefix = "0x"
-                                minLength = 4
-                                upperCase = true
-                            }
-                        }
-                    )
-                }, " +
-                "companyIdentifier: ${
-                    companyIdentifier.toHexString(
-                        format = HexFormat {
-                            number {
-                                prefix = "0x"
-                                minLength = 4
-                                upperCase = true
-                            }
-                        }
-                    )
-                })"
+            modelIdentifier.toHexString(
+                format = HexFormat {
+                    number {
+                        prefix = "0x"
+                        minLength = 4
+                        upperCase = true
+                    }
+                }
+            )
+        }, companyIdentifier: ${
+            companyIdentifier.toHexString(
+                format = HexFormat {
+                    number {
+                        prefix = "0x"
+                        minLength = 4
+                        upperCase = true
+                    }
+                }
+            )
+        })"
     }
 
     override fun equals(other: Any?): Boolean {
