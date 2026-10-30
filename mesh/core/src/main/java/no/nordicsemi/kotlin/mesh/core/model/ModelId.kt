@@ -28,9 +28,28 @@ sealed class ModelId {
      *
      * @param prefix0x If true prefixes hex value with 0x.
      */
-    fun toHex(prefix0x: Boolean = false) = when (id and 0xFFFF0000u) {
-        0u -> "%04X".format(id.toShort())
-        else -> "%08X".format(id.toInt())
+    fun toHex(prefix0x: Boolean = false) = when (this) {
+        is SigModelId -> modelIdentifier
+            .toHexString(
+                format = HexFormat {
+                    number {
+                        minLength = 4
+                        removeLeadingZeros = false
+                        upperCase = true
+                    }
+                }
+            )
+
+        is VendorModelId -> id
+            .toHexString(
+                format = HexFormat {
+                    number {
+                        minLength = 8
+                        removeLeadingZeros = false
+                        upperCase = true
+                    }
+                }
+            )
     }.let {
         if (prefix0x) "0x$it" else it
     }

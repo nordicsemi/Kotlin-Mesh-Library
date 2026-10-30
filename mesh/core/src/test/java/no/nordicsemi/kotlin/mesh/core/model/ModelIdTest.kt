@@ -53,6 +53,7 @@ class ModelIdTest {
     fun testToHex() {
         assertEquals("1000", SigModelId(0x1000u).toHex())
         assertEquals("0001", SigModelId(0x0001u).toHex())
+        assertEquals("ABCD", SigModelId(0xABCDu).toHex())
         assertEquals("00590001", VendorModelId(0x00590001u).toHex())
         assertEquals("FE590001", VendorModelId(0xFE590001u).toHex())
     }
