@@ -64,7 +64,7 @@ class GenericLevelSet(
         tid = tid,
         level = min(
             a = 32767,
-            b = max(a = -32768, b = -32768 + (655.36 * percent).toInt())
+            b = max(a = -32768, b = -32768 + (65535 * percent).toInt())
         ).toShort(),
         transitionParams = transitionParams
     )
