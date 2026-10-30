@@ -1136,16 +1136,23 @@ data class MeshNetwork internal constructor(
 
                 // Skip nodes with addresses below the range.
                 if (address > usedAddress) continue
+                // Use raw int arithmetic to avoid overflow in UnicastAddress ops
+                val addressInt = address.address.toInt()
+                val usedInt = usedAddress.address.toInt()
+                val highInt = range.highAddress.address.toInt()
 
-                if (address + elementCount - 1 < usedAddress) return address
-
-                address = usedAddress + 1
+                if (addressInt + elementCount - 1 < usedInt) return address
 
                 // If the new address is outside the range, go to the next one.
-                if (address + elementCount - 1 > range.highAddress) break
+                val next = usedInt + 1
+                if (next + elementCount - 1 > highInt) break
+
+                address = UnicastAddress(next)
             }
             // If the range has available space, return the address.
-            if (address + elementCount - 1 <= range.highAddress) return address
+            val addressRaw = address.address.toInt()
+            val highRaw = range.highAddress.address.toInt()
+            if (addressRaw + elementCount - 1 <= highRaw) return address
         }
         return null
     }
