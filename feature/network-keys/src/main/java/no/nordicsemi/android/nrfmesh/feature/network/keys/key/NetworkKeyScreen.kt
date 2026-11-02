@@ -40,10 +40,8 @@ import no.nordicsemi.kotlin.mesh.core.model.Secure
 import no.nordicsemi.kotlin.mesh.core.model.Security
 import java.text.DateFormat
 import java.util.Date
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-@OptIn(ExperimentalTime::class)
 @Composable
 internal fun NetworkKeyScreen(
     uiState: NetworkKeyScreenUiState,
@@ -59,7 +57,6 @@ internal fun NetworkKeyScreen(
     }
 }
 
-@OptIn(ExperimentalTime::class)
 @Composable
 private fun NetworkKeyContent(
     key: NetworkKey,
@@ -123,7 +120,6 @@ private fun Name(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun Key(
     key: ByteArray,
@@ -154,7 +150,6 @@ private fun Key(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun OldKey(oldKey: ByteArray?) {
     val scope = rememberCoroutineScope()
@@ -208,7 +203,6 @@ private fun Security(security: Security) {
     )
 }
 
-@OptIn(ExperimentalTime::class)
 @Composable
 private fun LastModified(timestamp: Instant) {
     ElevatedCardItem(

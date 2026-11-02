@@ -169,7 +169,6 @@ class ConfigModelSubscriptionStatus(
         }
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigModelSubscriptionStatus(" +
             "status: $status, " +
             "address: ${

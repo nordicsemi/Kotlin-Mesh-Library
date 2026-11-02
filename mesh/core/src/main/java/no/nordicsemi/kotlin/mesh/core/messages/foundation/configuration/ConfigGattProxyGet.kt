@@ -12,7 +12,6 @@ class ConfigGattProxyGet : AcknowledgedConfigMessage {
     override val parameters: ByteArray ? = null
     override val responseOpCode: UInt = ConfigGattProxyStatus.opCode
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String = "ConfigGattProxyGet"
 
     companion object Initializer : ConfigMessageInitializer {

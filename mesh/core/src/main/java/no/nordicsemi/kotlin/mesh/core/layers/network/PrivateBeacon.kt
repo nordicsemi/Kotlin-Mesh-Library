@@ -8,7 +8,6 @@ import no.nordicsemi.kotlin.mesh.core.model.IvIndex
 import no.nordicsemi.kotlin.mesh.core.model.KeyDistribution
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
-import kotlin.time.ExperimentalTime
 
 /**
  * Defines Private Beacon transmitted by the mesh network.
@@ -22,7 +21,6 @@ internal class PrivateBeacon(
 ) : NetworkBeaconPdu {
     override val beaconType = BeaconType.PRIVATE
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "Secure Network beacon (" +
             "Network ID: ${networkKey.networkId.toHexString()}, " +
             "IV Index: $ivIndex, " +
@@ -38,7 +36,6 @@ internal object PrivateBeaconDecoder {
      * @param networkKey   Network key to decode with.
      * @return PrivateBeacon or null if the beacon could not be decoded or authenticated.
      */
-    @OptIn(ExperimentalTime::class)
     fun decode(pdu: ByteArray, networkKey: NetworkKey): PrivateBeacon? {
         require(pdu.size == 27 && pdu[0] == 2.toByte()) { return null }
 

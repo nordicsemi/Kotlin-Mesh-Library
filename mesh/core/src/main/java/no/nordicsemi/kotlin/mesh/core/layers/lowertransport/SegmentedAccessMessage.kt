@@ -68,7 +68,6 @@ internal class SegmentedAccessMessage(
     override val type = LowerTransportPduType.ACCESS_MESSAGE
 
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "Segmented $type " +
             "(akf: ${
                 aid?.let {

@@ -2,7 +2,6 @@ package no.nordicsemi.android.nrfmesh.feature.groups.group.controls
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,7 +51,6 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.ModelId
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun GroupControlsScreen(
     uiState: GroupControlsScreenUiState,
@@ -73,7 +71,6 @@ internal fun GroupControlsScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun GroupControls(
     network: MeshNetwork,

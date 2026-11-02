@@ -72,7 +72,6 @@ class ConfigModelSubscriptionDelete(
         companyIdentifier = (model.modelId as? VendorModelId)?.companyIdentifier,
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigModelSubscriptionDelete(" +
             "address: ${
                 address.toHexString(

@@ -18,7 +18,6 @@ import no.nordicsemi.android.nrfmesh.core.data.storage.MeshSecurePropertiesStora
 import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
 import no.nordicsemi.kotlin.mesh.core.model.IvIndex
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
-import kotlin.time.ExperimentalTime
 
 @HiltViewModel(assistedFactory = IvIndexViewModel.Factory::class)
 class IvIndexViewModel @AssistedInject constructor(
@@ -79,7 +78,6 @@ class IvIndexViewModel @AssistedInject constructor(
     }
 }
 
-@OptIn(ExperimentalTime::class)
 internal data class IvIndexScreenUiState(
     val isIvIndexChangeAllowed: Boolean = false,
     val ivIndex: IvIndex = IvIndex(),

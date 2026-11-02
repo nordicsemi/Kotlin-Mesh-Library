@@ -2,7 +2,6 @@ package no.nordicsemi.android.nrfmesh.feature.groups
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -58,7 +57,6 @@ import no.nordicsemi.kotlin.mesh.core.model.PrimaryGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalStdlibApi::class)
 @Composable
 internal fun GroupsScreen(
     snackbarHostState: SnackbarHostState,
@@ -233,7 +231,6 @@ internal fun GroupsScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalStdlibApi::class)
 @Composable
 private fun Groups(
     uiState: GroupsScreenUiState,

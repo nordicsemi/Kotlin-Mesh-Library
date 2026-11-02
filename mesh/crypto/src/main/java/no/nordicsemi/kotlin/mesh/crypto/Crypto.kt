@@ -205,7 +205,6 @@ object Crypto {
      * Creates a 16-bit virtual address for a given UUID.
      * @param uuid 128-bit Label UUID.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     fun createVirtualAddress(uuid: Uuid): UShort {
         val salt = calculateS1(input = VTAD)
         val hash = calculateCmac(input = uuid.toByteArray(), key = salt)

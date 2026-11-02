@@ -35,7 +35,6 @@ data class ProvisionerData(
     val hasConfigurationCapabilities: Boolean = false,
     val id: Long = KeyIdGenerator.nextId()
 ) {
-    @OptIn(ExperimentalStdlibApi::class)
     constructor(provisioner: Provisioner) : this(
         name = provisioner.name,
         uuid = provisioner.uuid,

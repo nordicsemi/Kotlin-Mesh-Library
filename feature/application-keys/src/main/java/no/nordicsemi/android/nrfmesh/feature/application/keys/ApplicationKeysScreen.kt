@@ -17,7 +17,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -143,7 +142,6 @@ internal fun ApplicationKeysScreen(
     }
 }
 
-@OptIn(ExperimentalStdlibApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeToDismissKey(
     scope: CoroutineScope,

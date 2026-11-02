@@ -1,5 +1,4 @@
 @file:Suppress("unused")
-@file:OptIn(ExperimentalTime::class)
 
 package no.nordicsemi.kotlin.mesh.core.messages
 
@@ -11,7 +10,6 @@ import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
 import java.math.BigDecimal
 import no.nordicsemi.kotlin.data.ByteOrder
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**

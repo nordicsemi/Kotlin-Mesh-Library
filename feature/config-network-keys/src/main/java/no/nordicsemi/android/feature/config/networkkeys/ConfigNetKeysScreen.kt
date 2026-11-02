@@ -19,7 +19,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarDuration
@@ -65,7 +64,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNe
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNetKeyGet
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ConfigNetKeysScreen(
     snackbarHostState: SnackbarHostState,
@@ -231,7 +229,6 @@ internal fun ConfigNetKeysScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeToDismissKey(
     isInUse: Boolean,

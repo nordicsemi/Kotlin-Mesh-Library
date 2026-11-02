@@ -1,5 +1,4 @@
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
-@file:OptIn(ExperimentalTime::class)
 
 package no.nordicsemi.kotlin.mesh.core.messages
 
@@ -15,7 +14,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**

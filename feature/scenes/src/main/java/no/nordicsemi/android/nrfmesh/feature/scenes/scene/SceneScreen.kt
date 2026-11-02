@@ -64,7 +64,6 @@ fun Name(name: String, onNameChanged: (String) -> Unit) {
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 fun Number(number: SceneNumber) {
     ElevatedCardItem(

@@ -18,7 +18,6 @@ class ConfigDefaultTtlSet(val ttl: UByte) : AcknowledgedConfigMessage {
 
     override val responseOpCode = ConfigDefaultTtlStatus.opCode
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigDefaultTtlSet(ttl: $ttl)"
 
     companion object Initializer : ConfigMessageInitializer {

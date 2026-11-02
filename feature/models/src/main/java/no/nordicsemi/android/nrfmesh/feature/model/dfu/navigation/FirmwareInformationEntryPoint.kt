@@ -1,7 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model.dfu.navigation
 
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
@@ -19,10 +18,7 @@ data class FirmwareInformationKey(
     val information: FirmwareInformation,
 ) : NavKey
 
-@OptIn(
-    ExperimentalMaterial3AdaptiveApi::class,
-    ExperimentalMaterial3Api::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 
 internal fun EntryProviderScope<NavKey>.firmwareInformationEntryPoint(
     isInProgress: Boolean,

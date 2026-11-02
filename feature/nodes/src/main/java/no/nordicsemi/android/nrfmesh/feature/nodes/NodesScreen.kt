@@ -4,7 +4,6 @@ package no.nordicsemi.android.nrfmesh.feature.nodes
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -74,7 +73,6 @@ internal fun NodesScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalStdlibApi::class)
 @Composable
 private fun NodesList(
     nodes: List<Node>,

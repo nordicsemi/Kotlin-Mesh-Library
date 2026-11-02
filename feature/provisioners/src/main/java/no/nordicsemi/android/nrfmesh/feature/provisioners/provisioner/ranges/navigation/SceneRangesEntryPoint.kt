@@ -1,7 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.navigation
 
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -18,9 +17,7 @@ import kotlin.uuid.Uuid
 @Serializable
 data class SceneRangesContentKey(val uuid: String) : NavKey
 
-@OptIn(
-    ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 fun EntryProviderScope<NavKey>.sceneRangesEntry(appState: AppState, navigator: Navigator) {
     entry<SceneRangesContentKey>(
         metadata = BottomSheetSceneStrategy.bottomSheet()

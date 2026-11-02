@@ -61,7 +61,6 @@ class ConfigVendorModelSubscriptionList(
         addresses = emptyList()
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigVendorModelSubscriptionList(" +
             "status: $status, " +
             "elementAddress: $elementAddress, " +

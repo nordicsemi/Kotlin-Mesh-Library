@@ -49,7 +49,6 @@ import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.time.toDuration
 
@@ -63,7 +62,6 @@ import kotlin.time.toDuration
  * @property nextTid       Next transaction identifier.
  * @property isActive      Whether the transaction can be continued.
  */
-@OptIn(ExperimentalTime::class)
 private data class Transaction(
     var lastTid: UByte = Random.nextInt(0, UByte.MAX_VALUE.toInt()).toUByte(),
     var timestamp: Instant = Clock.System.now(),
@@ -235,7 +233,6 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
      * @param applicationKey   Application Key to be used to encrypt the message.
      * @param retransmit       If the message is a retransmission of a previous message.
      */
-    @OptIn(ExperimentalTime::class)
     suspend fun send(
         message: MeshMessage,
         element: Element,
@@ -309,7 +306,6 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
      *                         be used.
      * @throws IllegalArgumentException if the message is not a ConfigMessage.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     suspend fun send(
         message: ConfigMessage,
         localElement: Element,
@@ -366,7 +362,6 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
      * @param destination  Destination address. This must be a Unicast Address.
      * @param keySet       Set of keys that the message was encrypted with.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     suspend fun reply(
         origin: Address,
         destination: Address,
@@ -456,7 +451,6 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
      * @param request   Request message if the message was sent as a response to a request.
      * @return MeshMessage if the message was handled, null otherwise.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     private suspend fun handle(
         accessPdu: AccessPdu,
         keySet: KeySet,
@@ -666,7 +660,6 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
      * @param initialTtl    Initial TTL value of the message.
      * @param keySet        Key set used to encrypt the message.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     private suspend fun createReliableContext(
         pdu: AccessPdu,
         element: Element,

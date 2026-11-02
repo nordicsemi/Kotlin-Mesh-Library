@@ -83,7 +83,6 @@ import no.nordicsemi.android.nrfmesh.network.util.createKeysForAppTitles
 import no.nordicsemi.android.nrfmesh.network.util.title
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
-import kotlin.time.ExperimentalTime
 import kotlin.uuid.Uuid
 
 @Composable
@@ -149,12 +148,7 @@ internal fun NetworkScreen(
     }
 }
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalStdlibApi::class,
-    ExperimentalMaterial3AdaptiveApi::class,
-    ExperimentalTime::class
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 private fun NetworkContent(
     appState: MeshAppState,

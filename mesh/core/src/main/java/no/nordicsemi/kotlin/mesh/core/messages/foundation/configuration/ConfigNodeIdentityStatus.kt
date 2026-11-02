@@ -35,7 +35,6 @@ class ConfigNodeIdentityStatus(
         identity = NodeIdentityState.NOT_SUPPORTED
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String =
         "ConfigNodeIdentityStatus(status: $status, networkKeyIndex: $networkKeyIndex, identity: $identity)"
 

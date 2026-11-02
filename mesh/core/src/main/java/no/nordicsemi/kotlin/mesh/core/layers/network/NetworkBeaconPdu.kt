@@ -7,7 +7,6 @@ import kotlin.time.Instant
 import no.nordicsemi.kotlin.mesh.core.model.IvIndex
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
-import kotlin.time.ExperimentalTime
 
 /**
  * Base interface for a Network Beacon PDU
@@ -50,7 +49,6 @@ internal interface NetworkBeaconPdu : BeaconPdu {
      *                                  allow maximum increase of IV Index by 42.
      * @returns: True, if the network information can be applied; false otherwise.
      */
-    @OptIn(ExperimentalTime::class)
     fun canOverWrite(
         target: IvIndex,
         updatedAt: Instant?,

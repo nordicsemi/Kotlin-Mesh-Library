@@ -68,7 +68,6 @@ internal open class AccessMessage(
         aid = pdu.aid
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "$type (akf: ${
         aid?.let {
             "1, aid: ${

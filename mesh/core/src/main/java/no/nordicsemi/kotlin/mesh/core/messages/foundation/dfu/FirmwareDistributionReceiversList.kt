@@ -38,7 +38,6 @@ class FirmwareDistributionReceiversList(
 ) : ApplicationResponse {
     override val opCode: UInt = Initializer.opCode
 
-    @OptIn(ExperimentalUnsignedTypes::class)
     override val parameters: ByteArray
         get() {
             val initial = totalCount.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +

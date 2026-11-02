@@ -26,7 +26,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import kotlin.uuid.Uuid
 import javax.inject.Inject
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 class MeshSecurePropertiesStorage @Inject constructor(
@@ -110,7 +109,6 @@ class MeshSecurePropertiesStorage @Inject constructor(
             }
         }
 
-    @OptIn(ExperimentalTime::class)
     override suspend fun ivIndex(uuid: Uuid): IvIndex = withContext(context = ioDispatcher) {
         secureProperties(uuid = uuid)
             ?.ivIndex?.toIvIndex() ?: IvIndex().also {
@@ -263,7 +261,6 @@ object ProtoSecurePropertiesMapSerializer : Serializer<ProtoSecurePropertiesMap>
  * @receiver [ProtoIvIndex]
  * @return [IvIndex]
  */
-@OptIn(ExperimentalTime::class)
 private fun ProtoIvIndex.toIvIndex() = IvIndex(
     index = index.toUInt(),
     isIvUpdateActive = updateActive,
@@ -276,7 +273,6 @@ private fun ProtoIvIndex.toIvIndex() = IvIndex(
  * @receiver [IvIndex]
  * @return [ProtoIvIndex]
  */
-@OptIn(ExperimentalTime::class)
 private fun IvIndex.toProtoIvIndex() = ProtoIvIndex(
     index = index.toInt(),
     updateActive = isIvUpdateActive,

@@ -1,8 +1,6 @@
-@file:OptIn(ExperimentalSerializationApi::class)
 
 package no.nordicsemi.kotlin.mesh.core.model.serialization
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -38,7 +36,6 @@ internal object MeshNetworkSerializer {
      *
      * @param array in to a mesh network.
      */
-    @OptIn(ExperimentalSerializationApi::class)
     internal fun deserialize(array: ByteArray) = jsonSerializer.run {
         val networkElement: JsonElement = decodeFromStream(ByteArrayInputStream(array)
             .also { stream -> stream.close() })

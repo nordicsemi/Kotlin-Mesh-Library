@@ -17,7 +17,6 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 sealed class ModelError : Exception() {
@@ -231,7 +230,6 @@ abstract class StoredWithSceneModelEventHandler : ModelEventHandler() {
  * @param tid           Transaction ID of the message.
  * @param timestamp     Timestamp of the last transaction message sent.
  */
-@OptIn(ExperimentalTime::class)
 private data class Transaction(
     val source: Address,
     val destination: MeshAddress,
@@ -254,7 +252,6 @@ class TransactionHelper {
      * @param destination      destination address.
      * @return True, if the message starts a new transaction or false otherwise.
      */
-    @OptIn(ExperimentalTime::class)
     suspend fun isNewTransaction(
         message: TransactionMessage,
         source: Address,

@@ -5,7 +5,6 @@ package no.nordicsemi.kotlin.mesh.core.messages
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import kotlin.time.Clock
 import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.time.toDuration
 
@@ -198,7 +197,6 @@ interface TransactionMessage : MeshMessage {
      * @param timestamp   Timestamp of the previous message.
      * @return true if the message is a continuation of the previous message.
      */
-    @OptIn(ExperimentalTime::class)
     fun isNewTransaction(previousTid: UByte, timestamp: Instant) = tid != previousTid ||
             (Clock.System.now() - timestamp) < 6.toDuration(DurationUnit.SECONDS)
 }

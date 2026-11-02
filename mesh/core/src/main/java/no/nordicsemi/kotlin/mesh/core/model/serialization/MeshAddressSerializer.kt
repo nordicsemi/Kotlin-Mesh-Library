@@ -28,7 +28,6 @@ internal object MeshAddressSerializer : KSerializer<MeshAddress> {
         )
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun serialize(encoder: Encoder, value: MeshAddress) {
         encoder.encodeString(
             value = when (value) {

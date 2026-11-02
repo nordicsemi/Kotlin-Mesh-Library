@@ -97,7 +97,6 @@ class SigModelId(val modelIdentifier: UShort) : ModelId() {
     @SerialName(value = "modelId")
     override val id: UInt = modelIdentifier.toUInt()
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String =
         "SigModelId(${
             modelIdentifier.toHexString(
@@ -150,7 +149,6 @@ class VendorModelId internal constructor(
         companyIdentifier: UShort,
     ) : this(id = (modelIdentifier.toUInt()) or (companyIdentifier.toUInt() shl 16))
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
         return "VendorModelId(${
             modelIdentifier.toHexString(

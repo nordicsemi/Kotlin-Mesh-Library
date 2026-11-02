@@ -16,7 +16,6 @@ class ConfigDefaultTtlStatus(val ttl: UByte) : ConfigResponse {
 
     override val parameters: ByteArray? = ttl.toByteArray()
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigDefaultTtlStatus(ttl: $ttl)"
 
     companion object Initializer : ConfigMessageInitializer {

@@ -1,5 +1,4 @@
 @file:Suppress("unused")
-@file:OptIn(ExperimentalStdlibApi::class)
 
 package no.nordicsemi.kotlin.mesh.core.layers.network
 
@@ -91,7 +90,6 @@ internal class NetworkPdu internal constructor(
             }
         } else sequence
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
         val micSize = type.netMicSize
         val encryptedDataSie = pdu.size - micSize - 9

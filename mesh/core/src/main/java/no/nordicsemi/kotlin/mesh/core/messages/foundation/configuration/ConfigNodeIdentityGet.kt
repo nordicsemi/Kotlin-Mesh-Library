@@ -18,7 +18,6 @@ class ConfigNodeIdentityGet(
     override val parameters = encodeNetKeyIndex()
     override val responseOpCode: UInt = ConfigNodeIdentityStatus.opCode
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String = "ConfigNodeIdentityGet(networkKeyIndex: $networkKeyIndex)"
 
     companion object Initializer : ConfigMessageInitializer {

@@ -40,7 +40,6 @@ import no.nordicsemi.kotlin.mesh.core.util.NetworkIdentity
 import no.nordicsemi.kotlin.mesh.core.util.NodeIdentity
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
 import java.lang.Integer.min
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -74,7 +73,6 @@ import kotlin.uuid.Uuid
  * @constructor                     Creates a mesh network.
  */
 @ConsistentCopyVisibility
-@OptIn(ExperimentalTime::class)
 @Serializable
 data class MeshNetwork internal constructor(
     @Serializable(with = UuidSerializer::class)

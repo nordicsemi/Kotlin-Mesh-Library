@@ -7,7 +7,6 @@ import org.junit.Test
 
 class UnprovisionedDeviceTest {
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Test
     fun testFrom() {
         val expectedDevice = UnprovisionedDevice(

@@ -12,7 +12,6 @@ class ConfigRelayGet : AcknowledgedConfigMessage {
     override val parameters = null
     override val responseOpCode: UInt = ConfigRelayStatus.opCode
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String = "ConfigRelayGet"
 
     companion object Initializer : ConfigMessageInitializer {

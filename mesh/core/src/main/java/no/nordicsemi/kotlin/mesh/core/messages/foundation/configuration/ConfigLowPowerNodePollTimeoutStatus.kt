@@ -65,7 +65,6 @@ class ConfigLowPowerNodePollTimeoutStatus(
         pollTimeout = 0u
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() =
         "ConfigLowPowerNodePollTimeoutStatus(address: 0x${address.toHexString(HexFormat.UpperCase)})"
 

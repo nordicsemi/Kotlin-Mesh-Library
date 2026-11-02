@@ -416,7 +416,6 @@ internal class LowerTransportLayer(private val networkManager: NetworkManager) {
      * @param networkPdu  The network PDU from which the segment was created.
      * @return The reassembled message if all segments were received, or null if not.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     private suspend fun assemble(
         segment: SegmentedMessage,
         networkPdu: NetworkPdu,

@@ -46,7 +46,6 @@ internal class UpperTransportPdu(
     val userInitiated: Boolean,
 ) {
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
         val micSize = transportMicSize.toInt()
         val encryptedDataSize = transportPdu.size - micSize

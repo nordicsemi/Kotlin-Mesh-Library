@@ -16,7 +16,6 @@ class ConfigHeartbeatSubscriptionGet : AcknowledgedConfigMessage {
     override val responseOpCode = ConfigHeartbeatSubscriptionStatus.opCode
     override val parameters: ByteArray? = null
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigHeartbeatSubscriptionGet opCode ${opCode.toHexString()}"
 
     companion object Initializer : ConfigMessageInitializer {

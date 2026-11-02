@@ -29,7 +29,6 @@ import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import java.text.DateFormat
 import java.util.Date
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 @Composable
@@ -66,7 +65,6 @@ internal fun SettingsListScreen(
     }
 }
 
-@OptIn(ExperimentalTime::class)
 @Composable
 private fun SettingsScreen(
     settingsListData: SettingsListData,
@@ -263,7 +261,6 @@ private fun IvIndexRow(isSelected: Boolean, onIvIndexPressed: () -> Unit) {
     )
 }
 
-@OptIn(ExperimentalTime::class)
 @Composable
 private fun LastModifiedTimeRow(timestamp: Instant) {
     ElevatedCardItem(
@@ -278,7 +275,6 @@ private fun LastModifiedTimeRow(timestamp: Instant) {
     )
 }
 
-@OptIn(ExperimentalTime::class)
 @Composable
 private fun DeveloperSettingsRow(onDeveloperSettingsPressed: () -> Unit) {
     ElevatedCardItem(

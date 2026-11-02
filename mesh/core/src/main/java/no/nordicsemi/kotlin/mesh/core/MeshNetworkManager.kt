@@ -56,7 +56,6 @@ import no.nordicsemi.kotlin.mesh.core.model.serialization.MeshNetworkSerializer.
 import no.nordicsemi.kotlin.mesh.core.model.serialization.config.NetworkConfiguration
 import no.nordicsemi.kotlin.mesh.logger.LogCategory
 import no.nordicsemi.kotlin.mesh.logger.Logger
-import kotlin.time.ExperimentalTime
 import kotlin.uuid.Uuid
 
 /**
@@ -195,7 +194,6 @@ class MeshNetworkManager(
     /**
      * Saves the network in the local storage provided by the user.
      */
-    @OptIn(ExperimentalTime::class)
     suspend fun save() {
         export()?.let {
             mutex.withLock { storage.save(network = it) }
@@ -239,7 +237,6 @@ class MeshNetworkManager(
      * @param provisioner Provisioner to be added to the network.
      * @throws InvalidKeyLength if the key length is invalid.
      */
-    @OptIn(ExperimentalTime::class)
     @Throws(InvalidKeyLength::class)
     suspend fun create(
         name: String = "Mesh Network",
@@ -817,7 +814,6 @@ class MeshNetworkManager(
      *                            is unknown or Cannot remove last Network Key.
      * @throws InvalidTtl if the TTL value is invalid.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     @Throws(NoNetwork::class, InvalidSource::class, InvalidDestination::class, CannotDelete::class)
     suspend fun send(
         message: UnacknowledgedConfigMessage,
@@ -953,7 +949,6 @@ class MeshNetworkManager(
      *                            is unknown or Cannot remove last Network Key.
      * @throws InvalidTtl if the TTL value is invalid.
      */
-    @OptIn(ExperimentalStdlibApi::class)
     @Throws(
         NoNetwork::class,
         InvalidDestination::class,

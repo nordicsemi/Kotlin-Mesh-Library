@@ -61,7 +61,6 @@ class ConfigAppKeyList(
         status = status
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigAppKeyList(networkKeyIndex: $networkKeyIndex, " +
             "applicationKeyIndexes: $applicationKeyIndexes, " +
             "status: $status)"

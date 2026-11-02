@@ -146,7 +146,6 @@ private fun NodeNameRow(name: String, onNameChanged: (String) -> Unit) {
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun AddressRow(address: PrimaryGroupAddress) {
     ElevatedCardItem(

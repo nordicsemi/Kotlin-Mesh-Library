@@ -2,7 +2,6 @@ package no.nordicsemi.android.nrfmesh.feature.settings
 
 import no.nordicsemi.android.nrfmesh.core.common.KeyIdGenerator
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
@@ -16,7 +15,6 @@ import kotlin.time.Instant
  * @param timestamp        Timestamp when the network was last modified.
  */
 
-@OptIn(ExperimentalTime::class)
 data class SettingsListData(
     val name: String,
     val provisioners: Int,

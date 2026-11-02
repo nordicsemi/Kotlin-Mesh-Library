@@ -18,7 +18,6 @@ class ConfigGattProxyStatus(val state: FeatureState) : ConfigResponse {
 
     constructor(node: Node) : this(node.features.proxy?.state ?: FeatureState.Unsupported)
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() =
         "ConfigGattProxyStatus(state: $state)"
 
