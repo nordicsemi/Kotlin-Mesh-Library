@@ -1127,32 +1127,30 @@ data class MeshNetwork internal constructor(
             .sortedBy { it.address }
 
         provisioner._allocatedUnicastRanges.forEach { range ->
-            var address = range.lowAddress
+            val high = range.highAddress.address.toInt()
+            // Use an Int cursor so that stepping past 0x7FFF doesn't try to create an invalid
+            // UnicastAddress. It's only wrapped in a UnicastAddress when it's returned.
+            var address = range.lowAddress.address.toInt()
 
-            if (range.contains(offset.address) && address < offset) address = offset
+            if (range.contains(offset.address) && address < offset.address.toInt()) {
+                address = offset.address.toInt()
+            }
 
-            for (index in usedAddresses.indices) {
-                val usedAddress = usedAddresses[index]
+            for (usedAddress in usedAddresses) {
+                val used = usedAddress.address.toInt()
 
                 // Skip nodes with addresses below the range.
-                if (address > usedAddress) continue
-                // Use raw int arithmetic to avoid overflow in UnicastAddress ops
-                val addressInt = address.address.toInt()
-                val usedInt = usedAddress.address.toInt()
-                val highInt = range.highAddress.address.toInt()
+                if (address > used) continue
 
-                if (addressInt + elementCount - 1 < usedInt) return address
+                if (address + elementCount - 1 < used) return UnicastAddress(address)
+
+                address = used + 1
 
                 // If the new address is outside the range, go to the next one.
-                val next = usedInt + 1
-                if (next + elementCount - 1 > highInt) break
-
-                address = UnicastAddress(next)
+                if (address + elementCount - 1 > high) break
             }
             // If the range has available space, return the address.
-            val addressRaw = address.address.toInt()
-            val highRaw = range.highAddress.address.toInt()
-            if (addressRaw + elementCount - 1 <= highRaw) return address
+            if (address + elementCount - 1 <= high) return UnicastAddress(address)
         }
         return null
     }
