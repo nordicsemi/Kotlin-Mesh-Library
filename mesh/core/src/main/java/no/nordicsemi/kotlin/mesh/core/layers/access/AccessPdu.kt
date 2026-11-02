@@ -2,7 +2,6 @@
 
 package no.nordicsemi.kotlin.mesh.core.layers.access
 
-import no.nordicsemi.kotlin.data.ByteOrder
 import no.nordicsemi.kotlin.data.IntFormat
 import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
@@ -135,7 +134,7 @@ internal data class AccessPdu(
                     source = pdu.source,
                     destination = pdu.destination,
                     opCode = pdu.accessPdu
-                        .getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
+                        .getUShort(offset = 0)
                         .toUInt(),
                     parameters = pdu.accessPdu.copyOfRange(
                         fromIndex = 2, toIndex = pdu.accessPdu.size
