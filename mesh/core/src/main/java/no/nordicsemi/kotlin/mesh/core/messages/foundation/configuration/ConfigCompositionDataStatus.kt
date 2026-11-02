@@ -232,12 +232,12 @@ data class Page0(
                         offset = i,
                         order = ByteOrder.LITTLE_ENDIAN
                     )
-                    element.add(model = Model(modelId = SigModelId(sigModelId)))
+                    val _ = element.add(model = Model(modelId = SigModelId(sigModelId)))
                 }
                 offset += sigModelsByteCount
 
                 for (i in offset until offset + vendorModelsByteCount step 4) {
-                    element.add(
+                    val _ = element.add(
                         Model(
                             modelId = VendorModelId(
                                 companyIdentifier = compositionData.getUShort(

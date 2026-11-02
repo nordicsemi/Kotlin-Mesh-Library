@@ -191,8 +191,12 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
                     ?.model(modelId = response.modelId)
                     ?.let {
                         when (request) {
-                            is ConfigModelAppBind -> it.bind(index = request.applicationKeyIndex)
-                            is ConfigModelAppUnbind -> it.unbind(index = request.applicationKeyIndex)
+                            is ConfigModelAppBind -> {
+                                val _ = it.bind(index = request.applicationKeyIndex)
+                            }
+                            is ConfigModelAppUnbind -> {
+                                val _ = it.unbind(index = request.applicationKeyIndex)
+                            }
                         }
                     }
             }
@@ -258,13 +262,13 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
                         is ConfigModelSubscriptionVirtualAddressOverwrite,
                             -> {
                             models.forEach { it.unsubscribeFromAll() }
-                            models.forEach { it.subscribe(address = address) }
+                            models.forEach { val _ = it.subscribe(address = address) }
                         }
 
                         is ConfigModelSubscriptionAdd,
                         is ConfigModelSubscriptionVirtualAddressAdd,
                             ->
-                            models.forEach { it.subscribe(address = address) }
+                            models.forEach { val _ = it.subscribe(address = address) }
 
                         is ConfigModelSubscriptionDelete,
                         is ConfigModelSubscriptionVirtualAddressDelete,
@@ -295,7 +299,7 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
                                 ?: MeshAddress.create(address = it)) as SubscriptionAddress
                             // Check if address is FixedGroupAddress
                             if (address is FixedGroupAddress) {
-                                models.forEach { model -> model.subscribe(address = address) }
+                                models.forEach { model -> val _ = model.subscribe(address = address) }
                             } else /*if (address is GroupAddress)*/ {
                                 // The above line was commented out to support groups with virtual
                                 // addresses

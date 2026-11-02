@@ -569,7 +569,7 @@ data class Node internal constructor(
             elements
                 .flatMap { it.models }
                 .forEach { model ->
-                    model.unbind(index)
+                    val _ = model.unbind(index)
                 }
             network?.updateTimestamp()
         }

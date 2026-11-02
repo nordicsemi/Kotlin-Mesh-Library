@@ -254,21 +254,21 @@ class ProxyFilter internal constructor(
      * @param type Filter type.
      */
     suspend fun setType(type: ProxyFilterType) {
-        send(message = SetFilterType(filterType = type))
+        val _ = send(message = SetFilterType(filterType = type))
     }
 
     /**
      * Resets the filter to an empty accept list filter.
      */
     suspend fun reset() {
-        send(message = SetFilterType(filterType = ProxyFilterType.ACCEPT_LIST))
+        val _ = send(message = SetFilterType(filterType = ProxyFilterType.ACCEPT_LIST))
     }
 
     /**
      * Clears the current filter
      */
     suspend fun clear() {
-        send(message = SetFilterType(filterType = type))
+        val _ = send(message = SetFilterType(filterType = type))
     }
 
     /**
@@ -277,7 +277,7 @@ class ProxyFilter internal constructor(
      * @param address Address to be added to the filter.
      */
     suspend fun add(address: ProxyFilterAddress) {
-        send(message = AddAddressesToFilter(addresses = listOf(element = address)))
+        val _ = send(message = AddAddressesToFilter(addresses = listOf(element = address)))
     }
 
     /**
@@ -289,7 +289,7 @@ class ProxyFilter internal constructor(
      */
     suspend fun add(addresses: List<ProxyFilterAddress>) {
         addresses.chunked(5).forEach { chunk ->
-            send(message = AddAddressesToFilter(addresses = chunk))
+            val _ = send(message = AddAddressesToFilter(addresses = chunk))
         }
     }
 
@@ -317,7 +317,7 @@ class ProxyFilter internal constructor(
      * @param address Address to be removed from the filter.
      */
     suspend fun remove(address: ProxyFilterAddress) {
-        send(message = RemoveAddressesFromFilter(addresses = listOf(element = address)))
+        val _ = send(message = RemoveAddressesFromFilter(addresses = listOf(element = address)))
     }
 
     /**
@@ -327,7 +327,7 @@ class ProxyFilter internal constructor(
      */
     suspend fun remove(addresses: List<ProxyFilterAddress>) {
         addresses.chunked(5).forEach { chunk ->
-            send(message = RemoveAddressesFromFilter(addresses = chunk))
+            val _ = send(message = RemoveAddressesFromFilter(addresses = chunk))
         }
     }
 
@@ -397,7 +397,9 @@ class ProxyFilter internal constructor(
             logger?.i(LogCategory.PROXY) { "New Proxy connected" }
             manager.network?.localProvisioner?.let { provisioner ->
                 when (initializeState) {
-                    ProxyFilterSetup.AUTOMATIC -> setup(provisioner = provisioner)
+                    ProxyFilterSetup.AUTOMATIC -> {
+                        val _ = setup(provisioner = provisioner)
+                    }
                     ProxyFilterSetup.ACCEPT_LIST -> {
                         setType(type = ProxyFilterType.ACCEPT_LIST)
                         add(addresses = addresses)

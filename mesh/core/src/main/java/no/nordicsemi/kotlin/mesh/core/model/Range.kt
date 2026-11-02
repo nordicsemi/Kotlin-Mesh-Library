@@ -503,7 +503,7 @@ operator fun MutableList<Range>.minusAssign(other: Range) {
 }
 
 operator fun MutableList<Range>.minusAssign(other: List<Range>) {
-    other.map { this -= it }
+    other.forEach { this -= it }
 }
 
 /**

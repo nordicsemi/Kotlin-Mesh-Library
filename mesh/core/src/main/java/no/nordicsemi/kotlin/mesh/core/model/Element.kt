@@ -326,13 +326,13 @@ class Element(
         var primaryElement = Element(location = Location.UNKNOWN).apply {
             name = "Primary Element"
             // Configuration Server is required for all nodes.
-            add(Model(modelId = SigModelId(Model.CONFIGURATION_SERVER_MODEL_ID)))
+            val _ = add(Model(modelId = SigModelId(Model.CONFIGURATION_SERVER_MODEL_ID)))
             // Configuration Client is added because this is a Provisioner's Node.
-            add(Model(modelId = SigModelId(Model.CONFIGURATION_CLIENT_MODEL_ID)))
+            val _ = add(Model(modelId = SigModelId(Model.CONFIGURATION_CLIENT_MODEL_ID)))
             // Configuration Server is required for all nodes.
-            add(Model(modelId = SigModelId(Model.HEALTH_SERVER_MODEL_ID)))
+            val _ = add(Model(modelId = SigModelId(Model.HEALTH_SERVER_MODEL_ID)))
             // Health Client is added because this is a Provisioner's Node.
-            add(Model(modelId = SigModelId(Model.HEALTH_CLIENT_MODEL_ID)))
+            val _ = add(Model(modelId = SigModelId(Model.HEALTH_CLIENT_MODEL_ID)))
         }
     }
 }

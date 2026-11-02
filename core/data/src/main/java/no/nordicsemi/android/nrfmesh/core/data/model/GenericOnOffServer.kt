@@ -104,12 +104,14 @@ class GenericOnOffServer(
                     elementIndex = index
                 )
                 when {
-                    delay != null && transitionTime != null -> GenericState.transitionFrom(
-                        transitionFrom = state,
-                        to = isOn,
-                        delay = (delay.toDouble() * 0.005).toDuration(DurationUnit.MILLISECONDS),
-                        duration = transitionTime.interval
-                    )
+                    delay != null && transitionTime != null -> {
+                        val _ = GenericState.transitionFrom(
+                            transitionFrom = state,
+                            to = isOn,
+                            delay = (delay.toDouble() * 0.005).toDuration(DurationUnit.MILLISECONDS),
+                            duration = transitionTime.interval
+                        )
+                    }
 
                     else -> state = GenericState(value = isOn, storedWithScene = true)
                 }

@@ -233,7 +233,7 @@ internal class NetworkManager internal constructor(
             false -> localElement.parentNode?.defaultTTL ?: networkParameters.defaultTtl
         }
 
-        accessLayer.send(
+        val _ = accessLayer.send(
             message = message,
             element = localElement,
             destination = publish.address as MeshAddress,
@@ -246,13 +246,13 @@ internal class NetworkManager internal constructor(
             var count = publish.retransmit.count.toInt()
             if (count > 0) {
                 val interval: Duration = publish.retransmit.interval
-                timer(
+                val _ = timer(
                     daemon = false,
                     period = interval.toLong(DurationUnit.MILLISECONDS)
                 ) {
                     if (--count > 0) {
                         scope.launch {
-                            accessLayer.send(
+                            val _ = accessLayer.send(
                                 message = message,
                                 element = localElement,
                                 destination = publish.address as MeshAddress,

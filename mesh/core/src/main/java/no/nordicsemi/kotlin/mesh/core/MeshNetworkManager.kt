@@ -257,13 +257,13 @@ class MeshNetworkManager(
         return MeshNetwork(uuid = uuid, _name = name).also { network ->
             if (networkKeys.isNotEmpty()) {
                 networkKeys.forEachIndexed { index, key ->
-                    network.add(
+                    val _ = network.add(
                         name = if (index == 0) "Primary Network Key" else "Network Key $index",
                         key = key
                     )
                 }
             } else {
-                network.add(name = "Primary Network Key", index = 0u)
+                val _ = network.add(name = "Primary Network Key", index = 0u)
             }
             network.add(provisioner)
             this.network = network
@@ -438,7 +438,7 @@ class MeshNetworkManager(
             throw InvalidTtl()
         }
         ensureNetworkKeyExists(key = applicationKey.boundNetworkKey)
-        networkManager.send(
+        val _ = networkManager.send(
             message = message,
             element = source,
             destination = destination,

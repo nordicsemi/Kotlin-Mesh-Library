@@ -309,7 +309,6 @@ private fun Status(
             Text(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 text = (messageState.response as? GenericOnOffStatus)?.let {
-                    it.remainingTime
                     when {
                         it.targetState == true && it.remainingTime != null -> stringResource(
                             R.string.label_on_with_remaining_time,

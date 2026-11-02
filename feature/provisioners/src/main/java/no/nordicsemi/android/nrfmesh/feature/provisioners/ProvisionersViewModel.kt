@@ -122,7 +122,7 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
      * Removes the provisioners that are queued for deletion.
      */
     private fun removeProvisioners() {
-        runCatching {
+        val _ = runCatching {
             _uiState.value.provisionersToBeRemoved.forEach { provisioner ->
                 network.removeProvisionerWithUuid(uuid = provisioner.uuid)
             }

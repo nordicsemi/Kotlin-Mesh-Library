@@ -440,7 +440,7 @@ internal class LowerTransportLayer(private val networkManager: NetworkManager) {
                 }
 
                 acknowledgementTimers[key] = Timer().apply {
-                    schedule(
+                    val _ = schedule(
                         delay = networkParams.completeAcknowledgementTimerInterval.inWholeMilliseconds
                     ) {
                         // Until this timer is not executed no Segment Acknowledgement Message will
@@ -536,7 +536,7 @@ internal class LowerTransportLayer(private val networkManager: NetworkManager) {
                         it.purge()
                     }
                     discardTimers[key] = Timer().apply {
-                        schedule(delay = networkParams.discardTimeout.inWholeMilliseconds) {
+                        val _ = schedule(delay = networkParams.discardTimeout.inWholeMilliseconds) {
                             incompleteSegments.remove(key)?.let { segments ->
                                 val marks = segments.fold(0u) { acc, seg ->
                                     seg?.let { acc or ((1u shl seg.segmentOffset.toInt())) } ?: acc
@@ -574,7 +574,7 @@ internal class LowerTransportLayer(private val networkManager: NetworkManager) {
                     val ackTimerInterval = networkManager.networkParameters
                         .acknowledgementTimerInterval(segment.lastSegmentNumber)
                     acknowledgementTimers[key] = Timer().also { ackTimer ->
-                        ackTimer.schedule(delay = ackTimerInterval.inWholeMilliseconds) {
+                        val _ = ackTimer.schedule(delay = ackTimerInterval.inWholeMilliseconds) {
                             val segments = requireNotNull(incompleteSegments[key]) {
                                 acknowledgementTimers.remove(key)
                                 return@schedule
@@ -604,7 +604,7 @@ internal class LowerTransportLayer(private val networkManager: NetworkManager) {
                                     acknowledgementTimers[key] = timer
                                     timer.also {
                                         if (count > 1u) {
-                                            it.schedule(
+                                            val _ = it.schedule(
                                                 delay = interval.inWholeMilliseconds,
                                                 period = interval.inWholeMilliseconds
                                             ) {
@@ -623,7 +623,7 @@ internal class LowerTransportLayer(private val networkManager: NetworkManager) {
                                                 }
                                             }
                                         } else {
-                                            it.schedule(delay = interval.inWholeMilliseconds) {
+                                            val _ = it.schedule(delay = interval.inWholeMilliseconds) {
                                                 scope.launch {
                                                     logger?.v(LogCategory.LOWER_TRANSPORT) {
                                                         "Retransmitting ACK (${1u + initialCount - count}/$initialCount)"
@@ -813,7 +813,7 @@ internal class LowerTransportLayer(private val networkManager: NetworkManager) {
         //       manager still exists.
         for (segment in segments) {
             // Make sure the network manager is alive.
-            segmentTtl[segment.sequenceZero] ?: break
+            val _ = segmentTtl[segment.sequenceZero] ?: break
 
             // Make sure all the segments were not already acknowledged.
             // The this will turn nil when all segments were acknowledged.

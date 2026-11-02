@@ -687,7 +687,7 @@ class Model internal constructor(
      * @param group Group to subscribe.
      */
     fun subscribe(group: Group) {
-        subscribe(address = group.address as SubscriptionAddress)
+        val _ = subscribe(address = group.address as SubscriptionAddress)
     }
 
     /**
