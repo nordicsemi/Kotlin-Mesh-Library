@@ -103,7 +103,7 @@ class NetworkKeysViewModel @Inject internal constructor(
      * Removes all keys that are queued for deletion.
      */
     private fun removeKeys() {
-        runCatching {
+        val _ = runCatching {
             _uiState.value.keysToBeRemoved.forEach { keyData ->
                 network.removeNetworkKeyWithIndex(index = keyData.index)
             }

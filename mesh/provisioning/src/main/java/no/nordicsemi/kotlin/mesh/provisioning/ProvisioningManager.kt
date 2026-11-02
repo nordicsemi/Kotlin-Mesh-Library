@@ -199,7 +199,7 @@ class ProvisioningManager(
                 when (action) {
                     is AuthAction.DisplayNumber, is AuthAction.DisplayAlphaNumeric -> {
                         mutex.unlock()
-                        awaitInputComplete()
+                        val _ = awaitInputComplete()
                         emit(value = ProvisioningState.InputComplete)
                     }
 
@@ -234,7 +234,7 @@ class ProvisioningManager(
                 encryptedDataWithMic = provisioningData.encryptedProvisioningDataWithMic
             )
             logger?.v(LogCategory.PROVISIONING) { "Sending $data" }
-            send(request = data)
+            val _ = send(request = data)
 
             awaitComplete().also {
                 emit(value = ProvisioningState.Complete)
@@ -436,7 +436,7 @@ class ProvisioningManager(
         request: ProvisioningRequest.Confirmation,
     ): ByteArray {
         logger?.v(LogCategory.PROVISIONING) { "Sending $request" }
-        send(request)
+        val _ = send(request)
         val response = ProvisioningResponse.from(
             pdu = awaitBearerPdu().data
         ).also {
@@ -465,7 +465,7 @@ class ProvisioningManager(
     @Throws(RemoteError::class)
     private suspend fun awaitRandom(request: ProvisioningRequest.Random): ByteArray {
         logger?.v(LogCategory.PROVISIONING) { "Sending $request" }
-        send(request)
+        val _ = send(request)
         return (ProvisioningResponse.from(
             pdu = awaitBearerPdu().data
         ).apply {

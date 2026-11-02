@@ -56,7 +56,7 @@ class HealthServerHandler(
     private var currentFaultState = listOf<HealthFault>()
         set(value) {
             field = value
-            publish()
+            val _ = publish()
             // Whenever a fault condition has been present in the
             // Current Fault state, the corresponding record is added
             // to the Registered Fault state.

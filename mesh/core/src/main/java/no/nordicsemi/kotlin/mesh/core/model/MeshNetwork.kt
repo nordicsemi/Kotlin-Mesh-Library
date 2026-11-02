@@ -462,7 +462,7 @@ data class MeshNetwork internal constructor(
     @Throws(DoesNotBelongToNetwork::class, CannotRemove::class)
     fun remove(provisioner: Provisioner) {
         require(provisioner.network?.uuid == uuid) { throw DoesNotBelongToNetwork() }
-        removeProvisioner(_provisioners.indexOf(provisioner))
+        val _ = removeProvisioner(_provisioners.indexOf(provisioner))
     }
 
     /**
@@ -632,7 +632,7 @@ data class MeshNetwork internal constructor(
             .sortBy { it.index }
         updateTimestamp()
         // Make the local Provisioner aware of the new key.
-        localProvisioner?.node?.add(key = key)
+        val _ = localProvisioner?.node?.add(key = key)
     }
 
     /**
@@ -738,7 +738,7 @@ data class MeshNetwork internal constructor(
             .sortBy { it.index }
         updateTimestamp()
         // Make the local Provisioner aware of the new key.
-        localProvisioner?.node?.add(key = key)
+        val _ = localProvisioner?.node?.add(key = key)
     }
 
     /**
@@ -1426,7 +1426,7 @@ data class MeshNetwork internal constructor(
                 _nodes = _nodes.map { node ->
                     node.copy(deviceKey = null)
                 }.toMutableList()
-            } else _nodes
+            }
 
             is NodesConfig.Some -> {
                 val withDeviceKey = _nodes.filter { node ->
@@ -1450,7 +1450,6 @@ data class MeshNetwork internal constructor(
                         provisioner.node?.let { add(it) }
                     }
                 }
-                nodes
             }
         }
     }

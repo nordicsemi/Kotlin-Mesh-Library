@@ -31,7 +31,7 @@ fun EntryProviderScope<NavKey>.addNetKeysEntry(appState: AppState, navigator: Na
         AddNetworkKeysScreen(
             messageState = uiState.messageState,
             keys = uiState.availableNetworkKeys,
-            onAddNetworkKeyClicked = viewModel::addNetworkKey,
+            onAddNetworkKeyClicked = { val _ = viewModel.addNetworkKey() },
             onNetworkKeyClicked = { viewModel.send(ConfigNetKeyAdd(key = it)) },
             resetMessageState = viewModel::resetMessageState
         )

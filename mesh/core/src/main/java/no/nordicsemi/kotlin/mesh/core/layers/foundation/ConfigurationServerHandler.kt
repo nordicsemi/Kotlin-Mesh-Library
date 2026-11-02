@@ -261,7 +261,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                         )
                     }
                     // Force delete the key from the network configuration
-                    runCatching {
+                    val _ = runCatching {
                         meshNetwork.removeNetworkKeyAtIndex(index = index.toInt(), force = true)
                     }
 
@@ -398,7 +398,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                     }
 
                     // Remove the key from the global configuration
-                    runCatching {
+                    val _ = runCatching {
                         meshNetwork.removeApplicationKeyWithIndex(index = keyIndex, force = true)
                     }
 
@@ -446,7 +446,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                                 request = request,
                                 status = ConfigMessageStatus.INVALID_APP_KEY_INDEX
                             )
-                    model.bind(index = applicationKey.index)
+                    val _ = model.bind(index = applicationKey.index)
                     return ConfigModelAppStatus(request = request)
                 }
 
@@ -461,7 +461,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                             request = request,
                             status = ConfigMessageStatus.INVALID_MODEL
                         )
-                    model.unbind(index = request.applicationKeyIndex)
+                    val _ = model.unbind(index = request.applicationKeyIndex)
                     return ConfigModelAppStatus(request = request)
                 }
 
@@ -629,7 +629,7 @@ internal class ConfigurationServerHandler : ModelEventHandler() {
                                 else -> throw IllegalArgumentException("Invalid Address")
                             } as GroupAddress
                         }
-                        model.subscribe(address = address)
+                        val _ = model.subscribe(address = address)
                         ConfigModelSubscriptionStatus(address = address, model = model)
                     }.getOrElse {
                         ConfigModelSubscriptionStatus.init(

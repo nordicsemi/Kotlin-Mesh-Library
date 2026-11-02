@@ -19,7 +19,7 @@ class GenericOnOffClient : ModelEventHandler() {
         set(value) {
             field = value
             // Publishes the state change to the model.
-            publish()
+            val _ = publish()
         }
 
     override suspend fun handle(event: ModelEvent) = when (event) {
