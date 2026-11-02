@@ -40,7 +40,6 @@ The following features are not (yet) supported:
 
 1. The rest of models defined by Bluetooth SIG - *PRs are welcome!*
 2. IV Index update (initiation) - *not a top priority, as other nodes may initiate the update.*
-3. Health server messages - *in our TODO list.*
 
 ## How to start
 
