@@ -3,7 +3,6 @@ package no.nordicsemi.kotlin.mesh.bearer
 import org.junit.Assert
 import org.junit.Test
 
-@OptIn(ExperimentalStdlibApi::class)
 class ProxyProtocolHandlerTest {
 
     @Test

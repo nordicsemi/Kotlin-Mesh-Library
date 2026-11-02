@@ -34,7 +34,6 @@ class ConfigNodeIdentitySet(
         identityState = if (start) NodeIdentityState.RUNNING else NodeIdentityState.STOPPED
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String = "ConfigNodeIdentityGet(index: $networkKeyIndex, " +
             "nodeIdentityState: $identityState})"
 

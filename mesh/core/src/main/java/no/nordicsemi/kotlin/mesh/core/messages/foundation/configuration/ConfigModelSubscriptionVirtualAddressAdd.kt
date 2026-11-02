@@ -90,7 +90,6 @@ class ConfigModelSubscriptionVirtualAddressAdd(
         companyIdentifier = (model.modelId as? VendorModelId)?.companyIdentifier,
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigModelSubscriptionVirtualAddressAdd(" +
             "virtualLabel: ${virtualLabel}, " +
             "elementAddress: $elementAddress, " +

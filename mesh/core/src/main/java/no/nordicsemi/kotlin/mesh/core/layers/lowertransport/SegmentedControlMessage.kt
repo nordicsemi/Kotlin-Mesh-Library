@@ -46,7 +46,6 @@ internal class SegmentedControlMessage(
 
     override val type = LowerTransportPduType.CONTROL_MESSAGE
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "Segmented $type (opCode: ${
             opCode.toHexString(
                 format = HexFormat {

@@ -1,6 +1,5 @@
 package no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges
 
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -20,7 +19,6 @@ import no.nordicsemi.kotlin.mesh.core.model.minus
 import no.nordicsemi.kotlin.mesh.core.model.overlaps
 import no.nordicsemi.kotlin.mesh.core.model.plus
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun UnicastRangesScreen(
     snackbarHostState: SnackbarHostState,

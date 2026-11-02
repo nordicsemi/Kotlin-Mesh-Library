@@ -165,7 +165,6 @@ private fun Name(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun Key(
     key: ByteArray,
@@ -196,7 +195,6 @@ private fun Key(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun OldKey(oldKey: ByteArray?) {
     val scope = rememberCoroutineScope()

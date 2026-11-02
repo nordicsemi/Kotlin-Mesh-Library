@@ -46,7 +46,6 @@ class ConfigHeartbeatSubscriptionSet(
         periodLog = 0u
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigHeartbeatSubscriptionSet(source: ${
         source.address.toHexString(
             format = HexFormat {

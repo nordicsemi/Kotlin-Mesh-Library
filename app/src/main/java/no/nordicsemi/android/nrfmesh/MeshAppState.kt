@@ -1,7 +1,6 @@
 package no.nordicsemi.android.nrfmesh
 
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
@@ -35,7 +34,6 @@ import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.Provisionin
 import no.nordicsemi.android.nrfmesh.feature.scenes.navigation.ScenesContentKey
 import no.nordicsemi.android.nrfmesh.feature.scenes.scene.navigation.SceneContentKey
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun rememberMeshAppState(
     snackbarHostState: SnackbarHostState,
@@ -47,7 +45,6 @@ fun rememberMeshAppState(
     )
 }
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Stable
 class MeshAppState(
     navigationState: NavigationState,

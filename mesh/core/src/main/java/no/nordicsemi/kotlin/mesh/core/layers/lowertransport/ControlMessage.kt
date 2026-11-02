@@ -36,7 +36,6 @@ internal open class ControlMessage(
 
     override val type = LowerTransportPduType.CONTROL_MESSAGE
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String = "ControlMessage(" +
             "opCode: ${
                 opCode.toHexString(

@@ -55,7 +55,6 @@ class ConfigKeyRefreshPhaseStatus(
         refreshPhase = NormalOperation
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigKeyRefreshPhaseStatus(status: $status, " +
             "networkKeyIndex: $networkKeyIndex, refreshPhase: $refreshPhase)"
 

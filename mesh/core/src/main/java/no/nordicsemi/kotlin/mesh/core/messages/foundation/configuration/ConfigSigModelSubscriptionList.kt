@@ -58,7 +58,6 @@ class ConfigSigModelSubscriptionList(
         addresses = emptyList()
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigSigModelSubscriptionList(status: $status, " +
             "elementAddress: $elementAddress, modelId: $modelId, " +
             "addresses: [${addresses.joinToString { 

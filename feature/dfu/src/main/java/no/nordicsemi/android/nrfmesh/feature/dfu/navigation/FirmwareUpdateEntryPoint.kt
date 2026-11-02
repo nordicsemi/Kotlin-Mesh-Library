@@ -1,7 +1,5 @@
 package no.nordicsemi.android.nrfmesh.feature.dfu.navigation
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -18,10 +16,6 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.pager.NodeConfigurationViewMode
 import no.nordicsemi.android.nrfmesh.feature.dfu.FirmwareUpdateScreen
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
 
-@OptIn(
-    ExperimentalMaterial3AdaptiveApi::class,
-    ExperimentalMaterial3Api::class
-)
 fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
     var viewModel: DfuSessionViewModel? = null
     entry<FirmwareUpdateKey>(

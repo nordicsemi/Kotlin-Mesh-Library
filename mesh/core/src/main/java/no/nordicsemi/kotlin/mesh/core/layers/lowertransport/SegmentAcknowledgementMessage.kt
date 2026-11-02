@@ -78,7 +78,6 @@ internal class SegmentAcknowledgementMessage(
     fun areAllSegmentsReceived(lastSegmentNumber: Int) =
         ackedSegments == ((1 shl (lastSegmentNumber + 1)) - 1).toUInt()
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ACK (seqZero: $sequenceZero, acked segments: ${
         ackedSegments.toHexString(
             format = HexFormat {

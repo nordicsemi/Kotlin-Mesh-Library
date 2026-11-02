@@ -12,7 +12,6 @@ import no.nordicsemi.kotlin.mesh.crypto.Crypto
 import no.nordicsemi.kotlin.mesh.crypto.KeyDerivatives
 import no.nordicsemi.kotlin.mesh.crypto.SecurityCredentials
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
@@ -55,7 +54,6 @@ import kotlin.time.Instant
  *                                 application keys.
  */
 @ConsistentCopyVisibility
-@OptIn(ExperimentalTime::class)
 @Serializable
 data class NetworkKey internal constructor(
     val index: KeyIndex,
@@ -185,7 +183,6 @@ data class NetworkKey internal constructor(
         regenerateKeyDerivatives()
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
         return "NetworkKey(index: $index, name: $_name, security: $_security, phase: $_phase, " +
                 "timestamp: $timestamp)"

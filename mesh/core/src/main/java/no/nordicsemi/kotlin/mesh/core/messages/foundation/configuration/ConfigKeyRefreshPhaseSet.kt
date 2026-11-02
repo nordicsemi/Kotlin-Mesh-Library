@@ -39,7 +39,6 @@ class ConfigKeyRefreshPhaseSet(
         transition: KeyRefreshPhaseTransition,
     ) : this(networkKeyIndex = networkKey.index, transition = transition)
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigKeyRefreshPhaseSet(networkKeyIndex: ${networkKeyIndex}, " +
             "transition: $transition)"
 

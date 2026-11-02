@@ -21,7 +21,6 @@ import kotlin.uuid.Uuid
  * Unit tests for crypto module. All test data used can be found at section 8 "Sample data" in the
  * Bluetooth Mesh Profile specification.
  */
-@OptIn(ExperimentalStdlibApi::class)
 @Suppress("UNUSED_VARIABLE")
 class CryptoTest {
 

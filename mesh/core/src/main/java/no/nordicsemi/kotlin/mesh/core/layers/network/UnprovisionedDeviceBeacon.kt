@@ -25,7 +25,6 @@ internal class UnprovisionedDeviceBeacon(
 
     override val beaconType: BeaconType = BeaconType.UNPROVISIONED_DEVICE
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "Unprovisioned Device beacon (Uuid: $deviceUuid \n," +
             "OOB Information: $oobInformation \n, URI Hash: ${uriHash?.toHexString() ?: "null"})"
 }

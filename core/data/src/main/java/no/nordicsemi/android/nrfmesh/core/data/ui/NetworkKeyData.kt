@@ -8,7 +8,6 @@ import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.KeyRefreshPhase
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.Security
-import kotlin.time.ExperimentalTime
 
 /**
  * AThe network key object represents the state of the mesh network key that is used for securing
@@ -45,7 +44,6 @@ import kotlin.time.ExperimentalTime
  *                                 application keys.
  */
 @ConsistentCopyVisibility
-@OptIn(ExperimentalTime::class)
 data class NetworkKeyData internal constructor(
     val index: KeyIndex,
     val name: String,

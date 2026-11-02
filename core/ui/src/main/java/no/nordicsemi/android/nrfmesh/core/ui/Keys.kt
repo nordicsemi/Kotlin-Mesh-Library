@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 fun NetworkKey.Row(
     modifier: Modifier = Modifier,

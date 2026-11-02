@@ -388,7 +388,6 @@ private fun ElementRow(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun CompanyIdentifier(companyIdentifier: UShort?) {
     ElevatedCardItem(
@@ -408,7 +407,6 @@ private fun CompanyIdentifier(companyIdentifier: UShort?) {
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun ProductIdentifier(productIdentifier: UShort?) {
     ElevatedCardItem(
@@ -424,7 +422,6 @@ private fun ProductIdentifier(productIdentifier: UShort?) {
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun ProductVersion(productVersion: UShort?) {
     ElevatedCardItem(
@@ -440,7 +437,6 @@ private fun ProductVersion(productVersion: UShort?) {
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun ReplayProtectionCount(replayProtectionCount: UShort?) {
     ElevatedCardItem(

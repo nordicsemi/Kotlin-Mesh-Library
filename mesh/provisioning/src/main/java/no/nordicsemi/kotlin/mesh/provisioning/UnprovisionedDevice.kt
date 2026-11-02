@@ -25,7 +25,6 @@ data class UnprovisionedDevice(
          * @param advertisementData The advertisement data.
          * @return UnprovisionedDevice from the given advertisement data.
          */
-        @OptIn(ExperimentalStdlibApi::class)
         fun from(advertisementData: ByteArray): UnprovisionedDevice {
             var length: Int
             var type: Int

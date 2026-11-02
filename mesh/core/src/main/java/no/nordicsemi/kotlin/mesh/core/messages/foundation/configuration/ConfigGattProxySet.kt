@@ -23,7 +23,6 @@ data class ConfigGattProxySet(val state: FeatureState) : AcknowledgedConfigMessa
     constructor(enable: Boolean) :
             this(state = if (enable) FeatureState.Enabled else FeatureState.Disabled)
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigGattProxySet(state: $state)"
 
     companion object Initializer : ConfigMessageInitializer {

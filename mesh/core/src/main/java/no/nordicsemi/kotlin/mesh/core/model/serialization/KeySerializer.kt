@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
 
 package no.nordicsemi.kotlin.mesh.core.model.serialization
 

@@ -28,7 +28,6 @@ import androidx.compose.material.icons.outlined.GroupWork
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -64,7 +63,6 @@ import no.nordicsemi.kotlin.mesh.core.model.Range
 import no.nordicsemi.kotlin.mesh.core.model.SceneRange
 import no.nordicsemi.kotlin.mesh.core.model.UnicastRange
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalStdlibApi::class)
 @Composable
 fun RangesScreen(
     title: String,
@@ -392,7 +390,6 @@ private fun AddRangeDialog(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun UpdateRangeDialog(
     onDismissRequest: () -> Unit,

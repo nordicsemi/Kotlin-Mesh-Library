@@ -191,7 +191,6 @@ private fun Name(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun UnicastAddressRow(
     context: Context,

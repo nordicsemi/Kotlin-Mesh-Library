@@ -27,7 +27,6 @@ class ConfigKeyRefreshPhaseGet(override val networkKeyIndex: KeyIndex) : Acknowl
      */
     constructor(networkKey: NetworkKey) : this(networkKeyIndex = networkKey.index)
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString() = "ConfigKeyRefreshPhaseGet(networkKeyIndex: $networkKeyIndex)"
 
     companion object Initializer : ConfigMessageInitializer {

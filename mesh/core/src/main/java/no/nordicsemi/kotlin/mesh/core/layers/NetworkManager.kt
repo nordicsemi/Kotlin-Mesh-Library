@@ -3,7 +3,6 @@
 package no.nordicsemi.kotlin.mesh.core.layers
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -169,7 +168,6 @@ internal class NetworkManager internal constructor(
      * @param destination Destination address of the message.
      * @param timeout     Timeout duration.
      */
-    @OptIn(FlowPreview::class)
     suspend fun awaitMeshMessageResponse(
         destination: MeshAddress,
         responseOpcode: UInt,

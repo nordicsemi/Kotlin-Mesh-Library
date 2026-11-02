@@ -66,7 +66,6 @@ sealed class MeshAddress : HasAddress {
 
     override fun toString(): String = toHexString()
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toHexString(addPrefix: Boolean): HexString = address.toHexString(
         HexFormat {
             number {

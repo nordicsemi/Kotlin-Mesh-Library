@@ -201,7 +201,6 @@ abstract class BaseGattBearer<
         logger?.v(LogCategory.BEARER) { "Bearer closed" }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private fun ByteArray.toLogString() = toHexString(
         format = HexFormat {
             number.prefix = "0x"

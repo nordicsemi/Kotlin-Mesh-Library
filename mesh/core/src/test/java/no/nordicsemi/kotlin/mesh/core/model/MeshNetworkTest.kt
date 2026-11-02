@@ -8,7 +8,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.ExperimentalTime
 import kotlin.uuid.Uuid
 
 class MeshNetworkTest {
@@ -138,7 +137,6 @@ class MeshNetworkTest {
         assertEquals(expected = UnicastAddress(address = 100), actual = address)
     }
 
-    @OptIn(ExperimentalTime::class)
     @Test
     fun testNextAvailableUnicastAddressComplexNetwork() {
         val meshNetwork = MeshNetwork(

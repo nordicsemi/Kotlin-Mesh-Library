@@ -39,7 +39,6 @@ class SceneStatesDataStoreStorage @Inject constructor(
     /**
      * Creates a default [ProtoSceneStatesDataStore] with a single entry for the given [uuid].
      */
-    @OptIn(ExperimentalStdlibApi::class)
     private fun createSceneStatesDataStore(
         uuid: Uuid,
         sceneNumber: SceneNumber,
@@ -68,7 +67,6 @@ class SceneStatesDataStoreStorage @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun storeGenericOnOffState(
         uuid: Uuid,
         sceneNumber: SceneNumber,

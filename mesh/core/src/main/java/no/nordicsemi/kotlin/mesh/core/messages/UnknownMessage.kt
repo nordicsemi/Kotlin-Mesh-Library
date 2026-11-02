@@ -28,7 +28,6 @@ class UnknownMessage(
         parameters = accessPdu.parameters
     )
 
-    @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
         return "UnknownMessage(opCode: ${opCode.toHexString(
             format = HexFormat {

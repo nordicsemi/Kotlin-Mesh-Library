@@ -206,7 +206,6 @@ private fun ExportSelection(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun ProvisionerRow(
     state: ProvisionerItemState,
@@ -226,7 +225,6 @@ private fun ProvisionerRow(
     )
 }
 
-@OptIn(ExperimentalStdlibApi::class)
 @Composable
 private fun NetworkKeyRow(
     state: NetworkKeyItemState,
