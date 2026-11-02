@@ -114,6 +114,30 @@ class MeshNetworkTest {
         assertEquals(expected = UnicastAddress(address = 117), actual = address2)
     }
 
+    @Test
+    fun testNextAvailableUnicastAddressOffsetAboveRange() {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
+            add(node = Node(name = "Node 0", address = 1, elements = 9))
+            add(node = Node(name = "Node 1", address = 10, elements = 9))
+        }
+
+        val provisioner = Provisioner(
+            name = "Test Provisioner",
+            allocatedUnicastRanges = mutableListOf(UnicastRange(100, 200))
+        ).apply { this.network = meshNetwork }
+
+        val address = meshNetwork.nextAvailableUnicastAddress(
+            offset = UnicastAddress(address = 0x7FFF),
+            elementCount = 6,
+            provisioner = provisioner
+        )
+        assertNotNull(address)
+        assertEquals(expected = UnicastAddress(address = 100), actual = address)
+    }
+
     @OptIn(ExperimentalTime::class)
     @Test
     fun testNextAvailableUnicastAddressComplexNetwork() {
@@ -266,6 +290,94 @@ class MeshNetworkTest {
 
         val address = meshNetwork.nextAvailableUnicastAddress(
             elementCount = 6, provisioner = provisioner
+        )
+        assertNull(address)
+    }
+
+    @Test
+    fun testNextAvailableUnicastAddressLastAddressInUse() {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
+            add(node = Node(name = "Node 0", address = 0x7FFF, elements = 1))
+        }
+
+        val provisioner = Provisioner(
+            name = "Test Provisioner",
+            allocatedUnicastRanges = mutableListOf(UnicastRange(0x7FF0, 0x7FFF))
+        ).apply { this.network = meshNetwork }
+
+        val address = meshNetwork.nextAvailableUnicastAddress(
+            offset = UnicastAddress(address = 0x7FFF),
+            elementCount = 1,
+            provisioner = provisioner
+        )
+        assertNull(address)
+    }
+
+    @Test
+    fun testNextAvailableUnicastAddressFullRangeEndingAtMax() {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
+            add(node = Node(name = "Node 0", address = 0x7FFE, elements = 2))
+        }
+
+        val provisioner = Provisioner(
+            name = "Test Provisioner",
+            allocatedUnicastRanges = mutableListOf(UnicastRange(0x7FF0, 0x7FFF))
+        ).apply { this.network = meshNetwork }
+
+        val address = meshNetwork.nextAvailableUnicastAddress(
+            offset = UnicastAddress(address = 0x7FF0),
+            elementCount = 1,
+            provisioner = provisioner
+        )
+        assertNotNull(address)
+        assertEquals(expected = UnicastAddress(address = 0x7FF0), actual = address)
+    }
+
+    @Test
+    fun testNextAvailableUnicastAddressMultipleElementsNearMax() {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
+            add(node = Node(name = "Node 0", address = 0x7FF0, elements = 1))
+        }
+
+        val provisioner = Provisioner(
+            name = "Test Provisioner",
+            allocatedUnicastRanges = mutableListOf(UnicastRange(0x7FF0, 0x7FFF))
+        ).apply { this.network = meshNetwork }
+
+        val address = meshNetwork.nextAvailableUnicastAddress(
+            elementCount = 4,
+            provisioner = provisioner
+        )
+        assertNotNull(address)
+        assertEquals(expected = UnicastAddress(address = 0x7FF1), actual = address)
+    }
+
+    @Test
+    fun testNextAvailableUnicastAddressNotEnoughRoomNearMax() {
+        val meshNetwork = MeshNetwork(
+            name = "Test Network",
+            networkKeys = mutableListOf(NetworkKey())
+        ).apply {
+            add(node = Node(name = "Node 0", address = 0x7FFD, elements = 1))
+        }
+
+        val provisioner = Provisioner(
+            name = "Test Provisioner",
+            allocatedUnicastRanges = mutableListOf(UnicastRange(0x7FFD, 0x7FFF))
+        ).apply { this.network = meshNetwork }
+
+        val address = meshNetwork.nextAvailableUnicastAddress(
+            elementCount = 3,
+            provisioner = provisioner
         )
         assertNull(address)
     }

@@ -1127,25 +1127,30 @@ data class MeshNetwork internal constructor(
             .sortedBy { it.address }
 
         provisioner._allocatedUnicastRanges.forEach { range ->
-            var address = range.lowAddress
+            val high = range.highAddress.address.toInt()
+            // Use an Int cursor so that stepping past 0x7FFF doesn't try to create an invalid
+            // UnicastAddress. It's only wrapped in a UnicastAddress when it's returned.
+            var address = range.lowAddress.address.toInt()
 
-            if (range.contains(offset.address) && address < offset) address = offset
+            if (range.contains(offset.address) && address < offset.address.toInt()) {
+                address = offset.address.toInt()
+            }
 
-            for (index in usedAddresses.indices) {
-                val usedAddress = usedAddresses[index]
+            for (usedAddress in usedAddresses) {
+                val used = usedAddress.address.toInt()
 
                 // Skip nodes with addresses below the range.
-                if (address > usedAddress) continue
+                if (address > used) continue
 
-                if (address + elementCount - 1 < usedAddress) return address
+                if (address + elementCount - 1 < used) return UnicastAddress(address)
 
-                address = usedAddress + 1
+                address = used + 1
 
                 // If the new address is outside the range, go to the next one.
-                if (address + elementCount - 1 > range.highAddress) break
+                if (address + elementCount - 1 > high) break
             }
             // If the range has available space, return the address.
-            if (address + elementCount - 1 <= range.highAddress) return address
+            if (address + elementCount - 1 <= high) return UnicastAddress(address)
         }
         return null
     }
