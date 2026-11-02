@@ -22,7 +22,6 @@ import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import no.nordicsemi.kotlin.mesh.core.model.or
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 
 class GenericOnOffServer(
@@ -37,7 +36,6 @@ class GenericOnOffServer(
         GenericOnOffSetUnacknowledged.opCode to GenericOnOffSetUnacknowledged.Initializer
     )
     override val isSubscriptionSupported = true
-    @OptIn(ExperimentalTime::class)
     override val publicationMessageComposer: MessageComposer
         get() = {
             if (state.transition?.remainingTime?.let { it > 0.0.milliseconds } == true) {
@@ -51,7 +49,6 @@ class GenericOnOffServer(
             }
         }
 
-    @OptIn(ExperimentalTime::class)
     private var state: GenericState<Boolean> = GenericState(value = false)
         set(newValue) {
             if (!newValue.storedWithScene) {
@@ -90,7 +87,6 @@ class GenericOnOffServer(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     override fun recall(
         scene: SceneNumber,
         transitionTime: TransitionTime?,
@@ -133,7 +129,6 @@ class GenericOnOffServer(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun handleRequest(event: ModelEvent.AcknowledgedMessageReceived)
             : GenericOnOffStatus? {
         with(event) {
@@ -152,7 +147,7 @@ class GenericOnOffServer(
                         return null
                     }
 
-                    // Message execution delay in 5 millisecond steps. By default 0.
+                    // Message execution delay in 5 millisecond steps. By default, 0.
                     val delay = (req.delay ?: 0u).toDouble() * 0.005
 
                     // The time that an element will take to transition to the target
@@ -190,7 +185,6 @@ class GenericOnOffServer(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private suspend fun handleRequest(event: ModelEvent.UnacknowledgedMessageReceived) {
         with(event) {
             when (val req = message) {
@@ -208,7 +202,7 @@ class GenericOnOffServer(
                         return
                     }
 
-                    // Message execution delay in 5 millisecond steps. By default 0.
+                    // Message execution delay in 5 millisecond steps. By default, 0.
                     val delay = (req.delay ?: 0u).toDouble() * 0.005
 
                     // The time that an element will take to transition to the target
