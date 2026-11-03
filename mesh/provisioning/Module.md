@@ -1,6 +1,6 @@
 # Module provisioning
 
-Provisioning related functionality in Bluetooth Mesh for the Kotlin Mesh Library.
+Provisioning related functionality in Bluetooth Mesh.
 
 Implements the provisioning procedure that adds an unprovisioned device to a mesh network.
 

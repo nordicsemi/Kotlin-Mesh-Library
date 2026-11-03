@@ -1,6 +1,6 @@
 # Module crypto
 
-A set of cryptographic functions for the Kotlin Mesh Library.
+A set of cryptographic functions.
 
 Includes the cryptographic algorithms, key derivatives and security credentials used by Bluetooth
 Mesh.

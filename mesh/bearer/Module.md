@@ -1,6 +1,6 @@
 # Module bearer
 
-The Bearer implementation for the Kotlin Mesh Library.
+The Bearer implementation.
 
 A bearer is the transport used to exchange mesh PDUs with a mesh network, for example GATT. This
 module defines the bearer interfaces; concrete implementations are provided by `bearer-gatt` and

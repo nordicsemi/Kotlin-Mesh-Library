@@ -1,6 +1,6 @@
 # Module core
 
-A complete set of Bluetooth Mesh features for the Kotlin Mesh Library.
+Provides the core functionality in a Bluetooth Mesh Network.
 
 The module contains the mesh network database (`MeshNetwork`) and its serialization, the mesh
 network layers, and the supported foundation, generic, sensor and health messages.
