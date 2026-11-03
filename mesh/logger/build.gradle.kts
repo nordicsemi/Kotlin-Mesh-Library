@@ -14,3 +14,9 @@ nordicPublishing {
     POM_SCM_CONNECTION = "scm:git@github.com:nordicsemi/Kotlin-Mesh-Library.git"
     POM_SCM_DEV_CONNECTION = "scm:git@github.com:nordicsemi/Kotlin-Mesh-Library.git"
 }
+
+dokka {
+    dokkaSourceSets.configureEach {
+        includes.from("Module.md")
+    }
+}

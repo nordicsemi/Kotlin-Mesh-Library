@@ -26,3 +26,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlin.junit)
 }
+
+dokka {
+    dokkaSourceSets.configureEach {
+        includes.from("Module.md")
+    }
+}
