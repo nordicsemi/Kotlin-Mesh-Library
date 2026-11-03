@@ -27,3 +27,9 @@ tasks.withType<Jar> {
         into("META-INF/proguard/")
     }
 }
+
+dokka {
+    dokkaSourceSets.configureEach {
+        includes.from("Module.md")
+    }
+}

@@ -21,3 +21,9 @@ dependencies {
     // Dependencies used for testing
     testImplementation(libs.kotlin.junit)
 }
+
+dokka {
+    dokkaSourceSets.configureEach {
+        includes.from("Module.md")
+    }
+}
