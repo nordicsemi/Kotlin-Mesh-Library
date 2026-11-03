@@ -1,6 +1,6 @@
 # Module bearer-gatt
 
-A GATT Bearer implementation for the Kotlin Mesh Library.
+A GATT Bearer implementation.
 
 Allows communication with a mesh network through a node supporting the Mesh Proxy service.
 

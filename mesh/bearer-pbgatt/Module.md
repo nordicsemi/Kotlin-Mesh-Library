@@ -1,6 +1,6 @@
 # Module bearer-pbgatt
 
-A PB-GATT implementation of the Provisioning bearer for the Kotlin Mesh Library.
+A PB-GATT implementation of the Provisioning bearer.
 
 Allows provisioning of unprovisioned devices that support the Mesh Provisioning service.
 

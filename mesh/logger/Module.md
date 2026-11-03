@@ -1,6 +1,6 @@
 # Module logger
 
-A set of Mesh layer logging levels for the Kotlin Mesh Library.
+A set of Mesh layer logging levels.
 
 # Package no.nordicsemi.kotlin.mesh.logger
 
