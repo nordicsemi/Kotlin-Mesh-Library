@@ -18,7 +18,6 @@
         }
       }
     </script>
-<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
 <link href="../../../../styles/style.css" rel="Stylesheet">
 <link href="../../../../styles/main.css" rel="Stylesheet">
@@ -39,7 +38,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">0.6.0
+        <div class="library-version" id="library-version">1.3.0
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
@@ -94,7 +93,7 @@
   <div class="breadcrumbs"><a href="../../index.html">core</a><span class="delimiter">/</span><a href="../index.html">no.nordicsemi.kotlin.mesh.core.messages</a><span class="delimiter">/</span><span class="current">UnacknowledgedVendorMessage</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Unacknowledged</span><wbr><span>Vendor</span><wbr><span><span>Message</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">UnacknowledgedVendorMessage</a> : <a href="../-vendor-message/index.html">VendorMessage</a>, <a href="../-unacknowledged-mesh-message/index.html">UnacknowledgedMeshMessage</a></div><p class="paragraph">A base interface for unacknowledged vendor message.</p><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-vendor-response/index.html">VendorResponse</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-vendor-status-message/index.html">VendorStatusMessage</a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">UnacknowledgedVendorMessage</a> : <a href="../-vendor-message/index.html">VendorMessage</a>, <a href="../-unacknowledged-application-message/index.html">UnacknowledgedApplicationMessage</a></div><p class="paragraph">A base interface for unacknowledged vendor message.</p><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-vendor-response/index.html">VendorResponse</a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-vendor-status-message/index.html">VendorStatusMessage</a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
@@ -141,7 +140,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-mesh-message/is-segmented.html">isSegmented</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Defines if the message should be sent or was sent as Segmented Access     Message. By default, this  returns <code class="lang-kotlin">false</code>. To force segmentation for     shorter messages return <code class="lang-kotlin">true</code> despite payload length. If payload size     is longer than 11 bytes this field is not checked as the message must     be segmented.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-mesh-message/is-segmented.html">isSegmented</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Defines if the message should be sent or was sent as Segmented Access                             Message. By default, this  returns <code class="lang-kotlin">false</code>. To force segmentation for                             shorter messages return <code class="lang-kotlin">true</code> despite payload length. If payload size                             is longer than 11 bytes this field is not checked as the message must                             be segmented.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -171,7 +170,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="../-has-op-code/op-code.html">opCode</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-int/index.html">UInt</a></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="../-has-op-code/op-code.html">opCode</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-int/index.html">UInt</a></div><div class="brief "><p class="paragraph">The Op Code of the message.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -201,7 +200,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-mesh-message/security.html">security</a><span class="token operator">: </span><a href="../-mesh-message-security/index.html">MeshMessageSecurity</a></div><div class="brief "><p class="paragraph">Defines if the message should be sent or has been sent using 32-bit or     64-bit TransMIC value. By default MeshMessageSecurity.Low is used.     Only Segmented Access Messages can use 64-bit MIC. If the payload is     shorter than 11 bytes, make sure you return <code class="lang-kotlin">true</code> from     MeshMessage.isSegmented, otherwise this field will be ignored.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../-mesh-message/security.html">security</a><span class="token operator">: </span><a href="../-mesh-message-security/index.html">MeshMessageSecurity</a></div><div class="brief "><p class="paragraph">Defines if the message should be sent or has been sent using 32-bit or                             64-bit TransMIC value. By default <a href="../-mesh-message-security/-low/index.html">MeshMessageSecurity.Low</a> is used.                             Only Segmented Access Messages can use 64-bit MIC. If the payload is                             shorter than 11 bytes, make sure you return <code class="lang-kotlin">true</code> from                             <a href="../-mesh-message/is-segmented.html">MeshMessage.isSegmented</a>, otherwise this field will be ignored.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -235,7 +234,7 @@
                     <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
                         Dokka
                     </a>
-                    <div>Copyright © 2022 - 2025 Nordic Semiconductor ASA. All Rights Reserved.</div>
+                    <div>Copyright © 2022 - 2026 Nordic Semiconductor ASA. All Rights Reserved.</div>
                 </div>
             </div>
         </div>

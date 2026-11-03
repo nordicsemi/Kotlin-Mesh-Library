@@ -18,7 +18,6 @@
         }
       }
     </script>
-<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
 <link href="../../../../styles/style.css" rel="Stylesheet">
 <link href="../../../../styles/main.css" rel="Stylesheet">
@@ -39,7 +38,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">0.6.0
+        <div class="library-version" id="library-version">1.3.0
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
@@ -94,11 +93,49 @@
   <div class="breadcrumbs"><a href="../../index.html">provisioning</a><span class="delimiter">/</span><a href="../index.html">no.nordicsemi.kotlin.mesh.provisioning</a><span class="delimiter">/</span><span class="current">ProvisioningParameters</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Provisioning</span><wbr><span><span>Parameters</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">ProvisioningParameters</a></div><p class="paragraph">Configuration class that contains all the necessary information to provision a device.</p><h4 class="tableheader">Throws</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":mesh:provisioning/main" data-filterable-set=":mesh:provisioning/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.exception/-no-network-keys-added/index.html"><span>No</span><wbr><span>Network</span><wbr><span>Keys</span><wbr><span><span>Added</span></span></a></div></span></div><div><div class="title"><p class="paragraph">Exception thrown when there are no network keys added to the mesh     network.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":mesh:provisioning/main" data-filterable-set=":mesh:provisioning/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.exception/-no-local-provisioner/index.html"><span>No</span><wbr><span>Local</span><wbr><span><span>Provisioner</span></span></a></div></span></div><div><div class="title"><p class="paragraph">Exception thrown when there is no local provisioner added to the mesh     network.</p></div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">ProvisioningParameters</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>unicastAddress<span class="token operator">: </span><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.model/-unicast-address/index.html">UnicastAddress</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>networkKey<span class="token operator">: </span><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.model/-network-key/index.html">NetworkKey</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>algorithm<span class="token operator">: </span><a href="../../../../mesh/crypto/no.nordicsemi.kotlin.mesh.crypto/-algorithm/index.html">Algorithm</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>publicKey<span class="token operator">: </span><a href="../-public-key/index.html">PublicKey</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>authMethod<span class="token operator">: </span><a href="../-authentication-method/index.html">AuthenticationMethod</a></span></span><span class="token punctuation">)</span></div><p class="paragraph">Configuration class that contains all the necessary information to provision a device.</p><h4 class="tableheader">Throws</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":mesh:provisioning/main" data-filterable-set=":mesh:provisioning/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.exception/-no-network-keys-added/index.html"><span>No</span><wbr><span>Network</span><wbr><span>Keys</span><wbr><span><span>Added</span></span></a></div></span></div><div><div class="title"><p class="paragraph">Exception thrown when there are no network keys added to the mesh                              network.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":mesh:provisioning/main" data-filterable-set=":mesh:provisioning/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.exception/-no-local-provisioner/index.html"><span>No</span><wbr><span>Local</span><wbr><span><span>Provisioner</span></span></a></div></span></div><div><div class="title"><p class="paragraph">Exception thrown when there is no local provisioner added to the mesh                              network.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":mesh:provisioning/main" data-filterable-set=":mesh:provisioning/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-no-address-available/index.html"><span>No</span><wbr><span>Address</span><wbr><span><span>Available</span></span></a></div></span></div><div><div class="title"><p class="paragraph">Exception thrown when there is no available unicast address.</p></div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="1495038229%2FConstructors%2F1886344904" anchor-label="ProvisioningParameters" id="1495038229%2FConstructors%2F1886344904" data-filterable-set=":mesh:provisioning/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":mesh:provisioning/main" data-filterable-set=":mesh:provisioning/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-provisioning-parameters.html"><span>Provisioning</span><wbr><span><span>Parameters</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1495038229%2FConstructors%2F1886344904"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">unicastAddress<span class="token operator">: </span><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.model/-unicast-address/index.html">UnicastAddress</a><span class="token punctuation">, </span></span><span class="parameter ">networkKey<span class="token operator">: </span><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.model/-network-key/index.html">NetworkKey</a><span class="token punctuation">, </span></span><span class="parameter ">algorithm<span class="token operator">: </span><a href="../../../../mesh/crypto/no.nordicsemi.kotlin.mesh.crypto/-algorithm/index.html">Algorithm</a><span class="token punctuation">, </span></span><span class="parameter ">publicKey<span class="token operator">: </span><a href="../-public-key/index.html">PublicKey</a><span class="token punctuation">, </span></span><span class="parameter ">authMethod<span class="token operator">: </span><a href="../-authentication-method/index.html">AuthenticationMethod</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="115657396%2FClasslikes%2F1886344904" anchor-label="Companion" id="115657396%2FClasslikes%2F1886344904" data-filterable-set=":mesh:provisioning/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:provisioning/main" data-filterable-set=":mesh:provisioning/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="115657396%2FClasslikes%2F1886344904"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div data-togglable="PROPERTY">
         <h2 class="tableheader">Properties</h2>
         <div class="table"><a data-name="178573278%2FProperties%2F1886344904" anchor-label="algorithm" id="178573278%2FProperties%2F1886344904" data-filterable-set=":mesh:provisioning/main"></a>
@@ -111,7 +148,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="algorithm.html">algorithm</a><span class="token operator">: </span><a href="../../../../mesh/crypto/no.nordicsemi.kotlin.mesh.crypto/-algorithm/index.html">Algorithm</a></div><div class="brief "><p class="paragraph">Algorithm to be used for provisioning.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="algorithm.html">algorithm</a><span class="token operator">: </span><a href="../../../../mesh/crypto/no.nordicsemi.kotlin.mesh.crypto/-algorithm/index.html">Algorithm</a></div><div class="brief "><p class="paragraph">Algorithm to be used for provisioning.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -126,7 +163,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="auth-method.html">authMethod</a><span class="token operator">: </span><a href="../-authentication-method/index.html">AuthenticationMethod</a></div><div class="brief "><p class="paragraph">Authentication method to be used for provisioning.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="auth-method.html">authMethod</a><span class="token operator">: </span><a href="../-authentication-method/index.html">AuthenticationMethod</a></div><div class="brief "><p class="paragraph">Authentication method to be used for provisioning.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -141,7 +178,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="network-key.html">networkKey</a><span class="token operator">: </span><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.model/-network-key/index.html">NetworkKey</a></div><div class="brief "><p class="paragraph">Network key to be used for provisioning.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="network-key.html">networkKey</a><span class="token operator">: </span><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.model/-network-key/index.html">NetworkKey</a></div><div class="brief "><p class="paragraph">Network key to be used for provisioning.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -156,7 +193,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="public-key.html">publicKey</a><span class="token operator">: </span><a href="../-public-key/index.html">PublicKey</a></div><div class="brief "><p class="paragraph">Public key to be used for provisioning.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="public-key.html">publicKey</a><span class="token operator">: </span><a href="../-public-key/index.html">PublicKey</a></div><div class="brief "><p class="paragraph">Public key to be used for provisioning.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -171,7 +208,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="unicast-address.html">unicastAddress</a><span class="token operator">: </span><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.model/-unicast-address/index.html">UnicastAddress</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Unicast address to be assigned to the device.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:provisioning/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="unicast-address.html">unicastAddress</a><span class="token operator">: </span><a href="../../../../mesh/core/no.nordicsemi.kotlin.mesh.core.model/-unicast-address/index.html">UnicastAddress</a></div><div class="brief "><p class="paragraph">Unicast address to be assigned to the device.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -190,7 +227,7 @@
                     <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
                         Dokka
                     </a>
-                    <div>Copyright © 2022 - 2025 Nordic Semiconductor ASA. All Rights Reserved.</div>
+                    <div>Copyright © 2022 - 2026 Nordic Semiconductor ASA. All Rights Reserved.</div>
                 </div>
             </div>
         </div>

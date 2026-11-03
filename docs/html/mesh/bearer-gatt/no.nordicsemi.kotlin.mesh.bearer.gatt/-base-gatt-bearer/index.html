@@ -18,7 +18,6 @@
         }
       }
     </script>
-<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
 <link href="../../../../styles/style.css" rel="Stylesheet">
 <link href="../../../../styles/main.css" rel="Stylesheet">
@@ -39,7 +38,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">0.6.0
+        <div class="library-version" id="library-version">1.3.0
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
@@ -94,24 +93,24 @@
   <div class="breadcrumbs"><a href="../../index.html">bearer-gatt</a><span class="delimiter">/</span><a href="../index.html">no.nordicsemi.kotlin.mesh.bearer.gatt</a><span class="delimiter">/</span><span class="current">BaseGattBearer</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Base</span><wbr><span>Gatt</span><wbr><span><span>Bearer</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">BaseGattBearer</a><span class="token operator">&lt;</span><a href="index.html">Service</a><span class="token operator"> : </span><a href="../../no.nordicsemi.kotlin.mesh.bearer.gatt.utils/-mesh-service/index.html">MeshService</a><span class="token punctuation">, </span><a href="index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="index.html">C</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/CentralManager///PointingToDeclaration/">CentralManager</span><span class="token operator">&lt;</span><a href="index.html">ID</a><span class="token punctuation">, </span><a href="index.html">P</a><span class="token punctuation">, </span><a href="index.html">EX</a><span class="token punctuation">, </span><a href="index.html">F</a><span class="token punctuation">, </span><a href="index.html">SR</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="index.html">P</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/Peripheral///PointingToDeclaration/">Peripheral</span><span class="token operator">&lt;</span><a href="index.html">ID</a><span class="token punctuation">, </span><a href="index.html">EX</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="index.html">EX</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/Peripheral.Executor///PointingToDeclaration/">Peripheral.Executor</span><span class="token operator">&lt;</span><a href="index.html">ID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="index.html">F</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/CentralManager.ScanFilterScope///PointingToDeclaration/">CentralManager.ScanFilterScope</span><span class="token punctuation">, </span><a href="index.html">SR</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/ScanResult///PointingToDeclaration/">ScanResult</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dispatcher<span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines/CoroutineDispatcher///PointingToDeclaration/">CoroutineDispatcher</span><span class="token punctuation">, </span></span><span class="parameter ">centralManager<span class="token operator">: </span><a href="index.html">C</a><span class="token punctuation">, </span></span><span class="parameter ">peripheral<span class="token operator">: </span><a href="index.html">P</a></span></span><span class="token punctuation">)</span> : <a href="../../../../mesh/bearer/no.nordicsemi.kotlin.mesh.bearer.gatt/-gatt-bearer/index.html">GattBearer</a></div><p class="paragraph">Base implementation of the GATT Proxy Bearer.</p><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-gatt-bearer-impl/index.html">GattBearerImpl</a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">BaseGattBearer</a><span class="token operator">&lt;</span><a href="index.html">ID</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span><a href="index.html">C</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/CentralManager///PointingToDeclaration/">CentralManager</span><span class="token operator">&lt;</span><a href="index.html">ID</a><span class="token punctuation">, </span><a href="index.html">P</a><span class="token punctuation">, </span><a href="index.html">EX</a><span class="token punctuation">, </span><a href="index.html">F</a><span class="token punctuation">, </span><a href="index.html">SR</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="index.html">P</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/Peripheral///PointingToDeclaration/">Peripheral</span><span class="token operator">&lt;</span><a href="index.html">ID</a><span class="token punctuation">, </span><a href="index.html">EX</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="index.html">EX</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/Peripheral.Executor///PointingToDeclaration/">Peripheral.Executor</span><span class="token operator">&lt;</span><a href="index.html">ID</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="index.html">F</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/CentralManager.ScanFilterScope///PointingToDeclaration/">CentralManager.ScanFilterScope</span><span class="token punctuation">, </span><a href="index.html">SR</a><span class="token operator"> : </span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/ScanResult///PointingToDeclaration/">ScanResult</span><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">centralManager<span class="token operator">: </span><a href="index.html">C</a><span class="token punctuation">, </span></span><span class="parameter ">peripheral<span class="token operator">: </span><a href="index.html">P</a><span class="token punctuation">, </span></span><span class="parameter ">ioDispatcher<span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines/CoroutineDispatcher///PointingToDeclaration/">CoroutineDispatcher</span></span></span><span class="token punctuation">)</span> : <a href="../../../../mesh/bearer/no.nordicsemi.kotlin.mesh.bearer.gatt/-gatt-bearer/index.html">GattBearer</a></div><p class="paragraph">Base implementation of the GATT bearers, sending and receiving the mesh PDUs over the Mesh Proxy or the Mesh Provisioning service.</p><p class="paragraph">The service is handled by the <span data-unresolved-link="no.nordicsemi.kotlin.mesh.bearer.gatt/BaseGattBearer/profile/#/PointingToDeclaration/">profile</span>, which is attached to the peripheral when the bearer is opened. The profile is not required, so a device without the service is not disconnected by the BLE library. The bearer disconnects from it, instead, when it fails to open. Losing the connection closes the bearer.</p><h4 class="tableheader">Parameters</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>central</span><wbr><span><span>Manager</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Central manager used to connect to the peripheral.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>peripheral</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Peripheral to connect to.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>io</span><wbr><span><span>Dispatcher</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Coroutine dispatcher used by the bearer.</p></div></div></div></div></div><h4 class="tableheader">Inheritors</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-gatt-bearer-impl/index.html">GattBearerImpl</a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="tableheader">Constructors</h2>
-        <div class="table"><a data-name="1866684073%2FConstructors%2F1592084025" anchor-label="BaseGattBearer" id="1866684073%2FConstructors%2F1592084025" data-filterable-set=":mesh:bearer-gatt/main"></a>
+        <div class="table"><a data-name="1969319153%2FConstructors%2F1592084025" anchor-label="BaseGattBearer" id="1969319153%2FConstructors%2F1592084025" data-filterable-set=":mesh:bearer-gatt/main"></a>
           <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-base-gatt-bearer.html"><span>Base</span><wbr><span>Gatt</span><wbr><span><span>Bearer</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1866684073%2FConstructors%2F1592084025"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1969319153%2FConstructors%2F1592084025"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dispatcher<span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines/CoroutineDispatcher///PointingToDeclaration/">CoroutineDispatcher</span><span class="token punctuation">, </span></span><span class="parameter ">centralManager<span class="token operator">: </span><a href="index.html">C</a><span class="token punctuation">, </span></span><span class="parameter ">peripheral<span class="token operator">: </span><a href="index.html">P</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">centralManager<span class="token operator">: </span><a href="index.html">C</a><span class="token punctuation">, </span></span><span class="parameter ">peripheral<span class="token operator">: </span><a href="index.html">P</a><span class="token punctuation">, </span></span><span class="parameter ">ioDispatcher<span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines/CoroutineDispatcher///PointingToDeclaration/">CoroutineDispatcher</span></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -149,7 +148,37 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="is-open.html">isOpen</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns true if the bearer is open, false otherwise.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="is-open.html">isOpen</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Returns true if the bearer is open, false otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="692393388%2FProperties%2F1592084025" anchor-label="logger" id="692393388%2FProperties%2F1592084025" data-filterable-set=":mesh:bearer-gatt/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="logger.html"><span><span>logger</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="692393388%2FProperties%2F1592084025"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">var </span><a href="logger.html">logger</a><span class="token operator">: </span><a href="../../../../mesh/logger/no.nordicsemi.kotlin.mesh.logger/-logger/index.html">Logger</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Receives the logs of the bearer, containing the raw data of the packets                        sent and received, as well as the connection events.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="875291857%2FProperties%2F1592084025" anchor-label="name" id="875291857%2FProperties%2F1592084025" data-filterable-set=":mesh:bearer-gatt/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="name.html"><span><span>name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="875291857%2FProperties%2F1592084025"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="name.html">name</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -184,17 +213,17 @@
               </div>
             </div>
           </div>
-<a data-name="401090609%2FProperties%2F1592084025" anchor-label="supportedTypes" id="401090609%2FProperties%2F1592084025" data-filterable-set=":mesh:bearer-gatt/main"></a>
+<a data-name="271350840%2FProperties%2F1592084025" anchor-label="supportedTypes" id="271350840%2FProperties%2F1592084025" data-filterable-set=":mesh:bearer-gatt/main"></a>
           <div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="supported-types.html"><span>supported</span><wbr><span><span>Types</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="401090609%2FProperties%2F1592084025"></span>
+                  <div><a href="index.html#271350840%2FProperties%2F1592084025"><span>supported</span><wbr><span><span>Types</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="271350840%2FProperties%2F1592084025"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="supported-types.html">supportedTypes</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="../../../../mesh/bearer/no.nordicsemi.kotlin.mesh.bearer/-pdu-types/index.html">PduTypes</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">List of supported PDU types.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="index.html#271350840%2FProperties%2F1592084025">supportedTypes</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><a href="../../../../mesh/bearer/no.nordicsemi.kotlin.mesh.bearer/-pdu-types/index.html">PduTypes</a><span class="token operator">&gt;</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -214,21 +243,6 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">suspend override </span><span class="token keyword">fun </span><a href="close.html"><span class="token function">close</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="1023302384%2FFunctions%2F1592084025" anchor-label="configureGatt" id="1023302384%2FFunctions%2F1592084025" data-filterable-set=":mesh:bearer-gatt/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":mesh:bearer-gatt/main" data-filterable-set=":mesh:bearer-gatt/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="configure-gatt.html"><span>configure</span><wbr><span><span>Gatt</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1023302384%2FFunctions%2F1592084025"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:bearer-gatt/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="configure-gatt.html"><span class="token function">configureGatt</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">services<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="no.nordicsemi.kotlin.ble.client/RemoteService///PointingToDeclaration/">RemoteService</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -292,7 +306,7 @@
                     <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
                         Dokka
                     </a>
-                    <div>Copyright © 2022 - 2025 Nordic Semiconductor ASA. All Rights Reserved.</div>
+                    <div>Copyright © 2022 - 2026 Nordic Semiconductor ASA. All Rights Reserved.</div>
                 </div>
             </div>
         </div>

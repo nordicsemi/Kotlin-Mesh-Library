@@ -20,8 +20,11 @@ no.nordicsemi.kotlin.mesh.core.layers.foundation
 no.nordicsemi.kotlin.mesh.core.layers.lowertransport
 no.nordicsemi.kotlin.mesh.core.messages
 no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration
+no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
 no.nordicsemi.kotlin.mesh.core.messages.generic
+no.nordicsemi.kotlin.mesh.core.messages.health
 no.nordicsemi.kotlin.mesh.core.messages.proxy
+no.nordicsemi.kotlin.mesh.core.messages.sensor
 no.nordicsemi.kotlin.mesh.core.model
 no.nordicsemi.kotlin.mesh.core.model.serialization
 no.nordicsemi.kotlin.mesh.core.model.serialization.config

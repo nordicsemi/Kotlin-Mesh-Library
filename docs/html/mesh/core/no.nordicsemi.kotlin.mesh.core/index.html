@@ -18,7 +18,6 @@
         }
       }
     </script>
-<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
 <link href="../../../styles/style.css" rel="Stylesheet">
 <link href="../../../styles/main.css" rel="Stylesheet">
@@ -39,7 +38,7 @@
             </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
-        <div class="library-version" id="library-version">0.6.0
+        <div class="library-version" id="library-version">1.3.0
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
@@ -94,6 +93,7 @@
   <div class="breadcrumbs"><a href="../index.html">core</a><span class="delimiter">/</span><span class="current">no.nordicsemi.kotlin.mesh.core</span></div>
   <div class="cover ">
     <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+    <div class="platform-hinted UnderCoverText" data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><p class="paragraph">Entry point of the library, including the <code class="lang-kotlin">MeshNetworkManager</code>.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
@@ -110,7 +110,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-mesh-network-manager/index.html">MeshNetworkManager</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">storage<span class="token operator">: </span><a href="-storage/index.html">Storage</a><span class="token punctuation">, </span></span><span class="parameter ">secureProperties<span class="token operator">: </span><a href="-secure-properties-storage/index.html">SecurePropertiesStorage</a><span class="token punctuation">, </span></span><span class="parameter ">dispatcher<span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines/CoroutineDispatcher///PointingToDeclaration/">CoroutineDispatcher</span></span></span><span class="token punctuation">)</span> : <a href="-publisher/index.html">Publisher</a></div><div class="brief "><p class="paragraph">MeshNetworkManager is the entry point to the Mesh library.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-mesh-network-manager/index.html">MeshNetworkManager</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">storage<span class="token operator">: </span><a href="-storage/index.html">Storage</a><span class="token punctuation">, </span></span><span class="parameter ">secureProperties<span class="token operator">: </span><a href="-secure-properties-storage/index.html">SecurePropertiesStorage</a><span class="token punctuation">, </span></span><span class="parameter ">ioDispatcher<span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines/CoroutineDispatcher///PointingToDeclaration/">CoroutineDispatcher</span></span></span><span class="token punctuation">)</span> : <a href="-publisher/index.html">Publisher</a></div><div class="brief "><p class="paragraph">MeshNetworkManager is the entry point to the Mesh library.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -171,6 +171,21 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-model-event-handler/index.html">ModelEventHandler</a></div><div class="brief "><p class="paragraph">Defines the functionality of a <a href="../no.nordicsemi.kotlin.mesh.core.model/-model/index.html">Model</a> on the Local Node.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1102439727%2FClasslikes%2F-554328198" anchor-label="NetworkEvent" id="1102439727%2FClasslikes%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-network-event/index.html"><span>Network</span><wbr><span><span>Event</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1102439727%2FClasslikes%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-network-event/index.html">NetworkEvent</a></div><div class="brief "><p class="paragraph">Defines events the MeshNetwork that can be observed.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -339,7 +354,7 @@
                     <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
                         Dokka
                     </a>
-                    <div>Copyright © 2022 - 2025 Nordic Semiconductor ASA. All Rights Reserved.</div>
+                    <div>Copyright © 2022 - 2026 Nordic Semiconductor ASA. All Rights Reserved.</div>
                 </div>
             </div>
         </div>

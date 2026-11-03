@@ -1,0 +1,378 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>SensorSettingStatus</title>
+<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../../ui-kit/ui-kit.min.js" defer></script></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../../index.html" tabindex="1">
+                    Kotlin Mesh Library
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">1.3.0
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":mesh:core/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":mesh:core/main" data-filter=":mesh:core/main">
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Kotlin Mesh Library
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="core::no.nordicsemi.kotlin.mesh.core.messages.sensor/SensorSettingStatus///PointingToDeclaration//-554328198">
+  <div class="breadcrumbs"><a href="../../index.html">core</a><span class="delimiter">/</span><a href="../index.html">no.nordicsemi.kotlin.mesh.core.messages.sensor</a><span class="delimiter">/</span><span class="current">SensorSettingStatus</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Sensor</span><wbr><span>Setting</span><wbr><span><span>Status</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">SensorSettingStatus</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>propertyId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-short/index.html">UShort</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>settingPropertyId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-short/index.html">UShort</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>settingAccess<span class="token operator">: </span><a href="-sensor-setting-access/index.html">SensorSettingStatus.SensorSettingAccess</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>settingValue<span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property-characteristic/index.html">DevicePropertyCharacteristic</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="../../no.nordicsemi.kotlin.mesh.core.messages/-application-response/index.html">ApplicationResponse</a>, <a href="../../no.nordicsemi.kotlin.mesh.core.messages/-unacknowledged-application-message/index.html">UnacknowledgedApplicationMessage</a>, <a href="../../no.nordicsemi.kotlin.mesh.core.messages/-sensor-property-message/index.html">SensorPropertyMessage</a></div><p class="paragraph">This message is a response to a <a href="../-sensor-setting-get/index.html">SensorSettingGet</a>, <a href="../-sensor-setting-set/index.html">SensorSettingSet</a> and <a href="../-sensor-setting-set-unacknowledged/index.html">SensorSettingSetUnacknowledged</a> and contains the Sensor Setting state of a sensor setting.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-1357427463%2FConstructors%2F-554328198" anchor-label="SensorSettingStatus" id="-1357427463%2FConstructors%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-sensor-setting-status.html"><span>Sensor</span><wbr><span>Setting</span><wbr><span><span>Status</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1357427463%2FConstructors%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">propertyId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-short/index.html">UShort</a><span class="token punctuation">, </span></span><span class="parameter ">settingPropertyId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-short/index.html">UShort</a><span class="token punctuation">, </span></span><span class="parameter ">settingAccess<span class="token operator">: </span><a href="-sensor-setting-access/index.html">SensorSettingStatus.SensorSettingAccess</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">settingValue<span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property-characteristic/index.html">DevicePropertyCharacteristic</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">setting<span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property/index.html">DeviceProperty</a><span class="token punctuation">, </span></span><span class="parameter ">property<span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property/index.html">DeviceProperty</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Convenience constructor for a setting which has not been found on the sensor.</p></div><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">setting<span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property/index.html">DeviceProperty</a><span class="token punctuation">, </span></span><span class="parameter ">property<span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property/index.html">DeviceProperty</a><span class="token punctuation">, </span></span><span class="parameter ">access<span class="token operator">: </span><a href="-sensor-setting-access/index.html">SensorSettingStatus.SensorSettingAccess</a><span class="token punctuation">, </span></span><span class="parameter ">value<span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property-characteristic/index.html">DevicePropertyCharacteristic</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Convenience constructor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="847940957%2FClasslikes%2F-554328198" anchor-label="Initializer" id="847940957%2FClasslikes%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-initializer/index.html"><span><span>Initializer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="847940957%2FClasslikes%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-initializer/index.html">Initializer</a> : <a href="../../no.nordicsemi.kotlin.mesh.core.messages/-sensor-message-initializer/index.html">SensorMessageInitializer</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1543304443%2FClasslikes%2F-554328198" anchor-label="SensorSettingAccess" id="-1543304443%2FClasslikes%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-sensor-setting-access/index.html"><span>Sensor</span><wbr><span>Setting</span><wbr><span><span>Access</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1543304443%2FClasslikes%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-sensor-setting-access/index.html">SensorSettingAccess</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-sensor-setting-access/index.html">SensorSettingStatus.SensorSettingAccess</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">The Sensor Setting Access state indicates whether the Device Property can be read or written.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-451981080%2FProperties%2F-554328198" anchor-label="isAcknowledged" id="-451981080%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/is-acknowledged.html"><span>is</span><wbr><span><span>Acknowledged</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-451981080%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/is-acknowledged.html">isAcknowledged</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Defines if the message should be sent as an acknowledged message.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="808173656%2FProperties%2F-554328198" anchor-label="isSegmented" id="808173656%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/is-segmented.html"><span>is</span><wbr><span><span>Segmented</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="808173656%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/is-segmented.html">isSegmented</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Defines if the message should be sent or was sent as Segmented Access                             Message. By default, this  returns <code class="lang-kotlin">false</code>. To force segmentation for                             shorter messages return <code class="lang-kotlin">true</code> despite payload length. If payload size                             is longer than 11 bytes this field is not checked as the message must                             be segmented.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1798145003%2FProperties%2F-554328198" anchor-label="isVendorMessage" id="1798145003%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/is-vendor-message.html"><span>is</span><wbr><span>Vendor</span><wbr><span><span>Message</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1798145003%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/is-vendor-message.html">isVendorMessage</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether the message is a Vendor Message, or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2053912704%2FProperties%2F-554328198" anchor-label="opCode" id="-2053912704%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="op-code.html"><span>op</span><wbr><span><span>Code</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2053912704%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="op-code.html">opCode</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-int/index.html">UInt</a></div><div class="brief "><p class="paragraph">The Op Code of the message.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1961967612%2FProperties%2F-554328198" anchor-label="parameters" id="-1961967612%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parameters.html"><span><span>parameters</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1961967612%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="parameters.html">parameters</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-byte-array/index.html">ByteArray</a></div><div class="brief "><p class="paragraph">Access layer payload, including the Op Code.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1670512701%2FProperties%2F-554328198" anchor-label="property" id="-1670512701%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-sensor-property-message/property.html"><span><span>property</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1670512701%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-sensor-property-message/property.html">property</a><span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property/index.html">DeviceProperty</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Device Property describing the meaning and the format of the data reported                       by the sensor, or <code class="lang-kotlin">null</code> when the Property ID is not known to this library.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="59951838%2FProperties%2F-554328198" anchor-label="propertyId" id="59951838%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="property-id.html"><span>property</span><wbr><span><span>Id</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="59951838%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="property-id.html">propertyId</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-short/index.html">UShort</a></div><div class="brief "><p class="paragraph">Property ID identifying a sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2037743290%2FProperties%2F-554328198" anchor-label="security" id="2037743290%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/security.html"><span><span>security</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2037743290%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">val </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/security.html">security</a><span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message-security/index.html">MeshMessageSecurity</a></div><div class="brief "><p class="paragraph">Defines if the message should be sent or has been sent using 32-bit or                             64-bit TransMIC value. By default <a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message-security/-low/index.html">MeshMessageSecurity.Low</a> is used.                             Only Segmented Access Messages can use 64-bit MIC. If the payload is                             shorter than 11 bytes, make sure you return <code class="lang-kotlin">true</code> from                             <a href="../../no.nordicsemi.kotlin.mesh.core.messages/-mesh-message/is-segmented.html">MeshMessage.isSegmented</a>, otherwise this field will be ignored.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="932491736%2FProperties%2F-554328198" anchor-label="settingAccess" id="932491736%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="setting-access.html"><span>setting</span><wbr><span><span>Access</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="932491736%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="setting-access.html">settingAccess</a><span class="token operator">: </span><a href="-sensor-setting-access/index.html">SensorSettingStatus.SensorSettingAccess</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Read / write access rights of the setting, or <code class="lang-kotlin">null</code> when the                              requested setting property was not found.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1097173305%2FProperties%2F-554328198" anchor-label="settingProperty" id="-1097173305%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="setting-property.html"><span>setting</span><wbr><span><span>Property</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1097173305%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="setting-property.html">settingProperty</a><span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property/index.html">DeviceProperty</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Device Property of the setting, or <code class="lang-kotlin">null</code> when the Property ID is not                              known.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1439425684%2FProperties%2F-554328198" anchor-label="settingPropertyId" id="-1439425684%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="setting-property-id.html"><span>setting</span><wbr><span>Property</span><wbr><span><span>Id</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1439425684%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="setting-property-id.html">settingPropertyId</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-u-short/index.html">UShort</a></div><div class="brief "><p class="paragraph">Property ID identifying a setting within the sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-840803187%2FProperties%2F-554328198" anchor-label="settingValue" id="-840803187%2FProperties%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="setting-value.html"><span>setting</span><wbr><span><span>Value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-840803187%2FProperties%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="setting-value.html">settingValue</a><span class="token operator">: </span><a href="../../no.nordicsemi.kotlin.mesh.core.messages/-device-property-characteristic/index.html">DevicePropertyCharacteristic</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Value of the setting, or <code class="lang-kotlin">null</code> when the requested setting property                              was not found, or when a read-only setting was attempted to be set.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="720662018%2FFunctions%2F-554328198" anchor-label="toString" id="720662018%2FFunctions%2F-554328198" data-filterable-set=":mesh:core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":mesh:core/main" data-filterable-set=":mesh:core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="to-string.html"><span>to</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="720662018%2FFunctions%2F-554328198"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":mesh:core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="to-string.html"><span class="token function">toString</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>Copyright © 2022 - 2026 Nordic Semiconductor ASA. All Rights Reserved.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
