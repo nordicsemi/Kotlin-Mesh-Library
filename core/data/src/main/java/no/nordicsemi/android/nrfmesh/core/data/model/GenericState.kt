@@ -1,9 +1,8 @@
 package no.nordicsemi.android.nrfmesh.core.data.model
 
-import kotlin.time.Clock.*
+import kotlin.time.Clock.System
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
@@ -14,25 +13,22 @@ import kotlin.time.Instant
  * @property transition      Represents a transition from the current value to a target value.
  * @property animation       Represents an animation from the current value to a target value.
  */
-data class GenericState<T> @OptIn(ExperimentalTime::class) constructor(
+data class GenericState<T>(
     val value: T,
     val storedWithScene: Boolean = false,
     val transition: Transition<T>? = null,
     val animation: Move<T>? = null,
 ) {
 
-    data class Transition<T> @OptIn(ExperimentalTime::class) constructor(
+    data class Transition<T>(
         val targetValue: T,
         val start: Instant,
         val delay: Duration,
         val duration: Duration,
     ) {
-
-        @OptIn(ExperimentalTime::class)
         val startTime: Instant
             get() = start + delay
 
-        @OptIn(ExperimentalTime::class)
         val remainingTime: Duration
             get() = startTime.minus(other = System.now()).let { startsIn ->
                 if (startsIn + duration > 0.0.milliseconds) {
@@ -43,9 +39,7 @@ data class GenericState<T> @OptIn(ExperimentalTime::class) constructor(
             }
     }
 
-    @OptIn(ExperimentalTime::class)
-    @ExperimentalTime
-    data class Move<T> @OptIn(ExperimentalTime::class) constructor(
+    data class Move<T>(
         val start: Instant,
         val delay: Duration,
         val speed: T,
@@ -68,16 +62,15 @@ data class GenericState<T> @OptIn(ExperimentalTime::class) constructor(
 
         /**
          * Creates a new [GenericState] object with the specified value that will transition from a
-         * given state..
+         * given state.
          */
-        @ExperimentalTime
         fun <T> transitionFrom(
             transitionFrom: GenericState<T>,
             to: T,
             delay: Duration,
             duration: Duration?,
             storedWithScene: Boolean = false,
-        ) = GenericState<T>(
+        ) = GenericState(
             value = transitionFrom.value,
             storedWithScene = storedWithScene,
             transition = if (duration == null ||
@@ -87,8 +80,6 @@ data class GenericState<T> @OptIn(ExperimentalTime::class) constructor(
             animation = null
         )
 
-        @OptIn(ExperimentalTime::class)
-        @ExperimentalTime
         @Suppress("unused")
         fun <T> continueTransitionFrom(
             state: GenericState<T>,
@@ -134,9 +125,8 @@ data class GenericState<T> @OptIn(ExperimentalTime::class) constructor(
 
         /**
          * Creates a new [GenericState] object with the specified value that will transition from a
-         * given state..
+         * given state.
          */
-        @OptIn(ExperimentalTime::class)
         @Suppress("unused")
         fun <Int> transitionFromInt(
             transitionFrom: GenericState<out Int>,
@@ -144,7 +134,7 @@ data class GenericState<T> @OptIn(ExperimentalTime::class) constructor(
             delay: Duration,
             duration: Duration?,
             storedWithScene: Boolean = false,
-        ) = GenericState<Int>(
+        ) = GenericState(
             value = transitionFrom.value,
             storedWithScene = storedWithScene,
             transition = if (duration == null ||
@@ -154,8 +144,6 @@ data class GenericState<T> @OptIn(ExperimentalTime::class) constructor(
             animation = null
         )
 
-        @OptIn(ExperimentalTime::class)
-        @ExperimentalTime
         @Suppress("unused")
         fun <Int> continueTransitionFromInt(
             state: GenericState<out Int>,
@@ -199,11 +187,8 @@ data class GenericState<T> @OptIn(ExperimentalTime::class) constructor(
             )
         }
 
-        @OptIn(ExperimentalTime::class)
-        @ExperimentalTime
         @Suppress("unused")
         fun <T> GenericState<Int>.currentValue(): Int {
-
             animation?.let { anim ->
                 val timeDiff = anim.startTime.minus(System.now())
                 return if (timeDiff >= 0.milliseconds) {
