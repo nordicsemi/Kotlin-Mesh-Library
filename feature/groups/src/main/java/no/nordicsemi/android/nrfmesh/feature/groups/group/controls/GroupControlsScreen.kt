@@ -41,6 +41,7 @@ import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLCServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneSetupServer
+import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.groups.R
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
@@ -50,6 +51,22 @@ import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.ModelId
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecallUnacknowledged
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStoreUnacknowledged
+import no.nordicsemi.kotlin.mesh.core.model.Scene
+import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
 @Composable
 internal fun GroupControlsScreen(
@@ -110,10 +127,21 @@ internal fun GroupControls(
                             GenericLevelItem(count = models.size, key = key, send = send)
 
                         models.first().isSceneServer() ->
-                            SceneServerGroupItem(count = models.size, key = key, send = send)
+                            SceneServerGroupItem(
+                                network = network,
+                                models = models,
+                                count = models.size,
+                                key = key,
+                                send = send
+                            )
 
                         models.first().isSceneSetupServer() ->
-                            SceneSetupServerGroupItem(count = models.size, key = key, send = send)
+                            SceneSetupServerGroupItem(
+                                network = network,
+                                count = models.size,
+                                key = key,
+                                send = send
+                            )
 
                         models.first().isLightLCServer() -> {
                             LightLCModeGroupItem(count = models.size, key = key, send = send)
@@ -231,6 +259,66 @@ private fun GenericLevelItem(
     )
 }
 
+/**
+ * A button that shows a bottom sheet with the given scenes when clicked.
+ *
+ * @param text            Text of the button.
+ * @param scenes          Scenes to choose from.
+ * @param emptyText       Text shown in the sheet when there are no scenes to choose from.
+ * @param onSceneSelected Invoked with the number of the scene selected from the sheet.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SceneSelector(
+    text: String,
+    scenes: List<Scene>,
+    emptyText: String,
+    onSceneSelected: (SceneNumber) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showSheet by remember { mutableStateOf(value = false) }
+    TextButton(onClick = { showSheet = true }, content = { Text(text = text) })
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSheet = false },
+            sheetState = sheetState
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    text = stringResource(R.string.label_select_scene),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                if (scenes.isEmpty()) {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        text = emptyText,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+                ) {
+                    items(items = scenes, key = { it.number.toInt() }) { scene ->
+                        SceneItem(
+                            name = scene.name,
+                            sceneNumber = scene.number,
+                            onClick = {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    showSheet = false
+                                }
+                                onSceneSelected(scene.number)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun KeyRow(key: ApplicationKey) {
     Row(
@@ -277,9 +365,10 @@ private fun CountRow(count: Int) {
     }
 }
 
-@Suppress("unused")
 @Composable
 private fun SceneServerGroupItem(
+    network: MeshNetwork,
+    models: List<Model>,
     key: ApplicationKey,
     send: (UnacknowledgedMeshMessage, ApplicationKey) -> Unit,
     count: Int,
@@ -304,9 +393,17 @@ private fun SceneServerGroupItem(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    TextButton(
-                        onClick = { },
-                        content = { Text(text = stringResource(R.string.label_recall).uppercase()) }
+                    // Scenes stored on at least one of the Scene Servers in the group.
+                    val scenes = network.scenes.filter { scene ->
+                        models.any { model ->
+                            model.parentElement?.unicastAddress in scene.addresses
+                        }
+                    }
+                    SceneSelector(
+                        text = stringResource(R.string.label_recall).uppercase(),
+                        scenes = scenes,
+                        emptyText = stringResource(R.string.label_no_scenes_stored),
+                        onSceneSelected = { send(SceneRecallUnacknowledged(sceneNumber = it), key) }
                     )
                 }
                 KeyRow(key = key)
@@ -316,9 +413,9 @@ private fun SceneServerGroupItem(
     )
 }
 
-@Suppress("unused")
 @Composable
 private fun SceneSetupServerGroupItem(
+    network: MeshNetwork,
     key: ApplicationKey,
     send: (UnacknowledgedMeshMessage, ApplicationKey) -> Unit,
     count: Int,
@@ -343,9 +440,11 @@ private fun SceneSetupServerGroupItem(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    TextButton(
-                        onClick = { },
-                        content = { Text(text = stringResource(R.string.label_store).uppercase()) }
+                    SceneSelector(
+                        text = stringResource(R.string.label_store).uppercase(),
+                        scenes = network.scenes,
+                        emptyText = stringResource(R.string.label_no_scenes_defined),
+                        onSceneSelected = { send(SceneStoreUnacknowledged(sceneNumber = it), key) }
                     )
                 }
                 KeyRow(key = key)

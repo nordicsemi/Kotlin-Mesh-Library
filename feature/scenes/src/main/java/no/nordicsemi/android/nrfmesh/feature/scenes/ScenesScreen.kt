@@ -46,6 +46,7 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.data.ui.SceneData
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.kotlin.mesh.core.exception.NoSceneRangeAllocated
 import no.nordicsemi.kotlin.mesh.core.model.Scene
@@ -230,25 +231,11 @@ private fun SwipeToDismissScene(
             }
         },
         content = {
-            ElevatedCardItem(
-                onClick = { onSceneClicked(scene.number) },
-                colors = when (isSelected) {
-                    true -> CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-
-                    else -> CardDefaults.outlinedCardColors()
-                },
-                imageVector = Icons.Outlined.AutoAwesome,
-                title = scene.name,
-                subtitle = "Scene number: ${
-                    scene.number.toHexString(
-                        format = HexFormat {
-                            number.prefix = "0x"
-                            upperCase = true
-                        }
-                    )
-                }"
+            SceneItem(
+                name = scene.name,
+                sceneNumber = scene.number,
+                isSelected = isSelected,
+                onClick = { onSceneClicked(scene.number) }
             )
         }
     )

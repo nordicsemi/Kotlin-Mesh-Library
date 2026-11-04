@@ -36,4 +36,5 @@
     <string name="label_value_in_bytes">%d bytes</string>
     <string name="label_none">None</string>
 
+    <string name="label_scene_number_value">Scene number: %1$s</string>
 </resources>
