@@ -22,12 +22,12 @@ import java.io.OutputStream
 import kotlin.uuid.Uuid
 
 class SceneStatesDataStoreStorage @Inject constructor(
-    private val store: DataStore<ProtoSceneStatesDataStore>,
+    private val sceneStore: DataStore<ProtoSceneStatesDataStore>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : GenericOnOffStateStorage, GenericLevelStateStorage, SceneRegisterStorage {
      private val scope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
 
-    private suspend fun sceneStates(uuid: Uuid, sceneNumber: SceneNumber) = store.data
+    private suspend fun sceneStates(uuid: Uuid, sceneNumber: SceneNumber) = sceneStore.data
         .firstOrNull()
         ?.sceneStates
         ?.get(uuid.toString())
@@ -56,13 +56,13 @@ class SceneStatesDataStoreStorage @Inject constructor(
     }
 
     /**
-     * Returns the [ProtoSceneStatesDataStore] for the given [uuid] or creates a new one for a given
+     * Persists the scene states of the given [ProtoSceneStatesDataStore] for the networks that
+     * have none yet. Scene states that are already stored are never overwritten.
      */
-    private fun storeSceneStatesDataStore(store1: ProtoSceneStatesDataStore) {
+    private fun storeSceneStatesDataStore(store: ProtoSceneStatesDataStore) {
         scope.launch {
-            store.updateData {
-                it.copy(sceneStates = store1.sceneStates)
-                it
+            sceneStore.updateData {
+                it.copy(sceneStates = store.sceneStates + it.sceneStates)
             }
         }
     }
@@ -74,7 +74,7 @@ class SceneStatesDataStoreStorage @Inject constructor(
         on: Boolean,
     ) {
         scope.launch {
-            store.updateData {
+            sceneStore.updateData {
                 val sceneStates = it.sceneStates
                 // get the scene states for given network uuid or create a new one
                 val states = sceneStates[uuid.toString()] ?: SceneStates(states = mutableMapOf())
@@ -109,11 +109,11 @@ class SceneStatesDataStoreStorage @Inject constructor(
     override fun storeGenericLevelState(
         uuid: Uuid,
         sceneNumber: SceneNumber,
-        elementInex: Int,
+        elementIndex: Int,
         level: UShort,
     ) {
         scope.launch {
-            store.updateData {
+            sceneStore.updateData {
                 val sceneStates = it.sceneStates
                 // get the scene states for given network uuid or create a new one
                 val states = sceneStates[uuid.toString()] ?: SceneStates(states = mutableMapOf())
@@ -124,7 +124,7 @@ class SceneStatesDataStoreStorage @Inject constructor(
                 )
                 // add the current state to the scene state
                 val genericLevelStates = sceneState.genericLevelStates.plus(
-                    mapOf(elementInex to GenericLevelState(level = level.toInt()))
+                    mapOf(elementIndex to GenericLevelState(level = level.toInt()))
                 )
                 // create a new scene state with the updated generic on off states
                 val newSceneState = sceneState.copy(genericLevelStates = genericLevelStates)
@@ -147,7 +147,7 @@ class SceneStatesDataStoreStorage @Inject constructor(
         ?.toUShort()
         ?: 0u
 
-    override suspend fun readScenes(uuid: Uuid) = store.data
+    override suspend fun readScenes(uuid: Uuid) = sceneStore.data
         .firstOrNull()
         ?.sceneStates
         ?.get(uuid.toString())
@@ -159,7 +159,7 @@ class SceneStatesDataStoreStorage @Inject constructor(
 
     override fun storeScene(uuid: Uuid, sceneNumber: SceneNumber) {
         scope.launch {
-            store.updateData {
+            sceneStore.updateData {
                 val states = it.sceneStates[uuid.toString()] ?: SceneStates(states = mapOf())
                 if (states.states.containsKey(sceneNumber.toInt())) return@updateData it
                 val updatedStates = states.states.plus(
@@ -179,7 +179,7 @@ class SceneStatesDataStoreStorage @Inject constructor(
 
     override fun deleteScene(uuid: Uuid, sceneNumber: SceneNumber) {
         scope.launch {
-            store.updateData {
+            sceneStore.updateData {
                 val states = it.sceneStates[uuid.toString()] ?: return@updateData it
                 it.copy(
                     sceneStates = it.sceneStates.plus(
