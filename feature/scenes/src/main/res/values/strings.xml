@@ -15,7 +15,6 @@
     <string name="error_allocate_scene_range_to_provisioner">Error, please allocate a scene range to
         the provisioner.</string>
     <string name="unknown_error">Unknown error when adding a scene.</string>
-    <string name="no_scenes_currently_added">No scenes currently added.</string>
     <string name="provisioner_rationale_for_scenes">To add a scene to this network, "\n\n"
         1. Add a provisioner. "\n"
         2. Allocate a scene range to the provisioner. "\n"

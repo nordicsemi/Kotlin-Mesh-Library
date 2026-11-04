@@ -36,6 +36,6 @@
     <string name="label_group_address">Group Address</string>
     <string name="label_virtual_label">Virtual Label</string>
     <string name="label_no_scenes_stored">No scenes stored on the devices</string>
-    <string name="label_no_scenes_defined">No scenes defined. Add them in Settings</string>
+    <string name="label_no_scenes_defined">No scenes currently added.</string>
     <string name="label_select_scene">Select scene</string>
 </resources>

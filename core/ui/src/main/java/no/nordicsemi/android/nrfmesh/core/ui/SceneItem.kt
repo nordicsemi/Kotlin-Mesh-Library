@@ -2,9 +2,11 @@ package no.nordicsemi.android.nrfmesh.core.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
@@ -44,5 +46,23 @@ fun SceneItem(
                 }
             )
         )
+    )
+}
+
+/**
+ * Empty state shown when there are no scenes to display.
+ *
+ * @param modifier Modifier to be applied to the layout.
+ * @param title    Title of the empty state.
+ */
+@Composable
+fun NoScenesAvailable(
+    modifier: Modifier = Modifier.fillMaxSize(),
+    title: String = stringResource(R.string.no_scenes_currently_added),
+) {
+    MeshNoItemsAvailable(
+        modifier = modifier,
+        imageVector = Icons.Outlined.AutoAwesome,
+        title = title
     )
 }

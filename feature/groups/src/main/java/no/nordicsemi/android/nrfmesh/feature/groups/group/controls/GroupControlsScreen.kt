@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -41,6 +42,7 @@ import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLCServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneSetupServer
+import no.nordicsemi.android.nrfmesh.core.ui.NoScenesAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.groups.R
@@ -264,7 +266,7 @@ private fun GenericLevelItem(
  *
  * @param text            Text of the button.
  * @param scenes          Scenes to choose from.
- * @param emptyText       Text shown in the sheet when there are no scenes to choose from.
+ * @param emptyText       Title shown in the sheet when there are no scenes to choose from.
  * @param onSceneSelected Invoked with the number of the scene selected from the sheet.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -291,10 +293,11 @@ private fun SceneSelector(
                     style = MaterialTheme.typography.titleLarge
                 )
                 if (scenes.isEmpty()) {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        text = emptyText,
-                        style = MaterialTheme.typography.bodyMedium
+                    NoScenesAvailable(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(height = 240.dp),
+                        title = emptyText
                     )
                 }
                 LazyColumn(

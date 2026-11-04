@@ -37,4 +37,5 @@
     <string name="label_none">None</string>
 
     <string name="label_scene_number_value">Scene number: %1$s</string>
+    <string name="no_scenes_currently_added">No scenes currently added.</string>
 </resources>

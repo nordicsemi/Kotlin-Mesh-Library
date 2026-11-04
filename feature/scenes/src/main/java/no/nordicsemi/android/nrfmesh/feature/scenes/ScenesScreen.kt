@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -45,7 +44,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.data.ui.SceneData
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
-import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.NoScenesAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.kotlin.mesh.core.exception.NoSceneRangeAllocated
@@ -68,11 +67,7 @@ internal fun ScenesScreen(
     val scope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxSize()) {
         when (scenes.isEmpty()) {
-            true -> MeshNoItemsAvailable(
-                modifier = Modifier.fillMaxSize(),
-                imageVector = Icons.Outlined.AutoAwesome,
-                title = stringResource(R.string.no_scenes_currently_added)
-            )
+            true -> NoScenesAvailable(modifier = Modifier.fillMaxSize())
 
             false -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
