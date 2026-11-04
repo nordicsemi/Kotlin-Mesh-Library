@@ -24,7 +24,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecallUnack
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatus
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatusCode
+import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import no.nordicsemi.kotlin.mesh.core.model.or
@@ -106,7 +106,7 @@ class SceneServer(
                 // When a Scene Server receives a Scene Register Get message, it shall respond with
                 // a Scene Register Status message, setting the Status Code field to Success.
                 is SceneRegisterGet -> SceneRegisterStatus(
-                    status = SceneStatusCode.SUCCESS,
+                    status = SceneMessageStatus.SUCCESS,
                     currentScene = currentScene,
                     scenes = storedScenes
                 )
@@ -178,12 +178,12 @@ class SceneServer(
         // not match a Scene Number stored within the Scene Register state, it shall respond with
         // the Scene Status message, setting the Status Code field to Scene Not Found.
         if (scene !in storedScenes) {
-            return SceneStatus(status = SceneStatusCode.SCENE_NOT_FOUND, currentScene = currentScene)
+            return SceneStatus(status = SceneMessageStatus.SCENE_NOT_FOUND, currentScene = currentScene)
         }
         // If the target state is equal to the current state, the transition shall not be started
         // and is considered complete.
         if (scene == currentScene) {
-            return SceneStatus(status = SceneStatusCode.SUCCESS, currentScene = currentScene)
+            return SceneStatus(status = SceneMessageStatus.SUCCESS, currentScene = currentScene)
         }
 
         // The time that an element will take to transition to the target state from the present
@@ -265,7 +265,7 @@ class SceneServer(
     /**
      * Returns the Scene Register Status reporting the current state of the Scene Register.
      */
-    internal suspend fun registerStatus(status: SceneStatusCode = SceneStatusCode.SUCCESS) =
+    internal suspend fun registerStatus(status: SceneMessageStatus = SceneMessageStatus.SUCCESS) =
         stateMutex.withLock {
             SceneRegisterStatus(
                 status = status,
@@ -287,13 +287,13 @@ class SceneServer(
         return if (target != null && remaining != null && remaining > Duration.ZERO) {
             // While a transition is in progress the current scene is reported as 0.
             SceneStatus(
-                status = SceneStatusCode.SUCCESS,
+                status = SceneMessageStatus.SUCCESS,
                 currentScene = NO_SCENE,
                 targetScene = target.first,
                 remainingTime = TransitionTime.init(duration = remaining)
             )
         } else {
-            SceneStatus(status = SceneStatusCode.SUCCESS, currentScene = currentScene)
+            SceneStatus(status = SceneMessageStatus.SUCCESS, currentScene = currentScene)
         }
     }
 

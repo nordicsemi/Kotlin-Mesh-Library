@@ -1,5 +1,8 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.scene
 
+import no.nordicsemi.kotlin.data.ByteOrder
+import no.nordicsemi.kotlin.data.getUShort
+import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
@@ -12,20 +15,27 @@ import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
  */
 class SceneDeleteUnacknowledged(val sceneNumber: SceneNumber) : UnacknowledgedMeshMessage {
     override val opCode = Initializer.opCode
-    override val parameters = sceneNumber.toBytes()
+    override val parameters = sceneNumber.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
     init {
         require(sceneNumber != 0.toUShort()) { "Scene number must not be 0!" }
     }
 
-    override fun toString() = "SceneDeleteUnacknowledged(sceneNumber: $sceneNumber)"
+    override fun toString() = "SceneDeleteUnacknowledged(sceneNumber: ${
+        sceneNumber.toHexString(
+            format = HexFormat {
+                number.prefix = "0x"
+                upperCase = true
+            }
+        )
+    })"
 
     companion object Initializer : SceneMessageInitializer {
         override val opCode = 0x829Fu
 
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 2 }
-            ?.let { it.sceneNumberAt(0) }
+            ?.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
             ?.takeIf { it != 0.toUShort() }
             ?.let { SceneDeleteUnacknowledged(sceneNumber = it) }
     }

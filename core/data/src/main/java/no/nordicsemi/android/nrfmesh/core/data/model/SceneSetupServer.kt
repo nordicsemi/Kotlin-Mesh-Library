@@ -9,7 +9,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneDelete
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneDeleteUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatusCode
+import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStore
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStoreUnacknowledged
 
@@ -48,12 +48,12 @@ class SceneSetupServer(private val server: SceneServer) : ModelEventHandler() {
         is SceneStore -> when (server.store(scene = request.sceneNumber)) {
             true -> server.registerStatus()
             // Scene Register may contain up to 16 stored Scenes.
-            false -> server.registerStatus(status = SceneStatusCode.SCENE_REGISTER_FULL)
+            false -> server.registerStatus(status = SceneMessageStatus.SCENE_REGISTER_FULL)
         }
 
         is SceneDelete -> when (server.delete(scene = request.sceneNumber)) {
             true -> server.registerStatus()
-            false -> server.registerStatus(status = SceneStatusCode.SCENE_NOT_FOUND)
+            false -> server.registerStatus(status = SceneMessageStatus.SCENE_NOT_FOUND)
         }
 
         else -> throw ModelError.InvalidMessage(msg = request)

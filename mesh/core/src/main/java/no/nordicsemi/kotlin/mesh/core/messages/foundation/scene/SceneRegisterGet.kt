@@ -12,7 +12,7 @@ class SceneRegisterGet : AcknowledgedMeshMessage {
     override val responseOpCode = SceneRegisterStatus.opCode
     override val parameters = null
 
-    override fun toString() = "SceneRegisterGet"
+    override fun toString() = "SceneRegisterGet()"
 
     companion object Initializer : SceneMessageInitializer {
         override val opCode = 0x8244u

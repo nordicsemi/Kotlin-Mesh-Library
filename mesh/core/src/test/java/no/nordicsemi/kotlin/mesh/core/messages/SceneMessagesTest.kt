@@ -8,7 +8,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecallUnack
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatus
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatusCode
+import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStore
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStoreUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
@@ -95,9 +95,13 @@ class SceneMessagesTest {
         assertFailsWith<IllegalArgumentException> { SceneRecallUnacknowledged(sceneNumber = 0u) }
 
         val zero = byteArrayOf(0x00, 0x00)
+        // A message with an invalid scene number is not decoded.
         assertNull(SceneStore.init(zero))
+        assertNull(SceneStoreUnacknowledged.init(zero))
         assertNull(SceneDelete.init(zero))
+        assertNull(SceneDeleteUnacknowledged.init(zero))
         assertNull(SceneRecall.init(byteArrayOf(0x00, 0x00, 0x01)))
+        assertNull(SceneRecallUnacknowledged.init(byteArrayOf(0x00, 0x00, 0x01)))
     }
 
     @Test
@@ -162,13 +166,13 @@ class SceneMessagesTest {
 
     @Test
     fun testSceneStatusWithoutTarget() {
-        val message = SceneStatus(status = SceneStatusCode.SUCCESS, currentScene = 0x0201u)
+        val message = SceneStatus(status = SceneMessageStatus.SUCCESS, currentScene = 0x0201u)
         assertContentEquals(byteArrayOf(0x00, 0x01, 0x02), message.parameters)
         assertTrue(message.isSuccess)
 
         val decoded = SceneStatus.init(message.parameters)
         assertNotNull(decoded)
-        assertEquals(SceneStatusCode.SUCCESS, decoded.status)
+        assertEquals(SceneMessageStatus.SUCCESS, decoded.status)
         assertEquals(0x0201u.toUShort(), decoded.currentScene)
         assertNull(decoded.targetScene)
         assertNull(decoded.remainingTime)
@@ -177,7 +181,7 @@ class SceneMessagesTest {
     @Test
     fun testSceneStatusWithTarget() {
         val message = SceneStatus(
-            status = SceneStatusCode.SUCCESS,
+            status = SceneMessageStatus.SUCCESS,
             currentScene = 0x0001u,
             targetScene = 0x0302u,
             remainingTime = TransitionTime(rawValue = 0x45u)
@@ -198,7 +202,7 @@ class SceneMessagesTest {
     fun testSceneStatusErrorCodes() {
         val notFound = SceneStatus.init(byteArrayOf(0x02, 0x00, 0x00))
         assertNotNull(notFound)
-        assertEquals(SceneStatusCode.SCENE_NOT_FOUND, notFound.status)
+        assertEquals(SceneMessageStatus.SCENE_NOT_FOUND, notFound.status)
         assertFalse(notFound.isSuccess)
         assertEquals("Scene Not Found", notFound.message)
 
@@ -209,7 +213,7 @@ class SceneMessagesTest {
     @Test
     fun testSceneRegisterStatusEncodeDecode() {
         val message = SceneRegisterStatus(
-            status = SceneStatusCode.SUCCESS,
+            status = SceneMessageStatus.SUCCESS,
             currentScene = 0x0001u,
             scenes = listOf(0x0001u, 0x0102u, 0xFFFFu)
         )
@@ -220,7 +224,7 @@ class SceneMessagesTest {
 
         val decoded = SceneRegisterStatus.init(message.parameters)
         assertNotNull(decoded)
-        assertEquals(SceneStatusCode.SUCCESS, decoded.status)
+        assertEquals(SceneMessageStatus.SUCCESS, decoded.status)
         assertEquals(0x0001u.toUShort(), decoded.currentScene)
         assertEquals(listOf<UShort>(0x0001u, 0x0102u, 0xFFFFu), decoded.scenes)
     }
@@ -228,7 +232,7 @@ class SceneMessagesTest {
     @Test
     fun testSceneRegisterStatusWithEmptyRegister() {
         val message = SceneRegisterStatus(
-            status = SceneStatusCode.SCENE_REGISTER_FULL,
+            status = SceneMessageStatus.SCENE_REGISTER_FULL,
             currentScene = 0x0000u,
             scenes = emptyList()
         )
@@ -236,7 +240,7 @@ class SceneMessagesTest {
 
         val decoded = SceneRegisterStatus.init(message.parameters)
         assertNotNull(decoded)
-        assertEquals(SceneStatusCode.SCENE_REGISTER_FULL, decoded.status)
+        assertEquals(SceneMessageStatus.SCENE_REGISTER_FULL, decoded.status)
         assertTrue(decoded.scenes.isEmpty())
         assertFalse(decoded.isSuccess)
     }

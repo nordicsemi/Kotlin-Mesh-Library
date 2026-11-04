@@ -7,7 +7,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecallUnack
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatus
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatusCode
+import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStore
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import no.nordicsemi.kotlin.mesh.core.util.TransitionParameters
@@ -26,7 +26,7 @@ class SceneServerTest {
     fun testSceneRegisterIsEmptyInitially() = runBlocking {
         val status = node.sendToSceneServer(SceneRegisterGet())
         assertIs<SceneRegisterStatus>(status)
-        assertEquals(SceneStatusCode.SUCCESS, status.status)
+        assertEquals(SceneMessageStatus.SUCCESS, status.status)
         assertEquals(0.toUShort(), status.currentScene)
         assertTrue(status.scenes.isEmpty())
     }
@@ -35,7 +35,7 @@ class SceneServerTest {
     fun testSceneGetReportsNoCurrentSceneInitially() = runBlocking {
         val status = node.sendToSceneServer(SceneGet())
         assertIs<SceneStatus>(status)
-        assertEquals(SceneStatusCode.SUCCESS, status.status)
+        assertEquals(SceneMessageStatus.SUCCESS, status.status)
         assertEquals(0.toUShort(), status.currentScene)
         assertNull(status.targetScene)
     }
@@ -44,7 +44,7 @@ class SceneServerTest {
     fun testRecallOfUnknownSceneReturnsNotFound() = runBlocking {
         val status = node.sendToSceneServer(SceneRecall(sceneNumber = 5u))
         assertIs<SceneStatus>(status)
-        assertEquals(SceneStatusCode.SCENE_NOT_FOUND, status.status)
+        assertEquals(SceneMessageStatus.SCENE_NOT_FOUND, status.status)
         assertTrue(node.storedWithScene.recalled.isEmpty())
     }
 
@@ -55,7 +55,7 @@ class SceneServerTest {
 
         val status = node.sendToSceneServer(SceneRecall(sceneNumber = 1u))
         assertIs<SceneStatus>(status)
-        assertEquals(SceneStatusCode.SUCCESS, status.status)
+        assertEquals(SceneMessageStatus.SUCCESS, status.status)
         assertEquals(1.toUShort(), status.currentScene)
         assertEquals(1, node.storedWithScene.recalled.size)
         assertEquals(1.toUShort(), node.storedWithScene.recalled.single().first)
@@ -67,7 +67,7 @@ class SceneServerTest {
 
         val status = node.sendToSceneServer(SceneRecall(sceneNumber = 1u))
         assertIs<SceneStatus>(status)
-        assertEquals(SceneStatusCode.SUCCESS, status.status)
+        assertEquals(SceneMessageStatus.SUCCESS, status.status)
         assertEquals(1.toUShort(), status.currentScene)
         assertTrue(node.storedWithScene.recalled.isEmpty())
     }
@@ -89,7 +89,7 @@ class SceneServerTest {
             )
         )
         assertIs<SceneStatus>(status)
-        assertEquals(SceneStatusCode.SUCCESS, status.status)
+        assertEquals(SceneMessageStatus.SUCCESS, status.status)
         // While a transition is in progress the current scene is 0.
         assertEquals(0.toUShort(), status.currentScene)
         assertEquals(1.toUShort(), status.targetScene)

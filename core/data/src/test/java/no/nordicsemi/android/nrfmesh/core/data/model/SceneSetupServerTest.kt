@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneDelete
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneDeleteUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatusCode
+import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStore
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStoreUnacknowledged
 import kotlin.test.Test
@@ -19,7 +19,7 @@ class SceneSetupServerTest {
     fun testStoreAddsSceneAndMakesItCurrent() = runBlocking {
         val status = node.sendToSceneSetupServer(SceneStore(sceneNumber = 7u))
         assertIs<SceneRegisterStatus>(status)
-        assertEquals(SceneStatusCode.SUCCESS, status.status)
+        assertEquals(SceneMessageStatus.SUCCESS, status.status)
         assertEquals(7.toUShort(), status.currentScene)
         assertEquals(listOf<UShort>(7u), status.scenes)
         assertEquals(listOf<UShort>(7u), node.storedWithScene.stored)
@@ -30,7 +30,7 @@ class SceneSetupServerTest {
         node.sendToSceneSetupServer(SceneStore(sceneNumber = 7u))
         val status = node.sendToSceneSetupServer(SceneStore(sceneNumber = 7u))
         assertIs<SceneRegisterStatus>(status)
-        assertEquals(SceneStatusCode.SUCCESS, status.status)
+        assertEquals(SceneMessageStatus.SUCCESS, status.status)
         assertEquals(listOf<UShort>(7u), status.scenes)
         // The states are stored with the scene again.
         assertEquals(2, node.storedWithScene.stored.size)
@@ -54,12 +54,12 @@ class SceneSetupServerTest {
 
         val status = node.sendToSceneSetupServer(SceneStore(sceneNumber = 100u))
         assertIs<SceneRegisterStatus>(status)
-        assertEquals(SceneStatusCode.SCENE_REGISTER_FULL, status.status)
+        assertEquals(SceneMessageStatus.SCENE_REGISTER_FULL, status.status)
         assertEquals(16, status.scenes.size)
         // An existing scene can still be overwritten.
         val overwrite = node.sendToSceneSetupServer(SceneStore(sceneNumber = 3u))
         assertIs<SceneRegisterStatus>(overwrite)
-        assertEquals(SceneStatusCode.SUCCESS, overwrite.status)
+        assertEquals(SceneMessageStatus.SUCCESS, overwrite.status)
     }
 
     @Test
@@ -69,7 +69,7 @@ class SceneSetupServerTest {
 
         val status = node.sendToSceneSetupServer(SceneDelete(sceneNumber = 2u))
         assertIs<SceneRegisterStatus>(status)
-        assertEquals(SceneStatusCode.SUCCESS, status.status)
+        assertEquals(SceneMessageStatus.SUCCESS, status.status)
         assertEquals(listOf<UShort>(1u), status.scenes)
         // Scene 2 was the current scene.
         assertEquals(0.toUShort(), status.currentScene)
@@ -82,7 +82,7 @@ class SceneSetupServerTest {
 
         val status = node.sendToSceneSetupServer(SceneDelete(sceneNumber = 4u))
         assertIs<SceneRegisterStatus>(status)
-        assertEquals(SceneStatusCode.SCENE_NOT_FOUND, status.status)
+        assertEquals(SceneMessageStatus.SCENE_NOT_FOUND, status.status)
         assertEquals(listOf<UShort>(1u), status.scenes)
     }
 

@@ -1,7 +1,11 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.scene
 
+import no.nordicsemi.kotlin.data.ByteOrder
+import no.nordicsemi.kotlin.data.getUShort
+import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
 import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageInitializer
+import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.StatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.TransitionStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
@@ -18,7 +22,7 @@ import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
  * @property remainingTime  Time that an element will take to transition to the target scene.
  */
 class SceneStatus(
-    val status: SceneStatusCode,
+    val status: SceneMessageStatus,
     val currentScene: SceneNumber,
     val targetScene: SceneNumber?,
     override val remainingTime: TransitionTime?,
@@ -26,13 +30,15 @@ class SceneStatus(
     override val opCode = Initializer.opCode
     override val parameters: ByteArray
         get() {
-            val data = byteArrayOf(status.value.toByte()) + currentScene.toBytes()
+            val data = status.value.toByteArray() +
+                    currentScene.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
             return if (targetScene != null && remainingTime != null) {
-                data + targetScene.toBytes() + remainingTime.rawValue.toByte()
+                data + targetScene.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                        remainingTime.rawValue.toByte()
             } else data
         }
     override val isSuccess: Boolean
-        get() = status == SceneStatusCode.SUCCESS
+        get() = status == SceneMessageStatus.SUCCESS
     override val message: String
         get() = status.description
 
@@ -43,16 +49,30 @@ class SceneStatus(
      * @param currentScene Current scene.
      */
     @Suppress("unused")
-    constructor(status: SceneStatusCode, currentScene: SceneNumber) : this(
+    constructor(status: SceneMessageStatus, currentScene: SceneNumber) : this(
         status = status,
         currentScene = currentScene,
         targetScene = null,
         remainingTime = null
     )
 
-    override fun toString() = "SceneStatus(status: $status, currentScene: $currentScene" +
+    override fun toString() = "SceneStatus(status: $status, currentScene: ${
+        currentScene.toHexString(
+            format = HexFormat {
+                number.prefix = "0x"
+                upperCase = true
+            }
+        )
+    }" +
             if (targetScene != null && remainingTime != null) {
-                ", targetScene: $targetScene, remainingTime: $remainingTime)"
+                ", targetScene: ${
+                    targetScene.toHexString(
+                        format = HexFormat {
+                            number.prefix = "0x"
+                            upperCase = true
+                        }
+                    )
+                }, remainingTime: $remainingTime)"
             } else ")"
 
     companion object Initializer : SceneMessageInitializer {
@@ -61,11 +81,17 @@ class SceneStatus(
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 3 || it.size == 6 }
             ?.let { params ->
-                SceneStatusCode.from(params[0].toUByte())?.let { status ->
+                SceneMessageStatus.from(params[0].toUByte())?.let { status ->
                     SceneStatus(
                         status = status,
-                        currentScene = params.sceneNumberAt(1),
-                        targetScene = if (params.size == 6) params.sceneNumberAt(3) else null,
+                        currentScene = params.getUShort(
+                            offset = 1,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        ),
+                        targetScene = if (params.size == 6) params.getUShort(
+                            offset = 3,
+                            order = ByteOrder.LITTLE_ENDIAN
+                        ) else null,
                         remainingTime = if (params.size == 6)
                             TransitionTime(rawValue = params[5].toUByte())
                         else null
@@ -74,17 +100,3 @@ class SceneStatus(
             }
     }
 }
-
-/**
- * Encodes a scene number as 2 bytes in little endian order.
- */
-internal fun SceneNumber.toBytes() = byteArrayOf(
-    (toInt() and 0xFF).toByte(),
-    (toInt() shr 8).toByte()
-)
-
-/**
- * Decodes a little endian scene number starting at the given offset.
- */
-internal fun ByteArray.sceneNumberAt(offset: Int): SceneNumber =
-    ((this[offset].toInt() and 0xFF) or ((this[offset + 1].toInt() and 0xFF) shl 8)).toUShort()

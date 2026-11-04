@@ -1,5 +1,8 @@
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.scene
 
+import no.nordicsemi.kotlin.data.ByteOrder
+import no.nordicsemi.kotlin.data.getUShort
+import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.TransactionMessage
 import no.nordicsemi.kotlin.mesh.core.messages.TransitionMessage
@@ -26,7 +29,7 @@ class SceneRecallUnacknowledged(
     override val opCode = Initializer.opCode
     override val parameters: ByteArray
         get() {
-            val data = sceneNumber.toBytes() + tid!!.toByte()
+            val data = sceneNumber.toByteArray(order = ByteOrder.LITTLE_ENDIAN) + tid!!.toByte()
             return if (transitionTime != null && delay != null) {
                 data + byteArrayOf(transitionTime.rawValue.toByte(), delay.toByte())
             } else data
@@ -47,7 +50,14 @@ class SceneRecallUnacknowledged(
     @Suppress("unused")
     constructor(sceneNumber: SceneNumber) : this(tid = null, sceneNumber = sceneNumber)
 
-    override fun toString() = "SceneRecallUnacknowledged(tid: $tid, sceneNumber: $sceneNumber" +
+    override fun toString() = "SceneRecallUnacknowledged(tid: $tid, sceneNumber: ${
+        sceneNumber.toHexString(
+            format = HexFormat {
+                number.prefix = "0x"
+                upperCase = true
+            }
+        )
+    }" +
             if (transitionTime != null && delay != null) {
                 ", transitionTime: $transitionTime, delay: ${delay.toInt() * 5} ms)"
             } else ")"
@@ -58,16 +68,19 @@ class SceneRecallUnacknowledged(
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 3 || it.size == 5 }
             ?.let { params ->
-                params.sceneNumberAt(0).takeIf { it != 0.toUShort() }?.let { scene ->
-                    SceneRecallUnacknowledged(
-                        tid = params[2].toUByte(),
-                        sceneNumber = scene,
-                        transitionParams = if (params.size == 5) TransitionParameters(
-                            transitionTime = TransitionTime(rawValue = params[3].toUByte()),
-                            delay = params[4].toUByte()
-                        ) else null
-                    )
-                }
+                params
+                    .getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
+                    .takeIf { it != 0.toUShort() }
+                    ?.let { scene ->
+                        SceneRecallUnacknowledged(
+                            tid = params[2].toUByte(),
+                            sceneNumber = scene,
+                            transitionParams = if (params.size == 5) TransitionParameters(
+                                transitionTime = TransitionTime(rawValue = params[3].toUByte()),
+                                delay = params[4].toUByte()
+                            ) else null
+                        )
+                    }
             }
     }
 }
