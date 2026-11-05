@@ -65,4 +65,16 @@
     <string name="label_cancel">Cancel</string>
     <string name="label_no_network">No Network</string>
     <string name="label_no_network_rationale">This network has been reset by a remote Node.</string>
+    <string name="label_scenes">Scenes</string>
+    <string name="label_stored_scenes">Stored Scenes</string>
+    <plurals name="label_scenes_stored_count">
+        <item quantity="one">%d scene stored</item>
+        <item quantity="other">%d scenes stored</item>
+    </plurals>
+    <string name="label_no_scenes_on_node">No scenes stored on this node.\nPull down to refresh.</string>
+    <string name="label_scenes_hint">Tap a scene to recall it, swipe it to delete it from the node. The current scene is highlighted. Pull down to refresh.</string>
+    <string name="label_scenes_error">Unable to complete the scene operation.</string>
+    <string name="label_scene_setup_incomplete">Incomplete setup</string>
+    <string name="label_scene_setup_checklist">Before you start setting up scenes, bind an application key to the following models.\n\nScene Server on the node %1$s\nScene Setup Server on the node %2$s\nScene Client on your local node %3$s</string>
+    <string name="action_fix">Fix</string>
 </resources>

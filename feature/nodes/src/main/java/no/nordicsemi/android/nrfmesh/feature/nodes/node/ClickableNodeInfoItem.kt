@@ -10,4 +10,5 @@ sealed class ClickableNodeInfoItem {
     data object NetworkKeys : ClickableNodeInfoItem()
     data object ApplicationKeys : ClickableNodeInfoItem()
     data class Element(val address: Address) : ClickableNodeInfoItem()
+    data object Scenes : ClickableNodeInfoItem()
 }

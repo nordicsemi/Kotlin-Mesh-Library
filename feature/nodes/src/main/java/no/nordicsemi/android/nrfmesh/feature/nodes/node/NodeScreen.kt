@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Block
@@ -58,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
@@ -69,6 +71,7 @@ import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
 import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
 import no.nordicsemi.android.nrfmesh.core.data.configurator.TaskStatus
+import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
@@ -99,6 +102,7 @@ internal fun NodeScreen(
     selectedItem: ClickableNodeInfoItem?,
     onNetworkKeysClicked: (Uuid) -> Unit,
     onApplicationKeysClicked: (Uuid) -> Unit,
+    onScenesClicked: (Uuid) -> Unit,
     onElementClicked: (Address) -> Unit,
     onExcluded: (Boolean) -> Unit,
     send: (AcknowledgedConfigMessage) -> Unit,
@@ -175,6 +179,18 @@ internal fun NodeScreen(
                         onElementsClicked = { onElementClicked(element.unicastAddress.address) }
                     )
                 }
+            }
+            if (node.primaryElement.models.any { it.isSceneServer() }) {
+                SectionTitle(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    title = stringResource(id = R.string.label_scenes)
+                )
+                ScenesRow(
+                    count = nodeData.scenesCount,
+                    isSelected = selectedItem == ClickableNodeInfoItem.Scenes
+                            && highlightSelectedItem,
+                    onScenesClicked = { onScenesClicked(nodeData.uuid) }
+                )
             }
             SectionTitle(
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -363,6 +379,24 @@ private fun ApplicationKeysRow(
         imageVector = Icons.Outlined.VpnKey,
         title = stringResource(R.string.label_application_keys),
         subtitle = "$count ${if (count == 1) "key" else "keys"} added"
+    )
+}
+
+@Composable
+private fun ScenesRow(count: Int, isSelected: Boolean, onScenesClicked: () -> Unit) {
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        colors = when (isSelected) {
+            true -> CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+
+            else -> CardDefaults.outlinedCardColors()
+        },
+        onClick = onScenesClicked,
+        imageVector = Icons.Outlined.AutoAwesome,
+        title = stringResource(R.string.label_stored_scenes),
+        subtitle = pluralStringResource(R.plurals.label_scenes_stored_count, count, count)
     )
 }
 
