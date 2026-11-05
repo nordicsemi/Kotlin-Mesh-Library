@@ -329,7 +329,7 @@ private fun SceneSelector(
                         SceneItem(
                             name = scene.name,
                             sceneNumber = scene.number,
-                            isSelected = scene.number == selectedScene,
+                            isCurrent = scene.number == selectedScene,
                             onClick = {
                                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     showSheet = false

@@ -2,12 +2,17 @@ package no.nordicsemi.android.nrfmesh.core.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
 /**
@@ -17,6 +22,7 @@ import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
  * @param name       Name of the scene.
  * @param sceneNumber Scene number.
  * @param isSelected True if the row is highlighted as selected.
+ * @param isCurrent  True if the scene is the current scene, which is marked with a check.
  * @param onClick    Invoked when the row is clicked.
  */
 @Composable
@@ -24,6 +30,7 @@ fun SceneItem(
     name: String,
     sceneNumber: SceneNumber,
     isSelected: Boolean = false,
+    isCurrent: Boolean = false,
     onClick: () -> Unit,
 ) {
     ElevatedCardItem(
@@ -37,6 +44,16 @@ fun SceneItem(
         },
         imageVector = Icons.Outlined.AutoAwesome,
         title = name,
+        titleAction = {
+            if (isCurrent) {
+                Icon(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    imageVector = Icons.Outlined.CheckCircle,
+                    tint = Color.Green,
+                    contentDescription = null
+                )
+            }
+        },
         subtitle = stringResource(
             R.string.label_scene_number_value,
             sceneNumber.toHexString(
