@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.isSupportedGroupItem
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -25,6 +26,7 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.ModelId
 import no.nordicsemi.kotlin.mesh.core.model.ModelId.Companion.decode
+import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
 @HiltViewModel(assistedFactory = GroupControlsViewModel.Factory::class)
 internal class GroupControlsViewModel @AssistedInject internal constructor(
@@ -40,6 +42,11 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
 
     init {
         observeNetwork()
+        repository.recalledGroupScenes
+            .onEach { scenes ->
+                _uiState.update { it.copy(recalledScene = scenes[groupAddress.toUShort()]) }
+            }
+            .launchIn(scope = viewModelScope)
     }
 
     private fun observeNetwork() {
@@ -124,7 +131,13 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
     }
 }
 
-internal data class GroupControlsScreenUiState(val groupState: GroupModelControlsState = GroupModelControlsState.Loading)
+internal data class GroupControlsScreenUiState(
+    val groupState: GroupModelControlsState = GroupModelControlsState.Loading,
+    /**
+     * Scene that was last recalled on the group from this app.
+     */
+    val recalledScene: SceneNumber? = null,
+)
 
 internal sealed interface GroupModelControlsState {
     data object Loading : GroupModelControlsState

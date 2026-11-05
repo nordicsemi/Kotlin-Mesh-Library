@@ -82,6 +82,7 @@ internal fun GroupControlsScreen(
                 network = uiState.groupState.network,
                 modelId = uiState.groupState.modelId,
                 models = uiState.groupState.groupInfoListData.models,
+                recalledScene = uiState.recalledScene,
                 send = send,
             )
         }
@@ -96,6 +97,7 @@ internal fun GroupControls(
     network: MeshNetwork,
     modelId: ModelId,
     models: Map<ModelId, List<Model>>,
+    recalledScene: SceneNumber?,
     send: (UnacknowledgedMeshMessage, ApplicationKey) -> Unit,
 ) {
     // Controls are shown for the models that are bound to an application key.
@@ -149,6 +151,7 @@ internal fun GroupControls(
                             SceneServerGroupItem(
                                 network = network,
                                 models = models,
+                                recalledScene = recalledScene,
                                 count = models.size,
                                 key = key,
                                 send = send
@@ -292,6 +295,7 @@ private fun SceneSelector(
     text: String,
     scenes: List<Scene>,
     emptyText: String,
+    selectedScene: SceneNumber? = null,
     onSceneSelected: (SceneNumber) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -325,6 +329,7 @@ private fun SceneSelector(
                         SceneItem(
                             name = scene.name,
                             sceneNumber = scene.number,
+                            isSelected = scene.number == selectedScene,
                             onClick = {
                                 scope.launch { sheetState.hide() }.invokeOnCompletion {
                                     showSheet = false
@@ -389,6 +394,7 @@ private fun CountRow(count: Int) {
 private fun SceneServerGroupItem(
     network: MeshNetwork,
     models: List<Model>,
+    recalledScene: SceneNumber?,
     key: ApplicationKey,
     send: (UnacknowledgedMeshMessage, ApplicationKey) -> Unit,
     count: Int,
@@ -423,6 +429,7 @@ private fun SceneServerGroupItem(
                         text = stringResource(R.string.label_recall).uppercase(),
                         scenes = scenes,
                         emptyText = stringResource(R.string.label_no_scenes_stored),
+                        selectedScene = recalledScene,
                         onSceneSelected = { send(SceneRecallUnacknowledged(sceneNumber = it), key) }
                     )
                 }
