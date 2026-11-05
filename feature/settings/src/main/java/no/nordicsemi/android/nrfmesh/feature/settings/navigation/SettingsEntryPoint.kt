@@ -72,27 +72,27 @@ fun EntryProviderScope<NavKey>.settingsEntry(appState: AppState, navigator: Navi
                     } else true,
             navigateToProvisioners = {
                 viewModel.onItemSelected(ClickableSetting.PROVISIONERS)
-                navigator.navigate(key = ProvisionersContentKey)
+                navigator.navigateFrom(parent = key, key = ProvisionersContentKey)
             },
             navigateToNetworkKeys = {
                 viewModel.onItemSelected(ClickableSetting.NETWORK_KEYS)
-                navigator.navigate(key = NetworkKeysContentKey)
+                navigator.navigateFrom(parent = key, key = NetworkKeysContentKey)
             },
             navigateToApplicationKeys = {
                 viewModel.onItemSelected(ClickableSetting.APPLICATION_KEYS)
-                navigator.navigate(key = ApplicationKeysContentKey)
+                navigator.navigateFrom(parent = key, key = ApplicationKeysContentKey)
             },
             navigateToScenes = {
                 viewModel.onItemSelected(ClickableSetting.SCENES)
-                navigator.navigate(key = ScenesContentKey)
+                navigator.navigateFrom(parent = key, key = ScenesContentKey)
             },
             navigateToIvIndex = {
                 viewModel.onItemSelected(ClickableSetting.IV_INDEX)
-                navigator.navigate(key = IvIndexContentKey)
+                navigator.navigateFrom(parent = key, key = IvIndexContentKey)
             },
             navigateToDeveloperSettings = {
                 viewModel.onItemSelected(ClickableSetting.DEVELOPER_SETTINGS)
-                navigator.navigate(key = DeveloperSettingsContentKey)
+                navigator.navigateFrom(parent = key, key = DeveloperSettingsContentKey)
             }
         )
     }

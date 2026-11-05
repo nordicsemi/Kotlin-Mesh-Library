@@ -51,7 +51,8 @@ fun EntryProviderScope<NavKey>.groupEntry(appState: AppState, navigator: Navigat
             snackbarHostState = appState.snackbarHostState,
             onModelClicked = { modelId, index ->
                 viewModel.onModelClicked(index = index)
-                navigator.navigate(
+                navigator.navigateFrom(
+                    parent = key,
                     key = GroupControlsKey(
                         address = address,
                         modelId = modelId.id
