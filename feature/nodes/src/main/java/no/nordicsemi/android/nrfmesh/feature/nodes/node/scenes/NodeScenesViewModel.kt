@@ -1,5 +1,7 @@
 package no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.VpnKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -11,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -24,8 +27,13 @@ import no.nordicsemi.android.nrfmesh.core.common.Sending
 import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneSetupServer
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
+import no.nordicsemi.android.nrfmesh.core.data.configurator.ConfigTask
+import no.nordicsemi.android.nrfmesh.core.data.configurator.Messenger
+import no.nordicsemi.android.nrfmesh.core.data.configurator.TaskStatus
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneDelete
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneGet
@@ -33,7 +41,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecall
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatus
-import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
@@ -92,6 +99,7 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
                 scenes = network.scenes
                     .filter { node.primaryUnicastAddress in it.addresses }
                     .map { SceneInfo(name = it.name, number = it.number) },
+                canFix = server != null && client != null,
                 isSceneServerReady = serverKey != null,
                 isSceneSetupServerReady = setupServerKey != null,
                 // The client is ready, when it is bound to the key used by the server.
@@ -144,35 +152,73 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
     }
 
     /**
-     * Binds the application keys bound to the Scene Server and the Scene Setup Server on the node
-     * to the Scene Client model on the local node.
+     * Sets up the models required to work with scenes. The first application key of the network is
+     * used, or a new one is added if the network has none. The key is added to the node and to the
+     * local node if they don't know it and is then bound to the Scene Server and Scene Setup Server
+     * on the node and to the Scene Client on the local node.
      */
     internal fun fixClient() {
-        val client = localSceneClient ?: return
+        val network = repository.meshNetwork ?: return
+        val node = network.node(uuid = nodeUuid) ?: return
         val local = localNode ?: return
-        val keys = listOfNotNull(
-            sceneServer?.boundApplicationKeys?.firstOrNull(),
-            sceneSetupServer?.boundApplicationKeys?.firstOrNull()
-        ).distinctBy(ApplicationKey::index).filterNot { client.isBound(key = it) }
+        val client = localSceneClient ?: return
         viewModelScope.launch {
-            keys.forEach { key ->
-                val message = ConfigModelAppBind(model = client, applicationKey = key)
-                _uiState.update { it.copy(messageState = Sending(message = message)) }
-                try {
-                    val response = repository.send(node = local, message = message)
-                    _uiState.update {
-                        it.copy(messageState = Completed(message = message, response = response))
+            try {
+                val key = network.applicationKeys.firstOrNull()
+                    ?: repository.addApplicationKey(boundNetworkKey = network.networkKeys.first())
+                // The tasks are run by a messenger that is not shared with the other screens.
+                val messenger = repository.messengers.createDetached()
+                listOf(node, local)
+                    .filterNot { it.knows(key = key) }
+                    .forEach { messenger.enqueue(target = it, message = ConfigAppKeyAdd(key = key)) }
+                listOfNotNull(sceneServer, sceneSetupServer)
+                    .filterNot { key.isBoundTo(model = it) }
+                    .forEach {
+                        messenger.enqueue(
+                            target = node,
+                            message = ConfigModelAppBind(model = it, applicationKey = key)
+                        )
                     }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    _uiState.update {
-                        it.copy(messageState = Failed(message = message, error = e))
+                if (!key.isBoundTo(model = client)) {
+                    messenger.enqueue(
+                        target = local,
+                        message = ConfigModelAppBind(model = client, applicationKey = key)
+                    )
+                }
+                messenger.execute()
+                // The messenger stops at the first failed task of a node and reports it.
+                messenger.meshTaskFlow.first()
+                    .firstNotNullOfOrNull { it.status as? TaskStatus.Error }
+                    ?.let { error ->
+                        _uiState.update {
+                            it.copy(
+                                messageState = Failed(
+                                    message = SceneRegisterGet(),
+                                    error = IllegalStateException(error.error)
+                                )
+                            )
+                        }
                     }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(messageState = Failed(message = SceneRegisterGet(), error = e))
                 }
             }
             repository.meshNetwork?.let { updateState(network = it) }
         }
+    }
+
+    private fun Messenger.enqueue(target: Node, message: AcknowledgedConfigMessage) {
+        enqueueTask(
+            task = ConfigTask(
+                icon = Icons.Outlined.VpnKey,
+                label = message.toString(),
+                message = message,
+                target = target
+            )
+        )
     }
 
     internal fun onMessageHandled() {
@@ -247,6 +293,10 @@ internal data class NodeScenesUiState(
     val isSceneSetupServerReady: Boolean = false,
     val isSceneClientReady: Boolean = false,
     val isSceneClientReadyToSetup: Boolean = false,
+    /**
+     * The setup can be fixed when the node has a Scene Server and the local node a Scene Client.
+     */
+    val canFix: Boolean = false,
     val isRefreshing: Boolean = false,
     val messageState: MessageState = NotStarted,
 )

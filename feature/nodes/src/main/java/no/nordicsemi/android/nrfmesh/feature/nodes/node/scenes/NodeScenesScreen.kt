@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CardDefaults
@@ -17,44 +18,43 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Failed
+import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
+import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.NoScenesAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.core.ui.SwipeToDeleteBackground
 import no.nordicsemi.android.nrfmesh.feature.nodes.R
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
 /**
  * Displays the scenes stored on a node.
  *
- * @param snackbarHostState Snackbar host state used to show errors.
  * @param uiState           State of the screen.
  * @param onRefresh         Invoked when the user pulls down to read the scenes from the node.
  * @param onSceneClicked    Invoked with the number of the scene to be recalled.
  * @param onSceneDeleted    Invoked with the number of the scene to be deleted from the node.
  * @param onFixClicked      Invoked when the user wants to bind the keys to the Scene Client.
- * @param onMessageHandled  Invoked after an error was shown.
+ * @param onMessageHandled  Invoked when the error dialog is dismissed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun NodeScenesScreen(
-    snackbarHostState: SnackbarHostState,
     uiState: NodeScenesUiState,
     onRefresh: () -> Unit,
     onSceneClicked: (SceneNumber) -> Unit,
@@ -62,14 +62,14 @@ internal fun NodeScenesScreen(
     onFixClicked: () -> Unit,
     onMessageHandled: () -> Unit,
 ) {
-    val context = LocalContext.current
-    LaunchedEffect(key1 = uiState.messageState) {
-        (uiState.messageState as? Failed)?.let {
-            snackbarHostState.showSnackbar(
-                message = it.error.message ?: context.getString(R.string.label_scenes_error)
-            )
-            onMessageHandled()
-        }
+    // Errors are shown in a dialog, like on the other screens.
+    (uiState.messageState as? Failed)?.let {
+        MeshMessageStatusDialog(
+            // The status of a failed scene operation is described by the message of the error.
+            text = (it.error as? IllegalStateException)?.message ?: it.error.describe(),
+            showDismissButton = false,
+            onDismissRequest = onMessageHandled
+        )
     }
 
     if (!uiState.isSceneServerReady || !uiState.isSceneClientReady) {
@@ -98,11 +98,10 @@ internal fun NodeScenesScreen(
                                 modifier = Modifier.fillParentMaxSize(),
                                 imageVector = Icons.Outlined.AutoAwesome,
                                 title = stringResource(R.string.label_no_scenes_on_node),
-                                rationale = setupChecklist(uiState = uiState),
-                                onClickText = stringResource(R.string.action_fix).takeIf {
-                                    uiState.isSceneSetupServerReady
-                                },
-                                onClick = onFixClicked.takeIf { uiState.isSceneSetupServerReady }
+                                rationale = stringResource(R.string.label_scene_setup_rationale),
+                                onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
+                                onClickIcon = Icons.Outlined.AutoFixHigh,
+                                onClick = onFixClicked.takeIf { uiState.canFix }
                             )
                         }
                     }
@@ -163,18 +162,7 @@ private fun SwipeToDeleteScene(onDeleted: () -> Unit, content: @Composable () ->
     SwipeToDismissBox(
         modifier = Modifier.sceneItemPadding(),
         state = dismissState,
-        enableDismissFromStartToEnd = false,
-        backgroundContent = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = MaterialTheme.colorScheme.error, shape = CardDefaults.elevatedShape)
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-            }
-        },
+        backgroundContent = { SwipeToDeleteBackground(dismissState = dismissState) },
         onDismiss = {
             onDeleted()
             // The scene is removed from the list when the node confirms the deletion.
@@ -190,11 +178,10 @@ private fun SetupRationale(uiState: NodeScenesUiState, onFixClicked: () -> Unit)
         modifier = Modifier.fillMaxWidth(),
         imageVector = Icons.Outlined.Info,
         title = stringResource(R.string.label_scene_setup_incomplete),
-        rationale = setupChecklist(uiState = uiState),
-        onClickText = stringResource(R.string.action_fix).takeIf {
-            uiState.isSceneSetupServerReady
-        },
-        onClick = onFixClicked.takeIf { uiState.isSceneSetupServerReady }
+        rationale = stringResource(R.string.label_scene_setup_rationale),
+        onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
+        onClickIcon = Icons.Outlined.AutoFixHigh,
+        onClick = onFixClicked.takeIf { uiState.canFix }
     )
 }
 
@@ -204,19 +191,9 @@ private fun IncompleteSetup(uiState: NodeScenesUiState, onFixClicked: () -> Unit
         modifier = Modifier.fillMaxSize(),
         imageVector = Icons.Outlined.Info,
         title = stringResource(R.string.label_scene_setup_incomplete),
-        rationale = setupChecklist(uiState = uiState),
-        // The client can be fixed automatically only if the server has a key bound to it.
-        onClickText = stringResource(R.string.action_fix).takeIf { uiState.isSceneServerReady },
-        onClick = onFixClicked.takeIf { uiState.isSceneServerReady }
+        rationale = stringResource(R.string.label_scene_setup_rationale),
+        onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
+        onClickIcon = Icons.Outlined.AutoFixHigh,
+        onClick = onFixClicked.takeIf { uiState.canFix }
     )
 }
-
-@Composable
-private fun setupChecklist(uiState: NodeScenesUiState) = stringResource(
-    R.string.label_scene_setup_checklist,
-    uiState.isSceneServerReady.mark(),
-    uiState.isSceneSetupServerReady.mark(),
-    (uiState.isSceneClientReady && uiState.isSceneClientReadyToSetup).mark()
-)
-
-private fun Boolean.mark() = if (this) "✅" else "❌"

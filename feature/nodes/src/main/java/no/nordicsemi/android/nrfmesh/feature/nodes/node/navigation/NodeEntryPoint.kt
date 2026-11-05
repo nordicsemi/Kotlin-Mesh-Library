@@ -143,5 +143,5 @@ fun EntryProviderScope<NavKey>.nodeEntry(
     configNetKeysEntry(appState = appState, navigator = navigator)
     configAppKeysEntry(appState = appState, navigator = navigator)
     elementEntry(appState = appState, navigator = navigator)
-    nodeScenesEntry(appState = appState)
+    nodeScenesEntry()
 }

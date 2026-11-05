@@ -8,7 +8,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
-import no.nordicsemi.android.nrfmesh.core.navigation.AppState
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeListDetailSceneKey
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes.NodeScenesScreen
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes.NodeScenesViewModel
@@ -22,7 +21,7 @@ import no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes.NodeScenesViewMod
 data class NodeScenesKey(val nodeUuid: String) : NavKey
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
-fun EntryProviderScope<NavKey>.nodeScenesEntry(appState: AppState) {
+fun EntryProviderScope<NavKey>.nodeScenesEntry() {
     entry<NodeScenesKey>(
         metadata = ListDetailSceneStrategy.detailPane(
             sceneKey = NodeListDetailSceneKey
@@ -35,7 +34,6 @@ fun EntryProviderScope<NavKey>.nodeScenesEntry(appState: AppState) {
         }
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         NodeScenesScreen(
-            snackbarHostState = appState.snackbarHostState,
             uiState = uiState,
             onRefresh = viewModel::onRefresh,
             onSceneClicked = viewModel::recall,
