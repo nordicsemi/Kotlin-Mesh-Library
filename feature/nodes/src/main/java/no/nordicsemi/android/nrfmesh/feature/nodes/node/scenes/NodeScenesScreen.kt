@@ -123,8 +123,8 @@ internal fun NodeScenesScreen(
                         SceneItem(
                             name = scene.name,
                             sceneNumber = scene.number,
-                            // The current scene is highlighted.
-                            isSelected = scene.number == uiState.currentScene,
+                            // The current scene is marked with a check.
+                            isCurrent = scene.number == uiState.currentScene,
                             onClick = { onSceneClicked(scene.number) }
                         )
                     }
