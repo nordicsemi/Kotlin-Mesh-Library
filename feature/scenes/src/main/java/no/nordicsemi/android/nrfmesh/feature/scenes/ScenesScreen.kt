@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -45,8 +44,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.data.ui.SceneData
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
-import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.NoScenesAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.core.ui.SwipeToDeleteBackground
 import no.nordicsemi.kotlin.mesh.core.exception.NoSceneRangeAllocated
 import no.nordicsemi.kotlin.mesh.core.model.Scene
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
@@ -67,11 +68,7 @@ internal fun ScenesScreen(
     val scope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxSize()) {
         when (scenes.isEmpty()) {
-            true -> MeshNoItemsAvailable(
-                modifier = Modifier.fillMaxSize(),
-                imageVector = Icons.Outlined.AutoAwesome,
-                title = stringResource(R.string.no_scenes_currently_added)
-            )
+            true -> NoScenesAvailable(modifier = Modifier.fillMaxSize())
 
             false -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -167,25 +164,7 @@ private fun SwipeToDismissScene(
             .padding(bottom = 8.dp),
         state = dismissState,
         backgroundContent = {
-            val color by animateColorAsState(
-                when (dismissState.targetValue) {
-                    SwipeToDismissBoxValue.Settled,
-                    SwipeToDismissBoxValue.StartToEnd,
-                    SwipeToDismissBoxValue.EndToStart,
-                        -> if (scene.isInUse) Color.Gray else Color.Red
-                }
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = color, shape = CardDefaults.elevatedShape)
-                    .padding(horizontal = 16.dp),
-                contentAlignment = if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd)
-                    Alignment.CenterStart
-                else Alignment.CenterEnd
-            ) {
-                Icon(imageVector = Icons.Outlined.Delete, contentDescription = "null")
-            }
+            SwipeToDeleteBackground(dismissState = dismissState, isDeletable = !scene.isInUse)
         },
         onDismiss = {
             // Check if the dismissal was caused by a swipe (target not Settled)
@@ -230,25 +209,11 @@ private fun SwipeToDismissScene(
             }
         },
         content = {
-            ElevatedCardItem(
-                onClick = { onSceneClicked(scene.number) },
-                colors = when (isSelected) {
-                    true -> CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-
-                    else -> CardDefaults.outlinedCardColors()
-                },
-                imageVector = Icons.Outlined.AutoAwesome,
-                title = scene.name,
-                subtitle = "Scene number: ${
-                    scene.number.toHexString(
-                        format = HexFormat {
-                            number.prefix = "0x"
-                            upperCase = true
-                        }
-                    )
-                }"
+            SceneItem(
+                name = scene.name,
+                sceneNumber = scene.number,
+                isSelected = isSelected,
+                onClick = { onSceneClicked(scene.number) }
             )
         }
     )

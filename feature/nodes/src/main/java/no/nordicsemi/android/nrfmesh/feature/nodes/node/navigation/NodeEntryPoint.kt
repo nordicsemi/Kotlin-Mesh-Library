@@ -37,6 +37,8 @@ import no.nordicsemi.android.nrfmesh.feature.nodes.node.NodeState
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.NodeViewModel
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.ElementKey
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.elementEntry
+import no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes.navigation.NodeScenesKey
+import no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes.navigation.nodeScenesEntry
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeResetStatus
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -87,15 +89,19 @@ fun EntryProviderScope<NavKey>.nodeEntry(
                     onRefresh = viewModel::onRefresh,
                     onNetworkKeysClicked = {
                         viewModel.onItemSelected(item = ClickableNodeInfoItem.NetworkKeys)
-                        navigator.navigate(key = ConfigNetKeysKey(uuid = it.toString()))
+                        navigator.navigateFrom(parent = key, key = ConfigNetKeysKey(uuid = it.toString()))
                     },
                     onApplicationKeysClicked = {
                         viewModel.onItemSelected(item = ClickableNodeInfoItem.ApplicationKeys)
-                        navigator.navigate(key = ConfigAppKeysKey(uuid = it.toString()))
+                        navigator.navigateFrom(parent = key, key = ConfigAppKeysKey(uuid = it.toString()))
+                    },
+                    onScenesClicked = {
+                        viewModel.onItemSelected(item = ClickableNodeInfoItem.Scenes)
+                        navigator.navigateFrom(parent = key, key = NodeScenesKey(nodeUuid = it.toString()))
                     },
                     onElementClicked = { address ->
                         viewModel.onItemSelected(item = ClickableNodeInfoItem.Element(address = address))
-                        navigator.navigate(key = ElementKey(address = address))
+                        navigator.navigateFrom(parent = key, key = ElementKey(address = address))
                     },
                     onExcluded = viewModel::onExcluded,
                     selectedItem = uiState.selectedNodeInfoItem,
@@ -137,4 +143,5 @@ fun EntryProviderScope<NavKey>.nodeEntry(
     configNetKeysEntry(appState = appState, navigator = navigator)
     configAppKeysEntry(appState = appState, navigator = navigator)
     elementEntry(appState = appState, navigator = navigator)
+    nodeScenesEntry()
 }

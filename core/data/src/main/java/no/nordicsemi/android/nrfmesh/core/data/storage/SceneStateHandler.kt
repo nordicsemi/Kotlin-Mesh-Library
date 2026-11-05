@@ -72,3 +72,35 @@ interface GenericLevelStateStorage {
         elementIndex: Int,
     ): UShort
 }
+
+/**
+ * An interface for storing the Scene Register of the Scene Server on the local node using Proto
+ * DataStore.
+ */
+interface SceneRegisterStorage {
+
+    /**
+     * Reads the scene numbers stored in the Scene Register of a given network.
+     *
+     * @param uuid UUID of the network.
+     * @return Scene numbers sorted in ascending order.
+     */
+    suspend fun readScenes(uuid: Uuid): List<SceneNumber>
+
+    /**
+     * Adds a scene to the Scene Register of a given network. Does nothing if it already exists.
+     *
+     * @param uuid           UUID of the network.
+     * @param sceneNumber    Scene number.
+     */
+    fun storeScene(uuid: Uuid, sceneNumber: SceneNumber)
+
+    /**
+     * Removes a scene, along with the states stored with it, from the Scene Register of a given
+     * network.
+     *
+     * @param uuid           UUID of the network.
+     * @param sceneNumber    Scene number.
+     */
+    fun deleteScene(uuid: Uuid, sceneNumber: SceneNumber)
+}

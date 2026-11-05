@@ -127,7 +127,6 @@ internal data class AccessPdu(
             if (octet0 hasBitCleared 6) {
                 // At least 2 octets are required.
                 require(pdu.accessPdu.size >= 2) { return null }
-                val octet1 = pdu.accessPdu[1]
                 return AccessPdu(
                     message = null,
                     userInitiated = false,

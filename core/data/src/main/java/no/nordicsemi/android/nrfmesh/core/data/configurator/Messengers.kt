@@ -62,6 +62,12 @@ class Messengers(private val meshNetworkManager: MeshNetworkManager) {
         .also { messengers[uuid] = it }
 
     /**
+     * Creates a messenger that is not registered, so it does not replace the messenger of a node
+     * that is used by another screen.
+     */
+    fun createDetached() = Messenger(meshNetworkManager = meshNetworkManager)
+
+    /**
      * Gets the configurator for the given node.
      *
      * @param uuid Uuid of the node.

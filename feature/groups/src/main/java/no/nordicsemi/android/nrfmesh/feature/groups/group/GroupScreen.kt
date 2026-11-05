@@ -50,6 +50,7 @@ internal fun GroupScreen(
     uiState: GroupScreenUiState,
     onModelClicked: (ModelId, Int) -> Unit,
     isDetailPaneVisible: Boolean,
+    isControlsVisible: Boolean,
     deleteGroup: (Group) -> Unit,
     save: () -> Unit,
 ) {
@@ -61,6 +62,7 @@ internal fun GroupScreen(
                 group = uiState.groupState.group,
                 onModelClicked = onModelClicked,
                 isDetailPaneVisible = isDetailPaneVisible,
+                isControlsVisible = isControlsVisible,
                 selectedModelIndex = uiState.groupState.selectedModelIndex,
                 deleteGroup = deleteGroup,
                 save = save
@@ -79,6 +81,7 @@ internal fun GroupInfoContent(
     group: Group,
     onModelClicked: (ModelId, Int) -> Unit,
     isDetailPaneVisible: Boolean,
+    isControlsVisible: Boolean,
     selectedModelIndex: Int,
     deleteGroup: (Group) -> Unit,
     save: () -> Unit,
@@ -115,7 +118,7 @@ internal fun GroupInfoContent(
                 ModelRow(
                     models = entry.value,
                     onModelClicked = { onModelClicked(it, groupInfo.models.keys.indexOf(it)) },
-                    isSelected = isDetailPaneVisible &&
+                    isSelected = isControlsVisible &&
                             groupInfo.models.keys.indexOf(entry.key) == selectedModelIndex
                 )
             }

@@ -51,14 +51,14 @@ data class TransitionTime(val steps: UByte, val stepResolution: StepResolution) 
     )
 
     val milliseconds: Int?
-        get() = steps.takeIf { steps == 0x3F.toUByte() }?.let { steps ->
+        get() = steps.takeIf { it != 0x3F.toUByte() }?.let { steps ->
             stepResolution
                 .toMilliseconds(steps and 0x3F.toUByte())
                 .inWholeMilliseconds.toInt()
         }
 
     val interval: Duration?
-        get() = milliseconds?.toDuration(DurationUnit.SECONDS)
+        get() = milliseconds?.toDuration(DurationUnit.MILLISECONDS)
 
     val rawValue: UByte
         get() = steps and 0x3Fu or (stepResolution.value.toInt() shl 6).toUByte()
@@ -122,23 +122,23 @@ data class TransitionTime(val steps: UByte, val stepResolution: StepResolution) 
                 stepResolution = StepResolution.HUNDREDS_OF_MILLISECONDS
             )
 
-            duration.inWholeMilliseconds <= 62 * 0.100 -> TransitionTime(
-                steps = (duration.inWholeMilliseconds * 10).toUByte(),
+            duration.inWholeMilliseconds <= 62 * 100L -> TransitionTime(
+                steps = (duration.inWholeMilliseconds / 100).toUByte(),
                 stepResolution = StepResolution.HUNDREDS_OF_MILLISECONDS
             )
 
-            duration.inWholeMilliseconds <= 62 * 1.0 -> TransitionTime(
-                steps = (duration.inWholeMilliseconds * 1).toUByte(),
+            duration.inWholeMilliseconds <= 62 * 1000L -> TransitionTime(
+                steps = (duration.inWholeMilliseconds / 1000).toUByte(),
                 stepResolution = StepResolution.SECONDS
             )
 
-            duration.inWholeMilliseconds <= 62 * 10.0 -> TransitionTime(
-                steps = (duration.inWholeMilliseconds / 10).toUByte(),
+            duration.inWholeMilliseconds <= 62 * 10_000L -> TransitionTime(
+                steps = (duration.inWholeMilliseconds / 10_000).toUByte(),
                 stepResolution = StepResolution.TENS_OF_SECONDS
             )
 
-            duration.inWholeMilliseconds <= 62 * 10.0 * 60 -> TransitionTime(
-                steps = (duration.inWholeMilliseconds / (10 * 60)).toUByte(),
+            duration.inWholeMilliseconds <= 62 * 600_000L -> TransitionTime(
+                steps = (duration.inWholeMilliseconds / 600_000).toUByte(),
                 stepResolution = StepResolution.TENS_OF_MINUTES
             )
 

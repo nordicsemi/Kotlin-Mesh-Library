@@ -17,6 +17,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
@@ -41,6 +42,8 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.data.model.SceneServer
+import no.nordicsemi.android.nrfmesh.core.data.model.SceneSetupServer
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.PairingInitiatorClient
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.simpleonoff.SimpleOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.modeleventhandlers.SensorClientEventHandler
@@ -63,12 +66,15 @@ import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecallUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.messages.proxy.ProxyConfigurationMessage
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.Element
+import no.nordicsemi.kotlin.mesh.core.model.Address
 import no.nordicsemi.kotlin.mesh.core.model.Group
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupRange
+import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 import no.nordicsemi.kotlin.mesh.core.model.Location
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
@@ -116,6 +122,12 @@ class CoreDataRepository @Inject constructor(
 
     private var _developerSettingsStateFlow = MutableStateFlow(value = DeveloperSettings())
     val developerSettingsStateFlow = _developerSettingsStateFlow.asStateFlow()
+
+    /**
+     * Scenes that were last recalled on a group from this app, by the address of the group.
+     */
+    val recalledGroupScenes: StateFlow<Map<Address, SceneNumber>>
+        field = MutableStateFlow(value = emptyMap())
 
     val networkEvents: SharedFlow<NetworkEvent> = meshNetworkManager.networkEvents
     val meshNetwork: MeshNetwork?
@@ -285,13 +297,24 @@ class CoreDataRepository @Inject constructor(
      */
     private fun onMeshNetworkChanged() {
         val defaultTransitionTimeServer = GenericDefaultTransitionTimeServer()
+        val sceneServer = SceneServer(
+            ioDispatcher = ioDispatcher,
+            storage = storage,
+            defaultTransitionTimeServer = defaultTransitionTimeServer
+        )
         // Sets up the local Elements on the phone
         val element0 = Element(
             _name = "Primary Element",
             location = Location.FIRST,
             _models = mutableListOf(
-                Model(modelId = SigModelId(modelIdentifier = Model.SCENE_SERVER_MODEL_ID)),
-                Model(modelId = SigModelId(modelIdentifier = Model.SCENE_SETUP_SERVER_MODEL_ID)),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.SCENE_SERVER_MODEL_ID),
+                    handler = sceneServer
+                ),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.SCENE_SETUP_SERVER_MODEL_ID),
+                    handler = SceneSetupServer(server = sceneServer)
+                ),
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.SENSOR_CLIENT_MODEL_ID),
                     handler = SensorClientEventHandler()
@@ -775,6 +798,13 @@ class CoreDataRepository @Inject constructor(
     suspend fun send(group: Group, unackedMessage: UnacknowledgedMeshMessage, key: ApplicationKey) =
         withContext(context = ioDispatcher) {
             meshNetworkManager.send(group = group, message = unackedMessage, key = key)
+            // The scenes recalled on a group are not reported back, so the last recalled scene
+            // is remembered to be able to show it.
+            if (unackedMessage is SceneRecallUnacknowledged) {
+                recalledGroupScenes.update {
+                    it + (group.address.address to unackedMessage.sceneNumber)
+                }
+            }
         }
 
     /**

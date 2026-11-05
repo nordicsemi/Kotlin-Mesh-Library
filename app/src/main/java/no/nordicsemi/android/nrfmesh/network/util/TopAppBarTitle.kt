@@ -29,6 +29,7 @@ import no.nordicsemi.android.nrfmesh.feature.model.navigation.RelatedModelsKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.key.navigation.NetworkKeyContentKey
 import no.nordicsemi.android.nrfmesh.feature.network.keys.navigation.NetworkKeysContentKey
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.ElementKey
+import no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes.navigation.NodeScenesKey
 import no.nordicsemi.android.nrfmesh.feature.provisioners.navigation.ProvisionersContentKey
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.navigation.ProvisionerContentKey
 import no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges.navigation.GroupRangesContentKey
@@ -92,6 +93,10 @@ internal fun title(
         network.element(elementAddress = key.address)?.name
             ?: context.getString(R.string.label_unknown)
     else network.node(address = key.address)?.name ?: context.getString(R.string.label_unknown)
+
+    is NodeScenesKey -> if (isCompactWidth) context.getString(R.string.label_scenes)
+    else network.node(uuid = Uuid.parse(uuidString = key.nodeUuid))?.name
+        ?: context.getString(R.string.label_unknown)
 
     is ModelKey -> {
         val address = key.address

@@ -62,7 +62,10 @@ class GenericOnOffServer(
                     delay(duration = transition.remainingTime)
                     // If state hasn't changed since
                     if (state.transition?.start == transition.start) {
-                        state = GenericState(state.transition?.targetValue ?: state.value)
+                        state = GenericState(
+                            value = state.transition?.targetValue ?: state.value,
+                            storedWithScene = state.storedWithScene
+                        )
                     }
                 }
             }
@@ -99,17 +102,16 @@ class GenericOnOffServer(
                     sceneNumber = scene,
                     elementIndex = index
                 )
-                when {
-                    delay != null && transitionTime != null -> {
-                        val _ = GenericState.transitionFrom(
-                            transitionFrom = state,
-                            to = isOn,
-                            delay = (delay.toDouble() * 0.005).toDuration(DurationUnit.MILLISECONDS),
-                            duration = transitionTime.interval
-                        )
-                    }
+                state = when {
+                    delay != null && transitionTime != null -> GenericState.transitionFrom(
+                        transitionFrom = state,
+                        to = isOn,
+                        delay = (delay.toInt() * 5).milliseconds,
+                        duration = transitionTime.interval,
+                        storedWithScene = true
+                    )
 
-                    else -> state = GenericState(value = isOn, storedWithScene = true)
+                    else -> GenericState(value = isOn, storedWithScene = true)
                 }
 
             }

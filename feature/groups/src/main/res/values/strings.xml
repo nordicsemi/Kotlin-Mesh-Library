@@ -17,7 +17,7 @@
     <string name="label_no_models_subscribed">No models subscribed to this Group</string>
     <string name="label_no_models_subscribed_rationale">Bind an application key to a Generic On Off, Level, Scene, Scene Setup or a Light LC Server model and subscribe to this group in order to control a Group</string>
     <string name="label_no_models_selected">Select Models to Control</string>
-    <string name="label_select_model_rationale">Select a subscribed model from the list to control with bound Application key.</string>
+    <string name="label_select_model_rationale">Select a subscribed model from the list to control.</string>
     <string name="label_no_groups_currently_added_rationale">Create a Group and subscribe some model(s) to control them simultaneously.</string>
     <string name="label_delete_group_rationale">Removes this group from the network.</string>
     <string name="label_delete">Delete Group</string>
@@ -35,4 +35,7 @@
     <string name="label_add">Add</string>
     <string name="label_group_address">Group Address</string>
     <string name="label_virtual_label">Virtual Label</string>
+    <string name="label_no_scenes_stored">No scenes stored on the devices</string>
+    <string name="label_no_scenes_defined">No scenes currently added.</string>
+    <string name="label_select_scene">Select scene</string>
 </resources>

@@ -39,6 +39,21 @@ class Navigator(val state: NavigationState) {
     }
 
     /**
+     * Navigates to a key selected from the given list pane key, closing the detail and extra panes
+     * that were opened from it earlier.
+     *
+     * @param parent - the key of the pane the new key is selected from.
+     * @param key    - the navigation key to navigate to.
+     */
+    fun navigateFrom(parent: NavKey, key: NavKey) {
+        state.currentSubStack.apply {
+            val index = indexOf(parent)
+            if (index in 0 until lastIndex) subList(index + 1, size).clear()
+        }
+        navigate(key = key)
+    }
+
+    /**
      * Go back to the previous navigation key.
      */
     fun goBack() {

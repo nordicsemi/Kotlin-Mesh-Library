@@ -183,6 +183,14 @@ abstract class SceneServerModelEventHandler : ModelEventHandler() {
      * clear the Current Scene.
      */
     abstract fun networkDidExitStoredWithSceneState()
+
+    /**
+     * Returns the event handlers of all the models on the local node that store their states with
+     * a scene.
+     */
+    protected fun storedWithSceneHandlers() = meshNetwork.localElements
+        .flatMap { it.models }
+        .mapNotNull { it.eventHandler as? StoredWithSceneModelEventHandler }
 }
 
 abstract class StoredWithSceneModelEventHandler : ModelEventHandler() {

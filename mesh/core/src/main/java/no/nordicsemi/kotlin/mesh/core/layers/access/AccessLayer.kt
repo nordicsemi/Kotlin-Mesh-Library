@@ -524,12 +524,13 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
                                     element = element,
                                     keySet = keySet
                                 )
-
-                                if (eventHandler is SceneClientHandler) {
-                                    networkManager.emitNetworkManagerEvent(
-                                        NetworkManagerEvent.OnNetworkChanged
-                                    )
-                                }
+                            }
+                            // The Scene Client updates the scenes of the network, which has to
+                            // be reported even though it does not respond to the messages.
+                            if (eventHandler is SceneClientHandler) {
+                                networkManager.emitNetworkManagerEvent(
+                                    NetworkManagerEvent.OnNetworkChanged
+                                )
                             }
                         } else {
                             logger?.w(LogCategory.MODEL) {
