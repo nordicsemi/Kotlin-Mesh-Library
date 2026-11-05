@@ -17,7 +17,9 @@ class SceneRegisterGet : AcknowledgedMeshMessage {
     companion object Initializer : SceneMessageInitializer {
         override val opCode = 0x8244u
 
-        override fun init(parameters: ByteArray?) =
-            if (parameters == null) SceneRegisterGet() else null
+        // A message without parameters is received with an empty array of parameters.
+        override fun init(parameters: ByteArray?) =parameters
+            ?.takeIf { it.isEmpty() }
+            ?.let { SceneRegisterGet() }
     }
 }

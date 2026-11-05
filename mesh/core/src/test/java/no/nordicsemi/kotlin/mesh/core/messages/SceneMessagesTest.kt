@@ -49,6 +49,9 @@ class SceneMessagesTest {
         assertNull(SceneRegisterGet().parameters)
         assertNotNull(SceneGet.init(null))
         assertNotNull(SceneRegisterGet.init(null))
+        // A message without parameters is received with an empty array of parameters.
+        assertNotNull(SceneGet.init(byteArrayOf()))
+        assertNotNull(SceneRegisterGet.init(byteArrayOf()))
         assertNull(SceneGet.init(byteArrayOf(0x00)))
         assertNull(SceneRegisterGet.init(byteArrayOf(0x00)))
     }

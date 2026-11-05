@@ -17,6 +17,8 @@ class SceneGet : AcknowledgedMeshMessage {
     companion object Initializer : SceneMessageInitializer {
         override val opCode = 0x8241u
 
-        override fun init(parameters: ByteArray?) = if (parameters == null) SceneGet() else null
+        override fun init(parameters: ByteArray?) = parameters
+            ?.takeIf { it.isEmpty() }
+            ?.let { SceneGet() }
     }
 }
