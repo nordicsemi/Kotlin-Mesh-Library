@@ -18,20 +18,19 @@ import no.nordicsemi.kotlin.mesh.core.StoredWithSceneModelEventHandler
 import no.nordicsemi.kotlin.mesh.core.TransactionHelper
 import no.nordicsemi.kotlin.mesh.core.messages.HasInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.MeshResponse
+import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecall
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecallUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatus
-import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import no.nordicsemi.kotlin.mesh.core.model.or
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
@@ -44,7 +43,6 @@ import kotlin.time.Instant
  * Recalling a scene is forwarded to all the models on the local node that extend
  * [StoredWithSceneModelEventHandler].
  */
-@OptIn(ExperimentalTime::class)
 class SceneServer(
     @IoDispatcher ioDispatcher: CoroutineDispatcher,
     private val storage: SceneRegisterStorage,
@@ -147,7 +145,7 @@ class SceneServer(
                         destination = event.destination
                     )
                     if (isNewTransaction) {
-                        recall(
+                        val _ = recall(
                             scene = message.sceneNumber,
                             transitionTime = message.transitionTime,
                             delay = message.delay

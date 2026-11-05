@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
@@ -46,7 +45,6 @@ import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
  * @param onFixClicked      Invoked when the user wants to bind the keys to the Scene Client.
  * @param onMessageHandled  Invoked when the error dialog is dismissed.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun NodeScenesScreen(
     uiState: NodeScenesUiState,
