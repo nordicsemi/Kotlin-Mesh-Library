@@ -1,6 +1,5 @@
 package no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,26 +10,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoFixHigh
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import no.nordicsemi.android.nrfmesh.core.common.Completed
 import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
@@ -40,6 +33,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.SwipeToDeleteBackground
 import no.nordicsemi.android.nrfmesh.feature.nodes.R
+import no.nordicsemi.kotlin.mesh.core.messages.StatusMessage
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
 /**
@@ -62,14 +56,27 @@ internal fun NodeScenesScreen(
     onFixClicked: () -> Unit,
     onMessageHandled: () -> Unit,
 ) {
-    // Errors are shown in a dialog, like on the other screens.
-    (uiState.messageState as? Failed)?.let {
-        MeshMessageStatusDialog(
-            // The status of a failed scene operation is described by the message of the error.
-            text = (it.error as? IllegalStateException)?.message ?: it.error.describe(),
+    // Errors and statuses reporting an error are shown in a dialog, like on the model screen.
+    when (val messageState = uiState.messageState) {
+        is Failed -> MeshMessageStatusDialog(
+            // The errors of the setup are described by their message.
+            text = (messageState.error as? IllegalStateException)?.message
+                ?: messageState.error.describe(),
             showDismissButton = false,
             onDismissRequest = onMessageHandled
         )
+
+        is Completed -> (messageState.response as? StatusMessage)
+            ?.takeIf { !it.isSuccess }
+            ?.let {
+                MeshMessageStatusDialog(
+                    text = it.message,
+                    showDismissButton = false,
+                    onDismissRequest = onMessageHandled
+                )
+            }
+
+        else -> Unit
     }
 
     if (!uiState.isSceneServerReady || !uiState.isSceneClientReady) {

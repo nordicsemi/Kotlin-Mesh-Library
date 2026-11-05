@@ -122,7 +122,7 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
             val response = request(message = SceneRegisterGet(), model = sceneServer)
             // The Scene Register Status reports no current scene when a transition is in
             // progress, so the Scene Get is sent to find out the target scene.
-            if ((response as? SceneRegisterStatus)?.scenes?.isNotEmpty() == true) {
+            if ((response as? SceneRegisterStatus)?.takeIf { it.isSuccess }?.scenes?.isNotEmpty() == true) {
                 request(message = SceneGet(), model = sceneServer)
             }
             _uiState.update { it.copy(isRefreshing = false) }
@@ -228,26 +228,22 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
     /**
      * Sends the given message to the model and updates the current scene from the response.
      *
-     * @return the response if the node responded with a success status, or null otherwise.
+     * @return the response of the node, or null if the message could not be sent.
      */
     private suspend fun request(message: AcknowledgedMeshMessage, model: Model?): MeshMessage? {
         if (model == null) return null
         _uiState.update { it.copy(messageState = Sending(message = message)) }
         return try {
             val response = repository.send(model = model, ackedMessage = message)
-            when (response) {
-                is SceneStatus -> {
-                    if (!response.isSuccess) return fail(message, response.message)
+            // A status that reports an error is shown in a dialog by the screen, so the current
+            // scene is updated only when the node reports success.
+            when {
+                response is SceneStatus && response.isSuccess ->
                     // While a transition is in progress, the target scene is reported.
                     setCurrentScene(response.targetScene ?: response.currentScene)
-                }
 
-                is SceneRegisterStatus -> {
-                    if (!response.isSuccess) return fail(message, response.message)
+                response is SceneRegisterStatus && response.isSuccess ->
                     setCurrentScene(response.currentScene)
-                }
-
-                else -> Unit
             }
             _uiState.update {
                 it.copy(messageState = Completed(message = message, response = response))
@@ -259,13 +255,6 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
             _uiState.update { it.copy(messageState = Failed(message = message, error = e)) }
             null
         }
-    }
-
-    private fun fail(message: AcknowledgedMeshMessage, error: String): MeshMessage? {
-        _uiState.update {
-            it.copy(messageState = Failed(message = message, error = IllegalStateException(error)))
-        }
-        return null
     }
 
     private fun setCurrentScene(scene: SceneNumber) {
