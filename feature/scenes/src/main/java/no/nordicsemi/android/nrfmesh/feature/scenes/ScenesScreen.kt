@@ -47,6 +47,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.NoScenesAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.core.ui.SwipeToDeleteBackground
 import no.nordicsemi.kotlin.mesh.core.exception.NoSceneRangeAllocated
 import no.nordicsemi.kotlin.mesh.core.model.Scene
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
@@ -163,25 +164,7 @@ private fun SwipeToDismissScene(
             .padding(bottom = 8.dp),
         state = dismissState,
         backgroundContent = {
-            val color by animateColorAsState(
-                when (dismissState.targetValue) {
-                    SwipeToDismissBoxValue.Settled,
-                    SwipeToDismissBoxValue.StartToEnd,
-                    SwipeToDismissBoxValue.EndToStart,
-                        -> if (scene.isInUse) Color.Gray else Color.Red
-                }
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = color, shape = CardDefaults.elevatedShape)
-                    .padding(horizontal = 16.dp),
-                contentAlignment = if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd)
-                    Alignment.CenterStart
-                else Alignment.CenterEnd
-            ) {
-                Icon(imageVector = Icons.Outlined.Delete, contentDescription = "null")
-            }
+            SwipeToDeleteBackground(dismissState = dismissState, isDeletable = !scene.isInUse)
         },
         onDismiss = {
             // Check if the dismissal was caused by a swipe (target not Settled)
