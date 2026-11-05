@@ -42,6 +42,7 @@ import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLCServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneSetupServer
+import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.NoScenesAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -97,6 +98,22 @@ internal fun GroupControls(
     models: Map<ModelId, List<Model>>,
     send: (UnacknowledgedMeshMessage, ApplicationKey) -> Unit,
 ) {
+    // Controls are shown for the models that are bound to an application key.
+    val hasControls = network.applicationKeys.any { key ->
+        models[modelId]?.firstOrNull { key.isBoundTo(model = it) }?.let {
+            it.isGenericOnOffServer() || it.isGenericLevelServer() || it.isSceneServer() ||
+                    it.isSceneSetupServer() || it.isLightLCServer()
+        } == true
+    }
+    if (!hasControls) {
+        MeshNoItemsAvailable(
+            modifier = Modifier.fillMaxSize(),
+            imageVector = Icons.Outlined.Widgets,
+            title = stringResource(id = R.string.label_no_models_subscribed),
+            rationale = stringResource(id = R.string.label_no_models_subscribed_rationale)
+        )
+        return
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
