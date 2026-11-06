@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.nodes.node
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -7,9 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
@@ -18,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -27,6 +30,9 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.TaskStatus
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.core.ui.errorColor
+import no.nordicsemi.android.nrfmesh.core.ui.successColor
+import no.nordicsemi.android.nrfmesh.core.ui.warningColor
 import no.nordicsemi.android.nrfmesh.feature.nodes.R
 
 /**
@@ -74,11 +80,17 @@ internal fun ConfigurationTasksBottomSheet(
                     .padding(horizontal = 16.dp),
                 title = stringResource(id = R.string.label_configuration)
             )
+            // The retry button is orange when there are failed tasks, like the warnings on the DFU screens.
+            val canRetry = tasks.any { it.status is TaskStatus.Error }
             MeshOutlinedButton(
-                enabled = tasks.any { it.status is TaskStatus.Error },
+                enabled = canRetry,
                 onClick = onRetryPressed,
                 buttonIcon = Icons.Outlined.Refresh,
-                text = stringResource(R.string.label_retry)
+                buttonIconTint = warningColor.takeIf { canRetry },
+                text = stringResource(R.string.label_retry),
+                textColor = if (canRetry) warningColor else Color.Unspecified,
+                border = BorderStroke(width = 1.dp, color = warningColor).takeIf { canRetry }
+                    ?: ButtonDefaults.outlinedButtonBorder(enabled = false)
             )
             MeshOutlinedButton(
                 onClick = {
@@ -88,8 +100,14 @@ internal fun ConfigurationTasksBottomSheet(
                         }
                     }
                 },
-                buttonIcon = if (isCompleted) Icons.Outlined.AutoFixHigh else Icons.Outlined.Cancel,
+                buttonIcon = if (isCompleted) Icons.Outlined.Check else Icons.Outlined.Cancel,
+                buttonIconTint = if (isCompleted) successColor else errorColor,
                 text = stringResource(if (isCompleted) R.string.label_done else R.string.label_cancel),
+                textColor = if (isCompleted) successColor else errorColor,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = if (isCompleted) successColor else errorColor
+                )
             )
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
