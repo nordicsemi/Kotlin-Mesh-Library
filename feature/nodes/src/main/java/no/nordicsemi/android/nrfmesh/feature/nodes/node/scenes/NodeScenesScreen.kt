@@ -3,6 +3,18 @@ package no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
@@ -19,19 +32,24 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Completed
 import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
+import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
-import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.NoScenesAvailable
 import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
+import no.nordicsemi.android.nrfmesh.core.ui.SceneSelectionBottomSheet
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.SwipeToDeleteBackground
 import no.nordicsemi.android.nrfmesh.feature.nodes.R
+import no.nordicsemi.android.nrfmesh.feature.nodes.node.ConfigurationTasksBottomSheet
 import no.nordicsemi.kotlin.mesh.core.messages.StatusMessage
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
@@ -42,7 +60,11 @@ import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
  * @param onRefresh         Invoked when the user pulls down to read the scenes from the node.
  * @param onSceneClicked    Invoked with the number of the scene to be recalled.
  * @param onSceneDeleted    Invoked with the number of the scene to be deleted from the node.
- * @param onFixClicked      Invoked when the user wants to bind the keys to the Scene Client.
+ * @param onSceneStored     Invoked with the number of the scene to be stored on the node.
+ * @param onFixClicked      Invoked when the user wants to set up the scene models.
+ * @param onUniqueKeySetupClicked Invoked when the user wants a unique key for the Scene Setup Server.
+ * @param onRetryPressed    Invoked when the user wants to retry the tasks of the setup.
+ * @param onTasksDismissed  Invoked when the progress of the setup is closed.
  * @param onMessageHandled  Invoked when the error dialog is dismissed.
  */
 @Composable
@@ -51,13 +73,17 @@ internal fun NodeScenesScreen(
     onRefresh: () -> Unit,
     onSceneClicked: (SceneNumber) -> Unit,
     onSceneDeleted: (SceneNumber) -> Unit,
+    onSceneStored: (SceneNumber) -> Unit,
     onFixClicked: () -> Unit,
+    onUniqueKeySetupClicked: () -> Unit,
+    onRetryPressed: () -> Unit,
+    onTasksDismissed: () -> Unit,
     onMessageHandled: () -> Unit,
 ) {
     // Errors and statuses reporting an error are shown in a dialog, like on the model screen.
     when (val messageState = uiState.messageState) {
         is Failed -> MeshMessageStatusDialog(
-            // The errors of the setup are described by their message.
+            // The errors of the screen are described by their message.
             text = (messageState.error as? IllegalStateException)?.message
                 ?: messageState.error.describe(),
             showDismissButton = false,
@@ -77,14 +103,72 @@ internal fun NodeScenesScreen(
         else -> Unit
     }
 
-    if (!uiState.isSceneServerReady || !uiState.isSceneClientReady) {
-        IncompleteSetup(uiState = uiState, onFixClicked = onFixClicked)
-    } else {
-        val canSetup = uiState.isSceneSetupServerReady && uiState.isSceneClientReadyToSetup
+    // Shows the progress of the setup of the scene models.
+    if (uiState.tasks.isNotEmpty()) {
+        ConfigurationTasksBottomSheet(
+            tasks = uiState.tasks,
+            onRetryPressed = onRetryPressed,
+            onCompletePressed = onTasksDismissed,
+            onCancelPressed = onTasksDismissed
+        )
+    }
+
+    var showSetupRequired by rememberSaveable { mutableStateOf(value = false) }
+    var showSetupOptions by rememberSaveable { mutableStateOf(value = false) }
+    var showSceneSelection by rememberSaveable { mutableStateOf(value = false) }
+    // Reading the scenes of the node and recalling them requires the Scene Server and the Scene
+    // Client to share a key. Storing and deleting scenes requires the Scene Setup Server to be
+    // bound to the key of the Scene Client as well.
+    val isSceneServerPaired = uiState.isSceneServerReady && uiState.isSceneClientReady
+    val canSetup = isSceneServerPaired &&
+            uiState.isSceneSetupServerReady && uiState.isSceneClientReadyToSetup
+
+    // The user is asked to set up the scene models when an action needs it.
+    if (showSetupRequired) {
+        when (uiState.canFix) {
+            true -> MeshAlertDialog(
+                onDismissRequest = { showSetupRequired = false },
+                confirmButtonText = stringResource(R.string.action_set_up),
+                onConfirmClick = {
+                    showSetupRequired = false
+                    showSetupOptions = true
+                },
+                onDismissClick = { showSetupRequired = false },
+                icon = Icons.Outlined.Info,
+                title = stringResource(R.string.label_scene_setup_incomplete),
+                text = stringResource(
+                    R.string.label_scene_setup_rationale,
+                    uiState.nodeName,
+                    uiState.localNodeName
+                )
+            )
+
+            // The models are not available on the nodes, so they can't be set up.
+            false -> MeshMessageStatusDialog(
+                text = stringResource(
+                    R.string.label_scene_setup_rationale,
+                    uiState.nodeName,
+                    uiState.localNodeName
+                ),
+                showDismissButton = false,
+                onDismissRequest = { showSetupRequired = false }
+            )
+        }
+    }
+    if (showSetupOptions) {
+        SetupOptionsBottomSheet(
+            isUniqueKeySetupEnabled = uiState.canUniqueKeySetup,
+            onAutomaticClicked = onFixClicked,
+            onUniqueKeysClicked = onUniqueKeySetupClicked,
+            onDismissRequest = { showSetupOptions = false }
+        )
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
         PullToRefreshBox(
             modifier = Modifier.fillMaxSize(),
             isRefreshing = uiState.isRefreshing,
-            onRefresh = onRefresh
+            onRefresh = { if (isSceneServerPaired) onRefresh() else showSetupRequired = true }
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -92,23 +176,10 @@ internal fun NodeScenesScreen(
             ) {
                 if (uiState.scenes.isEmpty()) {
                     item {
-                        when (canSetup) {
-                            true -> NoScenesAvailable(
-                                modifier = Modifier.fillParentMaxSize(),
-                                title = stringResource(R.string.label_no_scenes_on_node)
-                            )
-
-                            // Explains what is needed to store and delete scenes.
-                            false -> MeshNoItemsAvailable(
-                                modifier = Modifier.fillParentMaxSize(),
-                                imageVector = Icons.Outlined.AutoAwesome,
-                                title = stringResource(R.string.label_no_scenes_on_node),
-                                rationale = stringResource(R.string.label_scene_setup_rationale),
-                                onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
-                                onClickIcon = Icons.Outlined.AutoFixHigh,
-                                onClick = onFixClicked.takeIf { uiState.canFix }
-                            )
-                        }
+                        NoScenesAvailable(
+                            modifier = Modifier.fillParentMaxSize(),
+                            title = stringResource(R.string.label_no_scenes_on_node)
+                        )
                     }
                 } else {
                     item {
@@ -119,23 +190,26 @@ internal fun NodeScenesScreen(
                     }
                 }
                 items(items = uiState.scenes, key = { it.number.toInt() }) { scene ->
-                    val item = @Composable {
-                        SceneItem(
-                            name = scene.name,
-                            sceneNumber = scene.number,
-                            // The current scene is marked with a check.
-                            isCurrent = scene.number == uiState.currentScene,
-                            onClick = { onSceneClicked(scene.number) }
-                        )
-                    }
-                    when (canSetup) {
-                        true -> SwipeToDeleteScene(
-                            onDeleted = { onSceneDeleted(scene.number) },
-                            content = item
-                        )
-
-                        false -> Box(modifier = Modifier.sceneItemPadding()) { item() }
-                    }
+                    SwipeToDeleteScene(
+                        onDeleted = {
+                            if (canSetup) onSceneDeleted(scene.number) else showSetupRequired = true
+                        },
+                        content = {
+                            SceneItem(
+                                name = scene.name,
+                                sceneNumber = scene.number,
+                                // The current scene is marked with a check.
+                                isCurrent = scene.number == uiState.currentScene,
+                                onClick = {
+                                    if (isSceneServerPaired) {
+                                        onSceneClicked(scene.number)
+                                    } else {
+                                        showSetupRequired = true
+                                    }
+                                }
+                            )
+                        }
+                    )
                 }
                 if (uiState.scenes.isNotEmpty()) {
                     item {
@@ -146,12 +220,25 @@ internal fun NodeScenesScreen(
                         )
                     }
                 }
-                if (!canSetup && uiState.scenes.isNotEmpty()) {
-                    item {
-                        SetupRationale(uiState = uiState, onFixClicked = onFixClicked)
-                    }
-                }
             }
+        }
+
+        ExtendedFloatingActionButton(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(all = 16.dp)
+                .defaultMinSize(minWidth = 150.dp),
+            text = { Text(text = stringResource(R.string.label_store_scene)) },
+            icon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
+            onClick = { if (canSetup) showSceneSelection = true else showSetupRequired = true }
+        )
+        if (showSceneSelection) {
+            SceneSelectionBottomSheet(
+                scenes = uiState.networkScenes,
+                emptyText = stringResource(R.string.label_no_scenes_defined),
+                onDismissRequest = { showSceneSelection = false },
+                onSceneSelected = onSceneStored
+            )
         }
     }
 }
@@ -177,28 +264,52 @@ private fun SwipeToDeleteScene(onDeleted: () -> Unit, content: @Composable () ->
     )
 }
 
+/**
+ * Bottom sheet where the user selects how the application keys are bound to the scene models.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SetupRationale(uiState: NodeScenesUiState, onFixClicked: () -> Unit) {
-    MeshNoItemsAvailable(
-        modifier = Modifier.fillMaxWidth(),
-        imageVector = Icons.Outlined.Info,
-        title = stringResource(R.string.label_scene_setup_incomplete),
-        rationale = stringResource(R.string.label_scene_setup_rationale),
-        onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
-        onClickIcon = Icons.Outlined.AutoFixHigh,
-        onClick = onFixClicked.takeIf { uiState.canFix }
-    )
-}
-
-@Composable
-private fun IncompleteSetup(uiState: NodeScenesUiState, onFixClicked: () -> Unit) {
-    MeshNoItemsAvailable(
-        modifier = Modifier.fillMaxSize(),
-        imageVector = Icons.Outlined.Info,
-        title = stringResource(R.string.label_scene_setup_incomplete),
-        rationale = stringResource(R.string.label_scene_setup_rationale),
-        onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
-        onClickIcon = Icons.Outlined.AutoFixHigh,
-        onClick = onFixClicked.takeIf { uiState.canFix }
-    )
+private fun SetupOptionsBottomSheet(
+    isUniqueKeySetupEnabled: Boolean,
+    onAutomaticClicked: () -> Unit,
+    onUniqueKeysClicked: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val onOptionSelected = { action: () -> Unit ->
+        scope.launch { sheetState.hide() }.invokeOnCompletion { onDismissRequest() }
+        action()
+    }
+    ModalBottomSheet(onDismissRequest = onDismissRequest, sheetState = sheetState) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+        ) {
+            Text(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                text = stringResource(R.string.label_scene_setup),
+                style = MaterialTheme.typography.titleLarge
+            )
+            ElevatedCardItem(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                onClick = { onOptionSelected(onAutomaticClicked) },
+                imageVector = Icons.Outlined.AutoFixHigh,
+                title = stringResource(R.string.label_automatic),
+                subtitle = stringResource(R.string.label_automatic_rationale),
+                subtitlesMaxLines = 3
+            )
+            ElevatedCardItem(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                enabled = isUniqueKeySetupEnabled,
+                onClick = { onOptionSelected(onUniqueKeysClicked) },
+                imageVector = Icons.Outlined.VpnKey,
+                title = stringResource(R.string.label_unique_keys),
+                subtitle = stringResource(R.string.label_unique_keys_rationale),
+                subtitlesMaxLines = 3
+            )
+        }
+    }
 }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -43,8 +42,7 @@ import no.nordicsemi.android.nrfmesh.core.common.isLightLCServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneSetupServer
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
-import no.nordicsemi.android.nrfmesh.core.ui.NoScenesAvailable
-import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
+import no.nordicsemi.android.nrfmesh.core.ui.SceneSelectionBottomSheet
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.groups.R
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
@@ -54,14 +52,6 @@ import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.ModelId
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -111,8 +101,8 @@ internal fun GroupControls(
         MeshNoItemsAvailable(
             modifier = Modifier.fillMaxSize(),
             imageVector = Icons.Outlined.Widgets,
-            title = stringResource(id = R.string.label_no_models_subscribed),
-            rationale = stringResource(id = R.string.label_no_models_subscribed_rationale)
+            title = stringResource(id = R.string.label_no_app_key_bound),
+            rationale = stringResource(id = R.string.label_no_app_key_bound_rationale)
         )
         return
     }
@@ -289,7 +279,6 @@ private fun GenericLevelItem(
  * @param emptyText       Title shown in the sheet when there are no scenes to choose from.
  * @param onSceneSelected Invoked with the number of the scene selected from the sheet.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SceneSelector(
     text: String,
@@ -298,49 +287,16 @@ private fun SceneSelector(
     selectedScene: SceneNumber? = null,
     onSceneSelected: (SceneNumber) -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showSheet by remember { mutableStateOf(value = false) }
     TextButton(onClick = { showSheet = true }, content = { Text(text = text) })
     if (showSheet) {
-        ModalBottomSheet(
+        SceneSelectionBottomSheet(
+            scenes = scenes,
+            emptyText = emptyText,
+            selectedScene = selectedScene,
             onDismissRequest = { showSheet = false },
-            sheetState = sheetState
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    text = stringResource(R.string.label_select_scene),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                if (scenes.isEmpty()) {
-                    NoScenesAvailable(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(height = 240.dp),
-                        title = emptyText
-                    )
-                }
-                LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(space = 8.dp)
-                ) {
-                    items(items = scenes, key = { it.number.toInt() }) { scene ->
-                        SceneItem(
-                            name = scene.name,
-                            sceneNumber = scene.number,
-                            isCurrent = scene.number == selectedScene,
-                            onClick = {
-                                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                    showSheet = false
-                                }
-                                onSceneSelected(scene.number)
-                            }
-                        )
-                    }
-                }
-            }
-        }
+            onSceneSelected = onSceneSelected
+        )
     }
 }
 

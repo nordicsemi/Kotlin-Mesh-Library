@@ -71,9 +71,16 @@
         <item quantity="one">%d scene stored</item>
         <item quantity="other">%d scenes stored</item>
     </plurals>
+    <string name="label_store_scene">Store scene</string>
+    <string name="label_no_scenes_defined">No scenes currently added.</string>
     <string name="label_no_scenes_on_node">No scenes stored on this node.\nPull down to refresh.</string>
     <string name="label_scenes_hint">Tap a scene to recall it, swipe it to delete it from the node. The current scene is marked with a check. Pull down to refresh.</string>
-    <string name="label_scene_setup_incomplete">Incomplete setup</string>
-    <string name="label_scene_setup_rationale">Before you start setting up scenes, bind an application key to the Scene Server and Scene Setup Server models on the node and to the Scene Client model on your local node.</string>
-    <string name="action_fix">Fix</string>
+    <string name="label_scene_setup_incomplete">Scene Setup Incomplete</string>
+    <string name="label_scene_setup_rationale">Before you start setting up scenes, bind an application key to the Scene Server and Scene Setup Server models on %1$s and to the Scene Client model on %2$s.</string>
+    <string name="action_set_up">Set up</string>
+    <string name="label_scene_setup">Scene Setup</string>
+    <string name="label_automatic">Automatic</string>
+    <string name="label_automatic_rationale">Uses a common key for Scene Server, Scene Setup Server and Scene Client</string>
+    <string name="label_unique_keys">Unique Keys</string>
+    <string name="label_unique_keys_rationale">Uses a unique key for Scene Setup Server</string>
 </resources>

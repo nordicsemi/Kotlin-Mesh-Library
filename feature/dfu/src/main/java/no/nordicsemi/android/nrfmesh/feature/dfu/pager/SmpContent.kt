@@ -32,7 +32,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -46,6 +45,8 @@ import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.Row
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.core.ui.successColor
+import no.nordicsemi.android.nrfmesh.core.ui.warningColor
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
@@ -231,7 +232,7 @@ private fun DeviceManagement(
                     Icon(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         imageVector = Icons.Outlined.CheckCircle,
-                        tint = Color.Green,
+                        tint = successColor,
                         contentDescription = null
                     )
                 }
@@ -280,7 +281,7 @@ private fun DeviceManagement(
                     Icon(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         imageVector = Icons.Outlined.CheckCircle,
-                        tint = Color.Green,
+                        tint = successColor,
                         contentDescription = null
                     )
                 }
@@ -336,7 +337,7 @@ private fun FirmwareDistributor(
                     Icon(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         imageVector = Icons.Outlined.CheckCircle,
-                        tint = Color.Green,
+                        tint = successColor,
                         contentDescription = null
                     )
                 // 4. Connected, but distribution server model is not supported
@@ -487,7 +488,7 @@ private fun BoundApplicationKeys(
                             Icon(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 imageVector = Icons.Outlined.CheckCircle,
-                                tint = Color.Green,
+                                tint = successColor,
                                 contentDescription = null
                             )
                         }
@@ -503,7 +504,7 @@ private fun BoundApplicationKeys(
                     Icon(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         imageVector = Icons.Rounded.WarningAmber,
-                        tint = Color(red = 1f, green = 0.6f, blue = 0f),
+                        tint = warningColor,
                         contentDescription = null
                     )
                 }
@@ -605,7 +606,7 @@ private fun DistributorStatus(
                         Icon(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             imageVector = Icons.Outlined.CheckCircle,
-                            tint = Color.Green,
+                            tint = successColor,
                             contentDescription = null
                         )
                     } else {
