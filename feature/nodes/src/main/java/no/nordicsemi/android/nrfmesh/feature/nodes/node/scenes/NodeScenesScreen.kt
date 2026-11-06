@@ -32,6 +32,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.SceneItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.SwipeToDeleteBackground
 import no.nordicsemi.android.nrfmesh.feature.nodes.R
+import no.nordicsemi.android.nrfmesh.feature.nodes.node.ConfigurationTasksBottomSheet
 import no.nordicsemi.kotlin.mesh.core.messages.StatusMessage
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 
@@ -42,7 +43,9 @@ import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
  * @param onRefresh         Invoked when the user pulls down to read the scenes from the node.
  * @param onSceneClicked    Invoked with the number of the scene to be recalled.
  * @param onSceneDeleted    Invoked with the number of the scene to be deleted from the node.
- * @param onFixClicked      Invoked when the user wants to bind the keys to the Scene Client.
+ * @param onFixClicked      Invoked when the user wants to set up the scene models.
+ * @param onRetryPressed    Invoked when the user wants to retry the tasks of the setup.
+ * @param onTasksDismissed  Invoked when the progress of the setup is closed.
  * @param onMessageHandled  Invoked when the error dialog is dismissed.
  */
 @Composable
@@ -52,14 +55,14 @@ internal fun NodeScenesScreen(
     onSceneClicked: (SceneNumber) -> Unit,
     onSceneDeleted: (SceneNumber) -> Unit,
     onFixClicked: () -> Unit,
+    onRetryPressed: () -> Unit,
+    onTasksDismissed: () -> Unit,
     onMessageHandled: () -> Unit,
 ) {
     // Errors and statuses reporting an error are shown in a dialog, like on the model screen.
     when (val messageState = uiState.messageState) {
         is Failed -> MeshMessageStatusDialog(
-            // The errors of the setup are described by their message.
-            text = (messageState.error as? IllegalStateException)?.message
-                ?: messageState.error.describe(),
+            text = messageState.error.describe(),
             showDismissButton = false,
             onDismissRequest = onMessageHandled
         )
@@ -75,6 +78,16 @@ internal fun NodeScenesScreen(
             }
 
         else -> Unit
+    }
+
+    // Shows the progress of the setup of the scene models.
+    if (uiState.tasks.isNotEmpty()) {
+        ConfigurationTasksBottomSheet(
+            tasks = uiState.tasks,
+            onRetryPressed = onRetryPressed,
+            onCompletePressed = onTasksDismissed,
+            onCancelPressed = onTasksDismissed
+        )
     }
 
     if (!uiState.isSceneServerReady || !uiState.isSceneClientReady) {

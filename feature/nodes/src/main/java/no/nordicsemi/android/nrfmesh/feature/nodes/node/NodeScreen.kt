@@ -16,10 +16,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Download
@@ -28,7 +26,6 @@ import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.QrCode
 import androidx.compose.material.icons.outlined.Recycling
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SafetyCheck
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Timer
@@ -37,16 +34,12 @@ import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -65,8 +58,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
-import no.nordicsemi.android.nrfmesh.core.common.KeyIdGenerator
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
 import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
@@ -90,7 +81,6 @@ import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
 import java.util.Locale.ROOT
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun NodeScreen(
     messageState: MessageState,
@@ -114,14 +104,12 @@ internal fun NodeScreen(
     onCancelPressed: () -> Unit,
     onRetryPressed: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
     val pullToRefreshState = rememberPullToRefreshState()
     // The state is reset when tasks are enqueued, so that the sheet is shown even if the screen was
     // composed before they were.
     var showConfigurationTasks by rememberSaveable(tasks.size) {
         mutableStateOf(tasks.isNotEmpty())
     }
-    val reconfigBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     PullToRefreshBox(
         modifier = Modifier.fillMaxSize(),
         state = pullToRefreshState,
@@ -227,69 +215,18 @@ internal fun NodeScreen(
             Spacer(modifier = Modifier.size(size = 16.dp))
         }
         if (showConfigurationTasks) {
-            ModalBottomSheet(
-                sheetState = reconfigBottomSheetState,
-                onDismissRequest = {
-                    showConfigurationTasks = !showConfigurationTasks
+            ConfigurationTasksBottomSheet(
+                tasks = tasks,
+                onRetryPressed = onRetryPressed,
+                onCompletePressed = {
+                    showConfigurationTasks = false
                     onReconfigCompletePressed()
                 },
-                sheetGesturesEnabled = !tasks.any { it.status !is TaskStatus.Completed },
-                properties = ModalBottomSheetProperties(
-                    shouldDismissOnBackPress = false,
-                    shouldDismissOnClickOutside = false
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 16.dp)
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SectionTitle(
-                        modifier = Modifier
-                            .weight(weight = 1f)
-                            .padding(horizontal = 16.dp),
-                        title = stringResource(id = R.string.label_configuration)
-                    )
-                    MeshOutlinedButton(
-                        enabled = tasks.any { it.status is TaskStatus.Error },
-                        onClick = onRetryPressed,
-                        buttonIcon = Icons.Outlined.Refresh,
-                        text = stringResource(R.string.label_retry)
-                    )
-                    MeshOutlinedButton(
-                        onClick = {
-                            scope.launch {
-                                reconfigBottomSheetState.hide()
-                            }.invokeOnCompletion {
-                                if (!reconfigBottomSheetState.isVisible) {
-                                    if (!tasks.any { it.status !is TaskStatus.Completed }) {
-                                        onReconfigCompletePressed()
-                                    } else {
-                                        onCancelPressed()
-                                    }
-                                    showConfigurationTasks = !showConfigurationTasks
-                                }
-                            }
-                        },
-                        buttonIcon = if (!tasks.any { it.status !is TaskStatus.Completed }) Icons.Outlined.AutoFixHigh else Icons.Outlined.Cancel,
-                        text = stringResource(if (!tasks.any { it.status !is TaskStatus.Completed }) R.string.label_done else R.string.label_cancel),
-                    )
+                onCancelPressed = {
+                    showConfigurationTasks = false
+                    onCancelPressed()
                 }
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
-                    items(items = tasks, key = { KeyIdGenerator.nextId() }) {
-                        ElevatedCardItem(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            imageVector = it.icon,
-                            title = it.label,
-                            subtitle = it.status.description(),
-                            subtitleTextColor = it.status.color()
-                        )
-                    }
-                }
-            }
+            )
         }
     }
 }

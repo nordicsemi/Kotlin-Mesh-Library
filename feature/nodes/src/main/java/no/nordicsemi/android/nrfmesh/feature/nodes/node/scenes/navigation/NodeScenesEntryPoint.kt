@@ -39,6 +39,8 @@ fun EntryProviderScope<NavKey>.nodeScenesEntry() {
             onSceneClicked = viewModel::recall,
             onSceneDeleted = viewModel::delete,
             onFixClicked = viewModel::fixClient,
+            onRetryPressed = viewModel::onRetryPressed,
+            onTasksDismissed = viewModel::onTasksDismissed,
             onMessageHandled = viewModel::onMessageHandled
         )
     }
