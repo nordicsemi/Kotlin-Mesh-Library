@@ -9,6 +9,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
@@ -92,18 +93,16 @@ internal class NetworkManager internal constructor(
 
     private var outgoingMessages = mutableSetOf<MeshAddress>()
 
-    private val _incomingProxyMessages = MutableSharedFlow<ReceivedMessage>()
-    internal val incomingProxyMessages
-        get() = _incomingProxyMessages.asSharedFlow()
+    internal val incomingProxyMessages: SharedFlow<ReceivedMessage>
+        field = MutableSharedFlow<ReceivedMessage>()
 
     // Internal so that tests can inject received messages.
     internal val _incomingMeshMessages = MutableSharedFlow<ReceivedMessage>()
     internal val incomingMeshMessages
         get() = _incomingMeshMessages.asSharedFlow()
 
-    private val _networkManagerEventFlow = MutableSharedFlow<NetworkManagerEvent>()
-    override val networkManagerEventFlow
-        get() = _networkManagerEventFlow.asSharedFlow()
+    override val networkManagerEventFlow: SharedFlow<NetworkManagerEvent>
+        field = MutableSharedFlow<NetworkManagerEvent>()
 
     private val ioScope = CoroutineScope(context = SupervisorJob() + manager.ioDispatcher)
 
@@ -126,7 +125,7 @@ internal class NetworkManager internal constructor(
      * @param event Network manager event.
      */
     override suspend fun emitNetworkManagerEvent(event: NetworkManagerEvent) {
-        _networkManagerEventFlow.emit(value = event)
+        networkManagerEventFlow.emit(value = event)
     }
 
     /**
@@ -143,7 +142,7 @@ internal class NetworkManager internal constructor(
             networkLayer.handle(incomingPdu = incomingPdu, type = type)
                 ?.let {
                     if (it.message is ProxyConfigurationMessage) {
-                        _incomingProxyMessages.emit(value = it)
+                        incomingProxyMessages.emit(value = it)
                     } else {
                         _incomingMeshMessages.emit(value = it)
                     }

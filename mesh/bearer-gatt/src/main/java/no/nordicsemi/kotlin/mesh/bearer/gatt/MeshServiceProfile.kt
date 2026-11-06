@@ -7,12 +7,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import no.nordicsemi.kotlin.ble.client.Peripheral
 import no.nordicsemi.kotlin.ble.client.Profile
 import no.nordicsemi.kotlin.ble.client.RemoteCharacteristic
@@ -50,15 +49,13 @@ abstract class MeshServiceProfile(
         data class Failed(val error: Throwable) : State
     }
 
-    private val _state = MutableStateFlow<State>(State.Closed)
-
     /** The state of the mesh service. */
-    val state: StateFlow<State> = _state.asStateFlow()
-
-    private val _notifications = MutableSharedFlow<ByteArray>(extraBufferCapacity = 64)
+    val state: StateFlow<State>
+        field = MutableStateFlow<State>(State.Closed)
 
     /** The values of the notifications of the Data Out characteristic. */
-    val notifications: Flow<ByteArray> = _notifications.asSharedFlow()
+    val notifications: Flow<ByteArray>
+        field = MutableSharedFlow<ByteArray>(extraBufferCapacity = 64)
 
     /** The Data In characteristic used to send data, or null if the service is not open. */
     @Volatile
@@ -83,43 +80,43 @@ abstract class MeshServiceProfile(
             .subscribe { subscribed.complete(Unit) }
             // Fails if subscribing is not permitted, i.e. OperationFailedException.
             .catch { subscribed.completeExceptionally(it) }
-            .onEach { _notifications.emit(it) }
+            .onEach { notifications.emit(it) }
             .launchIn(this)
         try {
             // Make sure the notifications are enabled before reporting the service as open.
             subscribed.await()
             dataIn = dataInCharacteristic
-            _state.value = State.Open
+            state.update { State.Open }
             // Hold the service open until the device disconnects, or its services get invalidated.
             notifications.join()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _state.value = State.Failed(e)
+            state.update { State.Failed(e) }
         } finally {
             dataIn = null
-            if (_state.value is State.Open) {
-                _state.value = State.Closed
+            if (state.value is State.Open) {
+                state.update { State.Closed }
             }
         }
     }
 
     override suspend fun unsupported(peripheral: Peripheral<*, *>) {
-        _state.value = State.Failed(IllegalStateException("Mesh service not supported"))
+        state.update { State.Failed(IllegalStateException("Mesh service not supported")) }
     }
 
     override suspend fun failed(
         peripheral: Peripheral<*, *>,
         reason: RemoteServices.Failed.Reason,
     ) {
-        _state.value = State.Failed(IllegalStateException("Service discovery failed: $reason"))
+        state.update { State.Failed(IllegalStateException("Service discovery failed: $reason")) }
     }
 
     /**
      * Resets the state, so that a result of a previous connection is not reported again.
      */
     fun reset() {
-        _state.value = State.Closed
+        state.update { State.Closed }
     }
 
     /**
