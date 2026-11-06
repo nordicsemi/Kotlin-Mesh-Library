@@ -170,12 +170,12 @@ class SceneTestNode(
     }
 }
 
-private object NoStorage : Storage {
+internal object NoStorage : Storage {
     override suspend fun load() = ByteArray(0)
     override suspend fun save(network: ByteArray) = Unit
 }
 
-private object NoSecureProperties : SecurePropertiesStorage {
+internal object NoSecureProperties : SecurePropertiesStorage {
     override suspend fun ivIndex(uuid: Uuid): IvIndex = TODO("Not needed by the tests")
     override suspend fun storeIvIndex(uuid: Uuid, ivIndex: IvIndex) = Unit
     override suspend fun nextSequenceNumber(uuid: Uuid, address: UnicastAddress): UInt = 0u

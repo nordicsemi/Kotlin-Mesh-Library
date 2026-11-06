@@ -31,13 +31,14 @@ class GenericMoveSet(
     override val transitionTime = transitionParams?.transitionTime
     override val continueTransaction = true
     override val delay = transitionParams?.delay
-    override val parameters = when (transitionTime != null && delay != null) {
-        true -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
-                tid!!.toByteArray() + transitionTime.rawValue.toByteArray() +
-                delay.toByteArray()
+    override val parameters: ByteArray
+        get() = when (transitionTime != null && delay != null) {
+            true -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+                    tid!!.toByteArray() + transitionTime.rawValue.toByteArray() +
+                    delay.toByteArray()
 
-        else -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) + tid!!.toByteArray()
-    }
+            else -> deltaLevel.toByteArray(order = ByteOrder.LITTLE_ENDIAN) + tid!!.toByteArray()
+        }
 
     /**
      * Convenience constructor to create a GenericMoveSet message.
@@ -62,7 +63,7 @@ class GenericMoveSet(
         tid = tid,
         deltaLevel = min(
             a = 32767,
-            b = max(32768, (327.67 * percent).toInt())
+            b = max(-32768, (327.67 * percent).toInt())
         ).toShort(),
         transitionParams = transitionParams
     )

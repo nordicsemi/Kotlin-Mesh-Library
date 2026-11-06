@@ -145,7 +145,6 @@ class SceneStatesDataStoreStorage @Inject constructor(
         ?.genericLevelStates[elementIndex]
         ?.level
         ?.toUShort()
-        ?: 0u
 
     override suspend fun readScenes(uuid: Uuid) = sceneStore.data
         .firstOrNull()

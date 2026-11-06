@@ -70,15 +70,22 @@ data class GenericState<T>(
             delay: Duration,
             duration: Duration?,
             storedWithScene: Boolean = false,
-        ) = GenericState(
-            value = transitionFrom.value,
-            storedWithScene = storedWithScene,
-            transition = if (duration == null ||
-                (delay <= 0.0.milliseconds && duration <= 0.0.milliseconds) ||
-                (transitionFrom.transition == null && transitionFrom.value == to)
-            ) null else Transition(targetValue = to, start = System.now(), delay, duration),
-            animation = null
-        )
+        ): GenericState<T> {
+            // Without a transition, the target value is applied immediately.
+            if (duration == null || (delay <= 0.0.milliseconds && duration <= 0.0.milliseconds)) {
+                return GenericState(value = to, storedWithScene = storedWithScene)
+            }
+            return GenericState(
+                value = transitionFrom.value,
+                storedWithScene = storedWithScene,
+                transition = if (transitionFrom.transition == null && transitionFrom.value == to) {
+                    null
+                } else {
+                    Transition(targetValue = to, start = System.now(), delay, duration)
+                },
+                animation = null
+            )
+        }
 
         @Suppress("unused")
         fun <T> continueTransitionFrom(
@@ -134,15 +141,22 @@ data class GenericState<T>(
             delay: Duration,
             duration: Duration?,
             storedWithScene: Boolean = false,
-        ) = GenericState(
-            value = transitionFrom.value,
-            storedWithScene = storedWithScene,
-            transition = if (duration == null ||
-                (delay <= 0.0.milliseconds && duration <= 0.0.milliseconds) ||
-                (transitionFrom.transition == null && transitionFrom.value == to)
-            ) null else Transition(to, System.now(), delay, duration),
-            animation = null
-        )
+        ): GenericState<out Int> {
+            // Without a transition, the target value is applied immediately.
+            if (duration == null || (delay <= 0.0.milliseconds && duration <= 0.0.milliseconds)) {
+                return GenericState(value = to, storedWithScene = storedWithScene)
+            }
+            return GenericState(
+                value = transitionFrom.value,
+                storedWithScene = storedWithScene,
+                transition = if (transitionFrom.transition == null && transitionFrom.value == to) {
+                    null
+                } else {
+                    Transition(to, System.now(), delay, duration)
+                },
+                animation = null
+            )
+        }
 
         @Suppress("unused")
         fun <Int> continueTransitionFromInt(

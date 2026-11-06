@@ -62,7 +62,7 @@ class GenericMoveSetUnacknowledged(
         tid = tid,
         deltaLevel = min(
             a = 32767,
-            b = max(32768, (327.67 * percent).toInt())
+            b = max(-32768, (327.67 * percent).toInt())
         ).toShort(),
         transitionParams = transitionParams
     )
