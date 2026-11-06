@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -32,8 +31,8 @@ class NetworkViewModel @Inject constructor(
     private val storage: MeshSecurePropertiesStorage,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(value = NetworkScreenUiState())
-    internal val uiState: StateFlow<NetworkScreenUiState> = _uiState.asStateFlow()
+    internal val uiState: StateFlow<NetworkScreenUiState>
+        field = MutableStateFlow(value = NetworkScreenUiState())
 
     init {
         observeNetworkChanges()
@@ -50,7 +49,7 @@ class NetworkViewModel @Inject constructor(
         repository.networkEvents
             .map {
                 if (repository.meshNetwork == null) {
-                    _uiState.update { state ->
+                    uiState.update { state ->
                         state.copy(networkState = MeshNetworkState.NoNetwork)
                     }
                 }
@@ -59,7 +58,7 @@ class NetworkViewModel @Inject constructor(
             .filterNotNull()
             .onEach {
                 meshNetwork = it
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         networkState = MeshNetworkState.Success(network = it),
                         id = state.id + 1
@@ -73,7 +72,7 @@ class NetworkViewModel @Inject constructor(
         viewModelScope.launch {
             // Check if a network can be loaded and if not update the state
             if (!repository.load()) {
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(networkState = MeshNetworkState.NoNetwork)
                 }
             } else {
@@ -91,11 +90,11 @@ class NetworkViewModel @Inject constructor(
     internal fun importNetwork(uri: Uri, contentResolver: ContentResolver) {
         viewModelScope.launch {
             runCatching {
-                _uiState.update { it.copy(importState = ImportState.Importing) }
+                uiState.update { it.copy(importState = ImportState.Importing) }
                 repository.importNetwork(uri = uri, contentResolver = contentResolver)
-                _uiState.update { it.copy(importState = ImportState.Completed()) }
+                uiState.update { it.copy(importState = ImportState.Completed()) }
             }.onFailure {
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(importState = ImportState.Completed(error = Error(it)))
                 }
             }
@@ -106,7 +105,7 @@ class NetworkViewModel @Inject constructor(
         if (!meshNetwork.restoreLocalProvisioner(storage = storage)) {
             meshNetwork
                 .takeIf { it.provisioners.size > 1 }
-                ?.let { _uiState.value = _uiState.value.copy(shouldSelectProvisioner = true) }
+                ?.let { uiState.update { it.copy(shouldSelectProvisioner = true) } }
                 ?: run {
                     storage.storeLocalProvisioner(
                         uuid = meshNetwork.uuid,
@@ -121,13 +120,13 @@ class NetworkViewModel @Inject constructor(
     }
 
     internal fun resetMeshNetworkUiState() {
-        _uiState.update {
+        uiState.update {
             it.copy(networkState = MeshNetworkState.Loading)
         }
     }
 
     internal fun onImportErrorAcknowledged() {
-        _uiState.update { it.copy(importState = ImportState.Unknown) }
+        uiState.update { it.copy(importState = ImportState.Unknown) }
     }
 
     /**
