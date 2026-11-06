@@ -3,11 +3,9 @@ package no.nordicsemi.android.nrfmesh.core.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -58,20 +56,18 @@ fun MeshNoItemsAvailable(
                     .padding(bottom = 32.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                OutlinedButton(
-                    onClick = onClick,
-                    content = {
-                        onClickIcon?.let {
-                            Icon(
-                                modifier = Modifier.size(size = ButtonDefaults.IconSize),
-                                imageVector = it,
-                                contentDescription = null
-                            )
-                            Spacer(modifier = Modifier.size(size = ButtonDefaults.IconSpacing))
-                        }
-                        Text(text = onClickText)
-                    }
-                )
+                when (onClickIcon) {
+                    null -> OutlinedButton(
+                        onClick = onClick,
+                        content = { Text(text = onClickText) }
+                    )
+
+                    else -> MeshOutlinedButton(
+                        buttonIcon = onClickIcon,
+                        text = onClickText,
+                        onClick = onClick
+                    )
+                }
             }
         }
     }

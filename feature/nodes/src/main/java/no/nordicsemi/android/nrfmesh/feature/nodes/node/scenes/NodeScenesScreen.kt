@@ -117,7 +117,7 @@ internal fun NodeScenesScreen(
                                 imageVector = Icons.Outlined.AutoAwesome,
                                 title = stringResource(R.string.label_no_scenes_on_node),
                                 rationale = stringResource(R.string.label_scene_setup_rationale),
-                                onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
+                                onClickText = stringResource(R.string.action_set_up).takeIf { uiState.canFix },
                                 onClickIcon = Icons.Outlined.AutoFixHigh,
                                 onClick = onFixClicked.takeIf { uiState.canFix }
                             )
@@ -197,7 +197,7 @@ private fun SetupRationale(uiState: NodeScenesUiState, onFixClicked: () -> Unit)
         imageVector = Icons.Outlined.Info,
         title = stringResource(R.string.label_scene_setup_incomplete),
         rationale = stringResource(R.string.label_scene_setup_rationale),
-        onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
+        onClickText = stringResource(R.string.action_set_up).takeIf { uiState.canFix },
         onClickIcon = Icons.Outlined.AutoFixHigh,
         onClick = onFixClicked.takeIf { uiState.canFix }
     )
@@ -210,7 +210,7 @@ private fun IncompleteSetup(uiState: NodeScenesUiState, onFixClicked: () -> Unit
         imageVector = Icons.Outlined.Info,
         title = stringResource(R.string.label_scene_setup_incomplete),
         rationale = stringResource(R.string.label_scene_setup_rationale),
-        onClickText = stringResource(R.string.action_fix).takeIf { uiState.canFix },
+        onClickText = stringResource(R.string.action_set_up).takeIf { uiState.canFix },
         onClickIcon = Icons.Outlined.AutoFixHigh,
         onClick = onFixClicked.takeIf { uiState.canFix }
     )
