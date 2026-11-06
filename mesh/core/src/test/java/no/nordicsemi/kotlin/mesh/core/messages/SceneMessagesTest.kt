@@ -8,7 +8,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRecallUnack
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneRegisterStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStatus
-import no.nordicsemi.kotlin.mesh.core.messages.SceneMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStore
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.scene.SceneStoreUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
@@ -47,8 +46,8 @@ class SceneMessagesTest {
     fun testGetMessagesHaveNoParameters() {
         assertNull(SceneGet().parameters)
         assertNull(SceneRegisterGet().parameters)
-        assertNotNull(SceneGet.init(null))
-        assertNotNull(SceneRegisterGet.init(null))
+        assertNull(SceneGet.init(null))
+        assertNull(SceneRegisterGet.init(null))
         // A message without parameters is received with an empty array of parameters.
         assertNotNull(SceneGet.init(byteArrayOf()))
         assertNotNull(SceneRegisterGet.init(byteArrayOf()))
