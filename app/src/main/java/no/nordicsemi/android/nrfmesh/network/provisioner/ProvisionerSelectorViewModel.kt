@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -24,8 +23,8 @@ internal class ProvisionerSelectorViewModel @Inject constructor(
     private val storage: MeshSecurePropertiesStorage,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(value = ProvisionerSelectorUiState())
-    internal val uiState: StateFlow<ProvisionerSelectorUiState> = _uiState.asStateFlow()
+    internal val uiState: StateFlow<ProvisionerSelectorUiState>
+        field = MutableStateFlow(value = ProvisionerSelectorUiState())
 
     init {
         observeNetworkChanges()
@@ -38,7 +37,7 @@ internal class ProvisionerSelectorViewModel @Inject constructor(
             .filterNotNull()
             .onEach {
                 meshNetwork = it
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(provisioners = meshNetwork.provisioners)
                 }
             }.launchIn(scope = viewModelScope)

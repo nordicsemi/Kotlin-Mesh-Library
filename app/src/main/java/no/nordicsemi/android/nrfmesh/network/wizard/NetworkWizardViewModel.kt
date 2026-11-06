@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Configuration
@@ -21,11 +20,11 @@ class NetworkWizardViewModel @Inject constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(NetworkWizardUiState())
-    internal val uiState: StateFlow<NetworkWizardUiState> = _uiState.asStateFlow()
+    internal val uiState: StateFlow<NetworkWizardUiState>
+        field = MutableStateFlow(NetworkWizardUiState())
 
     internal fun onConfigurationSelected(configuration: Configuration) {
-        _uiState.update { it.copy(configuration = configuration) }
+        uiState.update { it.copy(configuration = configuration) }
     }
 
     /**
@@ -55,7 +54,7 @@ class NetworkWizardViewModel @Inject constructor(
                         scenes = currentConfiguration.scenes + 1
                     )
                 }
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         configuration = newConfiguration,
                         configurations = updateList(
@@ -88,7 +87,7 @@ class NetworkWizardViewModel @Inject constructor(
                         scenes = currentConfiguration.scenes + 1
                     )
                 }
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         configuration = newConfiguration,
                         configurations = updateList(
@@ -134,7 +133,7 @@ class NetworkWizardViewModel @Inject constructor(
                     ) else currentConfiguration
                 }
 
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         configuration = newConfiguration,
                         configurations = updateList(
@@ -168,7 +167,7 @@ class NetworkWizardViewModel @Inject constructor(
                         scenes = currentConfiguration.scenes - 1
                     ) else currentConfiguration
                 }
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         configuration = newConfiguration,
                         configurations = updateList(
@@ -192,8 +191,8 @@ class NetworkWizardViewModel @Inject constructor(
         oldConfiguration: Configuration,
         newConfiguration: Configuration,
     ): List<Configuration> {
-        val index = _uiState.value.configurations.indexOf(oldConfiguration)
-        val newList = _uiState.value.configurations.toMutableList()
+        val index = uiState.value.configurations.indexOf(oldConfiguration)
+        val newList = uiState.value.configurations.toMutableList()
         newList[index] = newConfiguration
         return newList.toList()
     }
@@ -203,7 +202,7 @@ class NetworkWizardViewModel @Inject constructor(
      */
     internal fun onContinuePressed() {
         viewModelScope.launch {
-            val configuration = _uiState.value.configuration
+            val configuration = uiState.value.configuration
             val _ = repository.createNewMeshNetwork(configuration = configuration)
             repository.save()
             resetWizardState()
@@ -211,11 +210,11 @@ class NetworkWizardViewModel @Inject constructor(
     }
 
     internal fun resetWizardState() {
-        _uiState.update { NetworkWizardUiState() }
+        uiState.update { NetworkWizardUiState() }
     }
 
     internal fun onImportErrorAcknowledged() {
-        _uiState.update { it.copy(importState = ImportState.Unknown) }
+        uiState.update { it.copy(importState = ImportState.Unknown) }
     }
 
     /**
@@ -227,11 +226,11 @@ class NetworkWizardViewModel @Inject constructor(
     internal fun importNetwork(uri: Uri, contentResolver: ContentResolver) {
         viewModelScope.launch {
             runCatching {
-                _uiState.update { it.copy(importState = ImportState.Importing) }
+                uiState.update { it.copy(importState = ImportState.Importing) }
                 repository.importNetwork(uri = uri, contentResolver = contentResolver)
-                _uiState.update { it.copy(importState = ImportState.Completed()) }
+                uiState.update { it.copy(importState = ImportState.Completed()) }
             }.onFailure {
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(importState = ImportState.Completed(error = Error(it)))
                 }
             }
