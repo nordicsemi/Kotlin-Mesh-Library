@@ -4,6 +4,7 @@ package no.nordicsemi.kotlin.mesh.core.layers.lowertransport
 
 import no.nordicsemi.kotlin.data.and
 import no.nordicsemi.kotlin.data.getUInt
+import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.hasBitCleared
 import no.nordicsemi.kotlin.data.hasBitSet
 import no.nordicsemi.kotlin.data.shl
@@ -111,10 +112,19 @@ internal class SegmentAcknowledgementMessage(
             require(opCode == 0x00.toUByte()) { throw InvalidPdu() }
 
             val isOnBehalfOfLowePowerNode = pdu.transportPdu[1] hasBitSet 7
-            val sequenceZero: UShort = ((pdu.transportPdu[1].toUShort() and 0x7Fu) shl 6) or
-                    (pdu.transportPdu[2].toUShort() shr 2)
+            // Octets 1 and 2 contain OBO (1 bit) | SeqZero (13 bits) | RFU (2 bits).
+            //
+            // They are read together as one big-endian 16-bit value instead of converting each
+            // Byte to a UShort. Byte is signed, so converting an octet >= 0x80 with toUShort()
+            // sign extends it to 0xFFxx. The extra bits would then be OR'ed into the SeqZero, which
+            // would no longer match the SeqZero of the outgoing message. The acknowledgment would
+            // then be ignored and the segments would be retransmitted needlessly.
+            val sequenceZero: UShort = (pdu.transportPdu.getUShort(offset = 1) and 0x7FFFu) shr 2
             val ackedSegments = pdu.transportPdu.getUInt(offset = 3)
-            val upperTransportPdu = pdu.transportPdu.copyOfRange(3, pdu.transportPdu.size)
+            val upperTransportPdu = pdu.transportPdu.copyOfRange(
+                fromIndex = 3,
+                toIndex = pdu.transportPdu.size
+            )
             return SegmentAcknowledgementMessage(
                 source = pdu.source,
                 destination = pdu.destination,
