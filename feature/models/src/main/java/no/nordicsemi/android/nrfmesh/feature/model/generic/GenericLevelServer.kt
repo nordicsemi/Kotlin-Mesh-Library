@@ -16,7 +16,6 @@ import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -48,12 +47,12 @@ import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericDeltaSet
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericDeltaSetUnacknowledged
+import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLevelGet
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLevelSet
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLevelSetUnacknowledged
+import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLevelStatus
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericMoveSet
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericMoveSetUnacknowledged
-import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericOnOffGet
-import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericOnOffStatus
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.StepResolution
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
@@ -191,7 +190,7 @@ private fun Controls(
                 HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
                 Slider(
                     modifier = Modifier.fillMaxWidth(),
-                    value = percent.toFloat(),
+                    value = percent,
                     onValueChange = { percent = it },
                     onValueChangeFinished = {
                         onSliderValueChanged(
@@ -277,11 +276,11 @@ private fun Status(
             title = stringResource(R.string.label_status)
         )
         MeshIconButton(
-            onClick = { sendApplicationMessage(model, GenericOnOffGet()) },
+            onClick = { sendApplicationMessage(model, GenericLevelGet()) },
             buttonIcon = Icons.Outlined.Autorenew,
             enabled = !messageState.isInProgress(),
             isOnClickActionInProgress = messageState.isInProgress() &&
-                    messageState.message is GenericOnOffGet,
+                    messageState.message is GenericLevelGet,
         )
     }
     ElevatedCardItem(
@@ -291,13 +290,9 @@ private fun Status(
         titleAction = {
             Text(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                text = stringResource(
-                    id = (messageState.response as? GenericOnOffStatus)?.let {
-                        if (it.isOn) R.string.label_on else R.string.label_off
-                    } ?: run {
-                        R.string.label_unknown
-                    }
-                ).uppercase()
+                text = (messageState.response as? GenericLevelStatus)?.level?.let {
+                    "${it.toPercent()}%"
+                } ?: stringResource(R.string.label_unknown).uppercase()
             )
         }
     )
@@ -308,25 +303,19 @@ private fun Status(
         titleAction = {
             Text(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                text = (messageState.response as? GenericOnOffStatus)?.let {
-                    when {
-                        it.targetState == true && it.remainingTime != null -> stringResource(
-                            R.string.label_on_with_remaining_time,
-                            it.remainingTime.toString()
-                        )
-
-                        it.targetState == false && it.remainingTime != null -> stringResource(
-                            R.string.label_off_with_remaining_time,
-                            it.remainingTime.toString()
-                        )
-
-                        else -> stringResource(R.string.label_na)
-                    }
+                text = (messageState.response as? GenericLevelStatus)?.let {
+                    it.targetLevel?.let { target ->
+                        val level = "${target.toPercent()}%"
+                        it.remainingTime?.let { time -> "$level ($time)" } ?: level
+                    } ?: stringResource(R.string.label_na)
                 } ?: stringResource(R.string.label_unknown).uppercase(),
             )
         }
     )
 }
+
+/** Converts a signed 16-bit level to a percentage between 0 and 100. */
+private fun Short.toPercent(): Int = ((toInt() + 32768) / 655.35).roundToInt()
 
 private fun onSliderValueChanged(
     levelOption: Int,
