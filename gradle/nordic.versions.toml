@@ -1,6 +1,6 @@
 [versions]
 common = "2.12.0"     # https://github.com/nordicsemi/Android-Common-Libraries
-blek = "2.0.0-beta09"
+blek = "2.0.0-beta10"
 log = "2.6.0"
 util = "1.2.0"
 mcumgr = "3.5.0-alpha01"       # https://github.com/nordicsemi/Android-nRF-Connect-Device-Manager
