@@ -7,7 +7,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -36,8 +36,8 @@ private val BONDED_CONNECTION_DELAY = 500.milliseconds
 internal class LePairingViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(LePairingScreenUiState())
-    internal val uiState = _uiState.asStateFlow()
+    internal val uiState: StateFlow<LePairingScreenUiState>
+        field = MutableStateFlow(LePairingScreenUiState())
     private var pairingJob: Job? = null
 
     /**
@@ -57,7 +57,7 @@ internal class LePairingViewModel @Inject internal constructor(
     internal fun pair() {
         if (pairingJob?.isActive == true) return
         // Updated before launching, so that a previous result is never seen when the page is shown.
-        _uiState.update { it.copy(passKey = null, state = PairingState.Connecting) }
+        uiState.update { it.copy(passKey = null, state = PairingState.Connecting) }
         pairingJob = viewModelScope.launch {
             val connection = async {
                 try {
@@ -74,23 +74,23 @@ internal class LePairingViewModel @Inject internal constructor(
                 ?: run {
                     // The device is not bonded, the user has to enter the pass key in the pairing
                     // dialog of the system.
-                    _uiState.update { it.copy(state = PairingState.RequestingPassKey) }
+                    uiState.update { it.copy(state = PairingState.RequestingPassKey) }
                     try {
                         requestPassKey()?.let { passKey ->
-                            _uiState.update { it.copy(passKey = passKey) }
+                            uiState.update { it.copy(passKey = passKey) }
                         }
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
                         // The connection is canceled so that a retry starts a new one.
                         connection.cancel()
-                        _uiState.update { it.copy(state = PairingState.RequestFailed(error = e)) }
+                        uiState.update { it.copy(state = PairingState.RequestFailed(error = e)) }
                         return@launch
                     }
-                    _uiState.update { it.copy(state = PairingState.Connecting) }
+                    uiState.update { it.copy(state = PairingState.Connecting) }
                     connection.await()
                 }
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     state = result.fold(
                         onSuccess = { PairingState.Paired },

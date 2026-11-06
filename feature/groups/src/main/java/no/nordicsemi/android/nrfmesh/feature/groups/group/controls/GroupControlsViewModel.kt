@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -35,8 +34,8 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
     @Assisted("modelId") private val modelId: Int,
 ) : ViewModel() {
     private var group: Group? = null
-    private val _uiState = MutableStateFlow(GroupControlsScreenUiState())
-    val uiState: StateFlow<GroupControlsScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<GroupControlsScreenUiState>
+        field = MutableStateFlow(GroupControlsScreenUiState())
 
     private lateinit var network: MeshNetwork
 
@@ -44,7 +43,7 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
         observeNetwork()
         repository.recalledGroupScenes
             .onEach { scenes ->
-                _uiState.update { it.copy(recalledScene = scenes[groupAddress.toUShort()]) }
+                uiState.update { it.copy(recalledScene = scenes[groupAddress.toUShort()]) }
             }
             .launchIn(scope = viewModelScope)
     }
@@ -68,7 +67,7 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
                                     ?: listOf(model)
                             }
                         }
-                    val state = _uiState.value.copy(
+                    val state = uiState.value.copy(
                         groupState = GroupModelControlsState.Success(
                             network = network,
                             modelId = modelId.toUInt().decode(),
@@ -79,7 +78,7 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
                             )
                         )
                     )
-                    _uiState.emit(value = state)
+                    uiState.emit(value = state)
                     this@GroupControlsViewModel.network = network
                 }
             }.launchIn(scope = viewModelScope)
@@ -108,10 +107,12 @@ internal class GroupControlsViewModel @AssistedInject internal constructor(
     }
 
     fun onModelClicked(index: Int) {
-        val state = _uiState.value.groupState as? GroupModelControlsState.Success ?: return
-        _uiState.value = _uiState.value.copy(
-            groupState = state.copy(selectedModelIndex = index)
-        )
+        val state = uiState.value.groupState as? GroupModelControlsState.Success ?: return
+        uiState.update {
+            it.copy(
+                groupState = state.copy(selectedModelIndex = index)
+            )
+        }
     }
 
     fun deleteGroup(group: Group): Boolean = network.remove(group = group)

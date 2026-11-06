@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import javax.inject.Inject
@@ -35,9 +36,7 @@ internal class NodesViewModel @Inject internal constructor(
             .map { repository.meshNetwork }
             .filterNotNull()
             .onEach { network ->
-                _uiState.value = NodesScreenUiState(
-                    nodes = network.nodes.toList()
-                )
+                _uiState.update { NodesScreenUiState(nodes = network.nodes.toList()) }
             }
             .launchIn(scope = viewModelScope)
     }

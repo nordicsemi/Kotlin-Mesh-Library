@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -45,8 +44,8 @@ internal class AddNetKeysViewModel @AssistedInject internal constructor(
     private lateinit var selectedNode: Node
     private val nodeUuid = Uuid.parse(uuidString = uuid)
 
-    private val _uiState = MutableStateFlow(AddNetKeysScreenUi())
-    val uiState: StateFlow<AddNetKeysScreenUi> = _uiState.asStateFlow()
+    val uiState: StateFlow<AddNetKeysScreenUi>
+        field = MutableStateFlow(AddNetKeysScreenUi())
 
     init {
         observeNetworkChanges()
@@ -58,7 +57,7 @@ internal class AddNetKeysViewModel @AssistedInject internal constructor(
             .filterNotNull()
             .onEach { network ->
                 selectedNode = network.node(uuid = nodeUuid) ?: return@onEach
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         isLocalProvisionerNode = selectedNode.isLocalProvisioner,
                         addedNetworkKeys = selectedNode.networkKeys.toList(),
@@ -76,10 +75,10 @@ internal class AddNetKeysViewModel @AssistedInject internal constructor(
      * @return true if the NodeIdentityState should be updated, false otherwise.
      */
     private fun shouldUpdateNodeIdentityState(): Boolean =
-        _uiState.value.nodeIdentityStates.isEmpty()
+        uiState.value.nodeIdentityStates.isEmpty()
 
     internal fun send(message: AcknowledgedConfigMessage) {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 messageState = Sending(message = message),
                 isRefreshing = if (message is ConfigNetKeyGet) true else it.isRefreshing
@@ -88,63 +87,72 @@ internal class AddNetKeysViewModel @AssistedInject internal constructor(
         viewModelScope.launch {
             try {
                 repository.send(selectedNode, message)?.let { response ->
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Completed(
-                            message = message,
-                            response = response as ConfigResponse
-                        ),
-                        isRefreshing = false
-                    )
+                    uiState.update {
+                        it.copy(
+                            messageState = Completed(
+                                message = message,
+                                response = response as ConfigResponse
+                            ),
+                            isRefreshing = false
+                        )
+                    }
                 } ?: run {
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Failed(
-                            message = message,
-                            error = IllegalStateException("No response received")
-                        ),
+                    uiState.update {
+                        it.copy(
+                            messageState = Failed(
+                                message = message,
+                                error = IllegalStateException("No response received")
+                            ),
+                            isRefreshing = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                uiState.update {
+                    it.copy(
+                        messageState = Failed(message = message, error = e),
                         isRefreshing = false
                     )
                 }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    messageState = Failed(message = message, error = e),
-                    isRefreshing = false
-                )
             }
         }
     }
 
     internal fun send(model: Model, message: MeshMessage) {
-        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+        uiState.update { it.copy(messageState = Sending(message = message)) }
         viewModelScope.launch {
             runCatching {
                 if (message is AcknowledgedMeshMessage) {
                     val response = repository.send(model = model, ackedMessage = message)
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Completed(
-                            message = message,
-                            response = response as? MeshResponse
+                    uiState.update {
+                        it.copy(
+                            messageState = Completed(
+                                message = message,
+                                response = response as? MeshResponse
+                            )
                         )
-                    )
+                    }
 
                 } else {
                     repository.send(
                         model = model,
                         unackedMessage = message as UnacknowledgedMeshMessage
                     )
-                    _uiState.value =
-                        _uiState.value.copy(messageState = Completed(message = message))
+                    uiState.update { it.copy(messageState = Completed(message = message)) }
                 }
             }.getOrElse {
-                _uiState.value = _uiState.value.copy(
-                    messageState = Failed(message = message, error = it),
-                    isRefreshing = false
-                )
+                uiState.update { state ->
+                    state.copy(
+                        messageState = Failed(message = message, error = it),
+                        isRefreshing = false
+                    )
+                }
             }
         }
     }
 
     internal fun resetMessageState() {
-        _uiState.value = _uiState.value.copy(messageState = NotStarted)
+        uiState.update { it.copy(messageState = NotStarted) }
     }
 
     internal fun addNetworkKey() = repository.addNetworkKey()

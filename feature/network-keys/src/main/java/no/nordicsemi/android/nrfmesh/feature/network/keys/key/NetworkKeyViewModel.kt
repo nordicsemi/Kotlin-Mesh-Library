@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -25,8 +24,8 @@ class NetworkKeyViewModel @AssistedInject internal constructor(
 ) : ViewModel() {
     private val keyIndex = index.toUShort()
     private lateinit var network: MeshNetwork
-    private val _uiState = MutableStateFlow(NetworkKeyScreenUiState())
-    internal val uiState: StateFlow<NetworkKeyScreenUiState> = _uiState.asStateFlow()
+    internal val uiState: StateFlow<NetworkKeyScreenUiState>
+        field = MutableStateFlow(NetworkKeyScreenUiState())
 
     init {
         observeNetwork()
@@ -41,7 +40,7 @@ class NetworkKeyViewModel @AssistedInject internal constructor(
                 val keyState = network.networkKey(index = keyIndex)
                     ?.let { NetKeyState.Success(key = it) }
                     ?: NetKeyState.Error(throwable = IllegalStateException("Network Key not found."))
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(keyState = keyState)
                 }
             }

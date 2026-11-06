@@ -7,11 +7,11 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.storage.MeshSecurePropertiesStorage
@@ -25,8 +25,8 @@ class IvIndexViewModel @AssistedInject constructor(
     private val storage: MeshSecurePropertiesStorage,
 ) : ViewModel() {
     private lateinit var network: MeshNetwork
-    private val _uiState = MutableStateFlow(IvIndexScreenUiState())
-    internal val uiState: StateFlow<IvIndexScreenUiState> = _uiState.asStateFlow()
+    internal val uiState: StateFlow<IvIndexScreenUiState>
+        field = MutableStateFlow(IvIndexScreenUiState())
 
     init {
         observeNetworkState()
@@ -41,11 +41,13 @@ class IvIndexViewModel @AssistedInject constructor(
             .filterNotNull()
             .onEach {
                 network = it
-                _uiState.value = IvIndexScreenUiState(
-                    ivIndex = network.ivIndex,
-                    testMode = repository.ivUpdateTestMode,
-                    isIvIndexChangeAllowed = network.isIvIndexUpdateAllowed()
-                )
+                uiState.update {
+                    IvIndexScreenUiState(
+                        ivIndex = network.ivIndex,
+                        testMode = repository.ivUpdateTestMode,
+                        isIvIndexChangeAllowed = network.isIvIndexUpdateAllowed()
+                    )
+                }
             }
             .launchIn(scope = viewModelScope)
     }
@@ -60,7 +62,7 @@ class IvIndexViewModel @AssistedInject constructor(
                 storage.storeIvIndex(uuid = network.uuid, ivIndex = network.ivIndex)
             }
         }.onSuccess {
-            _uiState.value = _uiState.value.copy(ivIndex = network.ivIndex)
+            uiState.update { it.copy(ivIndex = network.ivIndex) }
         }
     }
 
@@ -69,7 +71,7 @@ class IvIndexViewModel @AssistedInject constructor(
      */
     internal fun toggleIvUpdateTestMode(flag: Boolean) {
         repository.toggleIvUpdateTestMode(flag = flag)
-        _uiState.value = _uiState.value.copy(testMode = flag)
+        uiState.update { it.copy(testMode = flag) }
     }
 
     @AssistedFactory

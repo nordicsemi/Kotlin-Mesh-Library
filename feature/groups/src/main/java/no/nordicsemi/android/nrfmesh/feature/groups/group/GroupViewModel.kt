@@ -8,11 +8,11 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.isSupportedGroupItem
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
@@ -30,8 +30,8 @@ internal class GroupViewModel @AssistedInject internal constructor(
     @Assisted private val address: Int,
 ) : ViewModel() {
     private var group: Group? = null
-    private val _uiState = MutableStateFlow(GroupScreenUiState())
-    val uiState: StateFlow<GroupScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<GroupScreenUiState>
+        field = MutableStateFlow(GroupScreenUiState())
 
     private lateinit var network: MeshNetwork
 
@@ -58,7 +58,7 @@ internal class GroupViewModel @AssistedInject internal constructor(
                                     ?: listOf(model)
                             }
                         }
-                    val state = _uiState.value.copy(
+                    val state = uiState.value.copy(
                         groupState = GroupState.Success(
                             network = network,
                             group = group,
@@ -68,7 +68,7 @@ internal class GroupViewModel @AssistedInject internal constructor(
                             )
                         )
                     )
-                    _uiState.emit(value = state)
+                    uiState.emit(value = state)
                     this@GroupViewModel.network = network
                 }
             }.launchIn(scope = viewModelScope)
@@ -97,10 +97,12 @@ internal class GroupViewModel @AssistedInject internal constructor(
     }
 
     fun onModelClicked(index: Int) {
-        val state = _uiState.value.groupState as? GroupState.Success ?: return
-        _uiState.value = _uiState.value.copy(
-            groupState = state.copy(selectedModelIndex = index)
-        )
+        val state = uiState.value.groupState as? GroupState.Success ?: return
+        uiState.update {
+            it.copy(
+                groupState = state.copy(selectedModelIndex = index)
+            )
+        }
     }
 
     fun deleteGroup(group: Group): Boolean = network.remove(group = group)

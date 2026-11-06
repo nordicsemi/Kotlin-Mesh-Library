@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -23,8 +22,8 @@ class NetworkKeysViewModel @Inject internal constructor(
 ) : ViewModel() {
 
     private lateinit var network: MeshNetwork
-    private val _uiState = MutableStateFlow(NetworkKeysScreenUiState())
-    val uiState: StateFlow<NetworkKeysScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<NetworkKeysScreenUiState>
+        field = MutableStateFlow(NetworkKeysScreenUiState())
 
     init {
         observeNetwork()
@@ -41,7 +40,7 @@ class NetworkKeysViewModel @Inject internal constructor(
             .filterNotNull()
             .onEach {
                 network = it
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         keys = network.networkKeys
                             .map { NetworkKeyData(key = it) }
@@ -65,7 +64,7 @@ class NetworkKeysViewModel @Inject internal constructor(
      * @param key Network key to be deleted.
      */
     internal fun onSwiped(key: NetworkKeyData) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(keysToBeRemoved = state.keysToBeRemoved + key)
         }
     }
@@ -77,7 +76,7 @@ class NetworkKeysViewModel @Inject internal constructor(
      * @param key Network key to be reverted.
      */
     internal fun onUndoSwipe(key: NetworkKeyData) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(keysToBeRemoved = state.keysToBeRemoved - key)
         }
     }
@@ -88,7 +87,7 @@ class NetworkKeysViewModel @Inject internal constructor(
      * @param key Key to be removed.
      */
     internal fun remove(key: NetworkKeyData) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(
                 keys = state.keys - key,
                 keysToBeRemoved = state.keysToBeRemoved - key
@@ -104,7 +103,7 @@ class NetworkKeysViewModel @Inject internal constructor(
      */
     private fun removeKeys() {
         val _ = runCatching {
-            _uiState.value.keysToBeRemoved.forEach { keyData ->
+            uiState.value.keysToBeRemoved.forEach { keyData ->
                 network.removeNetworkKeyWithIndex(index = keyData.index)
             }
         }
@@ -112,7 +111,7 @@ class NetworkKeysViewModel @Inject internal constructor(
     }
 
     internal fun selectKeyIndex(keyIndex: KeyIndex) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(selectedKeyIndex = keyIndex)
         }
     }

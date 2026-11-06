@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
@@ -22,8 +22,8 @@ internal class ScannerViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(ScannerScreenUiState())
-    internal val uiState = _uiState.asStateFlow()
+    internal val uiState: StateFlow<ScannerScreenUiState>
+        field = MutableStateFlow(ScannerScreenUiState())
 
     init {
         observeNetwork()
@@ -34,7 +34,7 @@ internal class ScannerViewModel @Inject internal constructor(
             .mapNotNull { repository.meshNetwork }
             .onEach { network ->
                 meshNetwork = network
-                _uiState.update {
+                uiState.update {
                     it.copy(meshNetworkState = MeshNetworkState.Success(network = network))
                 }
             }
@@ -42,7 +42,7 @@ internal class ScannerViewModel @Inject internal constructor(
 
         repository.proxyConnectionStateFlow
             .onEach { proxyConnectionState ->
-                _uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
+                uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
             }
             .launchIn(scope = viewModelScope)
     }

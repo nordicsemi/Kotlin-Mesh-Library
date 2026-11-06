@@ -14,7 +14,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
@@ -57,8 +56,8 @@ internal class NodeViewModel @AssistedInject internal constructor(
         ?: repository.messengers.create(uuid = nodeUuid)
     private var configurationJob: Job? = null
 
-    private val _uiState = MutableStateFlow(NodeScreenUiState())
-    val uiState: StateFlow<NodeScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<NodeScreenUiState>
+        field = MutableStateFlow(NodeScreenUiState())
 
     init {
         observeNetworkChanges()
@@ -82,7 +81,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
                         nodeInfoListData = NodeInfoListData(node = node)
                     )
                 } ?: NodeState.Error(Throwable("Node not found"))
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         nodeState = nodeState,
                         availableNetworkKeys = selectedNode.unknownNetworkKeys(),
@@ -99,7 +98,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
      */
     private fun observeMessenger() {
         messenger.meshTaskFlow
-            .onEach { tasks -> _uiState.update { it.copy(tasks = tasks.toList()) } }
+            .onEach { tasks -> uiState.update { it.copy(tasks = tasks.toList()) } }
             .launchIn(scope = viewModelScope)
     }
 
@@ -158,7 +157,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
      * Called when the user pulls down to refresh the node details.
      */
     internal fun onRefresh() {
-        _uiState.value = uiState.value.copy(isRefreshing = true)
+        uiState.update { it.copy(isRefreshing = true) }
         send(message = ConfigCompositionDataGet(page = 0x00u))
     }
 
@@ -173,15 +172,15 @@ internal class NodeViewModel @AssistedInject internal constructor(
     }
 
     internal fun onItemSelected(item: ClickableNodeInfoItem) {
-        _uiState.update { it.copy(selectedNodeInfoItem = item) }
+        uiState.update { it.copy(selectedNodeInfoItem = item) }
     }
 
     internal fun send(message: AcknowledgedConfigMessage) {
-        _uiState.update { it.copy(messageState = Sending(message = message)) }
+        uiState.update { it.copy(messageState = Sending(message = message)) }
         viewModelScope.launch {
             try {
                 repository.send(selectedNode, message)?.let { response ->
-                    _uiState.update {
+                    uiState.update {
                         it.copy(
                             messageState = Completed(
                                 message = message,
@@ -191,7 +190,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
                         )
                     }
                 } ?: run {
-                    _uiState.update {
+                    uiState.update {
                         it.copy(
                             messageState = Failed(
                                 message = message,
@@ -202,7 +201,7 @@ internal class NodeViewModel @AssistedInject internal constructor(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         messageState = Failed(message = message, error = e),
                         isRefreshing = false

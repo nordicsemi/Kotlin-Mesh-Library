@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -48,8 +47,8 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
     private lateinit var selectedNode: Node
     private val nodeUuid = Uuid.parse(uuidString = uuid)
 
-    private val _uiState = MutableStateFlow(ConfigNetKeysScreenUi())
-    val uiState: StateFlow<ConfigNetKeysScreenUi> = _uiState.asStateFlow()
+    val uiState: StateFlow<ConfigNetKeysScreenUi>
+        field = MutableStateFlow(ConfigNetKeysScreenUi())
 
     init {
         observeNetworkChanges()
@@ -61,7 +60,7 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
             .filterNotNull()
             .onEach { network ->
                 selectedNode = network.node(uuid = nodeUuid) ?: return@onEach
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         isLocalProvisionerNode = selectedNode.isLocalProvisioner,
                         addedNetworkKeys = selectedNode.networkKeys.toList(),
@@ -79,7 +78,7 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
      * @return true if the NodeIdentityState should be updated, false otherwise.
      */
     private fun shouldUpdateNodeIdentityState(): Boolean =
-        _uiState.value.nodeIdentityStates.isEmpty()
+        uiState.value.nodeIdentityStates.isEmpty()
 
     /**
      * Creates a list of NodeIdentityStatus objects for each network key.
@@ -99,12 +98,12 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
      * Called when the user pulls down to refresh the node details.
      */
     internal fun onRefresh() {
-        _uiState.value = uiState.value.copy(isRefreshing = true)
+        uiState.update { it.copy(isRefreshing = true) }
         send(message = ConfigNetKeyGet())
     }
 
     internal fun send(message: AcknowledgedConfigMessage) {
-        _uiState.update {
+        uiState.update {
             it.copy(
                 messageState = Sending(message = message),
                 isRefreshing = if (message is ConfigNetKeyGet) true else it.isRefreshing
@@ -113,57 +112,66 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
         viewModelScope.launch {
             try {
                 repository.send(selectedNode, message)?.let { response ->
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Completed(
-                            message = message,
-                            response = response as ConfigResponse
-                        ),
-                        isRefreshing = false
-                    )
+                    uiState.update {
+                        it.copy(
+                            messageState = Completed(
+                                message = message,
+                                response = response as ConfigResponse
+                            ),
+                            isRefreshing = false
+                        )
+                    }
                 } ?: run {
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Failed(
-                            message = message,
-                            error = IllegalStateException("No response received")
-                        ),
+                    uiState.update {
+                        it.copy(
+                            messageState = Failed(
+                                message = message,
+                                error = IllegalStateException("No response received")
+                            ),
+                            isRefreshing = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                uiState.update {
+                    it.copy(
+                        messageState = Failed(message = message, error = e),
                         isRefreshing = false
                     )
                 }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    messageState = Failed(message = message, error = e),
-                    isRefreshing = false
-                )
             }
         }
     }
 
     internal fun send(model: Model, message: MeshMessage) {
-        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+        uiState.update { it.copy(messageState = Sending(message = message)) }
         viewModelScope.launch {
             runCatching {
                 if (message is AcknowledgedMeshMessage) {
                     val response = repository.send(model = model, ackedMessage = message)
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Completed(
-                            message = message,
-                            response = response as? MeshResponse
+                    uiState.update {
+                        it.copy(
+                            messageState = Completed(
+                                message = message,
+                                response = response as? MeshResponse
+                            )
                         )
-                    )
+                    }
 
                 } else {
                     repository.send(
                         model = model,
                         unackedMessage = message as UnacknowledgedMeshMessage
                     )
-                    _uiState.value =
-                        _uiState.value.copy(messageState = Completed(message = message))
+                    uiState.update { it.copy(messageState = Completed(message = message)) }
                 }
             }.getOrElse {
-                _uiState.value = _uiState.value.copy(
-                    messageState = Failed(message = message, error = it),
-                    isRefreshing = false
-                )
+                uiState.update { state ->
+                    state.copy(
+                        messageState = Failed(message = message, error = it),
+                        isRefreshing = false
+                    )
+                }
             }
         }
     }
@@ -174,30 +182,36 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
             try {
                 selectedNode.networkKeys.forEach {
                     message = ConfigAppKeyGet(networkKeyIndex = it.index)
-                    _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+                    uiState.update { it.copy(messageState = Sending(message = message)) }
                     repository.send(selectedNode, message)?.let { response ->
-                        _uiState.value = _uiState.value.copy(
-                            messageState = Completed(
-                                message = message,
-                                response = response as ConfigResponse
-                            ),
-                            isRefreshing = false
-                        )
+                        uiState.update {
+                            it.copy(
+                                messageState = Completed(
+                                    message = message,
+                                    response = response as ConfigResponse
+                                ),
+                                isRefreshing = false
+                            )
+                        }
                     } ?: run {
-                        _uiState.value = _uiState.value.copy(
-                            messageState = Failed(
-                                message = message,
-                                error = IllegalStateException("No response received")
-                            ),
-                            isRefreshing = false
-                        )
+                        uiState.update {
+                            it.copy(
+                                messageState = Failed(
+                                    message = message,
+                                    error = IllegalStateException("No response received")
+                                ),
+                                isRefreshing = false
+                            )
+                        }
                     }
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    messageState = Failed(message = message, error = e),
-                    isRefreshing = false
-                )
+                uiState.update {
+                    it.copy(
+                        messageState = Failed(message = message, error = e),
+                        isRefreshing = false
+                    )
+                }
             }
         }
     }
@@ -206,12 +220,14 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
         viewModelScope.launch {
             val element = model.parentElement ?: throw IllegalStateException("Element not found")
             if (shouldUpdateNodeIdentityState()) {
-                _uiState.value = _uiState.value.copy(
-                    nodeIdentityStates = createNodeIdentityStates(model = model)
-                )
+                uiState.update {
+                    it.copy(
+                        nodeIdentityStates = createNodeIdentityStates(model = model)
+                    )
+                }
             }
-            val uiState = _uiState.value
-            val nodeIdentityStates = uiState.nodeIdentityStates.toMutableList()
+            val currentState = uiState.value
+            val nodeIdentityStates = currentState.nodeIdentityStates.toMutableList()
             val keys = element.parentNode?.networkKeys ?: emptyList()
 
             var message: ConfigNodeIdentityGet? = null
@@ -219,7 +235,7 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
             try {
                 keys.forEach { key ->
                     message = ConfigNodeIdentityGet(networkKeyIndex = key.index)
-                    _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+                    uiState.update { it.copy(messageState = Sending(message = message)) }
                     response = repository.send(
                         node = element.parentNode!!,
                         message = message
@@ -233,24 +249,28 @@ internal class ConfigNetKeysViewModel @AssistedInject internal constructor(
                             .copy(nodeIdentityState = status.identity)
                     }
                 }
-                _uiState.value = _uiState.value.copy(
-                    messageState = Completed(
-                        message = ConfigNodeIdentityGet(networkKeyIndex = keys.first().index),
-                        response = response as ConfigNodeIdentityStatus
-                    ),
-                    nodeIdentityStates = nodeIdentityStates.toList()
-                )
+                uiState.update {
+                    it.copy(
+                        messageState = Completed(
+                            message = ConfigNodeIdentityGet(networkKeyIndex = keys.first().index),
+                            response = response as ConfigNodeIdentityStatus
+                        ),
+                        nodeIdentityStates = nodeIdentityStates.toList()
+                    )
+                }
             } catch (ex: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    messageState = Failed(message = message, error = ex),
-                    isRefreshing = false,
-                )
+                uiState.update {
+                    it.copy(
+                        messageState = Failed(message = message, error = ex),
+                        isRefreshing = false,
+                    )
+                }
             }
         }
     }
 
     internal fun resetMessageState() {
-        _uiState.value = _uiState.value.copy(messageState = NotStarted)
+        uiState.update { it.copy(messageState = NotStarted) }
     }
 
     internal fun addNetworkKey() = repository.addNetworkKey()

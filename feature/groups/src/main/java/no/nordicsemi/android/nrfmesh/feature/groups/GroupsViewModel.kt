@@ -5,12 +5,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.compose
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.kotlin.mesh.core.exception.NoNetwork
@@ -24,8 +24,8 @@ internal class GroupsViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(GroupsScreenUiState(groups = listOf()))
-    val uiState: StateFlow<GroupsScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<GroupsScreenUiState>
+        field = MutableStateFlow(GroupsScreenUiState(groups = listOf()))
 
     init {
         observeNetworkChanges()
@@ -38,9 +38,11 @@ internal class GroupsViewModel @Inject internal constructor(
             .filterNotNull()
             .onEach { network ->
                 meshNetwork = network
-                _uiState.value = GroupsScreenUiState(
-                    groups = network.groups
-                )
+                uiState.update {
+                    GroupsScreenUiState(
+                        groups = network.groups
+                    )
+                }
             }
             .launchIn(scope = viewModelScope)
     }
