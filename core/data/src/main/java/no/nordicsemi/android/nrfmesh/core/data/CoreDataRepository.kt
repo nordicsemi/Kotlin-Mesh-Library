@@ -18,7 +18,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -119,13 +118,13 @@ class CoreDataRepository @Inject constructor(
 ) {
     var nodeToReconfigure: Node? = null
         private set
-    private var _proxyConnectionStateFlow = MutableStateFlow(ProxyConnectionState())
-    val proxyConnectionStateFlow = _proxyConnectionStateFlow.asStateFlow()
+    val proxyConnectionStateFlow: StateFlow<ProxyConnectionState>
+        field = MutableStateFlow(ProxyConnectionState())
     private val isAutoConnectEnabled: Boolean
-        get() = _proxyConnectionStateFlow.value.autoConnect
+        get() = proxyConnectionStateFlow.value.autoConnect
 
-    private var _developerSettingsStateFlow = MutableStateFlow(value = DeveloperSettings())
-    val developerSettingsStateFlow = _developerSettingsStateFlow.asStateFlow()
+    val developerSettingsStateFlow: StateFlow<DeveloperSettings>
+        field = MutableStateFlow(value = DeveloperSettings())
 
     /**
      * Scenes that were last recalled on a group from this app, by the address of the group.
@@ -192,7 +191,7 @@ class CoreDataRepository @Inject constructor(
     private fun observerAutomaticProxyConnectionState() {
         preferences.data
             .onEach { prefs ->
-                _proxyConnectionStateFlow.update { state ->
+                proxyConnectionStateFlow.update { state ->
                     state.copy(autoConnect = prefs[PreferenceKeys.PROXY_AUTO_CONNECT] == true)
                 }
             }
@@ -205,7 +204,7 @@ class CoreDataRepository @Inject constructor(
     private fun observeDeveloperSettingsState() {
         preferences.data
             .onEach { preferences ->
-                _developerSettingsStateFlow.update { state ->
+                developerSettingsStateFlow.update { state ->
                     state.copy(
                         quickProvisioning = preferences[PreferenceKeys.QUICK_PROVISIONING] == true,
                         alwaysReconfigure = preferences[PreferenceKeys.ALWAYS_RECONFIGURE] == true
@@ -505,7 +504,7 @@ class CoreDataRepository @Inject constructor(
      */
     suspend fun toggleAutomaticConnection(enabled: Boolean): Unit =
         withContext(context = ioDispatcher) {
-            _proxyConnectionStateFlow.update {
+            proxyConnectionStateFlow.update {
                 it.copy(autoConnect = enabled)
             }
             preferences.edit { preferences ->
@@ -633,12 +632,12 @@ class CoreDataRepository @Inject constructor(
         val peripheral = centralManager
             .scan { ServiceUuid(uuid = MeshProxyService.uuid) }
             .onStart {
-                _proxyConnectionStateFlow.update {
+                proxyConnectionStateFlow.update {
                     it.copy(connectionState = NetworkConnectionState.Scanning)
                 }
             }
             .onCompletion {
-                _proxyConnectionStateFlow.update { state ->
+                proxyConnectionStateFlow.update { state ->
                     state.copy(connectionState = NetworkConnectionState.Disconnected)
                 }
             }
@@ -704,7 +703,7 @@ class CoreDataRepository @Inject constructor(
                 when (event) {
                     is BearerEvent.Opened -> {
                         meshBearer = bearer
-                        _proxyConnectionStateFlow.update {
+                        proxyConnectionStateFlow.update {
                             it.copy(connectionState = NetworkConnectionState.Connected(name))
                         }
                     }
@@ -714,7 +713,7 @@ class CoreDataRepository @Inject constructor(
                         releaseMcuMgrTransport()
                         meshNetworkManager.proxyFilter.proxyDidDisconnect()
 
-                        _proxyConnectionStateFlow.update {
+                        proxyConnectionStateFlow.update {
                             it.copy(connectionState = NetworkConnectionState.Disconnected)
                         }
                     }
@@ -722,7 +721,7 @@ class CoreDataRepository @Inject constructor(
             }
             .launchIn(ioScope)
 
-        _proxyConnectionStateFlow.update {
+        proxyConnectionStateFlow.update {
             it.copy(connectionState = NetworkConnectionState.Connecting(name))
         }
         try {
@@ -894,10 +893,9 @@ class CoreDataRepository @Inject constructor(
         }
     }
 
-    private val _isPairing = MutableStateFlow(false)
-
     /** Whether the LE pairing with the connected proxy is in progress. */
-    val isPairing = _isPairing.asStateFlow()
+    val isPairing: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     /**
      * Starts the LE pairing with the connected proxy.
@@ -909,7 +907,7 @@ class CoreDataRepository @Inject constructor(
     fun startPairing() {
         if (pairingJob?.isActive == true) return
         val transport = bleMcuMgrTransport() ?: return
-        _isPairing.value = true
+        isPairing.update { true }
         pairingJob = ioScope.launch {
             try {
                 transport.connect()
@@ -934,7 +932,7 @@ class CoreDataRepository @Inject constructor(
                     level = LogLevel.APPLICATION
                 )
             }
-        }.also { job -> job.invokeOnCompletion { _isPairing.value = false } }
+        }.also { job -> job.invokeOnCompletion { isPairing.update { false } } }
     }
 
     /**
