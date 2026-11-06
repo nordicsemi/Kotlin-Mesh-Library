@@ -102,17 +102,22 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
         val serverKey = server?.boundApplicationKeys?.firstOrNull()
         val setupServerKey = setupServer?.boundApplicationKeys?.firstOrNull()
         val clientKeys = client?.boundApplicationKeys.orEmpty()
+        val isSetUp = serverKey != null && clientKeys.any { it.index == serverKey.index } &&
+                (setupServer == null || (setupServerKey != null &&
+                        clientKeys.any { it.index == setupServerKey.index }))
         _uiState.update { state ->
             state.copy(
+                nodeName = node.name,
+                localNodeName = local?.name.orEmpty(),
                 networkScenes = network.scenes,
                 scenes = network.scenes
                     .filter { node.primaryUnicastAddress in it.addresses }
                     .map { SceneInfo(name = it.name, number = it.number) },
-                // Set up is available until the Scene Server and the Scene Client can communicate.
-                canFix = server != null && client != null &&
-                        (serverKey == null || clientKeys.none { it.index == serverKey.index }),
+                // Set up is available until the Scene Server and the Scene Client share a key and the
+                // Scene Setup Server is bound to the key of the Scene Client.
+                canFix = server != null && client != null && !isSetUp,
                 canUniqueKeySetup = server != null && setupServer != null && client != null &&
-                        (serverKey == null || clientKeys.none { it.index == serverKey.index }),
+                        !isSetUp,
                 isSceneServerReady = serverKey != null,
                 isSceneSetupServerReady = setupServerKey != null,
                 // The client is ready, when it is bound to the key used by the server.
@@ -158,21 +163,7 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
      */
     internal fun store(scene: SceneNumber) {
         val state = _uiState.value
-        if (!state.isSceneSetupServerReady || !state.isSceneClientReadyToSetup) {
-            _uiState.update {
-                it.copy(
-                    messageState = Failed(
-                        message = SceneStore(sceneNumber = scene),
-                        error = IllegalStateException(
-                            "To store scenes, bind the same application key to the Scene Setup " +
-                                    "Server model on the node and to the Scene Client model on " +
-                                    "your local node."
-                        )
-                    )
-                )
-            }
-            return
-        }
+        if (!state.isSceneSetupServerReady || !state.isSceneClientReadyToSetup) return
         viewModelScope.launch {
             request(message = SceneStore(sceneNumber = scene), model = sceneSetupServer)
         }
@@ -412,6 +403,11 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
 internal data class SceneInfo(val name: String, val number: SceneNumber)
 
 internal data class NodeScenesUiState(
+    /**
+     * Name of the node and of the local node, which are shown when the setup is required.
+     */
+    val nodeName: String = "",
+    val localNodeName: String = "",
     val scenes: List<SceneInfo> = emptyList(),
     /**
      * All the scenes of the network, which can be stored on the node.
