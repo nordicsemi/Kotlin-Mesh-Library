@@ -9,7 +9,7 @@ plugins {
 android {
     namespace = "no.nordicsemi.android.nrfmesh"
     defaultConfig {
-        minSdk = 24
+        minSdk = 23
         compileSdk = 37
         applicationId = "no.nordicsemi.android.nrfmesh"
         multiDexEnabled = true
