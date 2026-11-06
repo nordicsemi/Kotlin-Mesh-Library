@@ -21,6 +21,7 @@ no.nordicsemi.kotlin.mesh.core.layers.lowertransport
 no.nordicsemi.kotlin.mesh.core.messages
 no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration
 no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu
+no.nordicsemi.kotlin.mesh.core.messages.foundation.scene
 no.nordicsemi.kotlin.mesh.core.messages.generic
 no.nordicsemi.kotlin.mesh.core.messages.health
 no.nordicsemi.kotlin.mesh.core.messages.proxy
