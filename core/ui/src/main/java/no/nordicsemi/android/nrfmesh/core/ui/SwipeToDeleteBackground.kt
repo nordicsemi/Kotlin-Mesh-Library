@@ -29,7 +29,7 @@ fun SwipeToDeleteBackground(
     dismissState: SwipeToDismissBoxState,
     isDeletable: Boolean = true,
 ) {
-    val color by animateColorAsState(if (isDeletable) Color.Red else Color.Gray)
+    val color by animateColorAsState(if (isDeletable) errorColor else Color.Gray)
     Box(
         modifier = Modifier
             .fillMaxSize()

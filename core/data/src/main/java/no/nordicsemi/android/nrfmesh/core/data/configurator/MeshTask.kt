@@ -1,7 +1,12 @@
 package no.nordicsemi.android.nrfmesh.core.data.configurator
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import no.nordicsemi.android.nrfmesh.core.ui.errorColor
+import no.nordicsemi.android.nrfmesh.core.ui.successColor
+import no.nordicsemi.android.nrfmesh.core.ui.warningColor
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
@@ -63,6 +68,7 @@ sealed class TaskStatus {
     abstract fun description(): String
 
     /** Color of the status to be displayed to the user. */
+    @Composable
     abstract fun color(): Color
 
     /**
@@ -70,6 +76,7 @@ sealed class TaskStatus {
      */
     object Idle : TaskStatus() {
         override fun description() = "Waiting..."
+        @Composable
         override fun color() = Color.Gray
     }
 
@@ -78,7 +85,8 @@ sealed class TaskStatus {
      */
     object InProgress : TaskStatus() {
         override fun description() = "In progress"
-        override fun color() = Color.Blue
+        @Composable
+        override fun color() = MaterialTheme.colorScheme.primary
     }
 
     /**
@@ -86,7 +94,8 @@ sealed class TaskStatus {
      */
     object Skipped : TaskStatus() {
         override fun description() = "Skipped"
-        override fun color() = Color.Gray
+        @Composable
+        override fun color() = warningColor
     }
 
     /**
@@ -94,7 +103,8 @@ sealed class TaskStatus {
      */
     object Completed : TaskStatus() {
         override fun description() = "Success"
-        override fun color() = Color.Green
+        @Composable
+        override fun color() = successColor
     }
 
     /**
@@ -102,6 +112,7 @@ sealed class TaskStatus {
      */
     data class Error(val error: String) : TaskStatus() {
         override fun description() = error
-        override fun color() = Color.Red
+        @Composable
+        override fun color() = errorColor
     }
 }

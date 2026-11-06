@@ -21,7 +21,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -32,6 +31,9 @@ import no.nordicsemi.android.nrfmesh.core.ui.MaxUploadSpace
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.RemainingUploadSpace
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.core.ui.errorColor
+import no.nordicsemi.android.nrfmesh.core.ui.successColor
+import no.nordicsemi.android.nrfmesh.core.ui.warningColor
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageStatus
@@ -129,8 +131,8 @@ internal fun CapabilitiesContent(
                         else -> Icons.Rounded.WarningAmber
                     },
                     tint = when (it.maxReceiversCount > 0u) {
-                        true -> Color.Green
-                        else -> Color(red = 1f, green = 0.6f, blue = 0f)
+                        true -> successColor
+                        else -> warningColor
                     },
                     contentDescription = null
                 )
@@ -162,14 +164,14 @@ internal fun CapabilitiesContent(
                         Icon(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             imageVector = Icons.Outlined.CheckCircle,
-                            tint = Color.Green,
+                            tint = successColor,
                             contentDescription = null
                         )
                     } else {
                         MeshIconButton(
                             modifier = Modifier.padding(end = 8.dp),
                             buttonIcon = Icons.Outlined.DeleteForever,
-                            buttonIconTint = Color.Red,
+                            buttonIconTint = errorColor,
                             onClick = {
                                 scope.launch {
                                     isDeleteFirmwareInProgress = true
@@ -220,8 +222,8 @@ internal fun CapabilitiesContent(
                         else -> Icons.Rounded.WarningAmber
                     },
                     tint = when (it.maxFirmwareImageSize > 0u) {
-                        true -> Color.Green
-                        else -> Color(red = 1f, green = 0.6f, blue = 0f)
+                        true -> successColor
+                        else -> warningColor
                     },
                     contentDescription = null
                 )
@@ -245,8 +247,8 @@ internal fun CapabilitiesContent(
                         else -> Icons.Rounded.WarningAmber
                     },
                     tint = when (it.maxUploadSpace > 0u) {
-                        true -> Color.Green
-                        else -> Color(red = 1f, green = 0.6f, blue = 0f)
+                        true -> successColor
+                        else -> warningColor
                     },
                     contentDescription = null
                 )
@@ -270,8 +272,8 @@ internal fun CapabilitiesContent(
                         else -> Icons.Rounded.WarningAmber
                     },
                     tint = when (it.remainingUploadSpace > 0u) {
-                        true -> Color.Green
-                        else -> Color(red = 1f, green = 0.6f, blue = 0f)
+                        true -> successColor
+                        else -> warningColor
                     },
                     contentDescription = null
                 )

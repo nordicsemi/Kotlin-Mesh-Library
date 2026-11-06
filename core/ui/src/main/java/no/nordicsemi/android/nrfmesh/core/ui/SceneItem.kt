@@ -10,7 +10,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
@@ -49,7 +48,7 @@ fun SceneItem(
                 Icon(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     imageVector = Icons.Outlined.CheckCircle,
-                    tint = Color.Green,
+                    tint = successColor,
                     contentDescription = null
                 )
             }
