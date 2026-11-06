@@ -40,6 +40,8 @@ import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
 import no.nordicsemi.android.nrfmesh.core.data.bearer.AndroidGattBearer
 import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericLevelClient
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.data.model.SceneServer
@@ -331,12 +333,22 @@ class CoreDataRepository @Inject constructor(
                         defaultTransitionTimeServer = defaultTransitionTimeServer
                     )
                 ),
-                Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_LEVEL_SERVER_MODEL_ID)),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.GENERIC_LEVEL_SERVER_MODEL_ID),
+                    handler = GenericLevelServer(
+                        ioDispatcher = ioDispatcher,
+                        storage = storage,
+                        defaultTransitionTimeServer = defaultTransitionTimeServer
+                    )
+                ),
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.GENERIC_ON_OFF_CLIENT_MODEL_ID),
                     handler = GenericOnOffClient()
                 ),
-                Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_LEVEL_CLIENT_MODEL_ID)),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.GENERIC_LEVEL_CLIENT_MODEL_ID),
+                    handler = GenericLevelClient()
+                ),
                 Model(modelId = SigModelId(modelIdentifier = Model.LIGHT_LC_CLIENT_MODEL_ID)),
                 // Nordic Pairing Initiator model
                 Model(

@@ -64,13 +64,13 @@ interface GenericLevelStateStorage {
      * @param uuid           UUID of the network.
      * @param sceneNumber    Scene number.
      * @param elementIndex   Index of the element.
-     * @return Level value.
+     * @return Level value, or null if no level was stored for the given scene and element.
      */
     suspend fun readGenericLevelState(
         uuid: Uuid,
         sceneNumber: SceneNumber,
         elementIndex: Int,
-    ): UShort
+    ): UShort?
 }
 
 /**
