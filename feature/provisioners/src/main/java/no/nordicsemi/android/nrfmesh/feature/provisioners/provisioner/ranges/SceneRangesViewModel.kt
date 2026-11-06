@@ -8,11 +8,11 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Provisioner
@@ -28,8 +28,8 @@ internal class SceneRangesViewModel @AssistedInject internal constructor(
     private val provisionerUuid = uuid
     private lateinit var network: MeshNetwork
     private lateinit var provisioner: Provisioner
-    private val _uiState = MutableStateFlow(SceneRangesScreenUiState())
-    internal val uiState: StateFlow<SceneRangesScreenUiState> = _uiState.asStateFlow()
+    internal val uiState: StateFlow<SceneRangesScreenUiState>
+        field = MutableStateFlow(SceneRangesScreenUiState())
 
     init {
         observeNetwork()
@@ -43,10 +43,12 @@ internal class SceneRangesViewModel @AssistedInject internal constructor(
                 network = it
                 it.provisioner(uuid = provisionerUuid)?.let { provisioner ->
                     this.provisioner = provisioner
-                    _uiState.value = SceneRangesScreenUiState(
-                        ranges = provisioner.allocatedSceneRanges,
-                        otherRanges = provisioner.otherSceneRanges
-                    )
+                    uiState.update {
+                        SceneRangesScreenUiState(
+                            ranges = provisioner.allocatedSceneRanges,
+                            otherRanges = provisioner.otherSceneRanges
+                        )
+                    }
                 }
             }
             .launchIn(scope = viewModelScope)

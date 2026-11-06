@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -49,8 +49,8 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
     private val centralManager: CentralManager,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(DistributorSelectionScreenUiState())
-    internal val uiState = _uiState.asStateFlow()
+    internal val uiState: StateFlow<DistributorSelectionScreenUiState>
+        field = MutableStateFlow(DistributorSelectionScreenUiState())
     private lateinit var network: MeshNetwork
 
     init {
@@ -68,7 +68,7 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
                     ?.model(modelId = firmwareDistributionServer)
                     ?.boundApplicationKeys
                     ?.firstOrNull()
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(selectedKey = selectedKey)
                 }
             }
@@ -79,7 +79,7 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
         repository.proxyConnectionStateFlow
             .onEach { proxyConnectionState ->
                 val state = proxyConnectionState.connectionState
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         proxyConnectionState = proxyConnectionState,
                         name = when (state) {
@@ -146,7 +146,7 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
                     is ProxyFilterState.ProxyFilterUpdateAcknowledged,
                     is ProxyFilterState.ProxyFilterLimitReached,
                         -> {
-                        _uiState.update { state ->
+                        uiState.update { state ->
                             state.copy(
                                 node = repository.proxyFilter.proxy,
                                 unicastAddress = repository.proxyFilter.proxy?.primaryUnicastAddress,
@@ -186,42 +186,42 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
                                     status?.let { appKeyList ->
                                         if (appKeyList.applicationKeyIndexes.isNotEmpty()) {
                                             val key = model.boundApplicationKeys.firstOrNull()
-                                            _uiState.update { it.copy(selectedKey = key) }
+                                            uiState.update { it.copy(selectedKey = key) }
                                             // The status and the capabilities are read separately, as the
                                             // status may have been refreshed by the user already.
-                                            if (_uiState.value.distributionStatus == null && key != null) {
+                                            if (uiState.value.distributionStatus == null && key != null) {
                                                 val distributionStatus = send(
                                                     model = model,
                                                     message = FirmwareDistributionGet()
                                                 ) as? FirmwareDistributionStatus
-                                                _uiState.update { state ->
+                                                uiState.update { state ->
                                                     state.copy(distributionStatus = distributionStatus)
                                                 }
                                             }
-                                            if (_uiState.value.capabilitiesStatus == null && key != null) {
+                                            if (uiState.value.capabilitiesStatus == null && key != null) {
                                                 val capabilitiesStatus = send(
                                                     model = model,
                                                     message = FirmwareDistributionCapabilitiesGet()
                                                 ) as? FirmwareDistributionCapabilitiesStatus
-                                                _uiState.update { state ->
+                                                uiState.update { state ->
                                                     state.copy(capabilitiesStatus = capabilitiesStatus)
                                                 }
                                             }
                                         }
                                     }
                                     // val key = it.boundApplicationKeys.firstOrNull()
-                                    // // _uiState.value = _uiState.value.copy(selectedKey = key)
-                                    // if (_uiState.value.distributionStatus == null && key != null) {
+                                    // // uiState.value = uiState.value.copy(selectedKey = key)
+                                    // if (uiState.value.distributionStatus == null && key != null) {
                                     //     val distributionStatus = send(
                                     //         model = it,
                                     //         message = FirmwareDistributionGet()
                                     //     ) as? FirmwareDistributionStatus
-                                    //     //_uiState.update { state -> state.copy(distributionStatus = distributionStatus) }
+                                    //     //uiState.update { state -> state.copy(distributionStatus = distributionStatus) }
                                     //     val capabilitiesStatus = send(
                                     //         model = it,
                                     //         message = FirmwareDistributionCapabilitiesGet()
                                     //     ) as? FirmwareDistributionCapabilitiesStatus
-                                    //     _uiState.update { state ->
+                                    //     uiState.update { state ->
                                     //         state.copy(
                                     //             selectedKey = key,
                                     //             capabilitiesStatus = capabilitiesStatus,
@@ -244,22 +244,22 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
     }
 
     internal fun resetMessageState() {
-        _uiState.value = _uiState.value.copy(messageState = NotStarted)
+        uiState.update { it.copy(messageState = NotStarted) }
     }
 
     internal fun onApplicationKeyClicked(key: ApplicationKey) {
         // Check if the selected key is bound to LE Pairing Responder
-        val isBound = _uiState.value.node?.model(modelId = lePairingResponder)
+        val isBound = uiState.value.node?.model(modelId = lePairingResponder)
             ?.boundApplicationKeys
             ?.any { it.index == key.index }
-        _uiState.update { it.copy(selectedKey = key) }
+        uiState.update { it.copy(selectedKey = key) }
     }
 
     /**
      * Invoked when the status of the distribution, i.e. its phase, was changed.
      */
     internal fun onDistributionStatusChanged(status: FirmwareDistributionStatus) {
-        _uiState.update { it.copy(distributionStatus = status) }
+        uiState.update { it.copy(distributionStatus = status) }
     }
 
     internal suspend fun send(
@@ -267,7 +267,7 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
         message: AcknowledgedMeshMessage,
     ): MeshMessage? {
         return try {
-            _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+            uiState.update { it.copy(messageState = Sending(message = message)) }
             val response = if (message is AcknowledgedConfigMessage) {
                 val parentNode = model.parentElement?.parentNode
                     ?: throw IllegalStateException("Parent not found")
@@ -276,14 +276,13 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
                 repository.send(model = model, ackedMessage = message)
             }
             response?.let {
-                _uiState.value = _uiState.value.copy(messageState = Completed(message = message, response = it))
+                uiState.update { state -> state.copy(messageState = Completed(message = message, response = it)) }
             } ?: run {
-                _uiState.value = _uiState.value.copy(messageState = Failed(message = message, error = IllegalStateException("No response received")))
+                uiState.update { it.copy(messageState = Failed(message = message, error = IllegalStateException("No response received"))) }
             }
             response
         } catch (e: Exception) {
-            _uiState.value =
-                _uiState.value.copy(messageState = Failed(message = message, error = e))
+            uiState.update { it.copy(messageState = Failed(message = message, error = e)) }
             null
         }
     }

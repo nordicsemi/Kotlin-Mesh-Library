@@ -105,29 +105,35 @@ internal class DistributionParametersViewModel @Inject internal constructor(
      * @return Response from the model or null if the message times out or no response was received
      */
     private suspend fun send(node: Node, message: AcknowledgedConfigMessage): MeshMessage? {
-        uiState.value = uiState.value.copy(messageState = Sending(message = message))
+        uiState.update { it.copy(messageState = Sending(message = message)) }
         return try {
             repository.send(node, message)?.let { response ->
-                uiState.value = uiState.value.copy(
-                    messageState = Completed(
-                        message = message,
-                        response = response as ConfigResponse
-                    ),
-                )
+                uiState.update {
+                    it.copy(
+                        messageState = Completed(
+                            message = message,
+                            response = response as ConfigResponse
+                        ),
+                    )
+                }
                 response
             } ?: run {
-                uiState.value = uiState.value.copy(
-                    messageState = Failed(
-                        message = message,
-                        error = IllegalStateException("No response received")
-                    ),
-                )
+                uiState.update {
+                    it.copy(
+                        messageState = Failed(
+                            message = message,
+                            error = IllegalStateException("No response received")
+                        ),
+                    )
+                }
                 null
             }
         } catch (e: Exception) {
-            uiState.value = uiState.value.copy(
-                messageState = Failed(message = message, error = e),
-            )
+            uiState.update {
+                it.copy(
+                    messageState = Failed(message = message, error = e),
+                )
+            }
             null
         }
     }

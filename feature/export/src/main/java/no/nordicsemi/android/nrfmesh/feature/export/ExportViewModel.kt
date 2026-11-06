@@ -8,7 +8,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -31,8 +30,8 @@ internal class ExportViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(ExportScreenUiState())
-    val uiState: StateFlow<ExportScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ExportScreenUiState>
+        field = MutableStateFlow(ExportScreenUiState())
 
     init {
         observeNetwork()
@@ -44,7 +43,7 @@ internal class ExportViewModel @Inject internal constructor(
             .filterNotNull()
             .onEach { meshNetwork ->
                 this.meshNetwork = meshNetwork
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         networkName = meshNetwork.name,
                         provisionerItemStates = meshNetwork.provisioners
@@ -64,7 +63,7 @@ internal class ExportViewModel @Inject internal constructor(
      * @param option Selected export option
      */
     internal fun onExportOptionSelected(option: ExportOption) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(exportOption = option)
         }
     }
@@ -76,7 +75,7 @@ internal class ExportViewModel @Inject internal constructor(
      * @param selected        True if selected or false otherwise.
      */
     internal fun onProvisionerSelected(provisioner: Provisioner, selected: Boolean) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(
                 provisionerItemStates = state.provisionerItemStates.map {
                     if (it.provisioner.uuid == provisioner.uuid)
@@ -94,7 +93,7 @@ internal class ExportViewModel @Inject internal constructor(
      * @param selected     True if selected or false otherwise.
      */
     internal fun onNetworkKeySelected(key: NetworkKey, selected: Boolean) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(
                 networkKeyItemStates = state.networkKeyItemStates.map {
                     if (it.networkKey.index == key.index)
@@ -111,7 +110,7 @@ internal class ExportViewModel @Inject internal constructor(
      * @param isToggled True if toggled and false otherwise.
      */
     internal fun onExportDeviceKeysToggled(isToggled: Boolean) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(exportDeviceKeys = isToggled)
         }
     }
@@ -120,7 +119,7 @@ internal class ExportViewModel @Inject internal constructor(
      * Invoked when the current export state is displayed to the user.
      */
     internal fun onExportStateDisplayed() {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(exportState = ExportState.Unknown)
         }
     }
@@ -132,7 +131,7 @@ internal class ExportViewModel @Inject internal constructor(
      */
     fun export(contentResolver: ContentResolver, uri: Uri) {
         viewModelScope.launch(CoroutineExceptionHandler { _, throwable ->
-            _uiState.update { state ->
+            uiState.update { state ->
                 state.copy(exportState = ExportState.Error(throwable))
             }
         }) {
@@ -155,7 +154,7 @@ internal class ExportViewModel @Inject internal constructor(
                     close()
                 }
             }
-            _uiState.update { state ->
+            uiState.update { state ->
                 state.copy(exportState = ExportState.Success)
             }
         }

@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -24,8 +23,8 @@ class SettingsViewModel @AssistedInject constructor(
     @Assisted clickableSetting: ClickableSetting?,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(value = SettingsScreenUiState(selectedSetting = clickableSetting))
-    val uiState: StateFlow<SettingsScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<SettingsScreenUiState>
+        field = MutableStateFlow(value = SettingsScreenUiState(selectedSetting = clickableSetting))
 
     init {
         observeNetworkState()
@@ -40,7 +39,7 @@ class SettingsViewModel @AssistedInject constructor(
             .filterNotNull()
             .onEach {
                 meshNetwork = it
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         networkState = MeshNetworkState.Success(
                             settings = SettingsListData(network = meshNetwork)
@@ -58,14 +57,14 @@ class SettingsViewModel @AssistedInject constructor(
      * @param clickableSetting The setting that was clicked.
      */
     internal fun onItemSelected(clickableSetting: ClickableSetting) {
-        _uiState.update { it.copy(selectedSetting = clickableSetting) }
+        uiState.update { it.copy(selectedSetting = clickableSetting) }
     }
 
     /**
      * Resets the selected setting to null.
      */
     internal fun resetSelectedSetting() {
-        _uiState.update { it.copy(selectedSetting = null) }
+        uiState.update { it.copy(selectedSetting = null) }
     }
 
     /**

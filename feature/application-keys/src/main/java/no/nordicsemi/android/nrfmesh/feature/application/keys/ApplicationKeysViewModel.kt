@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -23,8 +22,8 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
     private lateinit var network: MeshNetwork
-    private val _uiState = MutableStateFlow(ApplicationKeysScreenUiState())
-    val uiState: StateFlow<ApplicationKeysScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ApplicationKeysScreenUiState>
+        field = MutableStateFlow(ApplicationKeysScreenUiState())
 
     init {
         observeNetwork()
@@ -41,7 +40,7 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
             .filterNotNull()
             .onEach {
                 network = it
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         keys = network.applicationKeys
                             .map { ApplicationKeyData(key = it) }
@@ -68,7 +67,7 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
      * @param key Application key to be deleted.
      */
     fun onSwiped(key: ApplicationKeyData) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(keysToBeRemoved = state.keysToBeRemoved + key)
         }
     }
@@ -80,7 +79,7 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
      * @param key Application key to be reverted.
      */
     fun onUndoSwipe(key: ApplicationKeyData) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(keysToBeRemoved = state.keysToBeRemoved - key)
         }
     }
@@ -91,7 +90,7 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
      * @param key Key to be removed.
      */
     internal fun remove(key: ApplicationKeyData) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(
                 keys = state.keys - key,
                 keysToBeRemoved = state.keysToBeRemoved - key
@@ -107,7 +106,7 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
      */
     private fun removeKeys() {
         val _ = runCatching {
-            _uiState.value.keysToBeRemoved.forEach { keyData ->
+            uiState.value.keysToBeRemoved.forEach { keyData ->
                 network.removeApplicationKeyWithIndex(index = keyData.index)
             }
         }
@@ -116,7 +115,7 @@ internal class ApplicationKeysViewModel @Inject internal constructor(
 
 
     internal fun selectKeyIndex(keyIndex: KeyIndex?) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(selectedKeyIndex = keyIndex)
         }
     }

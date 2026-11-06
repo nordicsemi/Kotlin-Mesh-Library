@@ -14,7 +14,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -75,8 +74,8 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
     private var fixJob: Job? = null
     private var tasksJob: Job? = null
 
-    private val _uiState = MutableStateFlow(NodeScenesUiState())
-    val uiState: StateFlow<NodeScenesUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<NodeScenesUiState>
+        field = MutableStateFlow(NodeScenesUiState())
 
     init {
         repository.networkEvents
@@ -105,7 +104,7 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
         val isSetUp = serverKey != null && clientKeys.any { it.index == serverKey.index } &&
                 (setupServer == null || (setupServerKey != null &&
                         clientKeys.any { it.index == setupServerKey.index }))
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(
                 nodeName = node.name,
                 localNodeName = local?.name.orEmpty(),
@@ -133,17 +132,17 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
      * Reads the Scene Register and the current scene from the node.
      */
     internal fun onRefresh() {
-        val state = _uiState.value
+        val state = uiState.value
         if (!state.isSceneServerReady || !state.isSceneClientReady) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isRefreshing = true) }
+            uiState.update { it.copy(isRefreshing = true) }
             val response = request(message = SceneRegisterGet(), model = sceneServer)
             // The Scene Register Status reports no current scene when a transition is in
             // progress, so the Scene Get is sent to find out the target scene.
             if ((response as? SceneRegisterStatus)?.takeIf { it.isSuccess }?.scenes?.isNotEmpty() == true) {
                 request(message = SceneGet(), model = sceneServer)
             }
-            _uiState.update { it.copy(isRefreshing = false) }
+            uiState.update { it.copy(isRefreshing = false) }
         }
     }
 
@@ -151,7 +150,7 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
      * Recalls the given scene on the node.
      */
     internal fun recall(scene: SceneNumber) {
-        val state = _uiState.value
+        val state = uiState.value
         if (!state.isSceneServerReady || !state.isSceneClientReady) return
         viewModelScope.launch {
             request(message = SceneRecall(sceneNumber = scene), model = sceneServer)
@@ -162,7 +161,7 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
      * Stores the current state of the node as the given scene in the Scene Register of the node.
      */
     internal fun store(scene: SceneNumber) {
-        val state = _uiState.value
+        val state = uiState.value
         if (!state.isSceneSetupServerReady || !state.isSceneClientReadyToSetup) return
         viewModelScope.launch {
             request(message = SceneStore(sceneNumber = scene), model = sceneSetupServer)
@@ -173,7 +172,7 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
      * Deletes the given scene from the Scene Register of the node.
      */
     internal fun delete(scene: SceneNumber) {
-        val state = _uiState.value
+        val state = uiState.value
         if (!state.isSceneSetupServerReady || !state.isSceneClientReadyToSetup) return
         viewModelScope.launch {
             request(message = SceneDelete(sceneNumber = scene), model = sceneSetupServer)
@@ -313,13 +312,13 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
                 tasks.forEach { messenger.enqueueTask(task = it) }
                 tasksJob?.cancel()
                 tasksJob = messenger.meshTaskFlow
-                    .onEach { tasks -> _uiState.update { it.copy(tasks = tasks.toList()) } }
+                    .onEach { tasks -> uiState.update { it.copy(tasks = tasks.toList()) } }
                     .launchIn(scope = viewModelScope)
                 messenger.execute()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.update {
+                uiState.update {
                     it.copy(messageState = Failed(message = SceneRegisterGet(), error = e))
                 }
             }
@@ -347,12 +346,12 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
         tasksJob?.cancel()
         fixMessenger?.clear()
         fixMessenger = null
-        _uiState.update { it.copy(tasks = emptyList()) }
+        uiState.update { it.copy(tasks = emptyList()) }
         repository.meshNetwork?.let { updateState(network = it) }
     }
 
     internal fun onMessageHandled() {
-        _uiState.update { it.copy(messageState = NotStarted) }
+        uiState.update { it.copy(messageState = NotStarted) }
     }
 
     /**
@@ -362,7 +361,7 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
      */
     private suspend fun request(message: AcknowledgedMeshMessage, model: Model?): MeshMessage? {
         if (model == null) return null
-        _uiState.update { it.copy(messageState = Sending(message = message)) }
+        uiState.update { it.copy(messageState = Sending(message = message)) }
         return try {
             val response = repository.send(model = model, ackedMessage = message)
             // A status that reports an error is shown in a dialog by the screen, so the current
@@ -375,20 +374,20 @@ internal class NodeScenesViewModel @AssistedInject internal constructor(
                 response is SceneRegisterStatus && response.isSuccess ->
                     setCurrentScene(response.currentScene)
             }
-            _uiState.update {
+            uiState.update {
                 it.copy(messageState = Completed(message = message, response = response))
             }
             response
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _uiState.update { it.copy(messageState = Failed(message = message, error = e)) }
+            uiState.update { it.copy(messageState = Failed(message = message, error = e)) }
             null
         }
     }
 
     private fun setCurrentScene(scene: SceneNumber) {
-        _uiState.update { it.copy(currentScene = scene.takeIf { s -> Scene.isValid(sceneNumber = s) }) }
+        uiState.update { it.copy(currentScene = scene.takeIf { s -> Scene.isValid(sceneNumber = s) }) }
     }
 
     @AssistedFactory

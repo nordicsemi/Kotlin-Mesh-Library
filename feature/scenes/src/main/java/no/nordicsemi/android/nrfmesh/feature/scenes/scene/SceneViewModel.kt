@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -26,8 +25,8 @@ internal class SceneViewModel @AssistedInject internal constructor(
 ) : ViewModel() {
     private val sceneNumber = number.toUShort()
     private lateinit var network: MeshNetwork
-    private val _uiState = MutableStateFlow(SceneScreenUiState())
-    internal val uiState: StateFlow<SceneScreenUiState> = _uiState.asStateFlow()
+    internal val uiState: StateFlow<SceneScreenUiState>
+        field = MutableStateFlow(SceneScreenUiState())
 
     init {
         observeNetwork()
@@ -42,7 +41,7 @@ internal class SceneViewModel @AssistedInject internal constructor(
                 val sceneState = network.scene(number = sceneNumber)
                     ?.let { SceneState.Success(scene = it) }
                     ?: SceneState.Error(throwable = IllegalStateException("Scene not found."))
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(sceneState = sceneState)
                 }
             }

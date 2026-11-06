@@ -9,7 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterIsInstance
@@ -66,10 +66,10 @@ class ProvisioningViewModel @Inject constructor(
     private var unprovisionedDevice: UnprovisionedDevice? = null
     private var originalNode: Node? = null
 
-    private val _uiState = MutableStateFlow(
-        value = ProvisioningScreenUiState(provisionerState = Scanning)
-    )
-    internal val uiState = _uiState.asStateFlow()
+    internal val uiState: StateFlow<ProvisioningScreenUiState>
+        field = MutableStateFlow(
+            value = ProvisioningScreenUiState(provisionerState = Scanning)
+        )
 
     init {
         observeNetwork()
@@ -84,7 +84,7 @@ class ProvisioningViewModel @Inject constructor(
             .mapNotNull { repository.meshNetwork }
             .onEach {
                 meshNetwork = it
-                _uiState.update { state -> state.copy(networkKeys = it.networkKeys.toList()) }
+                uiState.update { state -> state.copy(networkKeys = it.networkKeys.toList()) }
             }
             .launchIn(scope = viewModelScope)
     }
@@ -92,7 +92,7 @@ class ProvisioningViewModel @Inject constructor(
     private fun observeDeveloperSettings() {
         repository.developerSettingsStateFlow
             .onEach {
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(developerSettings = it)
                 }
             }
@@ -182,7 +182,7 @@ class ProvisioningViewModel @Inject constructor(
 
         provisioningManager.provision(attentionTimer = 10u)
             .onEach { state ->
-                _uiState.update { uiState ->
+                uiState.update { uiState ->
                     uiState.copy(
                         provisionerState = Provisioning(
                             unprovisionedDevice = unprovisionedDevice,
@@ -201,7 +201,7 @@ class ProvisioningViewModel @Inject constructor(
             .filterIsInstance<ProvisioningState.CapabilitiesReceived>()
             .onEach { state ->
                 // If Quick Provisioning is set, use default parameters.
-                if (_uiState.value.developerSettings.quickProvisioning) {
+                if (uiState.value.developerSettings.quickProvisioning) {
                     state.start(state.defaultParameters)
                 }
             }
@@ -211,12 +211,14 @@ class ProvisioningViewModel @Inject constructor(
                     category = LogCategory.PROVISIONING,
                     level = LogLevel.ERROR
                 )
-                _uiState.value = _uiState.value.copy(
-                    provisionerState = Error(
-                        unprovisionedDevice = unprovisionedDevice,
-                        throwable = throwable
+                uiState.update {
+                    it.copy(
+                        provisionerState = Error(
+                            unprovisionedDevice = unprovisionedDevice,
+                            throwable = throwable
+                        )
                     )
-                )
+                }
             }
             .launchIn(scope = viewModelScope)
     }
@@ -239,13 +241,13 @@ class ProvisioningViewModel @Inject constructor(
             .drop(1)
             .onEach { event ->
                 when (event) {
-                    is BearerEvent.Opened -> _uiState.update {
+                    is BearerEvent.Opened -> uiState.update {
                         it.copy(provisionerState = Connected(unprovisionedDevice = unprovisionedDevice))
                     }
 
                     is BearerEvent.Closed -> {
                         this@ProvisioningViewModel.pbBearer = null
-                        _uiState.update {
+                        uiState.update {
                             it.copy(provisionerState = Disconnected(unprovisionedDevice = unprovisionedDevice))
                         }
                     }
@@ -254,7 +256,7 @@ class ProvisioningViewModel @Inject constructor(
             .launchIn(viewModelScope)
 
         // And open the bearer.
-        _uiState.update {
+        uiState.update {
             it.copy(provisionerState = Connecting(unprovisionedDevice = unprovisionedDevice))
         }
 
@@ -278,7 +280,7 @@ class ProvisioningViewModel @Inject constructor(
             pbBearer?.close()
             pbBearerStateObserverJob?.cancel()
             pbBearer = null
-            _uiState.update { it.copy(provisionerState = Scanning) }
+            uiState.update { it.copy(provisionerState = Scanning) }
         }
     }
 
@@ -300,7 +302,7 @@ class ProvisioningViewModel @Inject constructor(
         address: Address,
     ) {
         val provisionerState =
-            _uiState.value.provisionerState as? Provisioning ?: return
+            uiState.value.provisionerState as? Provisioning ?: return
         val capabilitiesReceivedState =
             provisionerState.state as? ProvisioningState.CapabilitiesReceived ?: return
         val elementCount = capabilitiesReceivedState.capabilities.numberOfElements
@@ -310,7 +312,7 @@ class ProvisioningViewModel @Inject constructor(
             unicastAddress = unicastAddress,
             numberOfElements = elementCount,
         ).also {
-            _uiState.update {
+            uiState.update {
                 it.copy(
                     provisioningParameters = it.provisioningParameters?.copy(unicastAddress = unicastAddress)
                 )
@@ -327,7 +329,7 @@ class ProvisioningViewModel @Inject constructor(
     }
 
     internal fun onNetworkKeyClicked(key: NetworkKey) {
-        _uiState.update {
+        uiState.update {
             it.copy(provisioningParameters = it.provisioningParameters?.copy(networkKey = key))
         }
     }
@@ -338,9 +340,9 @@ class ProvisioningViewModel @Inject constructor(
      * @param authMethod Authentication method to be used.
      */
     internal fun onAuthenticationMethodSelected(authMethod: AuthenticationMethod) {
-        val parameters = _uiState.value.provisioningParameters ?: return
+        val parameters = uiState.value.provisioningParameters ?: return
         val provisionerState =
-            _uiState.value.provisionerState as? Provisioning ?: return
+            uiState.value.provisionerState as? Provisioning ?: return
         val capabilitiesReceivedState =
             provisionerState.state as? ProvisioningState.CapabilitiesReceived ?: return
 
