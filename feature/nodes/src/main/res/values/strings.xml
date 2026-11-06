@@ -75,7 +75,7 @@
     <string name="label_no_scenes_defined">No scenes currently added.</string>
     <string name="label_no_scenes_on_node">No scenes stored on this node.\nPull down to refresh.</string>
     <string name="label_scenes_hint">Tap a scene to recall it, swipe it to delete it from the node. The current scene is marked with a check. Pull down to refresh.</string>
-    <string name="label_scene_setup_incomplete">Incomplete setup</string>
+    <string name="label_scene_setup_incomplete">Scene Setup Incomplete</string>
     <string name="label_scene_setup_rationale">Before you start setting up scenes, bind an application key to the Scene Server and Scene Setup Server models on the node and to the Scene Client model on your local node.</string>
     <string name="action_set_up">Set up</string>
     <string name="label_scene_setup">Scene Setup</string>
