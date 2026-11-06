@@ -111,8 +111,8 @@ internal fun GroupControls(
         MeshNoItemsAvailable(
             modifier = Modifier.fillMaxSize(),
             imageVector = Icons.Outlined.Widgets,
-            title = stringResource(id = R.string.label_no_models_subscribed),
-            rationale = stringResource(id = R.string.label_no_models_subscribed_rationale)
+            title = stringResource(id = R.string.label_no_app_key_bound),
+            rationale = stringResource(id = R.string.label_no_app_key_bound_rationale)
         )
         return
     }
