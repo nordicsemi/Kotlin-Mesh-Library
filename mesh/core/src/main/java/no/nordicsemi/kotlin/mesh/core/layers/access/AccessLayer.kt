@@ -281,16 +281,22 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
             createReliableContext(pdu = pdu, element = element, initialTtl = ttl, keySet = keySet)
         } else null
 
-        networkManager.upperTransportLayer.send(accessPdu = pdu, ttl = ttl, keySet = keySet)
+        val sendMessage: suspend () -> Unit = {
+            networkManager.upperTransportLayer.send(accessPdu = pdu, ttl = ttl, keySet = keySet)
+        }
 
         return when {
-            // If ack is null, the message is not acknowledged, hence return null
-            ack == null -> null
+            // If ack is null, the message is not acknowledged, hence nothing to await
+            ack == null -> {
+                sendMessage()
+                null
+            }
 
             else -> networkManager.awaitMeshMessageResponse(
                 destination = destination,
                 responseOpcode = ack.request.responseOpCode,
-                timeout = ack.timeout
+                timeout = ack.timeout,
+                send = sendMessage
             )?.message as? MeshMessage
         }
     }
@@ -343,13 +349,17 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
             keySet = keySet
         )
 
-        networkManager.upperTransportLayer.send(accessPdu = pdu, ttl = initialTtl, keySet = keySet)
-
         return networkManager.awaitMeshMessageResponse(
             destination = destination,
             responseOpcode = ack.request.responseOpCode,
             timeout = ack.timeout
-        )?.message as? MeshMessage
+        ) {
+            networkManager.upperTransportLayer.send(
+                accessPdu = pdu,
+                ttl = initialTtl,
+                keySet = keySet
+            )
+        }?.message as? MeshMessage
     }
 
     /**
