@@ -2,15 +2,19 @@
 
 package no.nordicsemi.kotlin.mesh.core.layers
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -92,7 +96,8 @@ internal class NetworkManager internal constructor(
     internal val incomingProxyMessages
         get() = _incomingProxyMessages.asSharedFlow()
 
-    private val _incomingMeshMessages = MutableSharedFlow<ReceivedMessage>()
+    // Internal so that tests can inject received messages.
+    internal val _incomingMeshMessages = MutableSharedFlow<ReceivedMessage>()
     internal val incomingMeshMessages
         get() = _incomingMeshMessages.asSharedFlow()
 
@@ -147,56 +152,78 @@ internal class NetworkManager internal constructor(
     }
 
     /**
-     * Await a response to the sent message.
+     * Sends a message using [send] and awaits the response to it.
      *
-     * @param destination Destination address of the message.
-     * @param timeout     Timeout duration.
+     * @param destination    Destination address of the message.
+     * @param responseOpcode Opcode of the expected response.
+     * @param timeout        Timeout duration.
+     * @param send           Sends the message. Called once the response is being listened for.
      */
     suspend fun awaitMeshMessageResponse(
         destination: Address,
         responseOpcode: UInt,
         timeout: Duration,
+        send: suspend () -> Unit,
     ) = awaitMeshMessageResponse(
         destination = MeshAddress.create(destination),
         responseOpcode = responseOpcode,
-        timeout = timeout
+        timeout = timeout,
+        send = send
     )
 
     /**
-     * Awaits for a response for a previously sent message.
+     * Sends a message using [send] and awaits the response to it.
      *
-     * @param destination Destination address of the message.
-     * @param timeout     Timeout duration.
+     * The response is listened for before [send] is called. Otherwise, a response that arrives
+     * right after the last segment of a segmented request, together with the Segment
+     * Acknowledgment, would be emitted before anybody is listening and would be lost.
+     *
+     * @param destination    Destination address of the message.
+     * @param responseOpcode Opcode of the expected response.
+     * @param timeout        Timeout duration.
+     * @param send           Sends the message. Called once the response is being listened for.
      */
     suspend fun awaitMeshMessageResponse(
         destination: MeshAddress,
         responseOpcode: UInt,
         timeout: Duration,
-    ): ReceivedMessage? = incomingMeshMessages
-        .timeout(timeout = timeout)
-        .catch {
-            // If it's a timeout exception that's thrown we should log it in the bearer
-            if (it is TimeoutCancellationException) {
-                logger?.w(LogCategory.BEARER) {
-                    "Timed out waiting for a response with response opCode 0x${
-                        responseOpcode.toHexString(
-                            format = HexFormat.UpperCase
-                        )
-                    } from ${
-                        destination.address.toHexString(
-                            format = HexFormat {
-                                number.prefix = "0x"
-                                upperCase = true
-                            }
-                        )
-                    }: $it"
+        send: suspend () -> Unit,
+    ): ReceivedMessage? = coroutineScope {
+        val subscribed = CompletableDeferred<Unit>()
+        val response = async {
+            incomingMeshMessages
+                .onSubscription { subscribed.complete(Unit) }
+                .timeout(timeout = timeout)
+                .catch {
+                    // If it's a timeout exception that's thrown we should log it in the bearer
+                    if (it is TimeoutCancellationException) {
+                        logger?.w(LogCategory.BEARER) {
+                            "Timed out waiting for a response with response opCode 0x${
+                                responseOpcode.toHexString(
+                                    format = HexFormat.UpperCase
+                                )
+                            } from ${
+                                destination.address.toHexString(
+                                    format = HexFormat {
+                                        number.prefix = "0x"
+                                        upperCase = true
+                                    }
+                                )
+                            }: $it"
+                        }
+                    }
+                    throw it
                 }
-            }
-            throw it
+                .firstOrNull {
+                    destination == it.source &&
+                            responseOpcode == (it.message as? HasOpCode)?.opCode
+                }
         }
-        .firstOrNull {
-            destination == it.source && responseOpcode == (it.message as? HasOpCode)?.opCode
-        }
+        // Don't send until the response is being listened for.
+        subscribed.await()
+        send()
+        response.await()
+    }
 
     /**
      * Awaits for a response to a sent message.
