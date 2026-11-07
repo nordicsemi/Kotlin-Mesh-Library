@@ -2,9 +2,7 @@
 
 package no.nordicsemi.kotlin.mesh.core.messages
 
-import no.nordicsemi.kotlin.data.FloatFormat
 import no.nordicsemi.kotlin.data.IntFormat
-import no.nordicsemi.kotlin.data.getFloat
 import no.nordicsemi.kotlin.data.getShort
 import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
@@ -1106,10 +1104,9 @@ enum class DeviceProperty(val id: UShort, val valueLength: Int?, val propertyNam
                 ->
                 if (!valid) DevicePropertyCharacteristic.Coefficient(value = 0.0f)
                 else DevicePropertyCharacteristic.Coefficient(
-                    value = data.getFloat(
-                        offset = offset,
-                        format = FloatFormat.IEEE_11073_32_BIT,
-                        order = ByteOrder.LITTLE_ENDIAN
+                    // The Coefficient characteristic is an IEEE-754 float32.
+                    value = Float.fromBits(
+                        data.getUInt(offset = offset, order = ByteOrder.LITTLE_ENDIAN).toInt()
                     )
                 )
 
