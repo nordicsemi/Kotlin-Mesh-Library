@@ -24,6 +24,7 @@ import no.nordicsemi.android.nrfmesh.core.common.isFirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isLePairingResponderServer
+import no.nordicsemi.android.nrfmesh.core.common.isLightLCServer
 import no.nordicsemi.android.nrfmesh.core.common.isSensorServer
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
@@ -38,6 +39,7 @@ import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.feature.model.lepairing.LePairingResponder
+import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLCServer
 import no.nordicsemi.android.nrfmesh.feature.model.sensor.SensorServer
 import no.nordicsemi.android.nrfmesh.feature.model.vendor.VendorModelControls
 import no.nordicsemi.android.nrfmesh.feature.models.R
@@ -133,6 +135,13 @@ internal fun ModelScreen(
 
             model.isGenericLevelServer() ->
                 GenericLevelServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isLightLCServer() ->
+                LightLCServer(
                     model = model,
                     messageState = messageState,
                     sendApplicationMessage = sendApplicationMessage
