@@ -66,8 +66,9 @@ import no.nordicsemi.kotlin.mesh.core.util.TransitionParameters
 /**
  * Displays the controls and states of the Light LC Server model.
  *
- * It contains the Light LC Mode, Light LC Occupancy Mode and Light LC Light OnOff controls. When the screen is opened and the model has at least one bound application key, the three states
- * are read one after another, similar to the iOS app.
+ * It contains the Light LC Mode, Light LC Occupancy Mode and Light LC Light OnOff controls.
+ * When the screen is opened and the model has at least one bound application key, the three
+ * states are read one after another, similar to the iOS app.
  */
 @Composable
 internal fun LightLCServer(
