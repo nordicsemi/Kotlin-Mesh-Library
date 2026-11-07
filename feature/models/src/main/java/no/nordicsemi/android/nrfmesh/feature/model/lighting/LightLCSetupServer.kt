@@ -73,7 +73,8 @@ internal fun LightLCSetupServer(
     // Index of the property being read while all properties are being read, -1 otherwise.
     var readingIndex by rememberSaveable { mutableStateOf(if (hasBoundKey) 0 else -1) }
     var editing by remember { mutableStateOf<DeviceProperty?>(null) }
-    val enabled = hasBoundKey && !messageState.isInProgress()
+    val isReadingAll = readingIndex >= 0
+    val enabled = hasBoundKey && !isReadingAll && !messageState.isInProgress()
 
     LaunchedEffect(key1 = Unit) {
         if (readingIndex in lightLCProperties.indices) {
@@ -137,7 +138,7 @@ internal fun LightLCSetupServer(
             },
             buttonIcon = Icons.Outlined.Autorenew,
             enabled = enabled,
-            isOnClickActionInProgress = readingIndex >= 0 && messageState.isInProgress(),
+            isOnClickActionInProgress = isReadingAll,
         )
     }
     lightLCProperties.forEach { property ->
@@ -155,7 +156,7 @@ internal fun LightLCSetupServer(
                     },
                     buttonIcon = Icons.Outlined.Autorenew,
                     enabled = enabled,
-                    isOnClickActionInProgress = messageState.isInProgress() &&
+                    isOnClickActionInProgress = !isReadingAll && messageState.isInProgress() &&
                             (messageState.message as? LightLCPropertyGet)?.propertyId == property.id
                 )
                 MeshIconButton(
