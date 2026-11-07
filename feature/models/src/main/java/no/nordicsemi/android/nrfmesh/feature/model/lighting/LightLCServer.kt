@@ -64,10 +64,9 @@ import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import no.nordicsemi.kotlin.mesh.core.util.TransitionParameters
 
 /**
- * Controls of the Light LC Server model: Light LC Mode, Light LC Occupancy Mode and
- * Light LC Light OnOff.
+ * Displays the controls and states of the Light LC Server model.
  *
- * When the screen is opened and the model has at least one bound application key, the three states
+ * It contains the Light LC Mode, Light LC Occupancy Mode and Light LC Light OnOff controls. When the screen is opened and the model has at least one bound application key, the three states
  * are read one after another, similar to the iOS app.
  */
 @Composable
@@ -202,8 +201,10 @@ private fun OccupancyModeControls(
 }
 
 /**
- * A section with a title and a read button, followed by a card containing the acknowledged switch,
- * On/Off buttons and the state received from the node.
+ * Displays a titled section with a read button and a card for a boolean state of the model.
+ *
+ * The card contains the acknowledged switch, the On/Off buttons and the state received from the
+ * node.
  */
 @Composable
 private fun StateSection(

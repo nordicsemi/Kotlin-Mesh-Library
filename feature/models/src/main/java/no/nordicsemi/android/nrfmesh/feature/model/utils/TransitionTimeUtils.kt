@@ -5,8 +5,11 @@ import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import kotlin.math.floor
 
 /**
- * Converts the value of a transition time slider (0..235) to a [TransitionTime] and a
- * human-readable label.
+ * Converts a transition time slider value to a [TransitionTime] and a label.
+ *
+ * @param value                   Slider value in the range 0..235.
+ * @param onTransitionTimeChanged Invoked with the resulting [TransitionTime] and a human-readable
+ *                                label.
  */
 internal fun handleTransitionTimeChange(
     value: Float,
