@@ -22,6 +22,12 @@ fun Model.isLightLCServer() =
 fun Model.isLightLCSetupServer() =
     (modelId as? SigModelId)?.modelIdentifier == Model.LIGHT_LC_SETUP_SERVER_MODEL_ID
 
+fun Model.isLightLightnessServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.LIGHT_LIGHTNESS_SERVER_MODEL_ID
+
+fun Model.isLightLightnessSetupServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.LIGHT_LIGHTNESS_SETUP_SERVER_MODEL_ID
+
 fun Model.isFirmwareDistributionServer() =
     (modelId as? SigModelId)?.modelIdentifier == Model.FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID
 
