@@ -11,7 +11,11 @@ import no.nordicsemi.kotlin.mesh.core.messages.lighting.LightLCOccupancyModeStat
 import no.nordicsemi.kotlin.mesh.core.messages.lighting.LightLCPropertyStatus
 
 /**
- * Handles the Light LC Client model events, allowing Light LC Status messages to be decoded.
+ * Handles the events of the Light LC Client model.
+ *
+ * Allows the Light LC Status messages ([LightLCModeStatus], [LightLCOccupancyModeStatus],
+ * [LightLCLightOnOffStatus] and [LightLCPropertyStatus]) to be decoded. Responses are delivered to
+ * the caller, while status messages published by a server are ignored.
  */
 class LightLCClient : ModelEventHandler() {
     override val messageTypes: Map<UInt, HasInitializer> = mapOf(

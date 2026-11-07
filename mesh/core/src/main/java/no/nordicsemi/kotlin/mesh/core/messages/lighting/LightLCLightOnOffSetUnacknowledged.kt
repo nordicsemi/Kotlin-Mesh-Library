@@ -8,8 +8,7 @@ import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 import no.nordicsemi.kotlin.mesh.core.util.TransitionParameters
 
 /**
- * This message is used to set the Light LC Light OnOff state of a Light LC Server without
- * expecting a response.
+ * Sets the Light LC Light OnOff state of a Light LC Server without expecting a response.
  *
  * @property tid              Defines a unique Transaction identifier that each message must have.
  * @property transitionTime   Defines the time interval an element will take to transition to the
@@ -36,8 +35,9 @@ class LightLCLightOnOffSetUnacknowledged(
     override val delay = transitionParams?.delay
 
     /**
-     * Convenience constructor to create the message without any transition time, tid or
-     * delay.
+     * Creates a Light LC Light OnOff Set Unacknowledged message without a transaction ID or transition.
+     *
+     * The transaction ID is assigned when the message is sent.
      *
      * @param on Desired Light LC Light OnOff state.
      */
@@ -45,8 +45,9 @@ class LightLCLightOnOffSetUnacknowledged(
     constructor(on: Boolean) : this(on = on, tid = null)
 
     /**
-     * Convenience constructor to create the message with a transaction ID without any
-     * transition time or delay.
+     * Creates a Light LC Light OnOff Set Unacknowledged message with a transaction ID.
+     *
+     * No transition time or delay is used.
      *
      * @param on  Desired Light LC Light OnOff state.
      * @param tid Transaction ID.

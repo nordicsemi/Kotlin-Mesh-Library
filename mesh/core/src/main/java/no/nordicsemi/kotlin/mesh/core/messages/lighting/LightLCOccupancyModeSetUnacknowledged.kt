@@ -4,9 +4,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.LightingMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 
 /**
- * This message is used to set the Light LC Occupancy Mode state of a Light LC Server without
- * expecting a
- * response.
+ * Sets the Light LC Occupancy Mode state of a Light LC Server without expecting a response.
  *
  * @property occupancyMode Whether the controller may transition from a standby state when occupancy
  *                         is reported.
