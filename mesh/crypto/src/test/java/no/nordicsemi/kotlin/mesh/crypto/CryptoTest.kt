@@ -324,4 +324,33 @@ class CryptoTest {
         val actual = "0010C280C480".toByteArray().utf8ToUint16()
         Assert.assertTrue(expected.contentEquals(actual))
     }
+
+    /**
+     * Unit test verifying that the crypto functions can be used from many threads at once.
+     *
+     * Uses the sample data for [Crypto.encrypt] and [Crypto.k2] (which uses AES-CMAC) concurrently.
+     */
+    @Test
+    fun testConcurrentUse() {
+        val expectedCcm = "b5e5bfdacbaf6cb7fb6bff871f035444ce83a670df".uppercase(Locale.US)
+        val data = "fffd".toByteArray() + "034b50057e400000010000".toByteArray()
+        val ccmKey = "0953fa93e7caac9638f58820220a398e".toByteArray()
+        val nonce = "00800000011201000012345678".toByteArray()
+        val netKey = "f7a2a44f8e8a8029064f173ddc1e2b00".toByteArray()
+        val expectedNid = 0x7f.toByte()
+        val failures = java.util.concurrent.atomic.AtomicInteger()
+        val threads = List(8) {
+            Thread {
+                repeat(2_000) {
+                    val ccm = Crypto.encrypt(data = data, key = ccmKey, nonce = nonce, micSize = 8)
+                    val (nid, _, _) = k2(N = netKey, P = byteArrayOf(0x00))
+                    if (ccm.toHexString() != expectedCcm || nid != expectedNid) {
+                        failures.incrementAndGet()
+                    }
+                }
+            }.apply { start() }
+        }
+        threads.forEach { it.join() }
+        Assert.assertEquals(0, failures.get())
+    }
 }
