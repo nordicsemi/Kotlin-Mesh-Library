@@ -23,9 +23,9 @@ dependencies {
     implementation(nordic.mcumgr.ble2)
     implementation(libs.kotlinx.serialization.json)
 
-    implementation("androidx.datastore:datastore-core:1.2.1")
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
-    implementation("androidx.datastore:datastore-preferences-proto:1.2.1")
+    implementation("androidx.datastore:datastore-core:1.3.0")
+    implementation("androidx.datastore:datastore-preferences:1.3.0")
+    implementation("androidx.datastore:datastore-preferences-proto:1.3.0")
 
     implementation(project(":core:ui"))
     api(project(":core:common"))
