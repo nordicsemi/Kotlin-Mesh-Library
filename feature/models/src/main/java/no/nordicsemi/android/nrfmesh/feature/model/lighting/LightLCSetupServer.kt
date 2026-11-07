@@ -17,6 +17,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -66,6 +67,7 @@ private val lightLCProperties = DeviceProperty.entries.filter {
 internal fun LightLCSetupServer(
     model: Model,
     messageState: MessageState,
+    onReadingAll: (Boolean) -> Unit,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
     val hasBoundKey = model.boundApplicationKeys.isNotEmpty()
@@ -75,6 +77,13 @@ internal fun LightLCSetupServer(
     var editing by remember { mutableStateOf<DeviceProperty?>(null) }
     val isReadingAll = readingIndex >= 0
     val enabled = hasBoundKey && !isReadingAll && !messageState.isInProgress()
+
+    LaunchedEffect(key1 = isReadingAll) {
+        onReadingAll(isReadingAll)
+    }
+    DisposableEffect(key1 = Unit) {
+        onDispose { onReadingAll(false) }
+    }
 
     LaunchedEffect(key1 = Unit) {
         if (readingIndex in lightLCProperties.indices) {
