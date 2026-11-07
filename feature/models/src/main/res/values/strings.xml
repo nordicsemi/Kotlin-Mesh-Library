@@ -125,6 +125,17 @@
     <string name="label_light_lc_mode">Light LC Mode</string>
     <string name="label_light_lc_occupancy_mode">Occupancy Mode</string>
     <string name="label_light_lc_light_on_off">Light OnOff</string>
+    <string name="label_light_lc_properties">Light LC Properties</string>
+    <string name="label_set">Set</string>
+    <string name="label_not_read">Not read</string>
+    <string name="label_edit_property">Edit %s</string>
+    <string name="label_property_value">Value</string>
+    <string name="label_property_range_lightness">Perceived lightness, 0 – 65535</string>
+    <string name="label_property_range_lux">Illuminance in lux, 0 – 167772.13</string>
+    <string name="label_property_range_percent">Percentage, 0 – 100</string>
+    <string name="label_property_range_ms">Time in milliseconds, 0 – 16777214</string>
+    <string name="label_property_range_coefficient">Unitless coefficient (floating point)</string>
+    <string name="label_invalid_property_value">Invalid value</string>
     <string name="label_level">Level</string>
     <string name="label_delta">Delta</string>
     <string name="label_move">Move</string>

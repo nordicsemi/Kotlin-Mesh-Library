@@ -19,6 +19,9 @@ fun Model.isSceneSetupServer() =
 fun Model.isLightLCServer() =
     (modelId as? SigModelId)?.modelIdentifier == Model.LIGHT_LC_SERVER_MODEL_ID
 
+fun Model.isLightLCSetupServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.LIGHT_LC_SETUP_SERVER_MODEL_ID
+
 fun Model.isFirmwareDistributionServer() =
     (modelId as? SigModelId)?.modelIdentifier == Model.FIRMWARE_DISTRIBUTION_SERVER_MODEL_ID
 
