@@ -7,9 +7,10 @@ import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
 
 /**
+ * Reports the current Light LC Light OnOff state of a Light LC Server.
+ *
  * This message is a response to a [LightLCLightOnOffGet], [LightLCLightOnOffSet] and
- * [LightLCLightOnOffSetUnacknowledged] that contains the current Light LC Light OnOff state of a
- * Light LC Server.
+ * [LightLCLightOnOffSetUnacknowledged].
  *
  * @property isOn          Current value of the Light LC Light OnOff state.
  * @property targetState   Target value of the Light LC Light OnOff state.
@@ -36,7 +37,9 @@ class LightLCLightOnOffStatus(
         }
 
     /**
-     * Convenience constructor to create a LightLCLightOnOffStatus
+     * Creates a Light LC Light OnOff Status message with the current state only.
+     *
+     * The target state and remaining time are not included.
      *
      * @param isOn True if the Light LC Light OnOff state is on or false otherwise.
      */

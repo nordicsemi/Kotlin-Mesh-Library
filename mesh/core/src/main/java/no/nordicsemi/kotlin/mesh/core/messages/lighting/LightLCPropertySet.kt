@@ -11,8 +11,9 @@ import no.nordicsemi.kotlin.mesh.core.messages.SensorPropertyMessage
 import no.nordicsemi.kotlin.mesh.core.messages.read
 
 /**
- * This message is used to set the Light LC Property state of a Light LC Server. The response
- * received to the message is [LightLCPropertyStatus].
+ * Sets a Light LC Property state of a Light LC Server.
+ *
+ * The response received to the message is [LightLCPropertyStatus].
  *
  * @property propertyId    Property ID identifying a Light LC Property.
  * @property propertyValue The new value of the property.
@@ -27,7 +28,7 @@ class LightLCPropertySet(
             propertyValue.data
 
     /**
-     * Convenience constructor.
+     * Creates a Light LC Property Set message from a [DeviceProperty].
      *
      * The property can be one of:
      * - [DeviceProperty.LIGHT_CONTROL_AMBIENT_LUX_LEVEL_ON]

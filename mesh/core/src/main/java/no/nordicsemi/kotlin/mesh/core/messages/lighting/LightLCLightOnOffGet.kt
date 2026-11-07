@@ -4,8 +4,9 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.LightingMessageInitializer
 
 /**
- * This message is used to request the Light LC Light OnOff state of a Light LC Server. The response
- * received to the message is [LightLCLightOnOffStatus].
+ * Requests the Light LC Light OnOff state of a Light LC Server.
+ *
+ * The response received to the message is [LightLCLightOnOffStatus].
  */
 class LightLCLightOnOffGet : AcknowledgedApplicationMessage {
     override val opCode = Initializer.opCode

@@ -4,8 +4,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.LightingMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 
 /**
- * This message is used to set the Light LC Mode state of a Light LC Server without expecting a
- * response.
+ * Sets the Light LC Mode state of a Light LC Server without expecting a response.
  *
  * @property controllerStatus Whether the controller is turned on and the binding with the Light
  *                            Lightness state is enabled.

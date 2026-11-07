@@ -11,8 +11,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.read
 
 /**
- * This message is used to set the Light LC Property state of a Light LC Server without expecting
- * a response.
+ * Sets a Light LC Property state of a Light LC Server without expecting a response.
  *
  * @property propertyId    Property ID identifying a Light LC Property.
  * @property propertyValue The new value of the property.
@@ -26,7 +25,7 @@ class LightLCPropertySetUnacknowledged(
             propertyValue.data
 
     /**
-     * Convenience constructor.
+     * Creates a Light LC Property Set Unacknowledged message from a [DeviceProperty].
      *
      * The property can be one of:
      * - [DeviceProperty.LIGHT_CONTROL_AMBIENT_LUX_LEVEL_ON]

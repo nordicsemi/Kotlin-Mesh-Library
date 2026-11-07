@@ -12,8 +12,10 @@ import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.read
 
 /**
+ * Reports the value of a Light LC Property of a Light LC Server.
+ *
  * This message is a response to a [LightLCPropertyGet], [LightLCPropertySet] and
- * [LightLCPropertySetUnacknowledged] and contains the value of a Light LC Property.
+ * [LightLCPropertySetUnacknowledged].
  *
  * @property propertyId    Property ID identifying a Light LC Property.
  * @property propertyValue The value of the property.
@@ -27,7 +29,7 @@ class LightLCPropertyStatus(
             propertyValue.data
 
     /**
-     * Convenience constructor.
+     * Creates a Light LC Property Status message from a [DeviceProperty].
      *
      * The property can be one of:
      * - [DeviceProperty.LIGHT_CONTROL_AMBIENT_LUX_LEVEL_ON]

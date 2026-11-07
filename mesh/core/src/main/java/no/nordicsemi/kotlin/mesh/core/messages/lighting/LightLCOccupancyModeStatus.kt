@@ -5,9 +5,10 @@ import no.nordicsemi.kotlin.mesh.core.messages.LightingMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 
 /**
+ * Reports the present Light LC Occupancy Mode state of a Light LC Server.
+ *
  * This message is a response to a [LightLCOccupancyModeGet], [LightLCOccupancyModeSet] and
- * [LightLCOccupancyModeSetUnacknowledged]
- * and contains the present value of the Light LC Occupancy Mode state.
+ * [LightLCOccupancyModeSetUnacknowledged].
  *
  * @property occupancyMode Whether the controller may transition from a standby state when occupancy
  *                         is reported.
