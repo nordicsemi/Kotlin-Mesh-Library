@@ -4,10 +4,11 @@ import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.LightingMessageInitializer
 
 /**
- * This message is used to set the Light LC Mode state of a Light LC Server. The response received to
- * the message is [LightLCModeStatus].
+ * This message is used to set the Light LC Mode state of a Light LC Server. The response
+ * received to the message is [LightLCModeStatus].
  *
- * @property controllerStatus Whether the controller is turned on and the binding with the Light Lightness state is enabled.
+ * @property controllerStatus Whether the controller is turned on and the binding with the Light
+ *                            Lightness state is enabled.
  */
 class LightLCModeSet(
     val controllerStatus: Boolean,

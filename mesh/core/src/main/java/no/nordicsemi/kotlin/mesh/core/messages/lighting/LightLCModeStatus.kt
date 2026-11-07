@@ -5,10 +5,12 @@ import no.nordicsemi.kotlin.mesh.core.messages.LightingMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedApplicationMessage
 
 /**
- * This message is a response to a [LightLCModeGet], [LightLCModeSet] and [LightLCModeSetUnacknowledged]
+ * This message is a response to a [LightLCModeGet], [LightLCModeSet] and
+ * [LightLCModeSetUnacknowledged]
  * and contains the present value of the Light LC Mode state.
  *
- * @property controllerStatus Whether the controller is turned on and the binding with the Light Lightness state is enabled.
+ * @property controllerStatus Whether the controller is turned on and the binding with the Light
+ *                            Lightness state is enabled.
  */
 class LightLCModeStatus(
     val controllerStatus: Boolean,

@@ -36,19 +36,19 @@ class LightLCLightOnOffSetUnacknowledged(
     override val delay = transitionParams?.delay
 
     /**
-     * Convenience constructor to create a LightLCLightOnOffSetUnacknowledged message without any transition time,
-     * tid or delay.
+     * Convenience constructor to create the message without any transition time, tid or
+     * delay.
      *
-     * @param on Desired state of Light LC Server.
+     * @param on Desired Light LC Light OnOff state.
      */
     @Suppress("unused")
     constructor(on: Boolean) : this(on = on, tid = null)
 
     /**
-     * Convenience constructor to create a LightLCLightOnOffSetUnacknowledged message with a transaction ID without any
+     * Convenience constructor to create the message with a transaction ID without any
      * transition time or delay.
      *
-     * @param on  Desired state of Light LC Server.
+     * @param on  Desired Light LC Light OnOff state.
      * @param tid Transaction ID.
      */
     @Suppress("unused")
