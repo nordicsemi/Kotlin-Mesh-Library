@@ -45,6 +45,7 @@ import no.nordicsemi.android.nrfmesh.core.data.model.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.data.model.LightLCClient
+import no.nordicsemi.android.nrfmesh.core.data.model.LightLightnessClient
 import no.nordicsemi.android.nrfmesh.core.data.model.SceneServer
 import no.nordicsemi.android.nrfmesh.core.data.model.SceneSetupServer
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.PairingInitiatorClient
@@ -353,6 +354,10 @@ class CoreDataRepository @Inject constructor(
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.LIGHT_LC_CLIENT_MODEL_ID),
                     handler = LightLCClient()
+                ),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.LIGHT_LIGHTNESS_CLIENT_MODEL_ID),
+                    handler = LightLightnessClient()
                 ),
                 // Nordic Pairing Initiator model
                 Model(
