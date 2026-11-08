@@ -6,7 +6,6 @@ import no.nordicsemi.kotlin.data.and
 import no.nordicsemi.kotlin.data.getInt
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.data.xor
-import org.bouncycastle.crypto.BlockCipher
 import org.bouncycastle.crypto.InvalidCipherTextException
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.engines.AESEngine
@@ -38,7 +37,6 @@ import kotlin.uuid.Uuid
 
 object Crypto {
     private val secureRandom = SecureRandom()
-    private val blockCipher: BlockCipher = AESEngine.newInstance()
     private val SALT_KEY = ByteArray(16)
     private val smk2 = "smk2".encodeToByteArray()
     private val smk3 = "smk3".encodeToByteArray()
@@ -613,7 +611,7 @@ object Crypto {
      */
     private fun calculateCmac(input: ByteArray, key: ByteArray): ByteArray {
         require(key.size == 16) { "Key must be 128-bits" }
-        return CMac(blockCipher).run {
+        return CMac(AESEngine.newInstance()).run {
             init(KeyParameter(key))
             update(input, 0, input.count())
             val output = ByteArray(macSize) { 0x00 }
@@ -668,7 +666,7 @@ object Crypto {
         additionalData: ByteArray? = null,
         micSize: Int,
         mode: Boolean,
-    ) = CCMBlockCipher.newInstance(blockCipher).run {
+    ) = CCMBlockCipher.newInstance(AESEngine.newInstance()).run {
         val ccm = ByteArray(if (mode) data.size + micSize else data.size - micSize)
         init(mode, AEADParameters(KeyParameter(key), micSize * 8, nonce, additionalData))
         processBytes(data, 0, data.size, ccm, data.size)
