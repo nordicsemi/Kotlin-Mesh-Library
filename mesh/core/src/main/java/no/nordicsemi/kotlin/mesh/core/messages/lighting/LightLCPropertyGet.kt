@@ -64,6 +64,6 @@ class LightLCPropertyGet(
 
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size == 2 }
-            ?.let { LightLCPropertyGet(it.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)) }
+            ?.let { LightLCPropertyGet(propertyId = it.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)) }
     }
 }
