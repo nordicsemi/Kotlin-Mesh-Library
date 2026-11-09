@@ -29,6 +29,6 @@ dependencies {
 
     // Navigation3
     api("androidx.compose.material3.adaptive:adaptive-navigation3:1.3.0")
-    api("androidx.navigation3:navigation3-runtime:1.2.1")
+    api("androidx.navigation3:navigation3-runtime:1.1.3")
     api("androidx.lifecycle:lifecycle-viewmodel-navigation3-android:2.11.0")
 }
