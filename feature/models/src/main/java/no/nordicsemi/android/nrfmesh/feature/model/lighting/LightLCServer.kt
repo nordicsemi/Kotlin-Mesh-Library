@@ -26,6 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -77,9 +79,15 @@ internal fun LightLCServer(
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
     val hasBoundKey = model.boundApplicationKeys.isNotEmpty()
-    var modeStatus by remember { mutableStateOf<LightLCModeStatus?>(null) }
-    var occupancyModeStatus by remember { mutableStateOf<LightLCOccupancyModeStatus?>(null) }
-    var lightOnOffStatus by remember { mutableStateOf<LightLCLightOnOffStatus?>(null) }
+    var modeStatus by rememberSaveable(stateSaver = ModeStatusSaver) {
+        mutableStateOf(null)
+    }
+    var occupancyModeStatus by rememberSaveable(stateSaver = OccupancyModeStatusSaver) {
+        mutableStateOf(null)
+    }
+    var lightOnOffStatus by rememberSaveable(stateSaver = LightOnOffStatusSaver) {
+        mutableStateOf(null)
+    }
     // True while the initial state is being read after the screen is opened.
     var isRefreshing by rememberSaveable { mutableStateOf(hasBoundKey) }
 
@@ -156,7 +164,7 @@ private fun ModeControls(
     StateSection(
         title = stringResource(R.string.label_light_lc_mode),
         icon = Icons.Outlined.Tune,
-        status = status?.let { it.controllerStatus.asOnOff() },
+        status = status?.controllerStatus?.asOnOff(),
         acknowledged = acknowledged,
         onAcknowledgedChange = { acknowledged = it },
         enabled = hasBoundKey && !messageState.isInProgress(),
@@ -184,7 +192,7 @@ private fun OccupancyModeControls(
     StateSection(
         title = stringResource(R.string.label_light_lc_occupancy_mode),
         icon = Icons.Outlined.SensorOccupied,
-        status = status?.let { it.occupancyMode.asOnOff() },
+        status = status?.occupancyMode?.asOnOff(),
         acknowledged = acknowledged,
         onAcknowledgedChange = { acknowledged = it },
         enabled = hasBoundKey && !messageState.isInProgress(),
@@ -484,6 +492,40 @@ private fun LightOnOffStatus(
         }
     )
 }
+
+private val ModeStatusSaver = Saver<LightLCModeStatus?, Boolean>(
+    save = { it?.controllerStatus },
+    restore = { LightLCModeStatus(controllerStatus = it) }
+)
+
+private val OccupancyModeStatusSaver = Saver<LightLCOccupancyModeStatus?, Boolean>(
+    save = { it?.occupancyMode },
+    restore = { LightLCOccupancyModeStatus(occupancyMode = it) }
+)
+
+/**
+ * Saves the status as `[isOn, targetState, remainingTime]`, where the target state is -1 if
+ * absent and the remaining time is the raw value, or -1 if absent.
+ */
+private val LightOnOffStatusSaver = listSaver<LightLCLightOnOffStatus?, Int>(
+    save = { status ->
+        status?.let {
+            listOf(
+                if (it.isOn) 1 else 0,
+                it.targetState?.let { target -> if (target) 1 else 0 } ?: -1,
+                it.remainingTime?.rawValue?.toInt() ?: -1
+            )
+        } ?: emptyList()
+    },
+    restore = {
+        if (it.isEmpty()) null
+        else LightLCLightOnOffStatus(
+            isOn = it[0] == 1,
+            targetState = if (it[1] < 0) null else it[1] == 1,
+            remainingTime = if (it[2] < 0) null else TransitionTime(rawValue = it[2].toUByte())
+        )
+    }
+)
 
 @Composable
 private fun Boolean.asOnOff() = stringResource(if (this) R.string.label_on else R.string.label_off)
