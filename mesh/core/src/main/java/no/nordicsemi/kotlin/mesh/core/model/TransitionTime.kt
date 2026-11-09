@@ -4,7 +4,6 @@ package no.nordicsemi.kotlin.mesh.core.model
 
 import no.nordicsemi.kotlin.data.shr
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime.Companion.immediate
-import no.nordicsemi.kotlin.mesh.core.model.TransitionTime.Companion.unknown
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
@@ -27,9 +26,6 @@ import kotlin.time.toDuration
  * @property rawValue           Raw representation of the transition in a mesh message.
  * @property isKnown            Returns true if the transition time is unknown.
  * @property isImmediate        Returns true if the transition time is immediate.
- * @property unknown            An unknown transition time. This cannot be used as a default
- *                              transition time.Returns true if the transition time is unknown.
- * @property immediate          An immediate transition time.
  *
  * @constructor                 Creates a new transition time.
  */
