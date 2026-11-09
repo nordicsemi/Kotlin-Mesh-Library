@@ -1,5 +1,7 @@
 # A Kotlin library for Bluetooth Mesh
 
+[![Maven Central](https://img.shields.io/maven-central/v/no.nordicsemi.kotlin.mesh/core?label=Maven%20Central)](https://central.sonatype.com/artifact/no.nordicsemi.kotlin.mesh/core)
+
 The nRF Mesh library allows to provision [Bluetooth® Mesh](https://www.bluetooth.com/learn-about-bluetooth/feature-enhancements/mesh/)
 devices into a mesh network, configure them and send and receive messages.
 
@@ -43,7 +45,13 @@ The following features are not (yet) supported:
 
 ## How to start
 
-The library can be included as a project and will be avialable on maven central in the near future.
+The library is available on Maven Central:
+
+```kotlin
+implementation("no.nordicsemi.kotlin.mesh:core:<version>")
+```
+
+It can also be included as a project.
 
 Product documentation is available here: [Documentation](https://nordicsemi.github.io/Kotlin-Mesh-Library/html/index.html).
 
