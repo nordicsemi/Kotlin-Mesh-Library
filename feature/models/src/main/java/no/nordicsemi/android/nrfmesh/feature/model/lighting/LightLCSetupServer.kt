@@ -15,16 +15,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -71,9 +73,9 @@ internal fun LightLCSetupServer(
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
     val hasBoundKey = model.boundApplicationKeys.isNotEmpty()
-    val values = remember { mutableStateMapOf<DeviceProperty, DevicePropertyCharacteristic>() }
+    val values = rememberSaveable(saver = PropertyValuesSaver) { mutableStateMapOf() }
     // Index of the property being read while all properties are being read, -1 otherwise.
-    var readingIndex by rememberSaveable { mutableStateOf(if (hasBoundKey) 0 else -1) }
+    var readingIndex by rememberSaveable { mutableIntStateOf(if (hasBoundKey) 0 else -1) }
     var editing by remember { mutableStateOf<DeviceProperty?>(null) }
     val isReadingAll = readingIndex >= 0
     val enabled = hasBoundKey && !isReadingAll && !messageState.isInProgress()
@@ -245,6 +247,29 @@ private fun EditPropertyDialog(
         }
     }
 }
+
+/**
+ * Saves the property values as `"<property id>:<editable text>"`, so they survive configuration
+ * changes. Values that cannot be edited, i.e. without an editable text, are not saved.
+ */
+private val PropertyValuesSaver =
+    Saver<SnapshotStateMap<DeviceProperty, DevicePropertyCharacteristic>, List<String>>(
+        save = { map ->
+            map.mapNotNull { (property, value) ->
+                value.editableText()?.let { "${property.id}:$it" }
+            }
+        },
+        restore = { saved ->
+            mutableStateMapOf<DeviceProperty, DevicePropertyCharacteristic>().apply {
+                saved.forEach { entry ->
+                    val (id, text) = entry.split(':', limit = 2)
+                    DeviceProperty.from(id = id.toUShort())?.let { property ->
+                        parse(property = property, text = text)?.let { put(property, it) }
+                    }
+                }
+            }
+        }
+    )
 
 private fun DeviceProperty.rangeHint() = when (this) {
     DeviceProperty.LIGHT_CONTROL_LIGHTNESS_ON,
