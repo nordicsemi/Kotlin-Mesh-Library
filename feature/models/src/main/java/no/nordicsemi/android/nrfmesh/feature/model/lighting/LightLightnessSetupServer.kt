@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,6 +37,8 @@ import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshSingleLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.feature.model.utils.DefaultStatusSaver
+import no.nordicsemi.android.nrfmesh.feature.model.utils.RangeStatusSaver
 import no.nordicsemi.android.nrfmesh.feature.model.utils.toLightness
 import no.nordicsemi.android.nrfmesh.feature.model.utils.toLightnessPercent
 import no.nordicsemi.android.nrfmesh.feature.models.R
@@ -76,8 +77,12 @@ internal fun LightLightnessSetupServer(
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
     val hasBoundKey = model.boundApplicationKeys.isNotEmpty()
-    var defaultStatus by remember { mutableStateOf<LightLightnessDefaultStatus?>(null) }
-    var rangeStatus by remember { mutableStateOf<LightLightnessRangeStatus?>(null) }
+    var defaultStatus by rememberSaveable(stateSaver = DefaultStatusSaver) {
+        mutableStateOf(null)
+    }
+    var rangeStatus by rememberSaveable(stateSaver = RangeStatusSaver) {
+        mutableStateOf(null)
+    }
     // Index of the state being read while all states are being read, -1 otherwise.
     var readingIndex by rememberSaveable { mutableIntStateOf(if (hasBoundKey) 0 else -1) }
     val isReadingAll = readingIndex >= 0

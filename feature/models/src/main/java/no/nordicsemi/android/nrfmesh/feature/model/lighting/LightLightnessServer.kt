@@ -29,7 +29,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,6 +45,10 @@ import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshSingleLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
+import no.nordicsemi.android.nrfmesh.feature.model.utils.LastStatusSaver
+import no.nordicsemi.android.nrfmesh.feature.model.utils.LightnessStatusSaver
+import no.nordicsemi.android.nrfmesh.feature.model.utils.LinearStatusSaver
+import no.nordicsemi.android.nrfmesh.feature.model.utils.TransitionTimeSaver
 import no.nordicsemi.android.nrfmesh.feature.model.utils.handleTransitionTimeChange
 import no.nordicsemi.android.nrfmesh.feature.model.utils.toLightness
 import no.nordicsemi.android.nrfmesh.feature.model.utils.toLightnessPercent
@@ -92,9 +95,15 @@ internal fun LightLightnessServer(
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
     val hasBoundKey = model.boundApplicationKeys.isNotEmpty()
-    var status by remember { mutableStateOf<LightLightnessStatus?>(null) }
-    var linearStatus by remember { mutableStateOf<LightLightnessLinearStatus?>(null) }
-    var lastStatus by remember { mutableStateOf<LightLightnessLastStatus?>(null) }
+    var status by rememberSaveable(stateSaver = LightnessStatusSaver) {
+        mutableStateOf(null)
+    }
+    var linearStatus by rememberSaveable(stateSaver = LinearStatusSaver) {
+        mutableStateOf(null)
+    }
+    var lastStatus by rememberSaveable(stateSaver = LastStatusSaver) {
+        mutableStateOf(null)
+    }
     // Index of the state being read while all states are being read, -1 otherwise.
     var readingIndex by rememberSaveable { mutableIntStateOf(if (hasBoundKey) 0 else -1) }
     val isReadingAll = readingIndex >= 0
@@ -266,16 +275,16 @@ private fun Controls(
 ) {
     val context = LocalContext.current
     var defaultTransitionEnabled by rememberSaveable { mutableStateOf(true) }
-    var transitionTime by remember {
+    var transitionTime by rememberSaveable(stateSaver = TransitionTimeSaver) {
         mutableStateOf(
             TransitionTime(steps = 0u, stepResolution = StepResolution.HUNDREDS_OF_MILLISECONDS)
         )
     }
-    var transitionTimeLabel by remember {
+    var transitionTimeLabel by rememberSaveable {
         mutableStateOf(context.getString(R.string.label_default))
     }
-    var delay by remember { mutableIntStateOf(0) }
-    var delayLabel by remember {
+    var delay by rememberSaveable { mutableIntStateOf(0) }
+    var delayLabel by rememberSaveable {
         mutableStateOf(context.getString(R.string.label_no_delay))
     }
     var percent by rememberSaveable { mutableFloatStateOf(0f) }
