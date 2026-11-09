@@ -31,6 +31,8 @@ import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isLePairingResponderServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLCServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLCSetupServer
+import no.nordicsemi.android.nrfmesh.core.common.isLightLightnessServer
+import no.nordicsemi.android.nrfmesh.core.common.isLightLightnessSetupServer
 import no.nordicsemi.android.nrfmesh.core.common.isSensorServer
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
@@ -47,6 +49,8 @@ import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.feature.model.lepairing.LePairingResponder
 import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLCServer
 import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLCSetupServer
+import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLightnessServer
+import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLightnessSetupServer
 import no.nordicsemi.android.nrfmesh.feature.model.sensor.SensorServer
 import no.nordicsemi.android.nrfmesh.feature.model.vendor.VendorModelControls
 import no.nordicsemi.android.nrfmesh.feature.models.R
@@ -165,6 +169,22 @@ internal fun ModelScreen(
 
             model.isLightLCSetupServer() ->
                 LightLCSetupServer(
+                    model = model,
+                    messageState = messageState,
+                    onReadingAll = { isBatchInProgress = it },
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isLightLightnessServer() ->
+                LightLightnessServer(
+                    model = model,
+                    messageState = messageState,
+                    onReadingAll = { isBatchInProgress = it },
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isLightLightnessSetupServer() ->
+                LightLightnessSetupServer(
                     model = model,
                     messageState = messageState,
                     onReadingAll = { isBatchInProgress = it },
