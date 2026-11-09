@@ -523,25 +523,42 @@ class CoreDataRepository @Inject constructor(
      */
     private fun startAutomaticConnectivity() {
         // Make sure we don't start this multiple times.
-        if (connectivityJob != null) {
+        if (connectivityJob?.isActive == true) {
             return
         }
 
         // Start a coroutine that will scan and connect to any GATT Proxy in this network.
         connectivityJob = ioScope.launch {
-            while (isAutoConnectEnabled) {
-                // Added a check here to avoid a possible crash when the network is reset
-                if (meshNetwork == null) {
-                    break
+            val job = coroutineContext[Job]
+            try {
+                while (isAutoConnectEnabled) {
+                    // Added a check here to avoid a possible crash when the network is reset
+                    if (meshNetwork == null) {
+                        break
+                    }
+                    val bearer = meshBearer ?: scanForGattProxy()
+                    open(bearer)
+                    awaitDisconnection(bearer)
+                    // Added a delay of 1500 seconds to avoid any reconnects
+                    // Clarify this against scan results from GATT proxy
+                    delay(1500.milliseconds)
                 }
-                val bearer = meshBearer ?: scanForGattProxy()
-                open(bearer)
-                awaitDisconnection(bearer)
-                // Added a delay of 1500 seconds to avoid any reconnects
-                // Clarify this against scan results from GATT proxy
-                delay(1500.milliseconds)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Bluetooth may be disabled or permissions may not be granted (e.g. on startup).
+                // Stop the automatic connectivity instead of crashing. It will be restarted by
+                // onBluetoothEnabled() once Bluetooth is enabled and permissions are granted.
+                logger.log(
+                    message = { "Automatic connectivity stopped: ${e.message}" },
+                    category = LogCategory.BEARER,
+                    level = LogLevel.ERROR
+                )
+            } finally {
+                if (connectivityJob === job) {
+                    connectivityJob = null
+                }
             }
-            connectivityJob = null
         }
     }
 
