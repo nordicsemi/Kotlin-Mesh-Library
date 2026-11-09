@@ -4,7 +4,8 @@ package no.nordicsemi.kotlin.mesh.core
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -220,9 +221,8 @@ class ProxyFilter internal constructor(
     val manager: MeshNetworkManager,
 ) : ProxyFilterEventHandler {
 
-    private val _proxyFilterStateFlow =
-        MutableStateFlow<ProxyFilterState>(value = ProxyFilterState.Unknown)
-    val proxyFilterStateFlow = _proxyFilterStateFlow.asStateFlow()
+    val proxyFilterStateFlow: StateFlow<ProxyFilterState>
+        field = MutableStateFlow<ProxyFilterState>(value = ProxyFilterState.Unknown)
 
     // A mutex for internal synchronization.
     private val mutex = Mutex()
@@ -363,7 +363,7 @@ class ProxyFilter internal constructor(
         manager.networkManager?.networkLayer?.proxyNetworkKey = null
         mutex.withLock {
             scope.launch {
-                _proxyFilterStateFlow.emit(
+                proxyFilterStateFlow.emit(
                     value = ProxyFilterState.ProxyFilterUpdated(
                         type = ProxyFilterType.ACCEPT_LIST,
                         addresses = listOf()
@@ -465,10 +465,12 @@ class ProxyFilter internal constructor(
                         this.request = null
                     }
                     // Notify the app about the current state
-                    _proxyFilterStateFlow.value = ProxyFilterState.ProxyFilterUpdated(
-                        type = type,
-                        addresses = addresses
-                    )
+                    proxyFilterStateFlow.update {
+                        ProxyFilterState.ProxyFilterUpdated(
+                            type = type,
+                            addresses = addresses
+                        )
+                    }
                 }
 
                 // Ensure the current information about the filter is up to date.
@@ -477,15 +479,19 @@ class ProxyFilter internal constructor(
                         "Proxy Filter limit reached: ${message.listSize} " +
                                 "(expected: $expectedListSize)"
                     }
-                    _proxyFilterStateFlow.value = ProxyFilterState.ProxyFilterLimitReached(
-                        type = message.filterType,
-                        listSize = message.listSize
-                    )
+                    proxyFilterStateFlow.update {
+                        ProxyFilterState.ProxyFilterLimitReached(
+                            type = message.filterType,
+                            listSize = message.listSize
+                        )
+                    }
                 } else {
-                    _proxyFilterStateFlow.value = ProxyFilterState.ProxyFilterUpdateAcknowledged(
-                        type = message.filterType,
-                        listSize = message.listSize
-                    )
+                    proxyFilterStateFlow.update {
+                        ProxyFilterState.ProxyFilterUpdateAcknowledged(
+                            type = message.filterType,
+                            listSize = message.listSize
+                        )
+                    }
                 }
             }
 

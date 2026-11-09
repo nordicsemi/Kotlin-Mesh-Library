@@ -7,7 +7,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -26,8 +25,8 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
 
     private lateinit var network: MeshNetwork
 
-    private val _uiState = MutableStateFlow(ProvisionersScreenUiState())
-    val uiState: StateFlow<ProvisionersScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ProvisionersScreenUiState>
+        field = MutableStateFlow(ProvisionersScreenUiState())
 
     init {
         observeNetwork()
@@ -39,7 +38,7 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
             .filterNotNull()
             .onEach {
                 network = it
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         provisioners = network.provisioners
                             .map { ProvisionerData(provisioner = it) }
@@ -84,7 +83,7 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
      * @param provisioner Provisioner to be deleted.
      */
     internal fun onSwiped(provisioner: ProvisionerData) {
-        _uiState.update {
+        uiState.update {
             it.copy(provisionersToBeRemoved = it.provisionersToBeRemoved + provisioner)
         }
     }
@@ -96,7 +95,7 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
      * @param provisioner Scene to be reverted.
      */
     internal fun onUndoSwipe(provisioner: ProvisionerData) {
-        _uiState.update {
+        uiState.update {
             it.copy(provisionersToBeRemoved = it.provisionersToBeRemoved - provisioner)
         }
     }
@@ -107,7 +106,7 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
      * @param provisioner Scene to be removed.
      */
     internal fun remove(provisioner: ProvisionerData) {
-        _uiState.update { state ->
+        uiState.update { state ->
             state.copy(
                 provisioners = state.provisioners - provisioner,
                 provisionersToBeRemoved = state.provisionersToBeRemoved - provisioner
@@ -123,7 +122,7 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
      */
     private fun removeProvisioners() {
         val _ = runCatching {
-            _uiState.value.provisionersToBeRemoved.forEach { provisioner ->
+            uiState.value.provisionersToBeRemoved.forEach { provisioner ->
                 network.removeProvisionerWithUuid(uuid = provisioner.uuid)
             }
         }
@@ -131,7 +130,7 @@ internal class ProvisionersViewModel @AssistedInject internal constructor(
     }
 
     fun selectProvisioner(uuid: Uuid) {
-        _uiState.update { it.copy(selectedProvisionerUuid = uuid) }
+        uiState.update { it.copy(selectedProvisionerUuid = uuid) }
     }
 
     @AssistedFactory

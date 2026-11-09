@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Completed
@@ -27,8 +26,8 @@ import javax.inject.Inject
 internal class DfuSessionViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(FirmwareUpdateScreenUiState())
-    internal val uiState = _uiState.asStateFlow()
+    internal val uiState: StateFlow<FirmwareUpdateScreenUiState>
+        field = MutableStateFlow(FirmwareUpdateScreenUiState())
 
     /**
      * State shared between the pages of the firmware update pager. As the ViewModel is scoped to
@@ -56,32 +55,38 @@ internal class DfuSessionViewModel @Inject internal constructor(
         session.update { it.copy(dfuParameters = dfuParameters) }
 
     internal fun send(model: Model, message: AcknowledgedConfigMessage) {
-        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+        uiState.update { it.copy(messageState = Sending(message = message)) }
         val node = model.parentElement?.parentNode ?: return
         viewModelScope.launch {
             try {
                 repository.send(node = node, message = message)?.let { response ->
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Completed(
-                            message = message,
-                            response = response as ConfigResponse
-                        ),
-                        isRefreshing = false
-                    )
+                    uiState.update {
+                        it.copy(
+                            messageState = Completed(
+                                message = message,
+                                response = response as ConfigResponse
+                            ),
+                            isRefreshing = false
+                        )
+                    }
                 } ?: run {
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Failed(
-                            message = message,
-                            error = IllegalStateException("No response received")
-                        ),
+                    uiState.update {
+                        it.copy(
+                            messageState = Failed(
+                                message = message,
+                                error = IllegalStateException("No response received")
+                            ),
+                            isRefreshing = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                uiState.update {
+                    it.copy(
+                        messageState = Failed(message = message, error = e),
                         isRefreshing = false
                     )
                 }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    messageState = Failed(message = message, error = e),
-                    isRefreshing = false
-                )
             }
         }
     }

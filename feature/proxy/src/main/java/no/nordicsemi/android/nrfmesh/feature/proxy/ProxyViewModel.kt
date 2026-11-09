@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -33,8 +33,8 @@ internal class ProxyViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
-    private val _uiState = MutableStateFlow(ProxyScreenUiState())
-    internal val uiState = _uiState.asStateFlow()
+    internal val uiState: StateFlow<ProxyScreenUiState>
+        field = MutableStateFlow(ProxyScreenUiState())
 
     init {
         observeNetwork()
@@ -46,7 +46,7 @@ internal class ProxyViewModel @Inject internal constructor(
             .filterNotNull()
             .onEach { network ->
                 meshNetwork = network
-                _uiState.update {
+                uiState.update {
                     it.copy(meshNetworkState = MeshNetworkState.Success(network = network))
                 }
             }
@@ -54,12 +54,12 @@ internal class ProxyViewModel @Inject internal constructor(
 
         repository.proxyConnectionStateFlow
             .onEach { proxyConnectionState ->
-                _uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
+                uiState.update { it.copy(proxyConnectionState = proxyConnectionState) }
             }
             .launchIn(scope = viewModelScope)
 
         // Setup initial state
-        _uiState.update {
+        uiState.update {
             it.copy(
                 filterType = repository.proxyFilter.type,
                 addresses = repository.proxyFilter.addresses.toList(),
@@ -72,7 +72,7 @@ internal class ProxyViewModel @Inject internal constructor(
                     is ProxyFilterState.ProxyFilterUpdated -> {
                         val addresses = mutableListOf<ProxyFilterAddress>()
                         addresses.addAll(state.addresses)
-                        _uiState.update {
+                        uiState.update {
                             it.copy(
                                 filterType = state.type,
                                 addresses = state.addresses.toList(),
@@ -82,7 +82,7 @@ internal class ProxyViewModel @Inject internal constructor(
                     }
 
                     is ProxyFilterState.ProxyFilterLimitReached -> {
-                        _uiState.update {
+                        uiState.update {
                             it.copy(
                                 filterType = state.type,
                                 isProxyLimitReached = true
@@ -91,7 +91,7 @@ internal class ProxyViewModel @Inject internal constructor(
                     }
 
                     is ProxyFilterState.ProxyFilterUpdateAcknowledged -> {
-                        _uiState.update {
+                        uiState.update {
                             it.copy(
                                 filterType = state.type,
                                 addresses = repository.proxyFilter.addresses.toList(),
@@ -139,21 +139,21 @@ internal class ProxyViewModel @Inject internal constructor(
     }
 
     internal fun send(message: ProxyConfigurationMessage) {
-        _uiState.update {
+        uiState.update {
             it.copy(messageState = Sending(message = message))
         }
         viewModelScope.launch {
             try {
                 repository.send(message).let { response ->
                     if (message is RemoveAddressesFromFilter) {
-                        val addresses = _uiState.value.addresses.toMutableList()
+                        val addresses = uiState.value.addresses.toMutableList()
                         if (addresses.removeAll(message.addresses)) {
-                            _uiState.update {
+                            uiState.update {
                                 it.copy(addresses = addresses.toList())
                             }
                         }
                     }
-                    _uiState.update {
+                    uiState.update {
                         it.copy(
                             messageState = Completed(
                                 message = message,
@@ -163,7 +163,7 @@ internal class ProxyViewModel @Inject internal constructor(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update {
+                uiState.update {
                     it.copy(messageState = Failed(message = message, error = e))
                 }
             }
@@ -171,7 +171,7 @@ internal class ProxyViewModel @Inject internal constructor(
     }
 
     internal fun resetMessageState() {
-        _uiState.value = _uiState.value.copy(messageState = NotStarted, isProxyLimitReached = false)
+        uiState.update { it.copy(messageState = NotStarted, isProxyLimitReached = false) }
     }
 }
 

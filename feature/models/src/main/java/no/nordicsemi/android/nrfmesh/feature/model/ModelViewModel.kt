@@ -9,7 +9,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
@@ -45,8 +44,8 @@ internal class ModelViewModel @AssistedInject internal constructor(
     private lateinit var selectedNode: Node
     private lateinit var selectedModel: Model
 
-    private val _uiState = MutableStateFlow(ModelScreenUiState())
-    val uiState: StateFlow<ModelScreenUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ModelScreenUiState>
+        field = MutableStateFlow(ModelScreenUiState())
 
     init {
         observeNetworkChanges()
@@ -61,7 +60,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
                     ?: throw IllegalStateException("Model not found")
                 selectedNode = selectedModel.parentElement?.parentNode
                     ?: throw IllegalStateException("Node not found")
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         modelState = ModelState.Success(
                             model = selectedModel
@@ -79,7 +78,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
      * @return true if the NodeIdentityState should be updated, false otherwise.
      */
     private fun shouldUpdateNodeIdentityState(): Boolean =
-        _uiState.value.nodeIdentityStates.isEmpty()
+        uiState.value.nodeIdentityStates.isEmpty()
 
     /**
      * Creates a list of NodeIdentityStatus objects for each network key.
@@ -99,12 +98,12 @@ internal class ModelViewModel @AssistedInject internal constructor(
         viewModelScope.launch {
             val element = model.parentElement ?: throw IllegalStateException("Element not found")
             if (shouldUpdateNodeIdentityState()) {
-                _uiState.update {
+                uiState.update {
                     it.copy(nodeIdentityStates = createNodeIdentityStates(model = model))
                 }
             }
-            val uiState = _uiState.value
-            val nodeIdentityStates = uiState.nodeIdentityStates.toMutableList()
+            val currentState = uiState.value
+            val nodeIdentityStates = currentState.nodeIdentityStates.toMutableList()
             val keys = element.parentNode?.networkKeys ?: emptyList()
 
             var message: ConfigNodeIdentityGet? = null
@@ -112,7 +111,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
             try {
                 keys.forEach { key ->
                     message = ConfigNodeIdentityGet(networkKeyIndex = key.index)
-                    _uiState.update { state -> state.copy(messageState = Sending(message = message)) }
+                    uiState.update { state -> state.copy(messageState = Sending(message = message)) }
                     response = repository.send(
                         node = element.parentNode!!,
                         message = message
@@ -126,7 +125,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
                             .copy(nodeIdentityState = status.identity)
                     }
                 }
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         messageState = Completed(
                             message = ConfigNodeIdentityGet(networkKeyIndex = keys.first().index),
@@ -136,7 +135,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
                     )
                 }
             } catch (ex: Exception) {
-                _uiState.update {
+                uiState.update {
                     it.copy(
                         messageState = Failed(
                             message = message,
@@ -150,11 +149,11 @@ internal class ModelViewModel @AssistedInject internal constructor(
     }
 
     internal fun send(message: AcknowledgedConfigMessage) {
-        _uiState.update { state -> state.copy(messageState = Sending(message = message)) }
+        uiState.update { state -> state.copy(messageState = Sending(message = message)) }
         viewModelScope.launch {
             try {
                 repository.send(selectedNode, message)?.let { response ->
-                    _uiState.update {
+                    uiState.update {
                         it.copy(
                             messageState = Completed(
                                 message = message,
@@ -164,7 +163,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
                         )
                     }
                 } ?: run {
-                    _uiState.update {
+                    uiState.update {
                         it.copy(
                             messageState = Failed(
                                 message = message,
@@ -175,7 +174,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         messageState = Failed(
                             message = message,
@@ -188,12 +187,12 @@ internal class ModelViewModel @AssistedInject internal constructor(
     }
 
     internal fun sendApplicationMessage(model: Model, message: MeshMessage) {
-        _uiState.update { state -> state.copy(messageState = Sending(message = message)) }
+        uiState.update { state -> state.copy(messageState = Sending(message = message)) }
         viewModelScope.launch {
             runCatching {
                 if (message is AcknowledgedMeshMessage) {
                     val response = repository.send(model = model, ackedMessage = message)
-                    _uiState.update { state ->
+                    uiState.update { state ->
                         state.copy(messageState = Completed(message = message, response = response))
                     }
                 } else {
@@ -201,10 +200,10 @@ internal class ModelViewModel @AssistedInject internal constructor(
                         model = model,
                         unackedMessage = message as UnacknowledgedMeshMessage
                     )
-                    _uiState.update { it -> it.copy(messageState = Completed(message = message)) }
+                    uiState.update { it -> it.copy(messageState = Completed(message = message)) }
                 }
             }.getOrElse {
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         messageState = Failed(message = message, error = it),
                         isRefreshing = false
@@ -223,7 +222,7 @@ internal class ModelViewModel @AssistedInject internal constructor(
     internal fun startPairing(context: Context) = repository.startPairing()
 
     internal fun resetMessageState() {
-        _uiState.update { state -> state.copy(messageState = NotStarted) }
+        uiState.update { state -> state.copy(messageState = NotStarted) }
     }
 
     @AssistedFactory

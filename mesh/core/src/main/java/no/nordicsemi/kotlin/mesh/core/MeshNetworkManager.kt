@@ -5,7 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -94,8 +94,8 @@ class MeshNetworkManager(
     /** The currently loaded mesh network. */
     var network: MeshNetwork? = null
         private set
-    private val _networkEvents = MutableSharedFlow<NetworkEvent>(replay = 1)
-    val networkEvents = _networkEvents.asSharedFlow()
+    val networkEvents: SharedFlow<NetworkEvent>
+        field = MutableSharedFlow<NetworkEvent>(replay = 1)
 
     internal var networkManagerEventObserver: Job? = null
     internal var observeMeshMessages: Job? = null
@@ -125,8 +125,8 @@ class MeshNetworkManager(
         }
     val proxyFilter: ProxyFilter = ProxyFilter(scope = scope, manager = this)
 
-    private val _attentionTimer = MutableSharedFlow<HealthAttentionTimer>()
-    val attentionTimer = _attentionTimer.asSharedFlow()
+    val attentionTimer: SharedFlow<HealthAttentionTimer>
+        field = MutableSharedFlow<HealthAttentionTimer>()
 
     var localElements: List<Element>
         get() = network?.localElements ?: emptyList()
@@ -152,7 +152,7 @@ class MeshNetworkManager(
             elements
                 .first()
                 .addPrimaryElementModels(
-                    triggerAttentionTimer = { _attentionTimer.tryEmit(value = it) },
+                    triggerAttentionTimer = { attentionTimer.tryEmit(value = it) },
                     logger = logger
                 )
 
@@ -187,7 +187,7 @@ class MeshNetworkManager(
                 .apply { ivIndex = secureProperties.ivIndex(uuid = uuid) }
             networkManager = NetworkManager(manager = this)
             proxyFilter.onNewNetworkCreated()
-            _networkEvents.emit(NetworkEvent.NetworkUpdated)
+            networkEvents.emit(NetworkEvent.NetworkUpdated)
             true
         } == true
 
@@ -197,7 +197,7 @@ class MeshNetworkManager(
     suspend fun save() {
         export()?.let {
             mutex.withLock { storage.save(network = it) }
-            _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
+            networkEvents.emit(value = NetworkEvent.NetworkUpdated)
         }
     }
 
@@ -277,7 +277,7 @@ class MeshNetworkManager(
                 uuid = network.uuid,
                 ivIndex = network.ivIndex
             )
-            _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
+            networkEvents.emit(value = NetworkEvent.NetworkUpdated)
         }
     }
 
@@ -287,7 +287,7 @@ class MeshNetworkManager(
     suspend fun clear() {
         networkManager = null
         network = null
-        _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
+        networkEvents.emit(value = NetworkEvent.NetworkUpdated)
         mutex.withLock { storage.save(network = byteArrayOf()) }
     }
 
@@ -305,7 +305,7 @@ class MeshNetworkManager(
                 this.network = network
                 networkManager = NetworkManager(this)
                 proxyFilter.onNewNetworkCreated()
-                _networkEvents.emit(value = NetworkEvent.NetworkUpdated)
+                networkEvents.emit(value = NetworkEvent.NetworkUpdated)
             }
     }.getOrElse {
         if (it is ImportError) throw it
@@ -1181,7 +1181,7 @@ class MeshNetworkManager(
             runCatching {
                 observeMeshMessages = networkManager?.incomingMeshMessages
                     ?.onEach {
-                        _networkEvents.emit(
+                        networkEvents.emit(
                             value = NetworkEvent.MeshMessageReceived(
                                 source = it.source.address,
                                 destination = it.destination,

@@ -8,7 +8,6 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -38,8 +37,8 @@ internal class AddAppKeysViewModel @AssistedInject internal constructor(
     private lateinit var selectedNode: Node
     private val nodeUuid = Uuid.parse(uuidString = uuid)
 
-    private val _uiState = MutableStateFlow(AddAppKeysUiState())
-    val uiState: StateFlow<AddAppKeysUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<AddAppKeysUiState>
+        field = MutableStateFlow(AddAppKeysUiState())
 
     init {
         observeNetworkChanges()
@@ -52,7 +51,7 @@ internal class AddAppKeysViewModel @AssistedInject internal constructor(
             .onEach { network ->
                 this@AddAppKeysViewModel.selectedNode =
                     network.node(uuid = nodeUuid) ?: return@onEach
-                _uiState.update { state ->
+                uiState.update { state ->
                     state.copy(
                         isLocalProvisionerNode = selectedNode.isLocalProvisioner,
                         addedAppKeys = selectedNode.applicationKeys.toList(),
@@ -65,34 +64,40 @@ internal class AddAppKeysViewModel @AssistedInject internal constructor(
     }
 
     internal fun send(message: AcknowledgedConfigMessage) {
-        _uiState.value = _uiState.value.copy(messageState = Sending(message = message))
+        uiState.update { it.copy(messageState = Sending(message = message)) }
         viewModelScope.launch {
             try {
                 repository.send(selectedNode, message)?.let { response ->
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Completed(
-                            message = message,
-                            response = response as ConfigResponse
-                        ),
-                    )
+                    uiState.update {
+                        it.copy(
+                            messageState = Completed(
+                                message = message,
+                                response = response as ConfigResponse
+                            ),
+                        )
+                    }
                 } ?: run {
-                    _uiState.value = _uiState.value.copy(
-                        messageState = Failed(
-                            message = message,
-                            error = IllegalStateException("No response received")
-                        ),
-                    )
+                    uiState.update {
+                        it.copy(
+                            messageState = Failed(
+                                message = message,
+                                error = IllegalStateException("No response received")
+                            ),
+                        )
+                    }
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    messageState = Failed(message = message, error = e),
-                )
+                uiState.update {
+                    it.copy(
+                        messageState = Failed(message = message, error = e),
+                    )
+                }
             }
         }
     }
 
     internal fun resetMessageState() {
-        _uiState.value = _uiState.value.copy(messageState = NotStarted)
+        uiState.update { it.copy(messageState = NotStarted) }
     }
 
     internal fun addApplicationKey() {
