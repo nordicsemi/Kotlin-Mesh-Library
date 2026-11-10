@@ -1,6 +1,7 @@
 
 package no.nordicsemi.android.nrfmesh.feature.scenes
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -72,7 +74,7 @@ internal fun ScenesScreen(
 
             false -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = bottomInsetPadding(extra = 80.dp)
                 // Removed in favor of padding in SwipeToDismissKey so that hiding an item will not leave any gaps
                 // verticalArrangement = Arrangement.spacedBy(space = 8.dp)
             ) {
@@ -116,6 +118,7 @@ internal fun ScenesScreen(
         ExtendedFloatingActionButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(16.dp)
                 .defaultMinSize(minWidth = 150.dp),
             text = { Text(text = stringResource(R.string.label_add_scene)) },

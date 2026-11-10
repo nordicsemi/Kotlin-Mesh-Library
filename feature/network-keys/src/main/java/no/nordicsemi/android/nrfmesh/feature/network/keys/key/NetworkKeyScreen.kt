@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.network.keys.key
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -99,6 +100,7 @@ private fun NetworkKeyContent(
         KeyRefreshPhase(phase = key.phase)
         Security(security = key.security)
         LastModified(key.timestamp)
+        BottomInsetSpacer(spacing = 8.dp)
     }
 }
 

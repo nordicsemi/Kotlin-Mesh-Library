@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.nodes.node
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -212,7 +213,7 @@ internal fun NodeScreen(
                 navigateBack = navigateBack,
                 removeNode = removeNode
             )
-            Spacer(modifier = Modifier.size(size = 16.dp))
+            BottomInsetSpacer(spacing = 8.dp)
         }
         if (showConfigurationTasks) {
             ConfigurationTasksBottomSheet(

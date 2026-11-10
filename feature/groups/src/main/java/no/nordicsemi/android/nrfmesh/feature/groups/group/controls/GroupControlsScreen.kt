@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.groups.group.controls
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -164,6 +165,7 @@ internal fun GroupControls(
                 }
             }
         }
+        BottomInsetSpacer(spacing = 8.dp)
     }
 }
 

@@ -1,5 +1,6 @@
 package no.nordicsemi.android.feature.config.networkkeys
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -88,7 +90,11 @@ internal fun ConfigNetKeysScreen(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = bottomInsetPadding().calculateBottomPadding()
+                ),
                 verticalArrangement = Arrangement.spacedBy(space = 8.dp)
             ) {
                 when (addedNetworkKeys.isNotEmpty()) {
@@ -145,6 +151,7 @@ internal fun ConfigNetKeysScreen(
             visible = !showBottomSheet,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(16.dp)
         ) {
             ExtendedFloatingActionButton(

@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.groups.group
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -135,6 +136,7 @@ internal fun GroupInfoContent(
                 )
             }
         }
+        BottomInsetSpacer(spacing = 8.dp)
     }
 }
 

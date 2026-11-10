@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.proxy
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -176,6 +177,7 @@ private fun ProxyContent(
                     messageState = messageState,
                     resetMessageState = resetMessageState
                 )
+                BottomInsetSpacer(spacing = 8.dp)
             }
         }
     }

@@ -1,5 +1,7 @@
 package no.nordicsemi.android.nrfmesh.feature.groups
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -76,6 +79,7 @@ internal fun GroupsScreen(
         ExtendedFloatingActionButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(16.dp)
                 .defaultMinSize(minWidth = 150.dp),
             text = { Text(text = stringResource(R.string.label_add_group)) },
@@ -240,7 +244,12 @@ private fun Groups(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(all = 16.dp),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = 16.dp,
+                end = 16.dp,
+                bottom = bottomInsetPadding().calculateBottomPadding()
+            ),
             content = {
                 items(
                     items = uiState.groups,
@@ -303,6 +312,7 @@ private fun Groups(
                     .height(height = 8.dp)
                     .fillMaxWidth()
             )
+            BottomInsetSpacer(modifier = Modifier.fillMaxWidth(), spacing = 16.dp)
         }
     }
     if (uiState.groups.isEmpty()) {

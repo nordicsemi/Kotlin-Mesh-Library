@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.nodes.node.element
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -83,7 +84,7 @@ internal fun ElementScreen(
             if (index < element.models.size - 1)
                 Spacer(modifier = Modifier.size(size = 8.dp))
         }
-        Spacer(modifier = Modifier.size(size = 8.dp))
+        BottomInsetSpacer()
     }
 }
 

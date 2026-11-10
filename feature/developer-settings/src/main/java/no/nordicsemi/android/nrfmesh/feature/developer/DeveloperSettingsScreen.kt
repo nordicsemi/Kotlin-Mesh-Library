@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.developer
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +45,7 @@ internal fun DeveloperSettingsScreen(
             alwaysReconfigure = developerSettings.alwaysReconfigure,
             onAlwaysReconfigure = onAlwaysReconfigure
         )
+        BottomInsetSpacer(spacing = 8.dp)
     }
 }
 

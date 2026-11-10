@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.bind.appkeys
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,6 +50,7 @@ fun BindAppKeysScreen(
         when (addedKeys.isNotEmpty()) {
             true -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                contentPadding = bottomInsetPadding(),
                 verticalArrangement = Arrangement.spacedBy(space = 8.dp)
             ) {
                 items(items = addedKeys, key = { it.index.toInt() + 1 }) { key ->

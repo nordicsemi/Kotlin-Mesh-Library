@@ -1,5 +1,6 @@
 package no.nordicsemi.android.feature.config.networkkeys
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -75,6 +76,7 @@ fun AddNetworkKeysScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(vertical = 8.dp),
+                contentPadding = bottomInsetPadding(),
                 verticalArrangement = Arrangement.spacedBy(space = 8.dp)
             ) {
                 items(items = keys) { key ->

@@ -2,6 +2,7 @@
 
 package no.nordicsemi.android.nrfmesh.feature.nodes
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -58,6 +60,7 @@ internal fun NodesScreen(
         ExtendedFloatingActionButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(16.dp)
                 .defaultMinSize(minWidth = 150.dp),
             text = { Text(text = stringResource(R.string.label_add_node)) },
@@ -101,6 +104,7 @@ private fun NodesList(
                         onClick = { navigateToNode(node.uuid) },
                     )
                 }
+                item { BottomInsetSpacer(spacing = 8.dp) }
             }
         )
     } else {
@@ -139,6 +143,7 @@ private fun NodesList(
                     .height(height = 8.dp)
                     .fillMaxWidth()
             )
+            BottomInsetSpacer(modifier = Modifier.fillMaxWidth(), spacing = 16.dp)
         }
     }
 }
