@@ -32,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -76,6 +78,9 @@ internal fun BoundApplicationKeys(
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showAddKeySheet by rememberSaveable { mutableStateOf(false) }
+    // The network is a mutable object that does not notify the UI when a key is generated, so a
+    // counter is bumped to recompose the available keys.
+    var generatedKeys by remember { mutableIntStateOf(0) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -222,7 +227,9 @@ internal fun BoundApplicationKeys(
 
     if (showAddKeySheet) {
         val addKeySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-        val availableKeys = model.parentElement?.parentNode?.unknownApplicationKeys().orEmpty()
+        val availableKeys = generatedKeys.let {
+            model.parentElement?.parentNode?.unknownApplicationKeys().orEmpty()
+        }
         ModalBottomSheet(
             sheetState = addKeySheetState,
             onDismissRequest = { showAddKeySheet = false },
@@ -240,7 +247,10 @@ internal fun BoundApplicationKeys(
                     )
                     MeshOutlinedButton(
                         modifier = Modifier.padding(end = 16.dp),
-                        onClick = addApplicationKey,
+                        onClick = {
+                            addApplicationKey()
+                            generatedKeys++
+                        },
                         buttonIcon = Icons.Outlined.AutoFixHigh,
                         text = stringResource(R.string.label_generate)
                     )
