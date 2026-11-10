@@ -16,18 +16,17 @@ fun MeshApp() {
         backStack = backStack,
         entryProvider = entryProvider {
             networkScreenEntry(
+                // Replaces the whole back stack, so going back from the wizard is not possible. This
+                // can be called more than once, so it must not add duplicates.
                 navigateToWizard = {
-                    // Add the wizard to the back stack as the latest screen to be displayed
+                    backStack.clear()
                     backStack.add(NetworkWizardKey)
-                    // Remove the NetworkScreenKey from the backstack as navigating to the wizard
-                    // should not allow going back
-                    backStack.remove(NetworkScreenKey)
                 }
             )
             networkWizardEntry(
                 navigateToNetwork = {
+                    backStack.clear()
                     backStack.add(NetworkScreenKey)
-                    backStack.remove(NetworkWizardKey)
                 }
             )
         }
