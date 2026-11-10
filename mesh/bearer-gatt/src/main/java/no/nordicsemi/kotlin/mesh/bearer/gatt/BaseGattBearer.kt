@@ -77,6 +77,11 @@ abstract class BaseGattBearer<
 
     var logger: Logger? = null
 
+    /**
+     * Optional observer notified about every PDU sent and received by this bearer.
+     */
+    var pduObserver: PduObserver? = null
+
     protected var mtu: Int = DEFAULT_MTU
     private val proxyProtocolHandler = ProxyProtocolHandler()
     private var connection: Job? = null
@@ -96,7 +101,11 @@ abstract class BaseGattBearer<
                 logger?.v(LogCategory.BEARER) { "<- ${data.toLogString()}" }
                 proxyProtocolHandler
                     .reassemble(data = data)
-                    ?.let { pdu -> _pdus.emit(pdu) }
+                    ?.let { pdu ->
+                        // Never let an observer affect the bearer.
+                        runCatching { pduObserver?.onPduReceived(pdu) }
+                        _pdus.emit(pdu)
+                    }
             }
         }
     }
@@ -183,6 +192,7 @@ abstract class BaseGattBearer<
             logger?.e(category = LogCategory.BEARER) { "Error: dataInCharacteristic is null" }
             return
         }
+        runCatching { pduObserver?.onPduSent(pdu = pdu, type = type) }
         proxyProtocolHandler.segment(data = pdu, type = type, mtu = mtu).forEach {
             logger?.v(LogCategory.BEARER) { "-> ${pdu.toLogString()}" }
             dataIn.write(data = it, writeType = WriteType.WITHOUT_RESPONSE)
