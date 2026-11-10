@@ -1,15 +1,11 @@
 package no.nordicsemi.android.nrfmesh.feature.settings
 
-import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.DataObject
@@ -18,6 +14,7 @@ import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.VpnKey
+import androidx.compose.material.icons.rounded.Tag
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -25,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.nrfmesh.core.navigation.ClickableSetting
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
@@ -256,7 +254,7 @@ private fun IvIndexRow(isSelected: Boolean, onIvIndexPressed: () -> Unit) {
 
             else -> CardDefaults.outlinedCardColors()
         },
-        imageVector = Icons.AutoMirrored.Outlined.List,
+        imageVector = Icons.Rounded.Tag,
         title = stringResource(R.string.label_iv_index),
         onClick = onIvIndexPressed
     )
