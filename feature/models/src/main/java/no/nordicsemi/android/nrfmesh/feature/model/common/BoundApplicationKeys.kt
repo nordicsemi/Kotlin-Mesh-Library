@@ -78,6 +78,9 @@ internal fun BoundApplicationKeys(
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showAddKeySheet by rememberSaveable { mutableStateOf(false) }
+    // Set when the add key sheet was opened because there were no keys left to bind, so that the
+    // bind sheet is shown again once a key is added or generated.
+    var returnToBindSheet by rememberSaveable { mutableStateOf(false) }
     // The network is a mutable object that does not notify the UI when a key is generated, so a
     // counter is bumped to recompose the available keys.
     var generatedKeys by remember { mutableIntStateOf(0) }
@@ -175,6 +178,7 @@ internal fun BoundApplicationKeys(
                             }.invokeOnCompletion {
                                 if (!bottomSheetState.isVisible) {
                                     showBottomSheet = false
+                                    returnToBindSheet = unboundKeys.isEmpty()
                                     showAddKeySheet = true
                                 }
                             }
@@ -226,12 +230,29 @@ internal fun BoundApplicationKeys(
 
     if (showAddKeySheet) {
         val addKeySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        // Hides the sheet and, if there was nothing to bind, goes back to the bind sheet.
+        val closeAddKeySheet: () -> Unit = {
+            scope.launch {
+                addKeySheetState.hide()
+            }.invokeOnCompletion {
+                if (!addKeySheetState.isVisible) {
+                    showAddKeySheet = false
+                    if (returnToBindSheet) {
+                        returnToBindSheet = false
+                        showBottomSheet = true
+                    }
+                }
+            }
+        }
         val availableKeys = generatedKeys.let {
             model.parentElement?.parentNode?.unknownApplicationKeys().orEmpty()
         }
         ModalBottomSheet(
             sheetState = addKeySheetState,
-            onDismissRequest = { showAddKeySheet = false },
+            onDismissRequest = {
+                showAddKeySheet = false
+                returnToBindSheet = false
+            },
             content = {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -249,6 +270,7 @@ internal fun BoundApplicationKeys(
                         onClick = {
                             addApplicationKey()
                             generatedKeys++
+                            if (returnToBindSheet) closeAddKeySheet()
                         },
                         buttonIcon = Icons.Outlined.AutoFixHigh,
                         text = stringResource(R.string.label_generate)
@@ -274,13 +296,7 @@ internal fun BoundApplicationKeys(
                         applicationKey.KeyRow(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             onClick = {
-                                scope.launch {
-                                    addKeySheetState.hide()
-                                }.invokeOnCompletion {
-                                    if (!addKeySheetState.isVisible) {
-                                        showAddKeySheet = false
-                                    }
-                                }
+                                closeAddKeySheet()
                                 send(ConfigAppKeyAdd(key = applicationKey))
                             }
                         )
