@@ -72,7 +72,8 @@
     <string name="label_cancel">Cancel</string>
     <string name="label_unbind_application_key_rationale">This key is currently used by the publication. Unbinding will clear the publication. Do you want to continue?</string>
     <string name="label_bind_application_keys">Bind Application Keys</string>
-    <string name="label_no_app_keys_to_bind">No application keys available to bind.\nAdd an application key to the node.</string>
+    <string name="label_no_app_keys_to_bind">No application keys available</string>
+    <string name="label_no_app_keys_to_bind_rationale">Add an application key to the node to be able to bind it to this model.</string>
     <string name="label_bind_key">Bind Key</string>
     <string name="label_settings">Settings</string>
     <string name="label_list">List</string>
