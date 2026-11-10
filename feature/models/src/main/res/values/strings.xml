@@ -71,7 +71,7 @@
     <string name="label_no_app_keys_available">No application keys available</string>
     <string name="label_no_app_keys_to_add_rationale">Add an application key to the network to be able to add it to this node.</string>
     <string name="label_generate">Generate</string>
-    <string name="label_no_keys_bound">No keys bound</string>
+    <string name="label_no_application_keys_bound">No application keys bound</string>
     <string name="label_warning">Warning</string>
     <string name="label_cancel">Cancel</string>
     <string name="label_unbind_application_key_rationale">This key is currently used by the publication. Unbinding will clear the publication. Do you want to continue?</string>
