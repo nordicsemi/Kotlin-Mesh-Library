@@ -5,7 +5,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -221,6 +225,10 @@ private fun NetworkContent(
         )
         val scene = sceneState.currentScene
         Scaffold(
+            // Content is drawn edge to edge; scrollables pad themselves for the bottom inset.
+            contentWindowInsets = WindowInsets.systemBars.only(
+                WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+            ),
             snackbarHost = { SnackbarHost(hostState = appState.snackbarHostState) },
             topBar = {
                 NordicAppBar(

@@ -1,5 +1,8 @@
 package no.nordicsemi.android.nrfmesh.feature.model.extension
 
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,7 +38,11 @@ internal fun RelatedModelsScreen(model: Model, onModelClicked: (Model) -> Unit) 
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 16.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+        ),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         directBaseModels(

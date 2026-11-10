@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner.ranges
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
@@ -125,7 +126,11 @@ fun RangesScreen(
                 .fillMaxWidth()
                 .weight(0.6f, false),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp)
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                bottom = bottomInsetPadding().calculateBottomPadding()
+            )
         ) {
             if (ranges.isNotEmpty()) {
                 items(items = ranges, key = { "${it.low}_${it.high}_${it::class.simpleName}" }) { range ->

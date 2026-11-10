@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model.dfu
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import android.content.res.Resources
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -95,6 +96,7 @@ internal fun FirmwareInformationScreen(
                 isInProgress = isInProgress,
                 send = send
             )
+            BottomInsetSpacer(spacing = 8.dp)
         }
         SnackbarHost(
             hostState = snackbarHostState,

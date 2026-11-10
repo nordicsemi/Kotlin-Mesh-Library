@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.settings
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -130,7 +131,7 @@ private fun SettingsScreen(
         )
         VersionNameRow()
         VersionCodeRow()
-        Spacer(modifier = Modifier.size(size = 16.dp))
+        BottomInsetSpacer()
     }
 }
 

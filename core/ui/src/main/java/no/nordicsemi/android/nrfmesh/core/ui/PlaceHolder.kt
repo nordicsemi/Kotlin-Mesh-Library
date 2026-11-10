@@ -2,6 +2,7 @@ package no.nordicsemi.android.nrfmesh.core.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
@@ -25,7 +26,9 @@ fun PlaceHolder(
     text: String,
 ) {
     OutlinedCard(
-        modifier = modifier.padding(top = 48.dp, end = 16.dp, bottom = 16.dp),
+        modifier = modifier
+            .navigationBarsPadding()
+            .padding(top = 48.dp, end = 16.dp, bottom = 16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(
             topStart = 16.dp,

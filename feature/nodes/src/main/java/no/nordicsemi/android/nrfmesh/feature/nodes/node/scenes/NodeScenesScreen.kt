@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -172,7 +174,7 @@ internal fun NodeScenesScreen(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = bottomInsetPadding(extra = 80.dp)
             ) {
                 if (uiState.scenes.isEmpty()) {
                     item {
@@ -226,6 +228,7 @@ internal fun NodeScenesScreen(
         ExtendedFloatingActionButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(all = 16.dp)
                 .defaultMinSize(minWidth = 150.dp),
             text = { Text(text = stringResource(R.string.label_store_scene)) },

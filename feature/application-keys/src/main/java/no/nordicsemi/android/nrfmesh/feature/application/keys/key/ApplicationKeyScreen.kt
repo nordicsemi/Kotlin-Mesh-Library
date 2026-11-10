@@ -2,6 +2,7 @@
 
 package no.nordicsemi.android.nrfmesh.feature.application.keys.key
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -144,6 +145,7 @@ internal fun ApplicationKeyContent(
                 )
             }
         }
+        BottomInsetSpacer(spacing = 8.dp)
     }
 }
 

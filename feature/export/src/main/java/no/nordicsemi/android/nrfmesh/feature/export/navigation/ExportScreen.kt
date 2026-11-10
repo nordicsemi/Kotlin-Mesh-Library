@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.export.navigation
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -156,6 +157,7 @@ private fun ExportContent(
                 onExportDeviceKeysToggled = onExportDeviceKeysToggled
             )
         }
+        BottomInsetSpacer(spacing = 8.dp)
     }
 }
 

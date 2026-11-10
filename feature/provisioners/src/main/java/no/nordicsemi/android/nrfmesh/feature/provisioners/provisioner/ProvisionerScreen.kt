@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import android.content.Context
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
@@ -180,7 +181,7 @@ private fun ProvisionerContent(
             navigateToSceneRanges = navigateToSceneRanges
         )
         AddressRangeLegendsForProvisioner()
-        Spacer(modifier = Modifier.size(16.dp))
+        BottomInsetSpacer(spacing = 8.dp)
     }
 }
 

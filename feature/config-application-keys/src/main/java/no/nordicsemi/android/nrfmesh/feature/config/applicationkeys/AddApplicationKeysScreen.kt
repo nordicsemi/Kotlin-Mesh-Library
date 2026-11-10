@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.config.applicationkeys
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -73,6 +74,7 @@ fun AddApplicationKeysScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(vertical = 8.dp),
+                contentPadding = bottomInsetPadding(),
                 verticalArrangement = Arrangement.spacedBy(space = 8.dp)
             ) {
                 items(items = keys, key = { it.index.toInt() + 1 }) { key ->

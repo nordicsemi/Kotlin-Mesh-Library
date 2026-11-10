@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.model
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import android.content.Context
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -228,7 +229,7 @@ internal fun ModelScreen(
                     sendApplicationMessage = sendApplicationMessage
                 )
         }
-        Spacer(modifier = Modifier.size(size = 8.dp))
+        BottomInsetSpacer(spacing = 8.dp)
     }
 
     when (messageState) {

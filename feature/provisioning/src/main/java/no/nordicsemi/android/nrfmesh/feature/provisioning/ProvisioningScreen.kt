@@ -2,6 +2,7 @@
 
 package no.nordicsemi.android.nrfmesh.feature.provisioning
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -235,6 +236,7 @@ internal fun ProvisioningScreen(
                     onProvisioningFailed = onProvisioningFailed,
                     dismissCapabilitiesSheet = { scope.launch { capabilitiesSheetState.hide() } }
                 )
+                BottomInsetSpacer()
             }
         }
     }

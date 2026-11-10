@@ -1,5 +1,7 @@
 package no.nordicsemi.android.nrfmesh.feature.network.keys
 
+import no.nordicsemi.android.nrfmesh.core.ui.BottomContentPadding
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -76,7 +79,11 @@ internal fun NetworkKeysScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = bottomInsetPadding(extra = BottomContentPadding - 8.dp).calculateBottomPadding()
+                        ),
                         // Removed in favor of padding in SwipeToDismissKey so that hiding an item will not leave any gaps
                         //verticalArrangement = Arrangement.spacedBy(space = 8.dp)
                     ) {
@@ -115,6 +122,7 @@ internal fun NetworkKeysScreen(
         ExtendedFloatingActionButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
                 .padding(16.dp)
                 .defaultMinSize(minWidth = 150.dp),
             text = { Text(text = stringResource(R.string.label_add_key)) },

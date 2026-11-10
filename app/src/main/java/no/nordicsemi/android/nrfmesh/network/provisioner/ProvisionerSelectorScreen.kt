@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.network.provisioner
 
+import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,7 +34,9 @@ internal fun ProvisionerSelectorScreen(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp),
+        contentPadding = bottomInsetPadding().let {
+            PaddingValues(start = 16.dp, end = 16.dp, bottom = it.calculateBottomPadding())
+        },
     ) {
         items(items = provisioners, key = { it.uuid.toString() }) {
             ElevatedCardItem(
