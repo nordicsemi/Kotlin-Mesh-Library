@@ -1034,7 +1034,10 @@ class MeshNetworkManager(
                         (node.isLocalProvisioner || proxyFilter.proxy?.knows(key = key) == true)
             }
         ?: run {
-            if (message as? ConfigNetKeyDelete != null) {
+            // CannotDelete only applies when the node has no other key to secure the message.
+            if (message is ConfigNetKeyDelete &&
+                node.networkKeys.none { it.index != message.networkKeyIndex }
+            ) {
                 logger?.e(LogCategory.FOUNDATION_MODEL) {
                     "Cannot delete the last Network Key or a key used to secure the message"
                 }
