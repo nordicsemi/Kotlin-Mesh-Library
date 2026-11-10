@@ -79,7 +79,7 @@ internal fun BoundApplicationKeys(
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showAddKeySheet by rememberSaveable { mutableStateOf(false) }
     // Set when the add key sheet was opened because there were no keys left to bind, so that the
-    // bind sheet is shown again once a key is added or generated.
+    // bind sheet is shown again once a key is added to the node.
     var returnToBindSheet by rememberSaveable { mutableStateOf(false) }
     // The network is a mutable object that does not notify the UI when a key is generated, so a
     // counter is bumped to recompose the available keys.
@@ -270,7 +270,6 @@ internal fun BoundApplicationKeys(
                         onClick = {
                             addApplicationKey()
                             generatedKeys++
-                            if (returnToBindSheet) closeAddKeySheet()
                         },
                         buttonIcon = Icons.Outlined.AutoFixHigh,
                         text = stringResource(R.string.label_generate)
