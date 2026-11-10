@@ -82,6 +82,9 @@ internal fun BoundApplicationKeys(
             model.boundApplicationKeys.size,
             model.boundApplicationKeys.size
         ),
-        onClick = dropUnlessResumed { navigateToBindApplicationKeys(model) }
+        // Nothing to manage when no keys are bound, so the item is not clickable.
+        onClick = model.boundApplicationKeys.takeIf { it.isNotEmpty() }?.let {
+            dropUnlessResumed { navigateToBindApplicationKeys(model) }
+        }
     )
 }
