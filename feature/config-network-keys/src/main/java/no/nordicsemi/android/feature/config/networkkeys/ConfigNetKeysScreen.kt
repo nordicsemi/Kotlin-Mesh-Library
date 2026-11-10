@@ -181,11 +181,17 @@ internal fun ConfigNetKeysScreen(
     }
 
     when (messageState) {
-        is Failed -> MeshMessageStatusDialog(
-            text = messageState.error.describe(),
-            showDismissButton = !messageState.didFail(),
-            onDismissRequest = resetMessageState,
-        )
+        is Failed -> {
+            // Dismiss the "deleting" snackbar as soon as the error dialog is shown.
+            LaunchedEffect(messageState) {
+                snackbarHostState.currentSnackbarData?.dismiss()
+            }
+            MeshMessageStatusDialog(
+                text = messageState.error.describe(),
+                showDismissButton = !messageState.didFail(),
+                onDismissRequest = resetMessageState,
+            )
+        }
 
         is Completed -> messageState.response?.takeIf {
             it is ConfigStatusMessage

@@ -118,7 +118,8 @@ internal fun DistributorSelection(
         OptionSelector(
             modifier = Modifier.weight(weight = 1f),
             option = option,
-            onOptionChanged = onOptionChanged
+            onOptionChanged = onOptionChanged,
+            disableUnsupported = true
         )
         IconButton(onClick = { isInfoDialogVisible = true }) {
             Icon(
@@ -141,6 +142,7 @@ internal fun DistributorSelection(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(space = 16.dp)) {
                 OptionSelector(
+                    modifier = Modifier.fillMaxWidth(),
                     option = infoOption,
                     onOptionChanged = { infoOption = it },
                     showIcons = false
@@ -232,6 +234,7 @@ private fun OptionSelector(
     onOptionChanged: (FirmwareUpdateOptions) -> Unit,
     modifier: Modifier = Modifier,
     showIcons: Boolean = true,
+    disableUnsupported: Boolean = false,
 ) {
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
         FirmwareUpdateOptions.entries.forEachIndexed { index, entry ->
@@ -243,6 +246,7 @@ private fun OptionSelector(
                 ),
                 onClick = { onOptionChanged(entry) },
                 selected = entry == option,
+                enabled = !disableUnsupported || entry == FirmwareUpdateOptions.SMP,
                 icon = {
                     if (showIcons) {
                         SegmentedButtonDefaults.Icon(active = entry == option) {
