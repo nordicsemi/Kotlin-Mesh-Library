@@ -21,7 +21,6 @@ import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeListDetailSceneKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
-import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.BindAppKeysKey
 import no.nordicsemi.android.nrfmesh.feature.bind.appkeys.navigation.bindAppKeysEntry
 import no.nordicsemi.android.nrfmesh.feature.model.ModelScreen
 import no.nordicsemi.android.nrfmesh.feature.model.ModelState
@@ -57,14 +56,8 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     resetMessageState = viewModel::resetMessageState,
                     onAddGroupClicked = { navigator.navigate(GroupsKey) },
                     navigateToGroups = { navigator.navigate(GroupsKey) },
+                    addApplicationKey = viewModel::addApplicationKey,
                     onRelatedModelsClicked = { navigator.navigate(key = RelatedModelsKey(model = it)) },
-                    navigateToBindApplicationKeys = { model ->
-                        model.parentElement?.let {
-                            navigator.navigate(
-                                key = BindAppKeysKey(model = model)
-                            )
-                        }
-                    },
                     navigateToFirmwareInformation = { title, model, information ->
                         navigator.navigate(
                             key = FirmwareInformationKey(

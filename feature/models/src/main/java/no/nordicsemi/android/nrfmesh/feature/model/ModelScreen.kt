@@ -74,8 +74,8 @@ internal fun ModelScreen(
     resetMessageState: () -> Unit,
     onAddGroupClicked: () -> Unit,
     navigateToGroups: () -> Unit,
+    addApplicationKey: () -> Unit,
     navigateToFirmwareInformation: (String, Model, FirmwareInformation) -> Unit,
-    navigateToBindApplicationKeys: (Model) -> Unit,
     onRelatedModelsClicked: (Model) -> Unit,
     startPairing: (Context) -> Unit,
 ) {
@@ -125,7 +125,7 @@ internal fun ModelScreen(
                 model = model,
                 messageState = sectionsMessageState,
                 send = send,
-                navigateToBindApplicationKeys = navigateToBindApplicationKeys
+                addApplicationKey = addApplicationKey
             )
         }
         if (model.supportsModelPublication) {

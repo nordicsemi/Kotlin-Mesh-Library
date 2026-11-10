@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.fixedGroupAddressesForSubscriptions
 import no.nordicsemi.android.nrfmesh.core.common.name
@@ -135,6 +137,7 @@ internal fun Subscriptions(
                 SubscriptionRow(
                     scope = scope,
                     snackbarHostState = snackbarHostState,
+                    messageState = messageState,
                     model = model,
                     address = it,
                     send = send
@@ -270,12 +273,17 @@ internal fun Subscriptions(
 private fun SubscriptionRow(
     scope: CoroutineScope,
     snackbarHostState: SnackbarHostState,
+    messageState: MessageState,
     model: Model,
     address: SubscriptionAddress,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
     val context = LocalContext.current
     val dismissState = rememberSwipeToDismissBoxState()
+    // Bring the row back if the message fails, e.g. when there is no connection to a proxy.
+    LaunchedEffect(key1 = messageState) {
+        if (messageState is Failed) dismissState.reset()
+    }
     SwipeToDismissBox(
         modifier = Modifier.padding(horizontal = 16.dp),
         state = dismissState,

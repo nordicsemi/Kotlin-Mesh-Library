@@ -67,12 +67,17 @@
     <string name="label_publication_triggers">Publication Triggers</string>
     <string name="label_bind">Bind</string>
     <string name="label_bound_application_keys">Bound Application Keys</string>
-    <plurals name="label_bound_application_keys_count">
-        <item quantity="zero">No keys bound</item>
-        <item quantity="one">1 key bound</item>
-        <item quantity="other">%d keys bound</item>
-    </plurals>
+    <string name="label_available_application_keys">Available Application Keys</string>
+    <string name="label_no_app_keys_available">No application keys available</string>
+    <string name="label_no_app_keys_to_add_rationale">Add an application key to the network to be able to add it to this node.</string>
+    <string name="label_generate">Generate</string>
+    <string name="label_no_application_keys_bound">No application keys bound</string>
+    <string name="label_warning">Warning</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="label_unbind_application_key_rationale">This key is currently used by the publication. Unbinding will clear the publication. Do you want to continue?</string>
     <string name="label_bind_application_keys">Bind Application Keys</string>
+    <string name="label_no_app_keys_to_bind">No application keys available</string>
+    <string name="label_no_app_keys_to_bind_rationale">Add an application key to the node to be able to bind it to this model.</string>
     <string name="label_bind_key">Bind Key</string>
     <string name="label_settings">Settings</string>
     <string name="label_list">List</string>

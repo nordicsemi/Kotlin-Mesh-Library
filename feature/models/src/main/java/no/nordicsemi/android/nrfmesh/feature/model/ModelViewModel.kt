@@ -221,6 +221,15 @@ internal class ModelViewModel @AssistedInject internal constructor(
     @Suppress("UNUSED_PARAMETER")
     internal fun startPairing(context: Context) = repository.startPairing()
 
+    /**
+     * Generates a new application key in the network bound to a network key known to the node.
+     */
+    internal fun addApplicationKey() {
+        val boundNetworkKey = selectedNode.networkKeys.firstOrNull()
+            ?: meshNetwork.networkKeys.first()
+        val _ = repository.addApplicationKey(boundNetworkKey = boundNetworkKey)
+    }
+
     internal fun resetMessageState() {
         uiState.update { state -> state.copy(messageState = NotStarted) }
     }
