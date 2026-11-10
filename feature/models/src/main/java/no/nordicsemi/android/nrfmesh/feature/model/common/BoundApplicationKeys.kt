@@ -28,6 +28,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
@@ -119,7 +121,12 @@ internal fun BoundApplicationKeys(
             // A key is used to ensure that the items are stable and do not cause recomposition
             // issues.
             key(it.index) {
-                BoundApplicationKeyRow(model = model, applicationKey = it, send = send)
+                BoundApplicationKeyRow(
+                    model = model,
+                    messageState = messageState,
+                    applicationKey = it,
+                    send = send
+                )
             }
         }
     } else {
@@ -188,12 +195,18 @@ internal fun BoundApplicationKeys(
 @Composable
 private fun BoundApplicationKeyRow(
     model: Model,
+    messageState: MessageState,
     applicationKey: ApplicationKey,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val dismissState = rememberSwipeToDismissBoxState()
     var showWarningDialog by rememberSaveable { mutableStateOf(false) }
+    // The row stays swiped away until the model changes. If the message fails, e.g. when there is
+    // no connection to a proxy, bring the row back.
+    LaunchedEffect(key1 = messageState) {
+        if (messageState is Failed) dismissState.reset()
+    }
     SwipeToDismissBox(
         modifier = Modifier.padding(horizontal = 16.dp),
         state = dismissState,
