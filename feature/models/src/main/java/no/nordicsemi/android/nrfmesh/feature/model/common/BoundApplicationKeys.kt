@@ -43,13 +43,16 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
+import no.nordicsemi.android.nrfmesh.core.common.unknownApplicationKeys
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppUnbind
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigSigModelAppGet
@@ -70,6 +73,7 @@ internal fun BoundApplicationKeys(
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
+    var showAddKeySheet by rememberSaveable { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -145,10 +149,34 @@ internal fun BoundApplicationKeys(
             sheetState = bottomSheetState,
             onDismissRequest = { showBottomSheet = false },
             content = {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(R.string.label_bind_application_keys)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SectionTitle(
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(horizontal = 16.dp),
+                        title = stringResource(R.string.label_bind_application_keys)
+                    )
+                    MeshOutlinedButton(
+                        modifier = Modifier.padding(end = 16.dp),
+                        enabled = !messageState.isInProgress(),
+                        onClick = {
+                            scope.launch {
+                                bottomSheetState.hide()
+                            }.invokeOnCompletion {
+                                if (!bottomSheetState.isVisible) {
+                                    showBottomSheet = false
+                                    showAddKeySheet = true
+                                }
+                            }
+                        },
+                        buttonIcon = Icons.Outlined.Add,
+                        text = stringResource(R.string.label_add_key)
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .padding(vertical = 16.dp)
@@ -182,6 +210,53 @@ internal fun BoundApplicationKeys(
                                         applicationKey = applicationKey
                                     )
                                 )
+                            }
+                        )
+                    }
+                }
+            }
+        )
+    }
+
+    if (showAddKeySheet) {
+        val addKeySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+        val availableKeys = model.parentElement?.parentNode?.unknownApplicationKeys().orEmpty()
+        ModalBottomSheet(
+            sheetState = addKeySheetState,
+            onDismissRequest = { showAddKeySheet = false },
+            content = {
+                SectionTitle(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    title = stringResource(R.string.label_available_application_keys)
+                )
+                Column(
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .verticalScroll(state = rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+                ) {
+                    if (availableKeys.isEmpty()) {
+                        MeshNoItemsAvailable(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            imageVector = Icons.Outlined.VpnKey,
+                            title = stringResource(R.string.label_no_app_keys_available),
+                            rationale = stringResource(R.string.label_no_app_keys_to_add_rationale)
+                        )
+                    }
+                    availableKeys.forEach { applicationKey ->
+                        applicationKey.KeyRow(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            onClick = {
+                                scope.launch {
+                                    addKeySheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!addKeySheetState.isVisible) {
+                                        showAddKeySheet = false
+                                    }
+                                }
+                                send(ConfigAppKeyAdd(key = applicationKey))
                             }
                         )
                     }

@@ -67,6 +67,9 @@
     <string name="label_publication_triggers">Publication Triggers</string>
     <string name="label_bind">Bind</string>
     <string name="label_bound_application_keys">Bound Application Keys</string>
+    <string name="label_available_application_keys">Available Application Keys</string>
+    <string name="label_no_app_keys_available">No application keys available</string>
+    <string name="label_no_app_keys_to_add_rationale">Add an application key to the network to be able to add it to this node.</string>
     <string name="label_no_keys_bound">No keys bound</string>
     <string name="label_warning">Warning</string>
     <string name="label_cancel">Cancel</string>
