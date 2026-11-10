@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AddLink
+import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.VpnKey
@@ -69,6 +70,7 @@ internal fun BoundApplicationKeys(
     model: Model,
     messageState: MessageState,
     send: (AcknowledgedConfigMessage) -> Unit,
+    addApplicationKey: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
@@ -225,10 +227,24 @@ internal fun BoundApplicationKeys(
             sheetState = addKeySheetState,
             onDismissRequest = { showAddKeySheet = false },
             content = {
-                SectionTitle(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    title = stringResource(R.string.label_available_application_keys)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SectionTitle(
+                        modifier = Modifier
+                            .weight(weight = 1f)
+                            .padding(horizontal = 16.dp),
+                        title = stringResource(R.string.label_available_application_keys)
+                    )
+                    MeshOutlinedButton(
+                        modifier = Modifier.padding(end = 16.dp),
+                        onClick = addApplicationKey,
+                        buttonIcon = Icons.Outlined.AutoFixHigh,
+                        text = stringResource(R.string.label_generate)
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .padding(vertical = 16.dp)
