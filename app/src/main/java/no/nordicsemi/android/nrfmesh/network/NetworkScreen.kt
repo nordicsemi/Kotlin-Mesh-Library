@@ -66,7 +66,11 @@ import no.nordicsemi.android.nrfmesh.core.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
+import no.nordicsemi.android.nrfmesh.core.common.Failed
+import no.nordicsemi.android.nrfmesh.core.common.MessageState
+import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
+import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.toEntries
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
@@ -103,6 +107,7 @@ internal fun NetworkScreen(
     isCompactWidth: Boolean = isCompactWidth(),
     resetMeshNetworkUiState: () -> Unit,
     startAttentionTimer: (Node) -> Unit,
+    resetMessageState: () -> Unit,
 ) {
     when (uiState.networkState) {
         MeshNetworkState.Loading -> {
@@ -136,6 +141,8 @@ internal fun NetworkScreen(
                 onImportErrorAcknowledged = onImportErrorAcknowledged,
                 onProvisionerSelectionPrompted = onProvisionerSelectionPrompted,
                 startAttentionTimer = startAttentionTimer,
+                messageState = uiState.messageState,
+                resetMessageState = resetMessageState,
             )
         }
 
@@ -169,10 +176,22 @@ private fun NetworkContent(
     topAppBarTitle: String,
     navigateToWizard: () -> Unit,
     startAttentionTimer: (Node) -> Unit,
+    messageState: MessageState,
+    resetMessageState: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var showResetNetworkDialog by rememberSaveable { mutableStateOf(false) }
-    var showAutoConfigurationHealthServerDialog by rememberSaveable { mutableStateOf(false) }
+    var autoConfigurationHealthServerNode by remember { mutableStateOf<Node?>(null) }
+    val identify: (Node) -> Unit = { node ->
+        val healthServerModel = node.primaryElement.models.firstOrNull { it.isHealthServer }
+        if (healthServerModel != null) {
+            if (healthServerModel.boundApplicationKeys.isNotEmpty()) {
+                startAttentionTimer(node)
+            } else {
+                autoConfigurationHealthServerNode = node
+            }
+        }
+    }
     val navigator = remember { Navigator(appState.navigationState) }
     NavigationSuiteScaffold(
         navigationItemVerticalArrangement = Arrangement.Center,
@@ -208,6 +227,7 @@ private fun NetworkContent(
             nodesEntry(
                 appState = appState,
                 navigator = navigator,
+                identify = identify,
                 navigateToWizard = {
                     resetNetwork()
                     navigateToWizard()
@@ -296,18 +316,7 @@ private fun NetworkContent(
                         val node = nodeUuid?.let { network.node(Uuid.parse(it)) }
                         if (node != null) {
                             IconButton(
-                                onClick = {
-                                    val healthServerModel =
-                                        node.primaryElement.models.firstOrNull { it.isHealthServer }
-                                            ?: return@IconButton
-                                    val hasBoundKeys =
-                                        healthServerModel.boundApplicationKeys.isNotEmpty()
-                                    if (hasBoundKeys) {
-                                        startAttentionTimer(node)
-                                    } else {
-                                        showAutoConfigurationHealthServerDialog = true
-                                    }
-                                }
+                                onClick = { identify(node) }
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.NotificationsActive,
@@ -371,27 +380,26 @@ private fun NetworkContent(
                 onDismissRequest = onImportErrorAcknowledged
             )
         }
-        if (showAutoConfigurationHealthServerDialog) {
-            val nodeUuid =
-                (appState.navigationState.currentKey as? NodeKey)?.nodeUuid
-                    ?: appState.navigationState.currentSubStack
-                        .firstNotNullOfOrNull { (it as? NodeKey)?.nodeUuid }
-                        ?.takeIf { !isCompactWidth() }
-            val node = nodeUuid?.let { network.node(Uuid.parse(it)) }
-            if (node != null) {
-                MeshAlertDialog(
-                    icon = Icons.Outlined.NotificationsActive,
-                    iconColor = nordicSun,
-                    title = stringResource(R.string.label_identify),
-                    text = stringResource(R.string.label_identify_rationale),
-                    onConfirmClick = {
-                        showAutoConfigurationHealthServerDialog = false
-                        startAttentionTimer(node)
-                    },
-                    onDismissClick = { showAutoConfigurationHealthServerDialog = false },
-                    onDismissRequest = { showAutoConfigurationHealthServerDialog = false }
-                )
-            }
+        (messageState as? Failed)?.let {
+            MeshMessageStatusDialog(
+                text = it.error.describe(),
+                showDismissButton = false,
+                onDismissRequest = resetMessageState
+            )
+        }
+        autoConfigurationHealthServerNode?.let { node ->
+            MeshAlertDialog(
+                icon = Icons.Outlined.NotificationsActive,
+                iconColor = nordicSun,
+                title = stringResource(R.string.label_identify),
+                text = stringResource(R.string.label_identify_rationale),
+                onConfirmClick = {
+                    autoConfigurationHealthServerNode = null
+                    startAttentionTimer(node)
+                },
+                onDismissClick = { autoConfigurationHealthServerNode = null },
+                onDismissRequest = { autoConfigurationHealthServerNode = null }
+            )
         }
         // After an import, the provisioner is selected only once the success dialog is dismissed.
         LaunchedEffect(shouldSelectProvisioner, importState) {

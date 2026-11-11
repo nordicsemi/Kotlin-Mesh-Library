@@ -12,11 +12,13 @@ import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.feature.nodes.NodesScreen
 import no.nordicsemi.android.nrfmesh.feature.nodes.NodesViewModel
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.navigation.nodeEntry
+import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.ProvisioningKey
 
 fun EntryProviderScope<NavKey>.nodesEntry(
     appState: AppState,
     navigator: Navigator,
+    identify: (Node) -> Unit,
     navigateToWizard: () -> Unit,
 ) {
     entry<NodesKey> {
@@ -25,6 +27,7 @@ fun EntryProviderScope<NavKey>.nodesEntry(
         NodesScreen(
             uiState = uiState,
             navigateToNode = { navigator.navigate(key = NodeKey(nodeUuid = it.toString())) },
+            identify = identify,
             addNode = { navigator.navigate(key = ProvisioningKey) }
         )
     }

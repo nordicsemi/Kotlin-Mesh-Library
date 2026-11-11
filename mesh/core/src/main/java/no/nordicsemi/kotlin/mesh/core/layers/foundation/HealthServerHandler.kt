@@ -234,6 +234,7 @@ class HealthServerHandler(
         attentionTimerTask?.cancel()
         attentionTimerTask = null
         attentionTimer.cancel()
-        attentionTimer.purge()
+        // A cancelled Timer can't be reused, so a new one is needed for the next attention request.
+        attentionTimer = Timer()
     }
 }

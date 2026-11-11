@@ -94,4 +94,5 @@
     <string name="label_automatic_rationale">Uses a common key for Scene Server, Scene Setup Server and Scene Client</string>
     <string name="label_unique_keys">Unique Keys</string>
     <string name="label_unique_keys_rationale">Uses a unique key for Scene Setup Server</string>
+    <string name="label_identify">Identify</string>
 </resources>
