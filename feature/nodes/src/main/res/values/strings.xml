@@ -21,6 +21,14 @@
     <string name="title_configuration">Configuration</string>
     <string name="label_configuration_complete">Configuration Complete</string>
     <string name="label_configuration_complete_rationale">Mark the node as configured once setup is complete</string>
+    <string name="title_features">Features</string>
+    <string name="label_relay">Relay</string>
+    <string name="label_proxy">Proxy</string>
+    <string name="label_friend">Friend</string>
+    <string name="label_low_power">Low Power</string>
+    <string name="label_feature_enabled">Enabled</string>
+    <string name="label_feature_not_enabled">Not enabled</string>
+    <string name="label_feature_not_supported">Not supported</string>
     <string name="title_exclusions">Exclusions</string>
     <string name="label_default_ttl_rationale">TTL limits the number of times a message can be
         relayed. Max value of TTL is 127.</string>
