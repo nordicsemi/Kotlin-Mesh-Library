@@ -1,7 +1,7 @@
 package no.nordicsemi.android.nrfmesh.feature.provisioners.provisioner
 
 import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
-import android.content.Context
+import android.content.res.Resources
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,7 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -153,7 +153,7 @@ private fun ProvisionerContent(
         }
         if (index != 0) {
             MoveProvisioner(
-                context = LocalContext.current,
+                resources = LocalResources.current,
                 scope = scope,
                 snackbarHostState = snackbarHostState,
                 index = index,
@@ -214,7 +214,7 @@ private fun UnicastAddress(
     onEditableStateChanged: () -> Unit,
     save: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val initialValue by remember(key1 = provisioner.uuid) {
         mutableStateOf(address?.address?.toString(radix = 16)?.uppercase() ?: "")
     }
@@ -340,7 +340,7 @@ private fun UnicastAddress(
                                             save()
                                         }.onFailure { t ->
                                             error = true
-                                            errorMessage = t.convertToString(context = context)
+                                            errorMessage = t.convertToString(resources = resources)
                                         }
                                     }
                                 },
@@ -439,7 +439,7 @@ private fun DeviceKey(key: String?) {
 
 @Composable
 private fun MoveProvisioner(
-    context: Context,
+    resources: Resources,
     scope: CoroutineScope,
     snackbarHostState: SnackbarHostState,
     index: Int,
@@ -458,7 +458,7 @@ private fun MoveProvisioner(
                     moveProvisioner(provisioner, if (it) 0 else index)
                     scope.launch {
                         snackbarHostState.showSnackbar(
-                            message = context.getString(
+                            message = resources.getString(
                                 R.string.message_local_provisioner_set,
                                 provisioner.name
                             ),

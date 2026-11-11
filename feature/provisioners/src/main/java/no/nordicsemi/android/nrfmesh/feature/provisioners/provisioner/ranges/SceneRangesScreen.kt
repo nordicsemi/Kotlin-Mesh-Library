@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -31,7 +31,7 @@ internal fun SceneRangesScreen(
     save: () -> Unit,
     navigateBack: () -> Unit
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val ranges = remember {
         mutableStateListOf<Range>().apply { addAll(elements = sceneRanges) }
@@ -77,7 +77,7 @@ internal fun SceneRangesScreen(
             }.onFailure {
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        message = it.message ?: context.getString(R.string.label_failed_to_allocate_ranges),
+                        message = it.message ?: resources.getString(R.string.label_failed_to_allocate_ranges),
                         duration = SnackbarDuration.Short
                     )
                 }

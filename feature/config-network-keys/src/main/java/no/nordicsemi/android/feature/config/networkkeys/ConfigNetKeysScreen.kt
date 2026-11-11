@@ -44,7 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -76,7 +76,7 @@ internal fun ConfigNetKeysScreen(
     send: (AcknowledgedConfigMessage) -> Unit,
     resetMessageState: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
@@ -124,7 +124,7 @@ internal fun ConfigNetKeysScreen(
                                             snackbarHostState.currentSnackbarData?.dismiss()
                                             scope.launch {
                                                 snackbarHostState.showSnackbar(
-                                                    message = context.getString(R.string.label_network_key_deleting),
+                                                    message = resources.getString(R.string.label_network_key_deleting),
                                                     duration = SnackbarDuration.Short,
                                                 )
                                             }
@@ -213,7 +213,7 @@ internal fun ConfigNetKeysScreen(
                 false -> LaunchedEffect(snackbarHostState) {
                     if (messageState.message is ConfigNetKeyDelete) {
                         snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.label_network_key_deleted),
+                            message = resources.getString(R.string.label_network_key_deleted),
                             duration = SnackbarDuration.Short,
                         ).also {
                             when (it) {
@@ -224,7 +224,7 @@ internal fun ConfigNetKeysScreen(
                         }
                     } else if (messageState.message is ConfigNetKeyAdd) {
                         snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.label_network_key_added),
+                            message = resources.getString(R.string.label_network_key_added),
                             duration = SnackbarDuration.Short,
                         ).also {
                             when (it) {

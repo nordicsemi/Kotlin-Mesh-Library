@@ -1,6 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.provisioning
 
-import android.content.Context
+import android.content.res.Resources
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -41,7 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -78,7 +78,7 @@ internal fun DeviceCapabilities(
     onNetworkKeyClicked: (NetworkKey) -> Unit,
     onAuthenticationMethodSelected: (AuthenticationMethod) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
     var isCurrentlyEditable by rememberSaveable { mutableStateOf(true) }
@@ -97,7 +97,7 @@ internal fun DeviceCapabilities(
             title = stringResource(R.string.title_provisioning_data)
         )
         UnicastAddressRow(
-            context = context,
+            resources = resources,
             scope = scope,
             snackbarHostState = snackbarHostState,
             keyboardController = keyboardController,
@@ -193,7 +193,7 @@ private fun Name(
 
 @Composable
 private fun UnicastAddressRow(
-    context: Context,
+    resources: Resources,
     scope: CoroutineScope,
     snackbarHostState: SnackbarHostState,
     keyboardController: SoftwareKeyboardController?,
@@ -223,7 +223,7 @@ private fun UnicastAddressRow(
                     showSnackbar(
                         scope = scope,
                         snackbarHostState = snackbarHostState,
-                        message = context.getString(R.string.error_invalid_address)
+                        message = resources.getString(R.string.error_invalid_address)
                     )
                 }
             }

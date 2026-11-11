@@ -24,7 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -68,7 +68,7 @@ private fun Request(
     messageState: MessageState,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val keyboardController = LocalSoftwareKeyboardController.current
     var isOpCodeFocused by rememberSaveable { mutableStateOf(false) }
     var isParametersFocused by rememberSaveable { mutableStateOf(false) }
@@ -126,10 +126,10 @@ private fun Request(
                                 opCodeError = it.text.toUByte(radix = 16).let { code ->
                                     if (code > 0x3Fu) {
                                         isOpCodeValid = false
-                                        context.getString(R.string.label_invalid_vendor_op_code_range)
+                                        resources.getString(R.string.label_invalid_vendor_op_code_range)
                                     } else {
                                         isOpCodeValid = true
-                                        context.getString(R.string.label_empty)
+                                        resources.getString(R.string.label_empty)
                                     }
                                 }
                             }.onFailure { _ ->
@@ -171,10 +171,10 @@ private fun Request(
                     if (parameters.text.isNotEmpty()) {
                         if (parameters.text.length % 2 == 0) {
                             areParametersValid = true
-                            parametersError = context.getString(R.string.label_empty)
+                            parametersError = resources.getString(R.string.label_empty)
                         } else {
                             areParametersValid = false
-                            parametersError = context
+                            parametersError = resources
                                 .getString(R.string.label_error_incorrect_hex_value)
                         }
                     } else {
@@ -243,15 +243,15 @@ private fun Request(
                                     responseOpCodeError = it.text.toUByte(radix = 16).let { code ->
                                         if (code > 0x3Fu) {
                                             isResponseOpCodeValid = false
-                                            context.getString(R.string.label_invalid_vendor_op_code_range)
+                                            resources.getString(R.string.label_invalid_vendor_op_code_range)
                                         } else {
                                             isResponseOpCodeValid = true
-                                            context.getString(R.string.label_empty)
+                                            resources.getString(R.string.label_empty)
                                         }
                                     }
                                 }.onFailure { _ ->
                                     opCodeError =
-                                        context.getString(R.string.label_invalid_vendor_op_code_range)
+                                        resources.getString(R.string.label_invalid_vendor_op_code_range)
                                 }
                             }
                         }

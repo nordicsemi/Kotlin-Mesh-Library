@@ -32,7 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -86,7 +86,7 @@ private fun Controls(
     messageState: MessageState,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var defaultTransitionEnabled by rememberSaveable { mutableStateOf(true) }
     var transitionTime by remember {
         mutableStateOf(
@@ -96,7 +96,7 @@ private fun Controls(
     var transitionTimeLabel by remember {
         mutableStateOf(
             if (defaultTransitionEnabled) {
-                context.getString(R.string.label_default)
+                resources.getString(R.string.label_default)
             } else {
                 transitionTime.toString()
             }
@@ -106,7 +106,7 @@ private fun Controls(
     var delayLabel by remember {
         mutableStateOf(
             if (defaultTransitionEnabled) {
-                context.getString(R.string.label_no_delay)
+                resources.getString(R.string.label_no_delay)
             } else {
                 transitionTime.toString()
             }
@@ -161,9 +161,9 @@ private fun Controls(
                     onValueChange = {
                         delay = it.toInt()
                         delayLabel = if (delay == 0) {
-                            context.getString(R.string.label_no_delay)
+                            resources.getString(R.string.label_no_delay)
                         } else {
-                            context.getString(R.string.delay_ms, delay.toInt() * 5)
+                            resources.getString(R.string.delay_ms, delay.toInt() * 5)
                         }
                     },
                     valueRange = 0f..255f,

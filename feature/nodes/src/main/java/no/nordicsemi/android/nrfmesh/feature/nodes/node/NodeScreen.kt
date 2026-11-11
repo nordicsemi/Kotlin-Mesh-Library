@@ -52,7 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -486,7 +486,7 @@ private fun DefaultTtlRow(
     messageState: MessageState,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var showDefaultTtlDialog by rememberSaveable { mutableStateOf(false) }
     var ttlInput by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(
@@ -531,7 +531,7 @@ private fun DefaultTtlRow(
             onConfirmClick = {
                 if (ttlInput.text.isBlank()) {
                     isError = !isError
-                    errorMessage = context.getString(R.string.label_default_ttl_empty_error)
+                    errorMessage = resources.getString(R.string.label_default_ttl_empty_error)
                 } else {
                     showDefaultTtlDialog = !showDefaultTtlDialog
                     send(ConfigDefaultTtlSet(ttl = ttlInput.text.toUByte()))

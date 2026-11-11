@@ -42,7 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -73,7 +73,7 @@ internal fun ConfigAppKeysScreen(
     send: (AcknowledgedConfigMessage) -> Unit,
     resetMessageState: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
@@ -124,7 +124,7 @@ internal fun ConfigAppKeysScreen(
                                             snackbarHostState.currentSnackbarData?.dismiss()
                                             scope.launch {
                                                 snackbarHostState.showSnackbar(
-                                                    message = context.getString(R.string.label_application_key_deleting),
+                                                    message = resources.getString(R.string.label_application_key_deleting),
                                                     duration = SnackbarDuration.Short,
                                                 )
                                             }
@@ -209,7 +209,7 @@ internal fun ConfigAppKeysScreen(
                     if (messageState.message is ConfigAppKeyDelete) {
                         snackbarHostState.run {
                             showSnackbar(
-                                message = context.getString(R.string.label_application_key_deleted),
+                                message = resources.getString(R.string.label_application_key_deleted),
                                 duration = SnackbarDuration.Short,
                             ).also { result ->
                                 when (result) {

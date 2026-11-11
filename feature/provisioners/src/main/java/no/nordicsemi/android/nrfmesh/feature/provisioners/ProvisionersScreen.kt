@@ -2,7 +2,7 @@
 package no.nordicsemi.android.nrfmesh.feature.provisioners
 
 import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
-import android.content.Context
+import android.content.res.Resources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -39,7 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -64,7 +64,7 @@ internal fun ProvisionersScreen(
     remove: (ProvisionerData) -> Unit,
     navigateToProvisioner: (Uuid) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxSize()) {
         when (provisioners.isEmpty()) {
@@ -104,7 +104,7 @@ internal fun ProvisionersScreen(
                             index = index,
                             provisioner = item,
                             scope = scope,
-                            context = context,
+                            resources = resources,
                             snackbarHostState = snackbarHostState,
                             isSelected = selectedProvisionerUuid == item.uuid && highlightSelectedItem,
                             onProvisionerClicked = onProvisionerClicked,
@@ -139,7 +139,7 @@ internal fun ProvisionersScreen(
                 }.onFailure {
                     scope.launch {
                         snackbarHostState.showSnackbar(
-                            message = it.message ?: context.getString(R.string.error_while_adding_provisioner)
+                            message = it.message ?: resources.getString(R.string.error_while_adding_provisioner)
                         )
                     }
                 }
@@ -152,7 +152,7 @@ internal fun ProvisionersScreen(
 @Composable
 private fun SwipeToDismissProvisioner(
     scope: CoroutineScope,
-    context: Context,
+    resources: Resources,
     snackbarHostState: SnackbarHostState,
     provisioner: ProvisionerData,
     onProvisionerClicked: (Uuid) -> Unit,
@@ -201,7 +201,7 @@ private fun SwipeToDismissProvisioner(
                 }
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        message = context.getString(
+                        message = resources.getString(
                             R.string.error_cannot_delete_last_provisioner,
                             provisioner.name
                         )
@@ -213,11 +213,11 @@ private fun SwipeToDismissProvisioner(
                 }
                 scope.launch {
                     val result = snackbarHostState.showSnackbar(
-                        message = context.getString(
+                        message = resources.getString(
                             R.string.label_provisioner_deleted,
                             provisioner.name
                         ),
-                        actionLabel = context.getString(R.string.action_undo),
+                        actionLabel = resources.getString(R.string.action_undo),
                         withDismissAction = true,
                         duration = SnackbarDuration.Short
                     )
@@ -246,7 +246,7 @@ private fun SwipeToDismissProvisioner(
                             upperCase = true
                         }
                     )
-                } ?: context.getString(R.string.label_unassigned),
+                } ?: resources.getString(R.string.label_unassigned),
             )
         }
     )

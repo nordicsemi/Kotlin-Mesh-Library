@@ -57,4 +57,7 @@
     <string name="label_reprovision_configure">Reprovision &amp; Reconfigure</string>
     <string name="label_reprovision">Reprovision</string>
     <string name="label_reprovision_as_new_device">Reprovision as a new node</string>
+    <string name="label_e_g_12e4s6">e.g. 12E4S6</string>
+    <string name="label_e_g_123456">e.g. 123456</string>
+    <string name="label_empty" />
 </resources>

@@ -33,7 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -294,7 +294,7 @@ private fun LightOnOffControls(
     hasBoundKey: Boolean,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val enabled = hasBoundKey && !messageState.isInProgress()
     var defaultTransitionEnabled by rememberSaveable { mutableStateOf(true) }
     var transitionTime by remember {
@@ -303,11 +303,11 @@ private fun LightOnOffControls(
         )
     }
     var transitionTimeLabel by remember {
-        mutableStateOf(context.getString(R.string.label_default))
+        mutableStateOf(resources.getString(R.string.label_default))
     }
     var delay by remember { mutableIntStateOf(0) }
     var delayLabel by remember {
-        mutableStateOf(context.getString(R.string.label_no_delay))
+        mutableStateOf(resources.getString(R.string.label_no_delay))
     }
     var acknowledged by rememberSaveable { mutableStateOf(false) }
     SectionTitle(
@@ -356,9 +356,9 @@ private fun LightOnOffControls(
                     onValueChange = {
                         delay = it.toInt()
                         delayLabel = if (delay == 0) {
-                            context.getString(R.string.label_no_delay)
+                            resources.getString(R.string.label_no_delay)
                         } else {
-                            context.getString(R.string.delay_ms, delay * 5)
+                            resources.getString(R.string.delay_ms, delay * 5)
                         }
                     },
                     valueRange = 0f..255f,

@@ -1,6 +1,6 @@
 package no.nordicsemi.android.nrfmesh.network.util
 
-import android.content.Context
+import android.content.res.Resources
 import no.nordicsemi.android.feature.config.networkkeys.navigation.AddNetKeysKey
 import no.nordicsemi.android.feature.config.networkkeys.navigation.ConfigNetKeysKey
 import no.nordicsemi.android.nrfmesh.R
@@ -63,79 +63,79 @@ internal fun MeshNetwork.createKeysForAppTitles(): List<String?> = nodes
             .map { it.name }
 
 internal fun title(
-    context: Context,
+    resources: Resources,
     network: MeshNetwork,
     navigationState: NavigationState,
     isCompactWidth: Boolean,
 ): String = when (val key = navigationState.currentKey) {
-    is ProvisioningKey -> context.getString(R.string.label_add_node)
-    is NodesKey -> context.getString(R.string.label_nodes)
+    is ProvisioningKey -> resources.getString(R.string.label_add_node)
+    is NodesKey -> resources.getString(R.string.label_nodes)
     is NodeKey -> network.node(uuid = Uuid.parse(uuidString = key.nodeUuid))?.name
-        ?: context.getString(R.string.label_unknown)
+        ?: resources.getString(R.string.label_unknown)
 
-    is ConfigNetKeysKey -> if (isCompactWidth) context.getString(R.string.label_network_keys)
+    is ConfigNetKeysKey -> if (isCompactWidth) resources.getString(R.string.label_network_keys)
     else network.node(uuid = Uuid.parse(uuidString = key.uuid))?.name
-        ?: context.getString(R.string.label_unknown)
+        ?: resources.getString(R.string.label_unknown)
 
-    is AddNetKeysKey -> if (isCompactWidth) context.getString(R.string.label_network_keys)
+    is AddNetKeysKey -> if (isCompactWidth) resources.getString(R.string.label_network_keys)
     else network.node(uuid = Uuid.parse(uuidString = key.uuid))?.name
-        ?: context.getString(R.string.label_unknown)
+        ?: resources.getString(R.string.label_unknown)
 
-    is ConfigAppKeysKey -> if (isCompactWidth) context.getString(R.string.label_application_keys)
+    is ConfigAppKeysKey -> if (isCompactWidth) resources.getString(R.string.label_application_keys)
     else network.node(uuid = Uuid.parse(uuidString = key.uuid))?.name
-        ?: context.getString(R.string.label_unknown)
+        ?: resources.getString(R.string.label_unknown)
 
-    is AddAppKeysKey -> if (isCompactWidth) context.getString(R.string.label_application_keys)
+    is AddAppKeysKey -> if (isCompactWidth) resources.getString(R.string.label_application_keys)
     else network.node(uuid = Uuid.parse(uuidString = key.uuid))?.name
-        ?: context.getString(R.string.label_unknown)
+        ?: resources.getString(R.string.label_unknown)
 
     is ElementKey -> if (isCompactWidth)
         network.element(elementAddress = key.address)?.name
-            ?: context.getString(R.string.label_unknown)
-    else network.node(address = key.address)?.name ?: context.getString(R.string.label_unknown)
+            ?: resources.getString(R.string.label_unknown)
+    else network.node(address = key.address)?.name ?: resources.getString(R.string.label_unknown)
 
-    is NodeScenesKey -> if (isCompactWidth) context.getString(R.string.label_scenes)
+    is NodeScenesKey -> if (isCompactWidth) resources.getString(R.string.label_scenes)
     else network.node(uuid = Uuid.parse(uuidString = key.nodeUuid))?.name
-        ?: context.getString(R.string.label_unknown)
+        ?: resources.getString(R.string.label_unknown)
 
     is ModelKey -> {
         val address = key.address
         if (isCompactWidth) {
             val node = network.node(address = address)
-                ?: return context.getString(R.string.label_unknown)
+                ?: return resources.getString(R.string.label_unknown)
             val element = node.element(address = address)
-                ?: return context.getString(R.string.label_unknown)
+                ?: return resources.getString(R.string.label_unknown)
             val modelId = element.model(key.modelId)
-                ?: return context.getString(R.string.label_unknown)
-            modelId.name ?: context.getString(R.string.label_unknown)
+                ?: return resources.getString(R.string.label_unknown)
+            modelId.name ?: resources.getString(R.string.label_unknown)
         } else network.element(elementAddress = address)?.name
-            ?: context.getString(R.string.label_unknown)
+            ?: resources.getString(R.string.label_unknown)
     }
     is RelatedModelsKey -> {
         val model = key.model
         if(isCompactWidth){
             model.name ?: model.name()
         } else {
-            model.parentElement?.name ?: context.getString(R.string.label_unknown)
+            model.parentElement?.name ?: resources.getString(R.string.label_unknown)
         }
     }
 
-    is BindAppKeysKey -> key.model.name ?: context.getString(R.string.label_unknown)
+    is BindAppKeysKey -> key.model.name ?: resources.getString(R.string.label_unknown)
 
     is FirmwareInformationKey -> if (isCompactWidth) {
-        key.model.name ?: context.getString(R.string.label_unknown)
-    } else context.getString(R.string.label_unknown)
+        key.model.name ?: resources.getString(R.string.label_unknown)
+    } else resources.getString(R.string.label_unknown)
 
-    is GroupsKey -> context.getString(R.string.label_groups)
+    is GroupsKey -> resources.getString(R.string.label_groups)
     is GroupKey -> network.group(address = key.address)?.name
-        ?: context.getString(R.string.label_unknown)
+        ?: resources.getString(R.string.label_unknown)
 
     is GroupControlsKey -> if (isCompactWidth) {
-        network.group(address = key.address)?.name ?: context.getString(R.string.label_unknown)
-    } else context.getString(R.string.label_groups)
+        network.group(address = key.address)?.name ?: resources.getString(R.string.label_unknown)
+    } else resources.getString(R.string.label_groups)
 
-    is ProxyKey -> context.getString(R.string.label_proxy)
-    is ScannerKey -> context.getString(
+    is ProxyKey -> resources.getString(R.string.label_proxy)
+    is ScannerKey -> resources.getString(
         when (navigationState.previousKey) {
             ProxyKey -> R.string.label_proxy
             FirmwareUpdateKey -> R.string.label_proxy
@@ -146,66 +146,66 @@ internal fun title(
     is SettingsKey,
     is ExportKey,
     is ProvisionerSelectorKey,
-        -> context.getString(R.string.label_settings)
+        -> resources.getString(R.string.label_settings)
 
-    is ProvisionersContentKey -> if (isCompactWidth) context.getString(R.string.label_provisioners)
-    else context.getString(R.string.label_settings)
+    is ProvisionersContentKey -> if (isCompactWidth) resources.getString(R.string.label_provisioners)
+    else resources.getString(R.string.label_settings)
 
     is ProvisionerContentKey -> if (isCompactWidth) {
         network.provisioner(uuid = Uuid.parse(uuidString = key.uuid))?.name
-            ?: context.getString(R.string.label_unknown)
-    } else context.getString(R.string.label_provisioners)
+            ?: resources.getString(R.string.label_unknown)
+    } else resources.getString(R.string.label_provisioners)
 
     is UnicastRangesContentKey -> {
         if (isCompactWidth) {
             network.provisioner(uuid = Uuid.parse(uuidString = key.uuid))?.name
-                ?: context.getString(R.string.label_unknown)
-        } else context.getString(R.string.label_provisioners)
+                ?: resources.getString(R.string.label_unknown)
+        } else resources.getString(R.string.label_provisioners)
     }
 
     is GroupRangesContentKey -> {
         if (isCompactWidth) {
             network.provisioner(uuid = Uuid.parse(uuidString = key.uuid))?.name
-                ?: context.getString(R.string.label_unknown)
-        } else context.getString(R.string.label_provisioners)
+                ?: resources.getString(R.string.label_unknown)
+        } else resources.getString(R.string.label_provisioners)
     }
 
     is SceneRangesContentKey -> {
         if (isCompactWidth) {
             network.provisioner(uuid = Uuid.parse(uuidString = key.uuid))?.name
-                ?: context.getString(R.string.label_unknown)
-        } else context.getString(R.string.label_provisioners)
+                ?: resources.getString(R.string.label_unknown)
+        } else resources.getString(R.string.label_provisioners)
     }
 
-    is NetworkKeysContentKey -> if (isCompactWidth) context.getString(R.string.label_network_keys)
-    else context.getString(R.string.label_settings)
+    is NetworkKeysContentKey -> if (isCompactWidth) resources.getString(R.string.label_network_keys)
+    else resources.getString(R.string.label_settings)
 
     is NetworkKeyContentKey -> if (isCompactWidth) {
-        network.networkKey(index = key.keyIndex)?.name ?: context.getString(R.string.label_unknown)
-    } else context.getString(R.string.label_network_keys)
+        network.networkKey(index = key.keyIndex)?.name ?: resources.getString(R.string.label_unknown)
+    } else resources.getString(R.string.label_network_keys)
 
-    is ApplicationKeysContentKey -> if (isCompactWidth) context.getString(R.string.label_application_keys)
-    else context.getString(R.string.label_settings)
+    is ApplicationKeysContentKey -> if (isCompactWidth) resources.getString(R.string.label_application_keys)
+    else resources.getString(R.string.label_settings)
 
     is ApplicationKeyContentKey -> if (isCompactWidth) {
         network.applicationKey(index = key.keyIndex)?.name
-            ?: context.getString(R.string.label_unknown)
-    } else context.getString(R.string.label_application_keys)
+            ?: resources.getString(R.string.label_unknown)
+    } else resources.getString(R.string.label_application_keys)
 
-    is ScenesContentKey -> if (isCompactWidth) context.getString(R.string.label_scenes)
-    else context.getString(R.string.label_settings)
+    is ScenesContentKey -> if (isCompactWidth) resources.getString(R.string.label_scenes)
+    else resources.getString(R.string.label_settings)
 
     is SceneContentKey -> if (isCompactWidth) {
-        network.scene(number = key.number)?.name ?: context.getString(R.string.label_unknown)
-    } else context.getString(R.string.label_scenes)
+        network.scene(number = key.number)?.name ?: resources.getString(R.string.label_unknown)
+    } else resources.getString(R.string.label_scenes)
 
     is IvIndexContentKey -> if (isCompactWidth)
-        context.getString(R.string.label_iv_index)
-    else context.getString(R.string.label_settings)
+        resources.getString(R.string.label_iv_index)
+    else resources.getString(R.string.label_settings)
 
     is DeveloperSettingsContentKey -> if (isCompactWidth)
-        context.getString(R.string.label_developer_settings)
-    else context.getString(R.string.label_settings)
+        resources.getString(R.string.label_developer_settings)
+    else resources.getString(R.string.label_settings)
 
-    else -> context.getString(R.string.label_unknown)
+    else -> resources.getString(R.string.label_unknown)
 }

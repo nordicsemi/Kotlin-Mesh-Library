@@ -1,7 +1,5 @@
-
 package no.nordicsemi.android.nrfmesh.feature.provisioning
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +23,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -59,11 +56,12 @@ fun AuthenticationDialog(
             icon = Icons.Outlined.Pin,
             content = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    AuthRow(action = action, authValue = authValue, onValueChanged = {
-                        authValue = it
-                    })
+                    AuthRow(
+                        action = action,
+                        authValue = authValue,
+                        onValueChanged = { authValue = it }
+                    )
                     Spacer(modifier = Modifier.size(size = 16.dp))
-
                     when {
                         action !is AuthAction.DisplayNumber &&
                                 action !is AuthAction.DisplayAlphaNumeric -> {
@@ -88,9 +86,7 @@ fun AuthenticationDialog(
                                         .defaultMinSize(minWidth = 100.dp),
                                     enabled = shouldEnable(action, authValue.text),
                                     onClick = { onOkClicked(action, authValue.text.trim()) },
-                                    content = {
-                                        Text(text = stringResource(id = R.string.label_ok))
-                                    }
+                                    content = { Text(text = stringResource(id = R.string.label_ok)) }
                                 )
                             }
                         }
@@ -124,28 +120,24 @@ private fun AuthRow(
     authValue: TextFieldValue,
     onValueChanged: (TextFieldValue) -> Unit,
 ) {
-    val context = LocalContext.current
     when (action) {
         is AuthAction.DisplayAlphaNumeric -> DisplayAlphaNumeric(action = action)
 
         is AuthAction.DisplayNumber -> DisplayNumber(action = action)
 
         is AuthAction.ProvideAlphaNumeric -> ProvideAlphaNumeric(
-            context = context,
             authValue = authValue,
             length = action.maxNumberOfCharacters.toInt(),
             onValueChanged = onValueChanged
         )
 
         is AuthAction.ProvideNumeric -> ProvideNumeric(
-            context = context,
             authValue = authValue,
             length = action.maxNumberOfDigits.toInt(),
             onValueChanged = onValueChanged
         )
 
         is AuthAction.ProvideStaticKey -> ProvideStaticKey(
-            context = context,
             length = action.length,
             authValue = authValue,
             onValueChanged = onValueChanged
@@ -194,7 +186,6 @@ private fun DisplayNumber(
 
 @Composable
 private fun ProvideAlphaNumeric(
-    context: Context,
     length: Int,
     authValue: TextFieldValue,
     onValueChanged: (TextFieldValue) -> Unit,
@@ -219,12 +210,12 @@ private fun ProvideAlphaNumeric(
             if (it.text.length <= length)
                 onValueChanged(it)
         },
-        label = { TextFieldValue(text = context.getString(R.string.label_auth_value)) },
+        label = { TextFieldValue(text = stringResource(R.string.label_auth_value)) },
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Characters,
             autoCorrectEnabled = false
         ),
-        placeholder = { TextFieldValue(text = "e.g. 12E4S6") },
+        placeholder = { TextFieldValue(text = stringResource(R.string.label_e_g_12e4s6)) },
         supportingText = {
             Text(
                 text = "${authValue.text.length} / $length",
@@ -237,7 +228,6 @@ private fun ProvideAlphaNumeric(
 
 @Composable
 private fun ProvideNumeric(
-    context: Context,
     length: Int,
     authValue: TextFieldValue,
     onValueChanged: (TextFieldValue) -> Unit,
@@ -262,12 +252,12 @@ private fun ProvideNumeric(
             if (it.text.length <= length)
                 onValueChanged(it)
         },
-        label = { Text(text = context.getString(R.string.label_auth_value)) },
+        label = { Text(text = stringResource(R.string.label_auth_value)) },
         keyboardOptions = KeyboardOptions(
             autoCorrectEnabled = false,
             keyboardType = KeyboardType.Number
         ),
-        placeholder = { Text(text = "e.g. 123456") },
+        placeholder = { Text(text = stringResource(R.string.label_e_g_123456)) },
         supportingText = {
             Text(
                 text = "${authValue.text.length} / $length",
@@ -280,7 +270,6 @@ private fun ProvideNumeric(
 
 @Composable
 private fun ProvideStaticKey(
-    context: Context,
     length: Int,
     authValue: TextFieldValue,
     onValueChanged: (TextFieldValue) -> Unit,
@@ -299,7 +288,7 @@ private fun ProvideStaticKey(
                 else -> if (it.text.length <= 64) onValueChanged(it)
             }
         },
-        label = { TextFieldValue(text = context.getString(R.string.label_auth_value)) },
+        label = { TextFieldValue(text = stringResource(R.string.label_auth_value)) },
         regex = when (length) {
             16 -> Regex("[0-9A-Fa-f]{0,32}")
             else -> Regex("[0-9A-Fa-f]{0,64}")
@@ -308,7 +297,7 @@ private fun ProvideStaticKey(
             capitalization = KeyboardCapitalization.Characters,
             autoCorrectEnabled = false,
         ),
-        placeholder = { TextFieldValue(text = "") },
+        placeholder = { TextFieldValue(text = stringResource(R.string.label_empty)) },
         supportingText = {
             Text(
                 text = "${authValue.text.length} / ${length * 2}",
