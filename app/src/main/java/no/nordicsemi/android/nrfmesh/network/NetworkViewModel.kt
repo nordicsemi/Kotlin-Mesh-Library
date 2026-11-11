@@ -7,9 +7,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -49,7 +48,7 @@ class NetworkViewModel @Inject constructor(
     // Observes the mesh network for any changes i.e. network reset etc.
     private fun observeNetworkChanges() {
         repository.networkEvents
-            .map {
+            .mapNotNull {
                 if (repository.meshNetwork == null) {
                     uiState.update { state ->
                         state.copy(networkState = MeshNetworkState.NoNetwork)
@@ -57,7 +56,6 @@ class NetworkViewModel @Inject constructor(
                 }
                 repository.meshNetwork
             }
-            .filterNotNull()
             .onEach {
                 meshNetwork = it
                 uiState.update { state ->

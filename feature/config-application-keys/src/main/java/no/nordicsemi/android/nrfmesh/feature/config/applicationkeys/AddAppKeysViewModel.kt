@@ -8,9 +8,8 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,8 +45,7 @@ internal class AddAppKeysViewModel @AssistedInject internal constructor(
 
     private fun observeNetworkChanges() {
         repository.networkEvents
-            .map { repository.meshNetwork }
-            .filterNotNull()
+            .mapNotNull { repository.meshNetwork }
             .onEach { network ->
                 this@AddAppKeysViewModel.selectedNode =
                     network.node(uuid = nodeUuid) ?: return@onEach
