@@ -224,7 +224,7 @@ data class NetworkKey internal constructor(
     }
 
     /**
-     * Sets the security level to secure.
+     * Lowers the security level to insecure.
      */
     fun lowerSecurity() {
         _security = Insecure

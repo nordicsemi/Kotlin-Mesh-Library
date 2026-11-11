@@ -348,6 +348,11 @@ data class Node internal constructor(
             throw SecurityException
         }*/
         this.security = security
+        // If the Node was provisioned in an insecure way, lower the minimum security of the
+        // Network Key it was provisioned with.
+        if (security is Insecure) {
+            assignedNetworkKey.lowerSecurity()
+        }
     }
 
     init {
