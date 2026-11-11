@@ -1,31 +1,29 @@
 package no.nordicsemi.android.nrfmesh.feature.nodes.node
 
-import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Badge
+import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FormatListNumbered
+import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Numbers
+import androidx.compose.material.icons.outlined.PeopleOutline
 import androidx.compose.material.icons.outlined.QrCode
 import androidx.compose.material.icons.outlined.Recycling
 import androidx.compose.material.icons.outlined.SafetyCheck
@@ -34,6 +32,7 @@ import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material.icons.outlined.WorkOutline
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -49,9 +48,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -62,9 +61,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
-import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
-import no.nordicsemi.android.nrfmesh.core.data.configurator.TaskStatus
 import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
+import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItemTextField
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
@@ -77,6 +76,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigDe
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigDefaultTtlSet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeReset
 import no.nordicsemi.kotlin.mesh.core.model.Address
+import no.nordicsemi.kotlin.mesh.core.model.FeatureState
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.util.CompanyIdentifier
@@ -192,6 +192,30 @@ internal fun NodeScreen(
             ProductVersion(productVersion = nodeData.versionIdentifier)
             ReplayProtectionCount(replayProtectionCount = nodeData.replayProtectionCount)
             Security(node = nodeData)
+            SectionTitle(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = stringResource(id = R.string.title_features)
+            )
+            FeatureRow(
+                imageVector = Icons.Rounded.Repeat,
+                name = stringResource(R.string.label_relay),
+                state = nodeData.features.relay?.state
+            )
+            FeatureRow(
+                imageVector = Icons.Outlined.Hub,
+                name = stringResource(R.string.label_proxy),
+                state = nodeData.features.proxy?.state
+            )
+            FeatureRow(
+                imageVector = Icons.Outlined.PeopleOutline,
+                name = stringResource(R.string.label_friend),
+                state = nodeData.features.friend?.state
+            )
+            FeatureRow(
+                imageVector = Icons.Outlined.BatteryAlert,
+                name = stringResource(R.string.label_low_power),
+                state = nodeData.features.lowPower?.state
+            )
             SectionTitle(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 title = stringResource(id = R.string.title_time_to_live)
@@ -426,6 +450,23 @@ private fun ReplayProtectionCount(replayProtectionCount: UShort?) {
         imageVector = Icons.Outlined.SafetyCheck,
         title = stringResource(R.string.label_replay_protection_count),
         subtitle = "${replayProtectionCount ?: stringResource(R.string.label_unknown)}",
+    )
+}
+
+@Composable
+private fun FeatureRow(imageVector: ImageVector, name: String, state: FeatureState?) {
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageVector = imageVector,
+        title = name,
+        subtitle = stringResource(
+            id = when (state) {
+                FeatureState.Enabled -> R.string.label_feature_enabled
+                FeatureState.Disabled -> R.string.label_feature_not_enabled
+                FeatureState.Unsupported -> R.string.label_feature_not_supported
+                null -> R.string.label_unknown
+            }
+        )
     )
 }
 
