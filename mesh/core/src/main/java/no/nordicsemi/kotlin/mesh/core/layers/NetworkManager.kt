@@ -225,7 +225,7 @@ internal class NetworkManager internal constructor(
     }
 
     /**
-     * Awaits for a response to a sent message.
+     * Awaits for a response to a message that was sent.
      */
     suspend fun awaitProxyMessageResponse() = incomingProxyMessages.firstOrNull()
 
