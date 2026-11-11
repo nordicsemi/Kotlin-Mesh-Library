@@ -49,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
@@ -109,14 +110,14 @@ internal fun NetworkScreen(
         }
 
         is MeshNetworkState.Success -> {
-            val context = LocalContext.current
+            val resources = LocalResources.current
             val topAppBarTitle by remember(
                 key1 = appState.navigationState.currentKey,
                 key2 = uiState.networkState.network.createKeysForAppTitles()
             ) {
                 derivedStateOf {
                     title(
-                        context = context,
+                        resources = resources,
                         network = uiState.networkState.network,
                         navigationState = appState.navigationState,
                         isCompactWidth = isCompactWidth

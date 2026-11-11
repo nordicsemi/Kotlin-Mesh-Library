@@ -2,7 +2,7 @@ package no.nordicsemi.android.nrfmesh.feature.application.keys
 
 import no.nordicsemi.android.nrfmesh.core.ui.BottomContentPadding
 import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
-import android.content.Context
+import android.content.res.Resources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -40,7 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -66,7 +66,7 @@ internal fun ApplicationKeysScreen(
     onUndoClicked: (ApplicationKeyData) -> Unit,
     remove: (ApplicationKeyData) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -103,7 +103,7 @@ internal fun ApplicationKeysScreen(
                         AnimatedVisibility(visibility) {
                             SwipeToDismissKey(
                                 scope = scope,
-                                context = context,
+                                resources = resources,
                                 snackbarHostState = snackbarHostState,
                                 dismissState = dismissState,
                                 key = key,
@@ -153,7 +153,7 @@ internal fun ApplicationKeysScreen(
 @Composable
 private fun SwipeToDismissKey(
     scope: CoroutineScope,
-    context: Context,
+    resources: Resources,
     snackbarHostState: SnackbarHostState,
     dismissState: SwipeToDismissBoxState,
     key: ApplicationKeyData,
@@ -196,7 +196,7 @@ private fun SwipeToDismissKey(
                     scope.launch {
                         dismissState.reset()
                         snackbarHostState.showSnackbar(
-                            message = context.getString(
+                            message = resources.getString(
                                 R.string.label_unable_to_delete_key_is_in_use,
                                 key.name
                             )
@@ -208,11 +208,11 @@ private fun SwipeToDismissKey(
                     }
                     scope.launch {
                         val result = snackbarHostState.showSnackbar(
-                            message = context.getString(
+                            message = resources.getString(
                                 R.string.label_key_deleted,
                                 key.name
                             ),
-                            actionLabel = context.getString(R.string.action_undo),
+                            actionLabel = resources.getString(R.string.action_undo),
                             withDismissAction = true,
                             duration = SnackbarDuration.Short
                         )

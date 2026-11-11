@@ -38,7 +38,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -68,7 +68,7 @@ internal fun GroupsScreen(
     onAddGroupClicked: (Group) -> Unit,
     nextAvailableGroupAddress: () -> GroupAddress,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     var showAddGroupDialog by rememberSaveable { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxSize()) {
@@ -131,7 +131,7 @@ internal fun GroupsScreen(
                             } else {
                                 isError = true
                                 errorMessage =
-                                    context.getString(R.string.label_invalid_group_address)
+                                    resources.getString(R.string.label_invalid_group_address)
                             }
                         }
                     },
@@ -171,13 +171,13 @@ internal fun GroupsScreen(
                                     snackbarHostState.currentSnackbarData?.dismiss()
                                     snackbarHostState.showSnackbar(
                                         message = when (it) {
-                                            is GroupAlreadyExists -> context
+                                            is GroupAlreadyExists -> resources
                                                 .getString(R.string.label_group_already_exists)
 
-                                            is GroupInUse -> context
+                                            is GroupInUse -> resources
                                                 .getString(R.string.label_group_in_use)
 
-                                            else -> it.message ?: context
+                                            else -> it.message ?: resources
                                                 .getString(R.string.label_failed_to_add_group)
                                         },
                                         duration = SnackbarDuration.Short
@@ -215,7 +215,7 @@ internal fun GroupsScreen(
                                             snackbarHostState.currentSnackbarData?.dismiss()
                                             snackbarHostState.showSnackbar(
                                                 message = it.message
-                                                    ?: context.getString(R.string.label_failed_to_add_group),
+                                                    ?: resources.getString(R.string.label_failed_to_add_group),
                                                 duration = SnackbarDuration.Short
                                             )
                                         }
@@ -223,7 +223,7 @@ internal fun GroupsScreen(
                                 } else {
                                     isError = true
                                     errorMessage =
-                                        context.getString(R.string.label_invalid_group_address)
+                                        resources.getString(R.string.label_invalid_group_address)
                                 }
                             }
                         },

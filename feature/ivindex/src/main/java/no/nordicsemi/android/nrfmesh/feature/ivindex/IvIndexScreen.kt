@@ -1,6 +1,5 @@
 package no.nordicsemi.android.nrfmesh.feature.ivindex
 
-import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -24,12 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
@@ -79,7 +79,7 @@ private fun IvIndex(
     isIvIndexChangeAllowed: Boolean,
     onIvIndexChanged: (UInt, Boolean) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     var showIvIndexDialog by rememberSaveable { mutableStateOf(false) }
     var ivIndexValue by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(
@@ -119,7 +119,7 @@ private fun IvIndex(
             onConfirmClick = {
                 if(ivIndexValue.text.isBlank()){
                     isError = true
-                    errorMessage = context.getString(R.string.label_iv_index_empty_error)
+                    errorMessage = resources.getString(R.string.label_iv_index_empty_error)
                 } else {
                     runCatching {
                         onIvIndexChanged(
@@ -131,9 +131,9 @@ private fun IvIndex(
                     }.onFailure {
                         isError = !isError
                         errorMessage = if (it is IvIndexTooSmall) {
-                            context.getString(R.string.label_iv_index_too_small_error)
+                            resources.getString(R.string.label_iv_index_too_small_error)
                         } else {
-                            context.getString(R.string.label_unknown_error)
+                            resources.getString(R.string.label_unknown_error)
                         }
                     }
                 }
@@ -157,7 +157,7 @@ private fun IvIndex(
                         },
                         value = ivIndexValue,
                         onValueChanged = { ivIndexValue = it },
-                        label = { Text(text = context.getString(R.string.label_iv_index)) },
+                        label = { Text(text = stringResource(R.string.label_iv_index)) },
                         keyboardOptions = KeyboardOptions(
                             autoCorrectEnabled = false,
                             keyboardType = KeyboardType.Number

@@ -23,7 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
@@ -131,7 +131,7 @@ private fun Key(
     onEditableStateChanged: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val clipboard = LocalClipboard.current
     KeyRow(
         modifier = Modifier
@@ -141,7 +141,7 @@ private fun Key(
                     scope = scope,
                     clipboard = clipboard,
                     text = key.toHexString(format = HexFormat.UpperCase),
-                    label = context.getString(R.string.label_network_key)
+                    label = resources.getString(R.string.label_network_key)
                 )
             },
         title = stringResource(id = R.string.label_key),
@@ -155,7 +155,7 @@ private fun Key(
 @Composable
 private fun OldKey(oldKey: ByteArray?) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val clipboard = LocalClipboard.current
     NetworkKeyRow(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -168,7 +168,7 @@ private fun OldKey(oldKey: ByteArray?) {
                     scope = scope,
                     clipboard = clipboard,
                     text = oldKey.toHexString(format = HexFormat.UpperCase),
-                    label = context.getString(R.string.label_old_key)
+                    label = resources.getString(R.string.label_old_key)
                 )
             }
         }

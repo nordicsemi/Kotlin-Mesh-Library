@@ -2,7 +2,7 @@ package no.nordicsemi.android.nrfmesh.feature.network.keys
 
 import no.nordicsemi.android.nrfmesh.core.ui.BottomContentPadding
 import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
-import android.content.Context
+import android.content.res.Resources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -39,7 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -65,7 +65,7 @@ internal fun NetworkKeysScreen(
     remove: (NetworkKeyData) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             when (keys.isEmpty()) {
@@ -99,7 +99,7 @@ internal fun NetworkKeysScreen(
                             AnimatedVisibility(visibility) {
                                 SwipeToDismissKey(
                                     scope = scope,
-                                    context = context,
+                                    resources = resources,
                                     snackbarHostState = snackbarHostState,
                                     key = key,
                                     isSelected = isSelected,
@@ -142,7 +142,7 @@ internal fun NetworkKeysScreen(
 @Composable
 private fun SwipeToDismissKey(
     scope: CoroutineScope,
-    context: Context,
+    resources: Resources,
     snackbarHostState: SnackbarHostState,
     key: NetworkKeyData,
     isSelected: Boolean,
@@ -183,14 +183,14 @@ private fun SwipeToDismissKey(
                 scope.launch {
                     dismissState.reset()
                     snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.label_cannot_delete_the_primary_network_key)
+                        message = resources.getString(R.string.label_cannot_delete_the_primary_network_key)
                     )
                 }
             } else if (key.isInUse) {
                 scope.launch {
                     dismissState.reset()
                     snackbarHostState.showSnackbar(
-                        message = context.getString(
+                        message = resources.getString(
                             R.string.label_cannot_delete_is_in_use,
                             key.name
                         )
@@ -200,8 +200,8 @@ private fun SwipeToDismissKey(
                 scope.launch { onSwiped(key) }
                 scope.launch {
                     val result = snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.label_key_deleted, key.name),
-                        actionLabel = context.getString(R.string.action_undo),
+                        message = resources.getString(R.string.label_key_deleted, key.name),
+                        actionLabel = resources.getString(R.string.action_undo),
                         withDismissAction = true,
                         duration = SnackbarDuration.Short
                     )

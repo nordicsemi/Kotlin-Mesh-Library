@@ -2,7 +2,7 @@
 package no.nordicsemi.android.nrfmesh.feature.scenes
 
 import no.nordicsemi.android.nrfmesh.core.ui.bottomInsetPadding
-import android.content.Context
+import android.content.res.Resources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -38,7 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -66,7 +66,7 @@ internal fun ScenesScreen(
     onUndoClicked: (SceneData) -> Unit,
     remove: (SceneData) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxSize()) {
         when (scenes.isEmpty()) {
@@ -93,7 +93,7 @@ internal fun ScenesScreen(
                     AnimatedVisibility(visible = visibility) {
                         SwipeToDismissScene(
                             scope = scope,
-                            context = context,
+                            resources = resources,
                             snackbarHostState = snackbarHostState,
                             dismissState = dismissState,
                             scene = scene,
@@ -132,11 +132,11 @@ internal fun ScenesScreen(
                     scope.launch {
                         snackbarHostState.showSnackbar(
                             message = when (t) {
-                                is NoSceneRangeAllocated -> t.message ?: context.getString(
+                                is NoSceneRangeAllocated -> t.message ?: resources.getString(
                                     R.string.error_allocate_scene_range_to_provisioner
                                 )
 
-                                else -> t.message ?: context.getString(R.string.unknown_error)
+                                else -> t.message ?: resources.getString(R.string.unknown_error)
                             }
                         )
                     }
@@ -150,7 +150,7 @@ internal fun ScenesScreen(
 @Composable
 private fun SwipeToDismissScene(
     scope: CoroutineScope,
-    context: Context,
+    resources: Resources,
     snackbarHostState: SnackbarHostState,
     dismissState: SwipeToDismissBoxState,
     scene: SceneData,
@@ -179,7 +179,7 @@ private fun SwipeToDismissScene(
                     scope.launch {
                         dismissState.reset()
                         snackbarHostState.showSnackbar(
-                            message = context.getString(
+                            message = resources.getString(
                                 R.string.label_cannot_delete_scene_in_use,
                                 scene.name
                             )
@@ -189,11 +189,11 @@ private fun SwipeToDismissScene(
                     onSwiped(scene)
                     scope.launch {
                         val result = snackbarHostState.showSnackbar(
-                            message = context.getString(
+                            message = resources.getString(
                                 R.string.label_scene_deleted,
                                 scene.name
                             ),
-                            actionLabel = context.getString(R.string.action_undo),
+                            actionLabel = resources.getString(R.string.action_undo),
                             withDismissAction = true,
                             duration = SnackbarDuration.Short
                         )

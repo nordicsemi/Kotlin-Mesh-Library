@@ -41,7 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -278,7 +278,7 @@ private fun SubscriptionRow(
     address: SubscriptionAddress,
     send: (AcknowledgedConfigMessage) -> Unit,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val dismissState = rememberSwipeToDismissBoxState()
     // Bring the row back if the message fails, e.g. when there is no connection to a proxy.
     LaunchedEffect(key1 = messageState) {
@@ -318,7 +318,7 @@ private fun SubscriptionRow(
                     snackbarHostState.currentSnackbarData?.dismiss()
                     dismissState.reset()
                     snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.label_primary_element_subscription_error)
+                        message = resources.getString(R.string.label_primary_element_subscription_error)
                     )
                 }
             } else {

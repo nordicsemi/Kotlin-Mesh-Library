@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.feature.provisioners.R
@@ -29,7 +29,7 @@ internal fun UnicastRangesScreen(
     save: () -> Unit,
     navigateBack: () -> Unit
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val ranges = remember {
         mutableStateListOf<Range>()
@@ -85,7 +85,7 @@ internal fun UnicastRangesScreen(
             }.onFailure {
                 scope.launch {
                     snackbarHostState.showSnackbar(
-                        message = it.message ?: context.getString(R.string.label_failed_to_allocate_ranges),
+                        message = it.message ?: resources.getString(R.string.label_failed_to_allocate_ranges),
                         duration = SnackbarDuration.Short
                     )
                 }
