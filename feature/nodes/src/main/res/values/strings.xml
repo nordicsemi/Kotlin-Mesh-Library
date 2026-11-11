@@ -18,6 +18,9 @@
     <string name="label_get_state">Get State</string>
     <string name="label_off">Off</string>
     <string name="label_proxy_state_rationale">"Turning off the proxy feature will set this node to a non-connectable state and disable the proxy server."</string>
+    <string name="title_configuration">Configuration</string>
+    <string name="label_configuration_complete">Configuration Complete</string>
+    <string name="label_configuration_complete_rationale">Mark the node as configured once setup is complete</string>
     <string name="title_exclusions">Exclusions</string>
     <string name="label_default_ttl_rationale">TTL limits the number of times a message can be
         relayed. Max value of TTL is 127.</string>

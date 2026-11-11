@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.DeviceHub
 import androidx.compose.material.icons.outlined.Download
@@ -95,6 +96,7 @@ internal fun NodeScreen(
     onApplicationKeysClicked: (Uuid) -> Unit,
     onScenesClicked: (Uuid) -> Unit,
     onElementClicked: (Address) -> Unit,
+    onConfigCompleteChanged: (Boolean) -> Unit,
     onExcluded: (Boolean) -> Unit,
     send: (AcknowledgedConfigMessage) -> Unit,
     save: () -> Unit,
@@ -198,6 +200,14 @@ internal fun NodeScreen(
                 ttl = nodeData.defaultTtl,
                 messageState = messageState,
                 send = send
+            )
+            SectionTitle(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                title = stringResource(id = R.string.title_configuration)
+            )
+            ConfigCompleteRow(
+                isConfigComplete = nodeData.configComplete,
+                onConfigCompleteChanged = onConfigCompleteChanged
             )
             SectionTitle(
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -528,6 +538,27 @@ private fun DefaultTtlRow(
             }
         )
     }
+}
+
+@Composable
+private fun ConfigCompleteRow(
+    isConfigComplete: Boolean,
+    onConfigCompleteChanged: (Boolean) -> Unit,
+) {
+    ElevatedCardItem(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        imageVector = Icons.Outlined.CheckCircle,
+        title = stringResource(R.string.label_configuration_complete),
+        titleAction = {
+            Switch(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                checked = isConfigComplete,
+                onCheckedChange = onConfigCompleteChanged
+            )
+        },
+        supportingText = stringResource(R.string.label_configuration_complete_rationale),
+        body = { Spacer(modifier = Modifier.size(8.dp)) }
+    )
 }
 
 @Composable

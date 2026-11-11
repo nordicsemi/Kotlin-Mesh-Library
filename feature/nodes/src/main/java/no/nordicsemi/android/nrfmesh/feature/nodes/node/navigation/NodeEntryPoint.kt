@@ -103,6 +103,7 @@ fun EntryProviderScope<NavKey>.nodeEntry(
                         viewModel.onItemSelected(item = ClickableNodeInfoItem.Element(address = address))
                         navigator.navigateFrom(parent = key, key = ElementKey(address = address))
                     },
+                    onConfigCompleteChanged = viewModel::onConfigCompleteChanged,
                     onExcluded = viewModel::onExcluded,
                     selectedItem = uiState.selectedNodeInfoItem,
                     send = viewModel::send,
