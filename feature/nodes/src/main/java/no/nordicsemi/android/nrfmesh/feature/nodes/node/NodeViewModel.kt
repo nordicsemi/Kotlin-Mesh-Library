@@ -171,6 +171,16 @@ internal class NodeViewModel @AssistedInject internal constructor(
         repository.save()
     }
 
+    /**
+     * Called when the user toggles whether the node configuration is complete.
+     *
+     * @param complete True if the node is fully configured.
+     */
+    internal fun onConfigCompleteChanged(complete: Boolean) {
+        selectedNode.configComplete = complete
+        repository.save()
+    }
+
     internal fun onItemSelected(item: ClickableNodeInfoItem) {
         uiState.update { it.copy(selectedNodeInfoItem = item) }
     }

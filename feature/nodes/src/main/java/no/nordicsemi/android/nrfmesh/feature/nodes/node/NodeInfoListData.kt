@@ -22,6 +22,7 @@ import kotlin.uuid.Uuid
  * @property defaultTtl                    Time to live of the node.
  * @property features                      Features of the node.
  * @property excluded                      True if the node is excluded from the network.
+ * @property configComplete                True if the node configuration is complete.
  * @property scenesCount                   Number of scenes known to be stored on the node.
  */
 data class NodeInfoListData(
@@ -40,6 +41,7 @@ data class NodeInfoListData(
     val defaultTtl: UByte?,
     val features: Features,
     val excluded: Boolean,
+    val configComplete: Boolean,
     val scenesCount: Int = 0,
 ) {
     constructor(node: Node) : this(
@@ -58,6 +60,7 @@ data class NodeInfoListData(
         defaultTtl = node.defaultTTL,
         features = node.features,
         excluded = node.excluded,
+        configComplete = node.configComplete,
         scenesCount = node.network?.scenes
             ?.count { node.primaryUnicastAddress in it.addresses } ?: 0
     )
