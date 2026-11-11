@@ -28,7 +28,6 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.remember
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
@@ -170,7 +169,7 @@ private fun SwipeToIdentifyNode(
     // Maximum distance the item can be swiped, just enough to reveal the icon.
     val maxOffset = with(LocalDensity.current) { RevealWidth.toPx() }
     var offset by remember { mutableFloatStateOf(0f) }
-    Box(modifier = modifier.clip(shape = CardDefaults.elevatedShape)) {
+    Box(modifier = modifier) {
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -186,7 +185,8 @@ private fun SwipeToIdentifyNode(
         }
         MeshItem(
             modifier = itemModifier
-                .offset { IntOffset(x = offset.roundToInt(), y = 0) }
+                // draggable must come before offset, otherwise the touch target moves with the
+                // item and the drag deltas are measured against a moving frame.
                 .draggable(
                     orientation = Orientation.Horizontal,
                     state = rememberDraggableState { delta ->
@@ -200,7 +200,8 @@ private fun SwipeToIdentifyNode(
                             offset = value
                         }
                     }
-                ),
+                )
+                .offset { IntOffset(x = offset.roundToInt(), y = 0) },
             icon = { CircularIcon(painter = painterResource(R.drawable.ic_mesh)) },
             title = node.name,
             subtitle = node.primaryUnicastAddress.address.toHexString(
