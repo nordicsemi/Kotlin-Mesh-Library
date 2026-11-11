@@ -287,6 +287,17 @@ data class Node internal constructor(
         _appKeys = appKeys.map { NodeKey(it.index, false) }.toMutableList()
     ) {
         this._name = provisioner.name
+        security = Secure
+        // A local node can support lots of addresses
+        replayProtectionCount = maxUnicastAddress
+        // A local node configuration can be marked as configured upon initialization
+        configComplete = true
+        features = Features(
+            _relay = Relay(state = FeatureState.Unsupported),
+            _proxy = Proxy(state = FeatureState.Unsupported),
+            _friend = Friend(state = FeatureState.Unsupported),
+            _lowPower = LowPower(state = FeatureState.Unsupported)
+        )
     }
 
     /**
