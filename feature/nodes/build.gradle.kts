@@ -11,6 +11,7 @@ android {
 
 dependencies {
     implementation(nordic.kotlin.data)
+    implementation(nordic.theme)
     implementation(libs.kotlinx.serialization.json)
 
     implementation(project(":core:common"))

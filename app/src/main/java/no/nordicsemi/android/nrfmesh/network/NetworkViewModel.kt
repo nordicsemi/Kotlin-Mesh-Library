@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -12,6 +13,9 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import no.nordicsemi.android.nrfmesh.core.common.Failed
+import no.nordicsemi.android.nrfmesh.core.common.MessageState
+import no.nordicsemi.android.nrfmesh.core.common.NotStarted
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.storage.MeshSecurePropertiesStorage
 import no.nordicsemi.android.nrfmesh.network.util.ImportState
@@ -140,6 +144,10 @@ class NetworkViewModel @Inject constructor(
         }
     }
 
+    internal fun resetMessageState() {
+        uiState.update { it.copy(messageState = NotStarted) }
+    }
+
     internal fun onImportErrorAcknowledged() {
         uiState.update { it.copy(importState = ImportState.Unknown) }
     }
@@ -162,40 +170,48 @@ class NetworkViewModel @Inject constructor(
             .model(SigModelId(Model.HEALTH_SERVER_MODEL_ID))
             ?.let { healthServerModel ->
                 viewModelScope.launch {
-                    // Is there any App Key bound to the Health Server model?
-                    if (healthServerModel.boundApplicationKeys.isEmpty()) {
-                        // Does the node know any App Key?
-                        var firstAppKey = node.applicationKeys.firstOrNull()
-                        if (firstAppKey == null) {
-                            // Usually, the keys are numbered from 0, so it's unlikely that 4095 exists.
-                            val keyIndex = 4095.toUShort()
-                            // Is there already a key with index 4095?
-                            firstAppKey = meshNetwork
-                                .applicationKeys
-                                .firstOrNull { it.index == keyIndex }
+                    try {
+                        // Is there any App Key bound to the Health Server model?
+                        if (healthServerModel.boundApplicationKeys.isEmpty()) {
+                            // Does the node know any App Key?
+                            var firstAppKey = node.applicationKeys.firstOrNull()
                             if (firstAppKey == null) {
-                                // Create such key.
-                                firstAppKey = meshNetwork.add(
-                                    "Node Identification Key",
-                                    index = keyIndex,
-                                    boundNetworkKey = node.networkKeys.first()
-                                )
+                                // Usually, the keys are numbered from 0, so it's unlikely that 4095 exists.
+                                val keyIndex = 4095.toUShort()
+                                // Is there already a key with index 4095?
+                                firstAppKey = meshNetwork
+                                    .applicationKeys
+                                    .firstOrNull { it.index == keyIndex }
+                                if (firstAppKey == null) {
+                                    // Create such key.
+                                    firstAppKey = meshNetwork.add(
+                                        "Node Identification Key",
+                                        index = keyIndex,
+                                        boundNetworkKey = node.networkKeys.first()
+                                    )
+                                }
+                                // Send it to the node before binding.
+                                val _ = repository.send(node, ConfigAppKeyAdd(firstAppKey))
                             }
-                            // Send it to the node before binding.
-                            val _ = repository.send(node, ConfigAppKeyAdd(firstAppKey))
-                        }
-                        // Bind the key. Here it is guaranteed, that the key is known to the node.
-                        val _ = repository.send(
-                            node, ConfigModelAppBind(
-                                healthServerModel, firstAppKey
+                            // Bind the key. Here it is guaranteed, that the key is known to the node.
+                            val _ = repository.send(
+                                node, ConfigModelAppBind(
+                                    healthServerModel, firstAppKey
+                                )
                             )
+                        }
+                        // Finally, start the attention timer for 3 seconds.
+                        repository.send(
+                            healthServerModel,
+                            HealthAttentionSetUnacknowledged(attentionTimer = 3u)
                         )
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        // Sending can fail, e.g. when no proxy is connected or another transfer is
+                        // in progress. Let the user know instead of crashing the app.
+                        uiState.update { it.copy(messageState = Failed(message = null, error = e)) }
                     }
-                    // Finally, start the attention timer for 3 seconds.
-                    repository.send(
-                        healthServerModel,
-                        HealthAttentionSetUnacknowledged(attentionTimer = 3u)
-                    )
                 }
             }
     }
@@ -212,4 +228,5 @@ internal data class NetworkScreenUiState(
     val shouldSelectProvisioner: Boolean = false,
     internal val id: Int = 0,
     val importState: ImportState = ImportState.Unknown,
+    val messageState: MessageState = NotStarted,
 )
