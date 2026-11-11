@@ -322,18 +322,21 @@ class Element(
          *
          * The Element will contain all mandatory Models (Configuration Server and Health Server)
          * and supported client models (Configuration Client, Health Client and Scene Client).
+         *
+         * A new Element is created on every access, as an Element can only belong to one Node.
          */
-        var primaryElement = Element(location = Location.UNKNOWN).apply {
-            name = "Primary Element"
-            // Configuration Server is required for all nodes.
-            val _ = add(Model(modelId = SigModelId(Model.CONFIGURATION_SERVER_MODEL_ID)))
-            // Configuration Client is added because this is a Provisioner's Node.
-            val _ = add(Model(modelId = SigModelId(Model.CONFIGURATION_CLIENT_MODEL_ID)))
-            // Configuration Server is required for all nodes.
-            val _ = add(Model(modelId = SigModelId(Model.HEALTH_SERVER_MODEL_ID)))
-            // Health Client is added because this is a Provisioner's Node.
-            val _ = add(Model(modelId = SigModelId(Model.HEALTH_CLIENT_MODEL_ID)))
-        }
+        val primaryElement: Element
+            get() = Element(location = Location.UNKNOWN).apply {
+                name = "Primary Element"
+                // Configuration Server is required for all nodes.
+                val _ = add(Model(modelId = SigModelId(Model.CONFIGURATION_SERVER_MODEL_ID)))
+                // Configuration Client is added because this is a Provisioner's Node.
+                val _ = add(Model(modelId = SigModelId(Model.CONFIGURATION_CLIENT_MODEL_ID)))
+                // Configuration Server is required for all nodes.
+                val _ = add(Model(modelId = SigModelId(Model.HEALTH_SERVER_MODEL_ID)))
+                // Health Client is added because this is a Provisioner's Node.
+                val _ = add(Model(modelId = SigModelId(Model.HEALTH_CLIENT_MODEL_ID)))
+            }
     }
 }
 
