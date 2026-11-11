@@ -24,6 +24,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.SigModelId
 import javax.inject.Inject
+import kotlin.uuid.Uuid
 
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
@@ -31,6 +32,7 @@ class NetworkViewModel @Inject constructor(
     private val storage: MeshSecurePropertiesStorage,
 ) : ViewModel() {
     private lateinit var meshNetwork: MeshNetwork
+    private var provisionerPromptedFor: Uuid? = null
     internal val uiState: StateFlow<NetworkScreenUiState>
         field = MutableStateFlow(value = NetworkScreenUiState())
 
@@ -88,6 +90,8 @@ class NetworkViewModel @Inject constructor(
      * @param contentResolver      Content resolver.
      */
     internal fun importNetwork(uri: Uri, contentResolver: ContentResolver) {
+        // An imported network must prompt for the provisioner, even if it has the same UUID.
+        provisionerPromptedFor = null
         viewModelScope.launch {
             runCatching {
                 uiState.update { it.copy(importState = ImportState.Importing) }
@@ -105,7 +109,13 @@ class NetworkViewModel @Inject constructor(
         if (!meshNetwork.restoreLocalProvisioner(storage = storage)) {
             meshNetwork
                 .takeIf { it.provisioners.size > 1 }
-                ?.let { uiState.update { it.copy(shouldSelectProvisioner = true) } }
+                // The selection is requested once per network, not on every network update.
+                ?.let {
+                    if (provisionerPromptedFor != it.uuid) {
+                        provisionerPromptedFor = it.uuid
+                        uiState.update { it.copy(shouldSelectProvisioner = true) }
+                    }
+                }
                 ?: run {
                     storage.storeLocalProvisioner(
                         uuid = meshNetwork.uuid,
@@ -113,6 +123,13 @@ class NetworkViewModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    /**
+     * Invoked once the provisioner selection has been shown, so it is not shown again.
+     */
+    internal fun onProvisionerSelectionPrompted() {
+        uiState.update { it.copy(shouldSelectProvisioner = false) }
     }
 
     internal fun resetNetwork() {

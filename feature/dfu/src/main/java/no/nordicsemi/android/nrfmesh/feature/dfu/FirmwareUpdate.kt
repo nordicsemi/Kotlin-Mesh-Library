@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -144,6 +145,9 @@ internal fun FirmwareUpdateScreen(
             pagerState.requestScrollToPage(page = page)
         }
     }
+    // The dialog ignores the system back, as leaving mid-way could be accidental. On the first
+    // step nothing has been started yet, so it behaves like the close button.
+    BackHandler(enabled = currentStep == FirmwareUpdateStep.DistributorSelection) { onBackClick() }
     if (isDistributorWarningVisible) MeshAlertDialog(
         onDismissRequest = { isDistributorWarningVisible = false },
         icon = Icons.Rounded.WarningAmber,

@@ -96,6 +96,7 @@ internal fun NetworkScreen(
     shouldSelectProvisioner: Boolean,
     importNetwork: (uri: Uri, contentResolver: ContentResolver) -> Unit,
     onImportErrorAcknowledged: () -> Unit,
+    onProvisionerSelectionPrompted: () -> Unit,
     resetNetwork: () -> Unit,
     navigateToWizard: () -> Unit,
     isCompactWidth: Boolean = isCompactWidth(),
@@ -132,6 +133,7 @@ internal fun NetworkScreen(
                 navigateToWizard = navigateToWizard,
                 topAppBarTitle = topAppBarTitle,
                 onImportErrorAcknowledged = onImportErrorAcknowledged,
+                onProvisionerSelectionPrompted = onProvisionerSelectionPrompted,
                 startAttentionTimer = startAttentionTimer,
             )
         }
@@ -161,6 +163,7 @@ private fun NetworkContent(
     importState: ImportState,
     importNetwork: (uri: Uri, contentResolver: ContentResolver) -> Unit,
     onImportErrorAcknowledged: () -> Unit,
+    onProvisionerSelectionPrompted: () -> Unit,
     resetNetwork: () -> Unit,
     topAppBarTitle: String,
     navigateToWizard: () -> Unit,
@@ -341,6 +344,18 @@ private fun NetworkContent(
                 onDismissClick = { showResetNetworkDialog = false },
                 onDismissRequest = { showResetNetworkDialog = false })
         }
+        if (importState is ImportState.Completed && importState.error == null) {
+            MeshAlertDialog(
+                icon = Icons.Outlined.Download,
+                iconColor = MaterialTheme.colorScheme.primary,
+                title = stringResource(R.string.label_import),
+                text = stringResource(R.string.label_import_success),
+                confirmButtonText = stringResource(android.R.string.ok),
+                onConfirmClick = onImportErrorAcknowledged,
+                dismissButtonText = null,
+                onDismissRequest = onImportErrorAcknowledged
+            )
+        }
         if (importState is ImportState.Completed && importState.error != null) {
             MeshAlertDialog(
                 icon = Icons.Outlined.Download,
@@ -377,9 +392,11 @@ private fun NetworkContent(
                 )
             }
         }
-        LaunchedEffect(shouldSelectProvisioner) {
-            if (shouldSelectProvisioner) {
+        // After an import, the provisioner is selected only once the success dialog is dismissed.
+        LaunchedEffect(shouldSelectProvisioner, importState) {
+            if (shouldSelectProvisioner && importState is ImportState.Unknown) {
                 navigator.navigate(key = ProvisionerSelectorKey)
+                onProvisionerSelectionPrompted()
             }
         }
     }

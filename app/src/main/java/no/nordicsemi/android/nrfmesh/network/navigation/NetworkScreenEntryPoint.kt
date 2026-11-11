@@ -39,6 +39,7 @@ fun EntryProviderScope<NavKey>.networkScreenEntry(
         navigateToWizard = navigateToWizard,
         importNetwork = viewModel::importNetwork,
         onImportErrorAcknowledged = viewModel::onImportErrorAcknowledged,
+        onProvisionerSelectionPrompted = viewModel::onProvisionerSelectionPrompted,
         resetMeshNetworkUiState = viewModel::resetMeshNetworkUiState,
         startAttentionTimer = viewModel::startAttentionTimer
     )
