@@ -7,7 +7,6 @@ import no.nordicsemi.kotlin.data.getUInt
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.hasBitSet
 import no.nordicsemi.kotlin.data.shl
-import no.nordicsemi.kotlin.data.shr
 import no.nordicsemi.kotlin.data.toByteArray
 import no.nordicsemi.kotlin.data.toHexString
 import no.nordicsemi.kotlin.data.ushr
@@ -76,19 +75,18 @@ internal class NetworkPdu internal constructor(
 
     val sequenceZero: UShort?
         get() = if (isSegmented || isSegmentAcknowledgementMessage) {
-            ((transportPdu[1] and 0x7F).toUShort() shl 6) or (transportPdu[2] shr 2).toUShort()
+            ((transportPdu[1] and 0x7F).toUShort() shl 6) or
+                    (transportPdu[2] ushr 2).toUShort()
         } else null
 
-    private val messageSequence: UInt
-        get() = if (isSegmented) {
-            val sequenceZero = (transportPdu[1].toUShort() and 0x7Fu shl 6) or
-                    (transportPdu[2].toUShort() shr 2)
-            if ((sequence and 0x1FFFFu) < sequenceZero) {
-                (sequence and 0xFFE000u) + sequenceZero.toUInt() - (0x1FFF + 1).toUInt()
+    internal val messageSequence: UInt
+        get() = sequenceZero?.takeIf { isSegmented }?.let { seqZero ->
+            if ((sequence and 0x1FFFu) < seqZero.toUInt()) {
+                (sequence and 0xFFE000u) + seqZero.toUInt() - 0x2000u
             } else {
-                (sequence and 0xFFE000u) + sequenceZero.toUInt()
+                (sequence and 0xFFE000u) + seqZero.toUInt()
             }
-        } else sequence
+        } ?: sequence
 
     override fun toString(): String {
         val micSize = type.netMicSize

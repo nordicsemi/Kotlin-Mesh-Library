@@ -79,7 +79,7 @@ internal class SegmentedControlMessage(
             require(opCode != 0x00.toUByte()) { return null } // Op Code 0 is reserved for future use.
 
             val sequenceZero = ((pdu.transportPdu[1].toUShort() and 0x7Fu) shl 6) or
-                    (pdu.transportPdu[2].toUShort() shr 2)
+                    (pdu.transportPdu[2].toUByte() shr 2).toUShort()
             val segmentOffset = ((pdu.transportPdu[2].toUByte() and 0x03u) shl 3) or
                     (pdu.transportPdu[3].toUByte() shr 5)
             val lastSegmentNumber = pdu.transportPdu[3].toUByte() and 0x1Fu
