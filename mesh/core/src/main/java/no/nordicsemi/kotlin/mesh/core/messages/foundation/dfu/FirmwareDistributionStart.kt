@@ -6,8 +6,8 @@ import no.nordicsemi.kotlin.data.ByteOrder
 import no.nordicsemi.kotlin.data.and
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.shl
-import no.nordicsemi.kotlin.data.shr
 import no.nordicsemi.kotlin.data.toByteArray
+import no.nordicsemi.kotlin.data.ushr
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedApplicationMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionMessageInitializer
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareUpdatePolicy
@@ -314,10 +314,10 @@ class FirmwareDistributionStart internal constructor(
                             order = ByteOrder.LITTLE_ENDIAN
                         ),
                         distributionTransferMode = TransferMode.from(
-                            value = (params[5] shr 6).toUByte()
+                            value = (params[5] and 0x03).toUByte()
                         ) ?: return@let null,
                         updatePolicy = FirmwareUpdatePolicy.from(
-                            value = ((params[5] shr 5) and 0x01).toUByte()
+                            value = ((params[5] ushr 2) and 0x01).toUByte()
                         ) ?: return@let null,
                         firmwareImageIndex = params.getUShort(
                             offset = 6,
@@ -339,10 +339,10 @@ class FirmwareDistributionStart internal constructor(
                             order = ByteOrder.LITTLE_ENDIAN
                         ),
                         distributionTransferMode = TransferMode.from(
-                            value = (params[5] shr 6).toUByte()
+                            value = (params[5] and 0x03).toUByte()
                         ) ?: return@let null,
                         updatePolicy = FirmwareUpdatePolicy.from(
-                            value = ((params[5] shr 5) and 0x01).toUByte()
+                            value = ((params[5] ushr 2) and 0x01).toUByte()
                         ) ?: return@let null,
                         firmwareImageIndex = params.getUShort(
                             offset = 6,
