@@ -58,15 +58,14 @@ class FirmwareDistributionUploadStart(
                     order = ByteOrder.LITTLE_ENDIAN
                 )
                 val metadataLength = params[15].toUByte().toInt()
+                // The metadata and the Firmware ID (at least the 2 octet Company ID) must fit.
+                if (params.size < 18 + metadataLength) return@let null
                 FirmwareDistributionUploadStart(
                     ttl = ttl,
                     timeoutBase = timeoutBase,
                     blobId = blobId,
                     firmwareSize = firmwareSize,
                     metadata = if (metadataLength > 0) {
-                        require(params.size >= 18 + metadataLength) {
-                            return null
-                        }
                         params.copyOfRange(fromIndex = 16, toIndex = 16 + metadataLength)
                     } else {
                         null
