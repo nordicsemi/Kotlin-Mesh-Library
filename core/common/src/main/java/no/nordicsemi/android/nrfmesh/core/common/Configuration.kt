@@ -8,6 +8,7 @@ import androidx.compose.material.icons.outlined.DashboardCustomize
 import androidx.compose.material.icons.outlined.GroupWork
 import androidx.compose.material.icons.outlined.VpnKey
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
+import kotlin.uuid.Uuid
 
 /**
  * Network properties
@@ -42,6 +43,11 @@ sealed class Configuration : NetworkProperties {
     abstract fun generateApplicationKeys(): List<ByteArray>
 
     /**
+     * Generate the label UUIDs of the virtual groups.
+     */
+    abstract fun generateVirtualGroupUuids(): List<Uuid>
+
+    /**
      * Empty configuration.
      */
     data object Empty : Configuration(), NetworkProperties {
@@ -54,6 +60,8 @@ sealed class Configuration : NetworkProperties {
         override fun generateNetworkKeys(): List<ByteArray> = listOf(Crypto.generateRandomKey())
 
         override fun generateApplicationKeys(): List<ByteArray> = emptyList()
+
+        override fun generateVirtualGroupUuids(): List<Uuid> = emptyList()
     }
 
     /**
@@ -74,6 +82,8 @@ sealed class Configuration : NetworkProperties {
         override fun generateApplicationKeys() = List(size = networkKeys) {
             Crypto.generateRandomKey()
         }
+
+        override fun generateVirtualGroupUuids() = List(size = virtualGroups) { Uuid.random() }
     }
 
     /**
@@ -90,6 +100,15 @@ sealed class Configuration : NetworkProperties {
         override fun generateNetworkKeys() = generateStaticKeys(size = networkKeys)
 
         override fun generateApplicationKeys() = generateStaticKeys(size = applicationKeys)
+
+        /**
+         * Generates static label UUIDs incremented by 1, from 1 to [virtualGroups], that is
+         * 00000000-0000-0000-0000-000000000001, 00000000-0000-0000-0000-000000000002 and so on.
+         * This is used for creating debug networks.
+         */
+        override fun generateVirtualGroupUuids() = List(size = virtualGroups) { index ->
+            Uuid.fromULongs(mostSignificantBits = 0uL, leastSignificantBits = (index + 1).toULong())
+        }
 
         /**
          * Generate static keys incremented by 1. This is used for creating debug networks

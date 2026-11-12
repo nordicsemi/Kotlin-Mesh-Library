@@ -269,12 +269,11 @@ class CoreDataRepository @Inject constructor(
                 ) ?: continue
                 meshNetwork.add(group = Group(_name = "Group ${group + 1}", address = groupAddress))
             }
-            val groupSize = meshNetwork.groups.size + configuration.virtualGroups
-            for (index in meshNetwork.groups.size until groupSize) {
+            configuration.generateVirtualGroupUuids().forEach { uuid ->
                 meshNetwork.add(
                     group = Group(
-                        _name = "Group ${index + 1}",
-                        address = VirtualAddress(uuid = Uuid.random())
+                        _name = "Group ${meshNetwork.groups.size + 1}",
+                        address = VirtualAddress(uuid = uuid)
                     )
                 )
             }
