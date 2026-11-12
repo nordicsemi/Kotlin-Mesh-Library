@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 
 class FirmwareDistributionUploadParsingTest {
 
@@ -39,5 +40,18 @@ class FirmwareDistributionUploadParsingTest {
         assertContentEquals(metadata, message.metadata)
         assertEquals(0x0059u.toUShort(), message.firmwareId.companyIdentifier)
         assertContentEquals(byteArrayOf(0x01, 0x02), message.firmwareId.version)
+    }
+
+    @Test
+    fun testUploadStartWithMetadataLongerThanMessageIsRejected() {
+        val params = byteArrayOf(0xFF.toByte()) +           // TTL
+                byteArrayOf(0x0A, 0x00) +                   // Timeout Base
+                ByteArray(8) { 0x11 } +                     // BLOB ID
+                byteArrayOf(0x00, 0x10, 0x00, 0x00) +       // Firmware Size
+                byteArrayOf(200.toByte()) +                 // Metadata Length (200)
+                ByteArray(10) +                             // Only 10 octets of metadata
+                byteArrayOf(0x59, 0x00)                     // Firmware ID
+
+        assertNull(FirmwareDistributionUploadStart.init(params))
     }
 }
