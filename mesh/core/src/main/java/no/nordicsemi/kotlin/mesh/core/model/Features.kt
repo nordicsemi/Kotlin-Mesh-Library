@@ -4,6 +4,7 @@ package no.nordicsemi.kotlin.mesh.core.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import no.nordicsemi.kotlin.data.hasBitSet
 import no.nordicsemi.kotlin.mesh.core.model.serialization.FeaturesSerializer
 
 /**
@@ -44,21 +45,28 @@ data class Features internal constructor(
     val lowPower: LowPower?
         get() = _lowPower
 
-    val rawValue = ((relay?.state?.value ?: 2) shr 0 or
-            (proxy?.state?.value ?: 2) shr 1 or
-            (friend?.state?.value ?: 2) shr 2 or
-            (lowPower?.state?.value ?: 2) shr 3).toUShort()
+    /**
+     * Bit field of the features, where bit 0 is Relay, bit 1 is Proxy, bit 2 is Friend and bit 3
+     * is Low Power. A bit is set unless the feature is known to be unsupported.
+     */
+    val rawValue: UShort
+        get() = (_relay?.state.bit(0) or
+                _proxy?.state.bit(1) or
+                _friend?.state.bit(2) or
+                _lowPower?.state.bit(3)).toUShort()
 
     /**
-     * Constructs a Features object from the given raw value.
+     * Constructs a Features object from the given raw value, where bit 0 is Relay, bit 1 is
+     * Proxy, bit 2 is Friend and bit 3 is Low Power. A set bit is an enabled feature and a cleared
+     * bit is an unsupported one.
      *
      * @param rawValue  Raw value of the features.
      */
     internal constructor(rawValue: UShort) : this(
-        _relay = Relay(state = FeatureState.from(value = rawValue.toInt() shl 0)),
-        _proxy = Proxy(state = FeatureState.from(value = rawValue.toInt() shl 1)),
-        _friend = Friend(state = FeatureState.from(value = rawValue.toInt() shl 2)),
-        _lowPower = LowPower(state = FeatureState.from(value = rawValue.toInt() shl 3))
+        _relay = Relay(state = rawValue.toFeatureState(bit = 0)),
+        _proxy = Proxy(state = rawValue.toFeatureState(bit = 1)),
+        _friend = Friend(state = rawValue.toFeatureState(bit = 2)),
+        _lowPower = LowPower(state = rawValue.toFeatureState(bit = 3))
     )
 
     /**
@@ -129,7 +137,8 @@ sealed class Feature {
  */
 @Serializable
 data class Relay(override val state: FeatureState) : Feature() {
-    override val rawValue: UShort = (state.value shr 0).toUShort()
+    override val rawValue: UShort
+        get() = state.bit(0).toUShort()
 
     override fun toString() = "Relay($state)"
 }
@@ -142,7 +151,8 @@ data class Relay(override val state: FeatureState) : Feature() {
  */
 @Serializable
 data class Proxy(override var state: FeatureState) : Feature() {
-    override val rawValue: UShort = (state.value shr 1).toUShort()
+    override val rawValue: UShort
+        get() = state.bit(1).toUShort()
 
     override fun toString() = "Proxy($state)"
 }
@@ -155,7 +165,8 @@ data class Proxy(override var state: FeatureState) : Feature() {
  */
 @Serializable
 data class Friend(override val state: FeatureState) : Feature() {
-    override val rawValue: UShort = (state.value shr 2).toUShort()
+    override val rawValue: UShort
+        get() = state.bit(2).toUShort()
 
     override fun toString() = "Friend($state)"
 }
@@ -168,10 +179,18 @@ data class Friend(override val state: FeatureState) : Feature() {
  */
 @Serializable
 data class LowPower(override val state: FeatureState) : Feature() {
-    override val rawValue: UShort = (state.value shr 3).toUShort()
+    override val rawValue: UShort
+        get() = state.bit(3).toUShort()
 
     override fun toString() = "LowPower($state)"
 }
+
+/** Returns the bit at the given position if the feature is not unsupported, otherwise 0. */
+private fun FeatureState?.bit(position: Int): Int =
+    if (this is FeatureState.Unsupported) 0 else 1 shl position
+
+private fun UShort.toFeatureState(bit: Int): FeatureState =
+    if (hasBitSet(bit)) FeatureState.Enabled else FeatureState.Unsupported
 
 /**
  * FeatureState describes the state of a given [Feature].
