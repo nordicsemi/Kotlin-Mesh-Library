@@ -326,7 +326,7 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
                 ?.apply { defaultTTL = response.ttl }
 
             is ConfigRelayStatus -> node(address = source)?.apply {
-                features._relay = Relay(state = response.state)
+                features = features.copy(_relay = Relay(state = response.state))
                 relayRetransmit = when (response.state) {
                     FeatureState.Unsupported -> null
                     FeatureState.Disabled, FeatureState.Enabled -> RelayRetransmit(response)
@@ -335,12 +335,12 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
             }
 
             is ConfigGattProxyStatus -> node(address = source)?.apply {
-                features._proxy = Proxy(state = response.state)
+                features = features.copy(_proxy = Proxy(state = response.state))
                 updateTimestamp()
             }
 
             is ConfigFriendStatus -> node(address = source)?.apply {
-                features._friend = Friend(state = response.state)
+                features = features.copy(_friend = Friend(state = response.state))
                 updateTimestamp()
             }
 
