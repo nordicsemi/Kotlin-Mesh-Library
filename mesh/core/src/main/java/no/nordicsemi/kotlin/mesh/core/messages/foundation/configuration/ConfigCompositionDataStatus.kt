@@ -195,9 +195,7 @@ data class Page0(
             val elements = mutableListOf<Element>()
             var offset = 11
             while (offset < compositionData.size) {
-                require(compositionData.size >= offset + 4) {
-                    return null
-                }
+                if (compositionData.size < offset + 4) return@let null
                 val rawValue = compositionData.getUShort(
                     offset = offset,
                     order = ByteOrder.LITTLE_ENDIAN
@@ -212,8 +210,8 @@ data class Page0(
                     format = IntFormat.UINT8
                 ) * 4
 
-                require(compositionData.size >= (offset + 3 + sigModelsByteCount + vendorModelsByteCount)) {
-                    return null
+                if (compositionData.size < offset + 3 + sigModelsByteCount + vendorModelsByteCount) {
+                    return@let null
                 }
 
                 // 4 bytes have been read.

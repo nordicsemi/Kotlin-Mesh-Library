@@ -145,7 +145,7 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
         response: MeshResponse,
         request: AcknowledgedMeshMessage,
         source: Address,
-    ) = meshNetwork.run {
+    ): Unit = meshNetwork.run {
         when (response) {
             // Composition Data
             is ConfigCompositionDataStatus -> {
