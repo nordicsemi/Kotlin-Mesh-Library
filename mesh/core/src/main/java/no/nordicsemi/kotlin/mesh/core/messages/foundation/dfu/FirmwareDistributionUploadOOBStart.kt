@@ -40,7 +40,7 @@ class FirmwareDistributionUploadOOBStart(
         override fun init(parameters: ByteArray?) = parameters
             ?.takeIf { it.size >= 4 }
             ?.let { params ->
-                val uriLength = params[0].toInt()
+                val uriLength = params[0].toUByte().toInt()
                 if (uriLength >= 1 && params.count() >= (3 + uriLength)) {
                     val urlString =
                         params.decodeToString(startIndex = 1, endIndex = (uriLength + 1))

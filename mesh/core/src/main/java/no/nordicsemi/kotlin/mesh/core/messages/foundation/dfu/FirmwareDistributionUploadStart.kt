@@ -57,7 +57,7 @@ class FirmwareDistributionUploadStart(
                     offset = 11,
                     order = ByteOrder.LITTLE_ENDIAN
                 )
-                val metadataLength = params[15].toInt()
+                val metadataLength = params[15].toUByte().toInt()
                 FirmwareDistributionUploadStart(
                     ttl = ttl,
                     timeoutBase = timeoutBase,
