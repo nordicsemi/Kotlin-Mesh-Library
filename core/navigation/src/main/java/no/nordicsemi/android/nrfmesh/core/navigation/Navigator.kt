@@ -54,6 +54,16 @@ class Navigator(val state: NavigationState) {
     }
 
     /**
+     * Clears all but the root key in every sub stack. Used when the network is replaced, as the
+     * keys of the screens that were open, e.g. a node, no longer refer to anything.
+     */
+    fun clearAllSubStacks() {
+        state.subStacks.values.forEach { stack ->
+            if (stack.size > 1) stack.subList(1, stack.size).clear()
+        }
+    }
+
+    /**
      * Go back to the previous navigation key.
      */
     fun goBack() {
