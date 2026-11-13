@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="title_scanning">Scanning</string>
+    <string name="label_configuration">Configuration</string>
+    <string name="label_done">Done</string>
+    <string name="label_retry">Retry</string>
+    <string name="label_cancel">Cancel</string>
 </resources>
