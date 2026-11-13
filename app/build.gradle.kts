@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":feature:config-network-keys"))
     implementation(project(":feature:config-application-keys"))
     implementation(project(":feature:bind-app-keys"))
+    implementation(project(":feature:quick-configuration"))
     implementation(project(":feature:application-keys"))
     implementation(project(":feature:scenes"))
     implementation(project(":feature:provisioners"))

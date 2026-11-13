@@ -26,6 +26,7 @@ dependencies {
     implementation(project(":feature:provisioning"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:groups"))
+    implementation(project(":feature:quick-configuration"))
     implementation(project(":mesh:core"))
 
     testImplementation(libs.junit4)
