@@ -560,7 +560,7 @@ private fun ConfigurationPage(
     viewportHeight: Int,
 ) {
     // The list follows the task being executed until the user scrolls it, and again after a retry.
-    var followTasks by remember { mutableStateOf(true) }
+    var followTasks by rememberSaveable { mutableStateOf(true) }
     LaunchedEffect(scrollState) {
         scrollState.interactionSource.interactions.collect {
             if (it is DragInteraction.Start) followTasks = false
