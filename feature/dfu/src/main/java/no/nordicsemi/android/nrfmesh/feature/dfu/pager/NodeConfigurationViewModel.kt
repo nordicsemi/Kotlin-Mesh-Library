@@ -5,7 +5,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AddLink
 import androidx.compose.material.icons.outlined.GroupWork
 import androidx.compose.material.icons.outlined.Recycling
-import androidx.compose.material.icons.outlined.VpnKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,17 +30,16 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.AppTask
 import no.nordicsemi.android.nrfmesh.core.data.configurator.ConfigTask
 import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
 import no.nordicsemi.android.nrfmesh.core.data.configurator.Messenger
+import no.nordicsemi.android.nrfmesh.core.data.configurator.NodeKeyTaskBuilder
 import no.nordicsemi.android.nrfmesh.core.data.configurator.TaskStatus
 import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.android.nrfmesh.feature.dfu.DfuSession
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.DfuParameters
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.Receiver
 import no.nordicsemi.android.nrfmesh.feature.dfu.util.UpdatePackage
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelAppBind
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelSubscriptionAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigModelSubscriptionVirtualAddressAdd
-import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNetKeyAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionReceiversAdd
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.dfu.FirmwareDistributionReceiversDeleteAll
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
@@ -249,8 +247,9 @@ internal class NodeConfigurationViewModel @Inject internal constructor(
      * @param models List of Models to which the application keys should be bound.
      */
     private fun bind(keys: List<ApplicationKey>, models: List<Model>) {
-        // Cache to prevent sending the same message multiple times
-        val cache = mutableMapOf<Node, MutableList<ApplicationKey>>()
+        // Remembers which keys were already queued for each node, to prevent sending the same
+        // message multiple times.
+        val keyTaskBuilders = mutableMapOf<Node, NodeKeyTaskBuilder>()
         models.forEach { model ->
             model.parentElement?.parentNode?.let { node ->
                 // Get the correct messenger by based on the parent node of the model
@@ -258,36 +257,13 @@ internal class NodeConfigurationViewModel @Inject internal constructor(
                     .run {
                         messenger(uuid = node.uuid) ?: create(uuid = node.uuid)
                     }
+                // Application Keys not known to the node are added first, preceded by the bound
+                // Network Key if the node does not know that either.
+                keyTaskBuilders
+                    .getOrPut(key = node) { NodeKeyTaskBuilder(node = node, verb = "Adding") }
+                    .tasksFor(keys = keys)
+                    .forEach { messenger.enqueueTask(task = it) }
                 keys.forEach { appKey ->
-                    // Checks if the application key is not known to the node
-                    // In addition we should check if the Check if the application key messages are
-                    // not queued already and is not known to the node
-                    if (cache[node]?.contains(appKey) != true && !node.knows(appKey)) {
-                        val boundNetKey = appKey.boundNetworkKey
-                        // Checks if the bound network key of the application key is known to the node
-                        if (!node.knows(key = boundNetKey)) {
-                            // Enqueue a task to add the bound network key to the node
-                            messenger.enqueueTask(
-                                task = ConfigTask(
-                                    icon = Icons.Outlined.VpnKey,
-                                    label = "Adding ${boundNetKey.name} to ${node.name}",
-                                    message = ConfigNetKeyAdd(boundNetKey),
-                                    target = node
-                                )
-                            )
-                        } else {
-                            // Enqueue a task to add the application key to the node
-                            messenger.enqueueTask(
-                                task = ConfigTask(
-                                    icon = Icons.Outlined.VpnKey,
-                                    label = "Adding ${appKey.name} to ${node.name}",
-                                    message = ConfigAppKeyAdd(appKey),
-                                    target = node
-                                )
-                            )
-                        }
-                        cache.getOrPut(key = node, defaultValue = { mutableListOf() }).add(appKey)
-                    }
                     // Checks if the application key is not bound to the model
                     if (!model.isBound(key = appKey)) {
                         // Enqueue a task to bind the application key to the model

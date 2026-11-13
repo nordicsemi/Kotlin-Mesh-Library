@@ -14,13 +14,18 @@ import androidx.compose.material.icons.outlined.WifiTethering
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import no.nordicsemi.android.nrfmesh.core.common.name
 import no.nordicsemi.android.nrfmesh.core.data.isDestinedToLocalNode
 import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.kotlin.mesh.core.MeshNetworkManager
+import no.nordicsemi.kotlin.mesh.core.layers.access.AccessError
+import no.nordicsemi.kotlin.mesh.core.layers.access.CannotRelay
+import no.nordicsemi.kotlin.mesh.core.layers.access.Timeout
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.ConfigMessageStatus
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigStatusMessage
 import no.nordicsemi.kotlin.mesh.core.messages.UnacknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigAppKeyAdd
@@ -40,6 +45,7 @@ import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigRe
 import no.nordicsemi.kotlin.mesh.core.model.AllNodes
 import no.nordicsemi.kotlin.mesh.core.model.FeatureState
 import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
+import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.PublicationAddress
@@ -99,6 +105,13 @@ class Messenger(private val meshNetworkManager: MeshNetworkManager) {
         get() = meshNetworkManager.network
     private val configTasksFlow = MutableStateFlow<List<ConfigTask>>(mutableListOf())
     private val appTasksFlow = MutableStateFlow<List<AppTask>>(mutableListOf())
+    private val failureFlow = MutableStateFlow<Throwable?>(null)
+
+    /**
+     * Set when the tasks could not be sent, as the node cannot be reached, for example when no
+     * GATT Proxy is connected. The remaining tasks are skipped when this happens.
+     */
+    val failure: StateFlow<Throwable?> = failureFlow
 
     @Suppress("unused")
     private val isCompleted: Boolean
@@ -139,16 +152,19 @@ class Messenger(private val meshNetworkManager: MeshNetworkManager) {
      * Cancelling the calling coroutine stops the execution.
      */
     suspend fun execute() {
-        executeConfigurationTasks()
-        executeAppTasks()
+        failureFlow.value = null
+        if (executeConfigurationTasks()) executeAppTasks()
     }
 
     /**
      * Retry the enqueued tasks, suspending until all of them have been processed.
      */
     suspend fun retry() {
-        executeConfigurationTasks()
-        executeAppTasks()
+        // Start over, so the statuses of the previous run are not shown while the tasks run.
+        configTasksFlow.update { tasks -> tasks.map { it.copy(status = TaskStatus.Idle) } }
+        appTasksFlow.update { tasks -> tasks.map { it.copy(status = TaskStatus.Idle) } }
+        failureFlow.value = null
+        if (executeConfigurationTasks()) executeAppTasks()
     }
 
     /**
@@ -159,11 +175,29 @@ class Messenger(private val meshNetworkManager: MeshNetworkManager) {
     fun clear() {
         configTasksFlow.value = emptyList()
         appTasksFlow.value = emptyList()
+        failureFlow.value = null
     }
 
-    private suspend fun executeConfigurationTasks() {
+    /**
+     * Executes the configuration tasks.
+     *
+     * @return false if the node could not be reached and the remaining tasks were skipped.
+     */
+    private suspend fun executeConfigurationTasks(): Boolean {
+        // Keys that could not be added to a node, so the tasks that depend on them are skipped.
+        val failedNetKeys = mutableSetOf<Pair<Uuid, KeyIndex>>()
+        val failedAppKeys = mutableSetOf<Pair<Uuid, KeyIndex>>()
         configTasksFlow.value.forEachIndexed { index, task ->
             var tempTask = task
+            var unreachable: Exception? = null
+            if (task.dependsOnFailedKey(failedNetKeys = failedNetKeys, failedAppKeys = failedAppKeys)) {
+                // A bind, a publication or an Application Key add requires a key that is not on
+                // the node, so there is no point sending the message.
+                tempTask = tempTask.copy(status = TaskStatus.Skipped)
+                configTasksFlow.update { it.toMutableList().apply { this[index] = tempTask } }
+                task.keyAddFailure(failedNetKeys = failedNetKeys, failedAppKeys = failedAppKeys)
+                return@forEachIndexed
+            }
             configTasksFlow.update {
                 tempTask = tempTask.copy(status = TaskStatus.InProgress)
                 it.toMutableList()
@@ -178,7 +212,11 @@ class Messenger(private val meshNetworkManager: MeshNetworkManager) {
                     tempTask = if (it is ConfigStatusMessage) {
                         when (it.isSuccess) {
                             true -> tempTask.copy(status = TaskStatus.Completed)
-                            else -> tempTask.copy(status = TaskStatus.Error(error = it.message))
+                            // The key being already stored means that the node has the key.
+                            else -> if (it.status ==
+                                ConfigMessageStatus.KEY_INDEX_ALREADY_STORED
+                            ) tempTask.copy(status = TaskStatus.Completed)
+                            else tempTask.copy(status = TaskStatus.Error(error = it.message))
                         }
                     } else {
                         tempTask.copy(status = TaskStatus.Completed)
@@ -188,19 +226,32 @@ class Messenger(private val meshNetworkManager: MeshNetworkManager) {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                tempTask =
-                    tempTask.copy(status = TaskStatus.Error(error = e.message ?: "Unknown Error"))
-                configTasksFlow.update {
-                    it.toMutableList()
-                        .apply { this[index] = tempTask }
-                }
-                return@forEachIndexed
+                tempTask = tempTask.copy(
+                    status = TaskStatus.Error(
+                        error = if (e is AccessError) e.toString() else e.message ?: "Unknown Error"
+                    )
+                )
+                // The node cannot be reached, so there is no point in sending the other tasks.
+                if (e is CannotRelay || e is Timeout) unreachable = e
             }
             configTasksFlow.update {
                 it.toMutableList()
                     .apply { this[index] = tempTask }
             }
+            if (tempTask.status is TaskStatus.Error) {
+                task.keyAddFailure(failedNetKeys = failedNetKeys, failedAppKeys = failedAppKeys)
+            }
+            unreachable?.let { error ->
+                configTasksFlow.update { tasks ->
+                    tasks.mapIndexed { i, t ->
+                        if (i > index) t.copy(status = TaskStatus.Skipped) else t
+                    }
+                }
+                failureFlow.value = error
+                return false
+            }
         }
+        return true
     }
 
     private suspend fun executeAppTasks() {
@@ -265,6 +316,32 @@ class Messenger(private val meshNetworkManager: MeshNetworkManager) {
                     .apply { this[index] = tempTask }
             }
         }
+    }
+}
+
+/** Whether the task needs a key whose add task has failed. */
+private fun ConfigTask.dependsOnFailedKey(
+    failedNetKeys: Set<Pair<Uuid, KeyIndex>>,
+    failedAppKeys: Set<Pair<Uuid, KeyIndex>>,
+): Boolean = when (val message = message) {
+    is ConfigAppKeyAdd -> (target.uuid to message.networkKeyIndex) in failedNetKeys
+    is ConfigModelAppBind -> (target.uuid to message.applicationKeyIndex) in failedAppKeys
+    is ConfigModelPublicationSet -> (target.uuid to message.publish.index) in failedAppKeys
+    is ConfigModelPublicationVirtualAddressSet ->
+        (target.uuid to message.publish.index) in failedAppKeys
+
+    else -> false
+}
+
+/** Records that the key of this task could not be added, if it is a key add task. */
+private fun ConfigTask.keyAddFailure(
+    failedNetKeys: MutableSet<Pair<Uuid, KeyIndex>>,
+    failedAppKeys: MutableSet<Pair<Uuid, KeyIndex>>,
+) {
+    when (val message = message) {
+        is ConfigNetKeyAdd -> failedNetKeys.add(target.uuid to message.networkKeyIndex)
+        is ConfigAppKeyAdd -> failedAppKeys.add(target.uuid to message.applicationKeyIndex)
+        else -> {}
     }
 }
 
