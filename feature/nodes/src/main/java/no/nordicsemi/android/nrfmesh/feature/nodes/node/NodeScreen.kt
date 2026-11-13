@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
 import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
+import no.nordicsemi.android.nrfmesh.core.data.configurator.ConfigurationTasksBottomSheet
 import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
 import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem

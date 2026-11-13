@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="label_quick_configuration">Quick Configuration</string>
+    <string name="label_quick_configuration_rationale">Configure the node with just a few taps.</string>
+    <string name="label_bind_app_keys">Bind Application Keys</string>
+    <string name="label_bind_app_keys_rationale">Bind Application Keys to the selected models of the node. Keys that the node does not know yet are sent automatically.</string>
+    <string name="label_subscribe">Subscribe</string>
+    <string name="label_subscribe_rationale">Subscribe the selected models of the node to the selected groups, so they receive the messages sent to those groups.</string>
+    <string name="label_set_publication">Set Publication</string>
+    <string name="label_set_publication_rationale">Make the selected models of the node publish to a group using the selected Application Key. The key is sent and bound to the models automatically if needed.</string>
+    <string name="label_application_keys">Application Keys</string>
+    <string name="label_application_key">Application Key</string>
+    <string name="label_groups">Groups</string>
+    <string name="label_fixed_groups">Fixed Groups</string>
+    <string name="label_destination">Destination</string>
+    <string name="label_models">Models</string>
+    <string name="label_bind">Bind</string>
+    <string name="label_publication">Publication</string>
+    <string name="label_close">Close</string>
+    <string name="label_back">Back</string>
+    <string name="label_next">Next</string>
+    <string name="label_configuration">Configuration</string>
+    <string name="label_retry">Retry</string>
+    <string name="label_completed">Completed</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="label_no_application_keys">No Application Keys in the network.</string>
+    <string name="label_no_groups">No Groups in the network.</string>
+    <string name="label_no_models">The node has no models that support this operation.</string>
+    <string name="label_no_configuration_required">Already Configured</string>
+    <string name="label_key_already_bound">%1$s is already bound to %2$s.</string>
+    <string name="label_model_already_subscribed">%1$s is already subscribed to %2$s.</string>
+    <string name="label_element">Element %1$d</string>
+</resources>

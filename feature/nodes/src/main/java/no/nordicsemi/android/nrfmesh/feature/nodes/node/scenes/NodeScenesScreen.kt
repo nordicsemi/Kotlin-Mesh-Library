@@ -51,7 +51,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.SceneSelectionBottomSheet
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.SwipeToDeleteBackground
 import no.nordicsemi.android.nrfmesh.feature.nodes.R
-import no.nordicsemi.android.nrfmesh.feature.nodes.node.ConfigurationTasksBottomSheet
+import no.nordicsemi.android.nrfmesh.core.data.configurator.ConfigurationTasksBottomSheet
 import no.nordicsemi.kotlin.mesh.core.messages.StatusMessage
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 

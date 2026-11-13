@@ -57,4 +57,5 @@
     <string name="label_error_while_importing_a_network">Error while importing a network: \n\n%1$s</string>
     <string name="label_developer_settings">Developer Settings</string>
     <string name="label_firmware_update">Firmware Update</string>
+    <string name="label_quick_configuration">Quick Configuration</string>
 </resources>

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Upload
@@ -66,6 +67,7 @@ import no.nordicsemi.android.nrfmesh.core.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
+import no.nordicsemi.android.nrfmesh.feature.quickconfiguration.navigation.QuickConfigurationKey
 import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
@@ -132,6 +134,7 @@ internal fun NetworkScreen(
             NetworkContent(
                 appState = appState,
                 network = uiState.networkState.network,
+                networkVersion = uiState.id,
                 shouldSelectProvisioner = shouldSelectProvisioner,
                 importState = uiState.importState,
                 importNetwork = importNetwork,
@@ -167,6 +170,8 @@ internal fun NetworkScreen(
 private fun NetworkContent(
     appState: MeshAppState,
     network: MeshNetwork,
+    // Changes whenever the network is updated, as the network instance itself stays the same.
+    networkVersion: Int,
     shouldSelectProvisioner: Boolean,
     importState: ImportState,
     importNetwork: (uri: Uri, contentResolver: ContentResolver) -> Unit,
@@ -321,6 +326,20 @@ private fun NetworkContent(
                                 Icon(
                                     imageVector = Icons.Outlined.NotificationsActive,
                                     contentDescription = null
+                                )
+                            }
+                            // The models of the node are known only after getting its composition data.
+                            IconButton(
+                                enabled = remember(networkVersion, node) {
+                                    node.isCompositionDataReceived
+                                },
+                                onClick = {
+                                    navigator.navigate(key = QuickConfigurationKey(nodeUuid = nodeUuid))
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AutoFixHigh,
+                                    contentDescription = stringResource(R.string.label_quick_configuration)
                                 )
                             }
                         }

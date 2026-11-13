@@ -39,6 +39,7 @@ import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.Eleme
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.elementEntry
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes.navigation.NodeScenesKey
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.scenes.navigation.nodeScenesEntry
+import no.nordicsemi.android.nrfmesh.feature.quickconfiguration.navigation.quickConfigurationEntry
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigNodeResetStatus
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -145,4 +146,5 @@ fun EntryProviderScope<NavKey>.nodeEntry(
     configAppKeysEntry(appState = appState, navigator = navigator)
     elementEntry(appState = appState, navigator = navigator)
     nodeScenesEntry()
+    quickConfigurationEntry(onFinished = navigator::goBack)
 }

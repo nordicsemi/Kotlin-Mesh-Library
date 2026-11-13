@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.nodes.node
+package no.nordicsemi.android.nrfmesh.core.data.configurator
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -29,11 +29,11 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
 import no.nordicsemi.android.nrfmesh.core.data.configurator.TaskStatus
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
+import no.nordicsemi.android.nrfmesh.core.data.R
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.errorColor
 import no.nordicsemi.android.nrfmesh.core.ui.successColor
 import no.nordicsemi.android.nrfmesh.core.ui.warningColor
-import no.nordicsemi.android.nrfmesh.feature.nodes.R
 
 /**
  * Modal bottom sheet showing the status of the configuration tasks of a messenger.
@@ -48,7 +48,7 @@ import no.nordicsemi.android.nrfmesh.feature.nodes.R
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ConfigurationTasksBottomSheet(
+fun ConfigurationTasksBottomSheet(
     tasks: List<MeshTask>,
     onRetryPressed: () -> Unit,
     onCompletePressed: () -> Unit,
