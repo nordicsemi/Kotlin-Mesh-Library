@@ -44,8 +44,13 @@
     <string name="label_authentication_required">Authentication Required</string>
     <string name="label_auth_value">Auth Value</string>
     <string name="label_display_numeric_rationale">Enter the following number %s on the device.</string>
+    <string name="label_display_push_rationale">Push the button on the device %s times.</string>
+    <string name="label_display_twist_rationale">Twist the knob on the device %s times.</string>
     <string name="label_display_alpha_numeric_rationale">Enter the following text %s on the device.</string>
     <string name="label_provide_numeric_rationale">Enter the number displayed on the device.</string>
+    <string name="label_provide_blink_rationale">Enter the number of times the device blinked.</string>
+    <string name="label_provide_beep_rationale">Enter the number of times the device beeped.</string>
+    <string name="label_provide_vibrate_rationale">Enter the number of times the device vibrated.</string>
     <string name="label_provide_alpha_numeric_rationale">Enter the text displayed on the device.</string>
     <string name="label_provide_static_key_rationale">Enter the %d character text displayed on the device.</string>
     <string name="action_connect">Connect</string>

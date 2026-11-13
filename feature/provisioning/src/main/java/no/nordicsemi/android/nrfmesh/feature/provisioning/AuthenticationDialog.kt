@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedTextField
 import no.nordicsemi.kotlin.mesh.provisioning.AuthAction
+import no.nordicsemi.kotlin.mesh.provisioning.InputAction
+import no.nordicsemi.kotlin.mesh.provisioning.OutputAction
 
 @Composable
 fun AuthenticationDialog(
@@ -132,6 +134,7 @@ private fun AuthRow(
         )
 
         is AuthAction.ProvideNumeric -> ProvideNumeric(
+            outputAction = action.action,
             authValue = authValue,
             length = action.maxNumberOfDigits.toInt(),
             onValueChanged = onValueChanged
@@ -169,7 +172,14 @@ private fun DisplayNumber(
     action: AuthAction.DisplayNumber,
 ) {
     val number = action.number.toString()
-    val message = stringResource(id = R.string.label_display_alpha_numeric_rationale, number)
+    val message = stringResource(
+        id = when (action.action) {
+            InputAction.PUSH -> R.string.label_display_push_rationale
+            InputAction.TWIST -> R.string.label_display_twist_rationale
+            else -> R.string.label_display_numeric_rationale
+        },
+        number
+    )
     val start = message.indexOf(number)
     val end = start + number.length
     val input = AnnotatedString.Builder(message)
@@ -228,12 +238,20 @@ private fun ProvideAlphaNumeric(
 
 @Composable
 private fun ProvideNumeric(
+    outputAction: OutputAction,
     length: Int,
     authValue: TextFieldValue,
     onValueChanged: (TextFieldValue) -> Unit,
 ) {
     Text(
-        text = stringResource(id = R.string.label_provide_numeric_rationale),
+        text = stringResource(
+            id = when (outputAction) {
+                OutputAction.BLINK -> R.string.label_provide_blink_rationale
+                OutputAction.BEEP -> R.string.label_provide_beep_rationale
+                OutputAction.VIBRATE -> R.string.label_provide_vibrate_rationale
+                else -> R.string.label_provide_numeric_rationale
+            }
+        ),
         style = MaterialTheme.typography.bodyMedium
     )
     Spacer(modifier = Modifier.size(size = 16.dp))
