@@ -2,6 +2,8 @@ package no.nordicsemi.android.nrfmesh.feature.quickconfiguration
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
@@ -10,7 +12,14 @@ import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -98,6 +107,7 @@ import no.nordicsemi.kotlin.mesh.core.model.PublishPeriod
 import no.nordicsemi.kotlin.mesh.core.model.Retransmit
 import no.nordicsemi.kotlin.mesh.core.model.Group
 import no.nordicsemi.kotlin.mesh.core.model.Model
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,6 +186,8 @@ internal fun QuickConfigurationScreen(
             userScrollEnabled = false
         ) { pageIndex ->
             val step = QuickConfigurationStep.entries[pageIndex]
+            val scrollState = rememberScrollState()
+            var viewportHeight by remember { mutableIntStateOf(0) }
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -190,7 +202,8 @@ internal fun QuickConfigurationScreen(
                         modifier = Modifier
                             .weight(weight = 1f)
                             .fillMaxWidth()
-                            .verticalScroll(state = rememberScrollState()),
+                            .onSizeChanged { viewportHeight = it.height }
+                            .verticalScroll(state = scrollState),
                         verticalArrangement = Arrangement.spacedBy(space = 8.dp)
                     ) {
                         when (step) {
@@ -219,7 +232,7 @@ internal fun QuickConfigurationScreen(
                                 onAllModelsToggled = onAllModelsToggled
                             )
 
-                            QuickConfigurationStep.Configuration -> ConfigurationPage(uiState)
+                            QuickConfigurationStep.Configuration -> ConfigurationPage(uiState, scrollState, viewportHeight)
                         }
                     }
                     Row(
@@ -541,7 +554,39 @@ private fun ModelsPage(
 }
 
 @Composable
-private fun ConfigurationPage(uiState: QuickConfigurationUiState) {
+private fun ConfigurationPage(
+    uiState: QuickConfigurationUiState,
+    scrollState: ScrollState,
+    viewportHeight: Int,
+) {
+    // The list follows the task being executed until the user scrolls it, and again after a retry.
+    var followTasks by remember { mutableStateOf(true) }
+    LaunchedEffect(scrollState) {
+        scrollState.interactionSource.interactions.collect {
+            if (it is DragInteraction.Start) followTasks = false
+        }
+    }
+    LaunchedEffect(uiState.tasks.all { it.status == TaskStatus.Idle }) {
+        if (uiState.tasks.all { it.status == TaskStatus.Idle }) followTasks = true
+    }
+    // The vertical range of each task in the scrolled content.
+    val bounds = remember { mutableStateMapOf<Int, ClosedFloatingPointRange<Float>>() }
+    val runningIndex = uiState.tasks.indexOfFirst { it.status == TaskStatus.InProgress }
+    LaunchedEffect(runningIndex, followTasks, bounds[runningIndex]) {
+        val running = bounds[runningIndex]
+        if (!followTasks || running == null) return@LaunchedEffect
+        fun isVisible(range: ClosedFloatingPointRange<Float>) =
+            range.start >= scrollState.value &&
+                    range.endInclusive <= scrollState.value + viewportHeight
+        if (isVisible(running)) return@LaunchedEffect
+        // The list is only scrolled once all the tasks that are visible have completed.
+        val visibleTasksCompleted = uiState.tasks.indices.all { index ->
+            val range = bounds[index]
+            range == null || !isVisible(range) ||
+                    uiState.tasks[index].status.let { it != TaskStatus.Idle && it != TaskStatus.InProgress }
+        }
+        if (visibleTasksCompleted) scrollState.animateScrollTo(value = running.start.roundToInt())
+    }
     SectionTitle(
         modifier = Modifier.padding(top = 8.dp),
         title = stringResource(R.string.label_configuration)
@@ -569,8 +614,12 @@ private fun ConfigurationPage(uiState: QuickConfigurationUiState) {
         }
         return
     }
-    uiState.tasks.forEach { task ->
+    uiState.tasks.forEachIndexed { index, task ->
         ElevatedCardItem(
+            modifier = Modifier.onGloballyPositioned {
+                val top = it.positionInParent().y
+                bounds[index] = top..(top + it.size.height)
+            },
             imageVector = task.icon,
             title = task.label,
             subtitle = task.status.description(),

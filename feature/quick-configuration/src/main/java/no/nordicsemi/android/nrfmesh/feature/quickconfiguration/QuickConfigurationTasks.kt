@@ -42,7 +42,9 @@ private fun keyTasks(node: Node, keys: List<ApplicationKey>): List<MeshTask> =
 /** Binds each of the [keys] to each of the [models] of the [node]. */
 internal fun bindTasks(node: Node, keys: List<ApplicationKey>, models: List<Model>): List<MeshTask> =
     keyTasks(node = node, keys = keys) + models.flatMap { model ->
-        keys.filterNot { it.isBoundTo(model) }.map { key ->
+        // A key the node does not know cannot be bound on it, whatever the local database says,
+        // e.g. after importing a network.
+        keys.filter { !node.knows(it) || !it.isBoundTo(model) }.map { key ->
             ConfigTask(
                 icon = Icons.Outlined.AddLink,
                 label = "Bind ${key.name} to ${model.name()}",
