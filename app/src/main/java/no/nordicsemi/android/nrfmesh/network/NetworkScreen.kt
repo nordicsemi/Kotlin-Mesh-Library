@@ -355,6 +355,8 @@ private fun NetworkContent(
                 onDismissRequest = { showResetNetworkDialog = false })
         }
         if (importState is ImportState.Completed && importState.error == null) {
+            // The screens opened from the previous network, e.g. a node, are no longer valid.
+            LaunchedEffect(importState) { navigator.clearAllSubStacks() }
             MeshAlertDialog(
                 icon = Icons.Outlined.Download,
                 iconColor = MaterialTheme.colorScheme.primary,
