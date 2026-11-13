@@ -21,6 +21,7 @@ import no.nordicsemi.kotlin.mesh.core.model.StepResolution
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
+import kotlin.uuid.Uuid
 import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.experimental.and
 import kotlin.experimental.or
@@ -33,6 +34,9 @@ import kotlin.experimental.or
  * @property modelIdentifier       The model identifier.
  * @property elementAddress        The target element address.
  * @property publish               Contains the publication state.
+ * @property virtualAddressHash    The 16-bit hash of the virtual label when the status was received
+ *                                 from a node with a virtual publication address. The label itself
+ *                                 is not part of the message, so [publish] holds a placeholder.
  */
 class ConfigModelPublicationStatus(
     override val status: ConfigMessageStatus = ConfigMessageStatus.SUCCESS,
@@ -40,6 +44,7 @@ class ConfigModelPublicationStatus(
     override val modelIdentifier: UShort,
     override val companyIdentifier: UShort?,
     val publish: Publish,
+    val virtualAddressHash: UShort? = null,
 ) : ConfigResponse, ConfigStatusMessage, ConfigAnyModelMessage {
     override val opCode: UInt = Initializer.opCode
 
@@ -204,11 +209,13 @@ class ConfigModelPublicationStatus(
                 ?.let { status ->
                     val elementAddress = params
                         .getUShort(offset = 1, order = ByteOrder.LITTLE_ENDIAN)
-                    val address = MeshAddress
-                        .create(
-                            address = params
-                                .getUShort(offset = 3, order = ByteOrder.LITTLE_ENDIAN)
-                        )
+                    val rawAddress = params
+                        .getUShort(offset = 3, order = ByteOrder.LITTLE_ENDIAN)
+                    // A status only carries the 16-bit hash of a virtual address, not its label,
+                    // so a placeholder is used. Callers must use the label from the request.
+                    val address = if (VirtualAddress.isValid(address = rawAddress))
+                        VirtualAddress(uuid = Uuid.NIL)
+                    else MeshAddress.create(address = rawAddress)
                     val index = params
                         .getUShort(offset = 5, order = ByteOrder.LITTLE_ENDIAN) and 0x0FFFu
                     val flag = (params[6] and 0x10) shr 4
@@ -230,6 +237,7 @@ class ConfigModelPublicationStatus(
                     ConfigModelPublicationStatus(
                         status = status,
                         publish = publish,
+                        virtualAddressHash = rawAddress.takeIf { VirtualAddress.isValid(it) },
                         companyIdentifier = if (params.size == 14) {
                             params.getUShort(offset = 10, order = ByteOrder.LITTLE_ENDIAN)
                         } else null,

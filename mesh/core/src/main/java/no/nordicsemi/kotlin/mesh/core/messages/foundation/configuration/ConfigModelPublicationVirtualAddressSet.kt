@@ -2,6 +2,7 @@
 
 package no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration
 
+import no.nordicsemi.kotlin.data.ByteOrder
 import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.getUuid
 import no.nordicsemi.kotlin.data.toByteArray
@@ -19,7 +20,6 @@ import no.nordicsemi.kotlin.mesh.core.model.StepResolution
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
-import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.experimental.and
 import kotlin.experimental.or
 
@@ -31,7 +31,7 @@ import kotlin.experimental.or
  * @property elementAddress        The target element address.
  * @property publish               Contains the publication state with a VirtualAddress.
  */
-data class ConfigModelPublicationVirtualAddressSet(
+class ConfigModelPublicationVirtualAddressSet(
     override val elementAddress: UnicastAddress,
     override val companyIdentifier: UShort?,
     override val modelIdentifier: UShort,
@@ -55,7 +55,7 @@ data class ConfigModelPublicationVirtualAddressSet(
                     (publish.retransmit.steps.toInt() shl 3).toByte()
             data += companyIdentifier?.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
                 ?.plus(modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN))
-                ?: modelIdentifier.toByteArray()
+                ?: modelIdentifier.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
             return data
         }
 
@@ -86,7 +86,14 @@ data class ConfigModelPublicationVirtualAddressSet(
     }
 
     override fun toString() = "ConfigModelPublicationVirtualAddressSet(" +
-            "elementAddress: ${elementAddress.address}, " +
+            "elementAddress: ${
+                elementAddress.address.toHexString(
+                    format = HexFormat {
+                        number.prefix = "0x"
+                        upperCase = true
+                    }
+                )
+            }, " +
             "modelIdentifier: ${
                 modelIdentifier.toHexString(
                     format = HexFormat {
@@ -108,7 +115,9 @@ data class ConfigModelPublicationVirtualAddressSet(
                         }
                     )
                 }, "
-            } else { "" } +
+            } else {
+                ""
+            } +
             "publish: $publish)"
 
     companion object Initializer : ConfigMessageInitializer {
