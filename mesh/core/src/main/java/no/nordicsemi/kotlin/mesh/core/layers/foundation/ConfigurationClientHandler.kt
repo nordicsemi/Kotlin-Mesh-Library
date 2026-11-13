@@ -218,20 +218,23 @@ internal class ConfigurationClientHandler() : ModelEventHandler() {
                                 val publicationAddress = response.publish.address
                                 when {
                                     response.publish.isCanceled -> model.clearPublication()
-                                    publicationAddress is VirtualAddress -> group(
-                                        address = publicationAddress.address
-                                    )?.takeIf { it.address is VirtualAddress }
-                                        ?.let { model.set(response.publish) }
+                                    // The status has only the 16-bit hash of the virtual label,
+                                    // so look for the label in the local groups.
+                                    publicationAddress is VirtualAddress -> response.virtualAddressHash
+                                        ?.let { hash -> group(address = hash) }
+                                        ?.let { it.address as? VirtualAddress }
+                                        ?.let {model.set(publish = response.publish.copy(address = it)) }
 
-                                    else -> model.set(response.publish)
+                                    else -> model.set(publish = response.publish)
                                 }
                             }
 
                             is ConfigModelPublicationSet -> if (!response.publish.isCanceled)
-                                model.set(response.publish)
+                                model.set(publish = response.publish)
                             else model.clearPublication()
 
-                            is ConfigModelPublicationVirtualAddressSet -> model.set(response.publish)
+                            // The status only carries the hash of the label, so use the request's publish.
+                            is ConfigModelPublicationVirtualAddressSet -> model.set(publish = request.publish)
                             else -> {}
                         }
                     }
