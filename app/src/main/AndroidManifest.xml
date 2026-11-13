@@ -6,6 +6,8 @@
     <!-- Package visibility of the nRF Mesh Sniffer content provider. -->
     <queries>
         <provider android:authorities="no.nordicsemi.android.mesh.sniffer.provider" />
+        <!-- Lets the Settings screen detect and launch the nRF Mesh Sniffer app. -->
+        <package android:name="no.nordicsemi.android.mesh.sniffer" />
     </queries>
 
     <application

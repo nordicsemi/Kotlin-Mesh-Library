@@ -1,5 +1,8 @@
 package no.nordicsemi.android.nrfmesh.feature.settings
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,8 +22,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import no.nordicsemi.android.nrfmesh.core.navigation.ClickableSetting
 import no.nordicsemi.android.nrfmesh.core.ui.BottomInsetSpacer
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
@@ -129,6 +136,8 @@ private fun SettingsScreen(
         )
         VersionNameRow()
         VersionCodeRow()
+        val context = LocalContext.current
+        NrfMeshSnifferRow(onClick = { openNrfMeshSniffer(context) })
         BottomInsetSpacer()
     }
 }
@@ -308,4 +317,39 @@ private fun VersionCodeRow() {
         title = stringResource(R.string.label_version_code),
         subtitle = BuildConfig.VERSION_CODE
     )
+}
+@Composable
+private fun NrfMeshSnifferRow(onClick: () -> Unit) {
+    ElevatedCardItem(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .padding(top = 8.dp),
+        imageVector = ImageVector.vectorResource(R.drawable.ic_nrf_mesh_sniffer),
+        title = stringResource(R.string.label_nrf_mesh_sniffer),
+        subtitle = stringResource(R.string.label_nrf_mesh_sniffer_rationale),
+        onClick = onClick
+    )
+}
+
+private const val NRF_MESH_SNIFFER_PACKAGE = "no.nordicsemi.android.mesh.sniffer"
+
+/** Opens nRF Mesh Sniffer if it is installed, otherwise its page in Google Play (or in a browser). */
+private fun openNrfMeshSniffer(context: Context) {
+    val launch = context.packageManager.getLaunchIntentForPackage(NRF_MESH_SNIFFER_PACKAGE)
+    val intents = listOfNotNull(
+        launch,
+        Intent(Intent.ACTION_VIEW, "market://details?id=$NRF_MESH_SNIFFER_PACKAGE".toUri()),
+        Intent(
+            Intent.ACTION_VIEW,
+            "https://play.google.com/store/apps/details?id=$NRF_MESH_SNIFFER_PACKAGE".toUri()
+        ),
+    )
+    for (intent in intents) {
+        try {
+            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            return
+        } catch (_: ActivityNotFoundException) {
+            // try the next one
+        }
+    }
 }
