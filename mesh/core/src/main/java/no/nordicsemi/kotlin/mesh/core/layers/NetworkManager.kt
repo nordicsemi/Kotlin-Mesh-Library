@@ -84,8 +84,14 @@ internal class NetworkManager internal constructor(
             awaitBearerPdus()
         }
 
-    val meshNetwork: MeshNetwork
-        get() = manager.network!!
+    /**
+     * The mesh network this manager was created for.
+     *
+     * The reference is kept instead of reading it from the [MeshNetworkManager], as the latter is
+     * cleared when the local node is reset while this manager may still be processing the
+     * message, which would otherwise result in a NullPointerException.
+     */
+    val meshNetwork: MeshNetwork = requireNotNull(manager.network) { "Mesh network not created" }
 
     val networkParameters: NetworkParameters
         get() = manager.networkParameters
