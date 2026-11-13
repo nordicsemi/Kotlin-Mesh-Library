@@ -82,11 +82,15 @@ internal class NodeViewModel @AssistedInject internal constructor(
                     )
                 } ?: NodeState.Error(Throwable("Node not found"))
                 uiState.update { state ->
-                    state.copy(
-                        nodeState = nodeState,
-                        availableNetworkKeys = selectedNode.unknownNetworkKeys(),
-                        availableAppKeys = selectedNode.unknownApplicationKeys()
-                    )
+                    // The node is not found when it was removed or the network was reset, in which
+                    // case selectedNode might not have been initialized.
+                    (nodeState as? NodeState.Success)?.node?.let { node ->
+                        state.copy(
+                            nodeState = nodeState,
+                            availableNetworkKeys = node.unknownNetworkKeys(),
+                            availableAppKeys = node.unknownApplicationKeys()
+                        )
+                    } ?: state.copy(nodeState = nodeState)
                 }
                 meshNetwork = it // update the local network instance
             }
