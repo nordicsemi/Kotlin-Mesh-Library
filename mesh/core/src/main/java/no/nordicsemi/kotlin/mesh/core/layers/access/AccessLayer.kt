@@ -18,6 +18,7 @@ import no.nordicsemi.kotlin.mesh.core.layers.foundation.SceneClientHandler
 import no.nordicsemi.kotlin.mesh.core.layers.uppertransport.UpperTransportPdu
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.ConfigModelMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigAnyModelMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
@@ -193,11 +194,15 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
         val accessPdu = AccessPdu.init(pdu = upperTransportPdu) ?: return null
         var request: AcknowledgedMeshMessage? = null
 
+        // A model configuration status, like a late duplicate of a previous one, must not be
+        // taken as the response of another request, so the element and model are compared too.
+        val response = runCatching { decodeConfigResponse(accessPdu = accessPdu) }.getOrNull()
         val index = mutex.withLock {
             reliableMessageContexts.indexOfFirst {
                 it.source == upperTransportPdu.destination.address &&
                         it.request.responseOpCode == accessPdu.opCode &&
-                        it.destination == upperTransportPdu.source
+                        it.destination == upperTransportPdu.source &&
+                        isResponseTo(request = it.request, response = response)
             }
         }
 
@@ -217,6 +222,13 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
         }
         return handle(accessPdu = accessPdu, keySet = keySet, request = request)
     }
+
+    /** Decodes a message received with a Device Key, using the models of the local node. */
+    private fun decodeConfigResponse(accessPdu: AccessPdu): MeshMessage? =
+        network.localProvisioner?.node?.elements
+            ?.flatMap { it.models }
+            ?.filter { it.supportsDeviceKey }
+            ?.firstNotNullOfOrNull { it.eventHandler?.decode(accessPdu = accessPdu) }
 
     /**
      * Sends the given Mesh Message to the given destination address. The message is encrypted
@@ -769,6 +781,19 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
             }
         }
     }
+}
+
+/**
+ * Whether the [response] belongs to the [request]. Messages sent to a model are answered by a
+ * status with the same element and model, anything else is not a response to that request.
+ *
+ * @param request  Request that is waiting for a response.
+ * @param response Decoded response or null, if it could not be decoded.
+ */
+internal fun isResponseTo(request: AcknowledgedMeshMessage, response: MeshMessage?): Boolean {
+    if (request !is ConfigModelMessage || response !is ConfigModelMessage) return true
+    return request.elementAddress == response.elementAddress &&
+            request.modelId == response.modelId
 }
 
 /**
