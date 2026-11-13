@@ -107,11 +107,12 @@ internal fun NetworkWizardScreen(
                 colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary)
             )
             Text(
-                modifier = Modifier.padding(vertical = 16.dp),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp),
                 text = stringResource(R.string.label_app_welcome_rationale),
                 textAlign = TextAlign.Center
             )
             Text(
+                modifier = Modifier.padding(horizontal = 8.dp),
                 text = stringResource(R.string.label_start_creating),
                 textAlign = TextAlign.Center
             )
@@ -194,13 +195,13 @@ internal fun NetworkWizardScreen(
                     },
                     subtitle = when (configuration) {
                         is Configuration.Empty if (property == ConfigurationProperty.NETWORK_KEYS ||
-                                property == ConfigurationProperty.APPLICATION_KEYS) -> "Random"
+                                property == ConfigurationProperty.APPLICATION_KEYS) -> stringResource(R.string.label_key_random)
 
                         is Configuration.Custom if (property == ConfigurationProperty.NETWORK_KEYS ||
-                                property == ConfigurationProperty.APPLICATION_KEYS) -> "Random"
+                                property == ConfigurationProperty.APPLICATION_KEYS) -> stringResource(R.string.label_key_random)
 
                         is Configuration.Debug if (property == ConfigurationProperty.NETWORK_KEYS ||
-                                property == ConfigurationProperty.APPLICATION_KEYS) -> "Fixed"
+                                property == ConfigurationProperty.APPLICATION_KEYS) -> stringResource(R.string.label_key_fixed)
 
                         else -> null
                     }
