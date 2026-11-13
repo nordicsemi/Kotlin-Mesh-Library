@@ -11,6 +11,7 @@
     <string name="label_application_keys">Application Keys</string>
     <string name="label_application_key">Application Key</string>
     <string name="label_groups">Groups</string>
+    <string name="label_fixed_groups">Fixed Groups</string>
     <string name="label_destination">Destination</string>
     <string name="label_models">Models</string>
     <string name="label_bind">Bind</string>

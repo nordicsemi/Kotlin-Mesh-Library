@@ -17,13 +17,23 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
+import no.nordicsemi.android.nrfmesh.core.common.fixedGroupAddressesForSubscriptions
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.configurator.MeshTask
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
+import no.nordicsemi.kotlin.mesh.core.model.Credentials
+import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
+import no.nordicsemi.kotlin.mesh.core.model.MasterSecurity
+import no.nordicsemi.kotlin.mesh.core.model.PublicationAddress
+import no.nordicsemi.kotlin.mesh.core.model.PublishPeriod
+import no.nordicsemi.kotlin.mesh.core.model.Retransmit
 import no.nordicsemi.kotlin.mesh.core.model.Group
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import kotlin.uuid.Uuid
+
+/** TTL 255 makes the node use its Default TTL. */
+private const val DEFAULT_TTL = 255
 
 /** The kind of configuration the user wants to perform. */
 internal enum class QuickConfigurationMode { Bind, Subscribe, Publish }
@@ -35,8 +45,15 @@ internal data class QuickConfigurationUiState(
     val mode: QuickConfigurationMode = QuickConfigurationMode.Bind,
     val selectedKeys: Set<ApplicationKey> = emptySet(),
     val selectedGroups: Set<Group> = emptySet(),
+    /** Fixed groups a model can subscribe to. */
+    val fixedGroups: List<FixedGroupAddress> = fixedGroupAddressesForSubscriptions,
+    val selectedFixedGroups: Set<FixedGroupAddress> = emptySet(),
     val publishKey: ApplicationKey? = null,
-    val destination: Group? = null,
+    val destination: PublicationAddress? = null,
+    val ttl: Int = DEFAULT_TTL,
+    val period: PublishPeriod = PublishPeriod.disabled,
+    val credentials: Credentials = MasterSecurity,
+    val retransmit: Retransmit = Retransmit.disabled,
     val selectedModels: Set<Model> = emptySet(),
     val tasks: List<MeshTask> = emptyList(),
     val isExecuting: Boolean = false,
@@ -60,7 +77,8 @@ internal data class QuickConfigurationUiState(
     val hasSelection: Boolean
         get() = when (mode) {
             QuickConfigurationMode.Bind -> selectedKeys.isNotEmpty()
-            QuickConfigurationMode.Subscribe -> selectedGroups.isNotEmpty()
+            QuickConfigurationMode.Subscribe ->
+                selectedGroups.isNotEmpty() || selectedFixedGroups.isNotEmpty()
             QuickConfigurationMode.Publish -> publishKey != null && destination != null
         }
 }
@@ -88,6 +106,7 @@ internal class QuickConfigurationViewModel @AssistedInject constructor(
             it.copy(
                 node = network?.node(uuid = Uuid.parse(uuidString = uuid)),
                 applicationKeys = network?.applicationKeys.orEmpty(),
+                publishKey = network?.applicationKeys?.firstOrNull(),
                 groups = network?.groups.orEmpty()
             )
         }
@@ -114,6 +133,17 @@ internal class QuickConfigurationViewModel @AssistedInject constructor(
 
     fun onGroupToggled(group: Group) = uiState.update {
         it.copy(selectedGroups = it.selectedGroups.toggle(group))
+    }
+
+    fun onFixedGroupToggled(address: FixedGroupAddress) = uiState.update {
+        it.copy(selectedFixedGroups = it.selectedFixedGroups.toggle(address))
+    }
+
+    fun onAllFixedGroupsToggled() = uiState.update {
+        it.copy(
+            selectedFixedGroups = if (it.selectedFixedGroups.size == it.fixedGroups.size) emptySet()
+            else it.fixedGroups.toSet()
+        )
     }
 
     fun onAllKeysToggled() = uiState.update {
@@ -161,7 +191,18 @@ internal class QuickConfigurationViewModel @AssistedInject constructor(
 
     fun onPublishKeySelected(key: ApplicationKey) = uiState.update { it.copy(publishKey = key) }
 
-    fun onDestinationSelected(group: Group) = uiState.update { it.copy(destination = group) }
+    fun onDestinationSelected(address: PublicationAddress) =
+        uiState.update { it.copy(destination = address) }
+
+    fun onTtlChanged(ttl: Int) = uiState.update { it.copy(ttl = ttl.coerceIn(0, 255)) }
+
+    fun onPeriodChanged(period: PublishPeriod) = uiState.update { it.copy(period = period) }
+
+    fun onCredentialsChanged(credentials: Credentials) =
+        uiState.update { it.copy(credentials = credentials) }
+
+    fun onRetransmitChanged(retransmit: Retransmit) =
+        uiState.update { it.copy(retransmit = retransmit) }
 
     fun onModelToggled(model: Model) = uiState.update {
         it.copy(selectedModels = it.selectedModels.toggle(model))
@@ -187,6 +228,7 @@ internal class QuickConfigurationViewModel @AssistedInject constructor(
             QuickConfigurationMode.Subscribe -> subscribeTasks(
                 node = node,
                 groups = state.groups.filter { it in state.selectedGroups },
+                fixedGroups = state.fixedGroups.filter { it in state.selectedFixedGroups },
                 models = models
             )
 
@@ -194,6 +236,11 @@ internal class QuickConfigurationViewModel @AssistedInject constructor(
                 node = node,
                 key = state.publishKey ?: return,
                 destination = state.destination ?: return,
+                destinationName = describe(state.destination, node.network),
+                ttl = state.ttl.toUByte(),
+                period = state.period,
+                credentials = state.credentials,
+                retransmit = state.retransmit,
                 models = models
             )
         }
@@ -205,6 +252,7 @@ internal class QuickConfigurationViewModel @AssistedInject constructor(
 
             QuickConfigurationMode.Subscribe -> alreadySubscribed(
                 groups = state.groups.filter { it in state.selectedGroups },
+                fixedGroups = state.fixedGroups.filter { it in state.selectedFixedGroups },
                 models = models
             )
 

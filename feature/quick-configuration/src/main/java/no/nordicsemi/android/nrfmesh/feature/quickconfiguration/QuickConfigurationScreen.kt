@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
+import no.nordicsemi.android.nrfmesh.core.common.name
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
@@ -64,6 +65,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.outlined.Check
@@ -83,6 +85,17 @@ import no.nordicsemi.android.nrfmesh.core.ui.Row
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
 import no.nordicsemi.kotlin.mesh.core.model.ApplicationKey
+import no.nordicsemi.android.nrfmesh.feature.model.common.ApplicationKeys
+import no.nordicsemi.android.nrfmesh.feature.model.common.Destination
+import no.nordicsemi.android.nrfmesh.feature.model.common.FriendshipCredential
+import no.nordicsemi.android.nrfmesh.feature.model.common.PeriodicPublishingInterval
+import no.nordicsemi.android.nrfmesh.feature.model.common.RetransmissionCountAndInterval
+import no.nordicsemi.android.nrfmesh.feature.model.common.Ttl
+import no.nordicsemi.kotlin.mesh.core.model.Credentials
+import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
+import no.nordicsemi.kotlin.mesh.core.model.PublicationAddress
+import no.nordicsemi.kotlin.mesh.core.model.PublishPeriod
+import no.nordicsemi.kotlin.mesh.core.model.Retransmit
 import no.nordicsemi.kotlin.mesh.core.model.Group
 import no.nordicsemi.kotlin.mesh.core.model.Model
 
@@ -93,8 +106,14 @@ internal fun QuickConfigurationScreen(
     onModeSelected: (QuickConfigurationMode) -> Unit,
     onKeyToggled: (ApplicationKey) -> Unit,
     onGroupToggled: (Group) -> Unit,
+    onFixedGroupToggled: (FixedGroupAddress) -> Unit,
+    onAllFixedGroupsToggled: () -> Unit,
     onPublishKeySelected: (ApplicationKey) -> Unit,
-    onDestinationSelected: (Group) -> Unit,
+    onDestinationSelected: (PublicationAddress) -> Unit,
+    onTtlChanged: (Int) -> Unit,
+    onPeriodChanged: (PublishPeriod) -> Unit,
+    onCredentialsChanged: (Credentials) -> Unit,
+    onRetransmitChanged: (Retransmit) -> Unit,
     onModelToggled: (Model) -> Unit,
     onAllModelsToggled: () -> Unit,
     onAllKeysToggled: () -> Unit,
@@ -135,7 +154,9 @@ internal fun QuickConfigurationScreen(
         MeshMessageStatusDialog(
             text = it.describe(),
             showDismissButton = false,
-            onDismissRequest = onFailureDismissed
+            onDismissRequest = onFailureDismissed,
+            // Shown over this full screen dialog, so it keeps the platform width.
+            usePlatformDefaultWidth = true
         )
     }
     Scaffold(
@@ -178,8 +199,14 @@ internal fun QuickConfigurationScreen(
                                 onModeSelected = onModeSelected,
                                 onKeyToggled = onKeyToggled,
                                 onGroupToggled = onGroupToggled,
+                                onFixedGroupToggled = onFixedGroupToggled,
+                                onAllFixedGroupsToggled = onAllFixedGroupsToggled,
                                 onPublishKeySelected = onPublishKeySelected,
                                 onDestinationSelected = onDestinationSelected,
+                                onTtlChanged = onTtlChanged,
+                                onPeriodChanged = onPeriodChanged,
+                                onCredentialsChanged = onCredentialsChanged,
+                                onRetransmitChanged = onRetransmitChanged,
                                 onAllKeysToggled = onAllKeysToggled,
                                 onAllGroupsToggled = onAllGroupsToggled,
                                 onAddKeyClicked = onAddKeyClicked,
@@ -295,8 +322,14 @@ private fun SelectionPage(
     onModeSelected: (QuickConfigurationMode) -> Unit,
     onKeyToggled: (ApplicationKey) -> Unit,
     onGroupToggled: (Group) -> Unit,
+    onFixedGroupToggled: (FixedGroupAddress) -> Unit,
+    onAllFixedGroupsToggled: () -> Unit,
     onPublishKeySelected: (ApplicationKey) -> Unit,
-    onDestinationSelected: (Group) -> Unit,
+    onDestinationSelected: (PublicationAddress) -> Unit,
+    onTtlChanged: (Int) -> Unit,
+    onPeriodChanged: (PublishPeriod) -> Unit,
+    onCredentialsChanged: (Credentials) -> Unit,
+    onRetransmitChanged: (Retransmit) -> Unit,
     onAllKeysToggled: () -> Unit,
     onAllGroupsToggled: () -> Unit,
     onAddKeyClicked: () -> Unit,
@@ -390,6 +423,27 @@ private fun SelectionPage(
                     Checkbox(modifier = Modifier.padding(end = 16.dp), checked = group in uiState.selectedGroups, onCheckedChange = null)
                 }
             }
+            SelectableHeader(
+                title = stringResource(R.string.label_fixed_groups),
+                allSelected = uiState.selectedFixedGroups.size == uiState.fixedGroups.size,
+                enabled = uiState.fixedGroups.isNotEmpty(),
+                onSelectAllClicked = onAllFixedGroupsToggled
+            )
+            uiState.fixedGroups.forEach { address ->
+                ElevatedCardItem(
+                    imageVector = Icons.Outlined.GroupWork,
+                    title = address.name(),
+                    subtitle = "0x${address.address.toHexString(HexFormat.UpperCase)}",
+                    onClick = { onFixedGroupToggled(address) },
+                    titleAction = {
+                        Checkbox(
+                            modifier = Modifier.padding(end = 16.dp),
+                            checked = address in uiState.selectedFixedGroups,
+                            onCheckedChange = null
+                        )
+                    }
+                )
+            }
         }
 
         QuickConfigurationMode.Publish -> {
@@ -405,20 +459,42 @@ private fun SelectionPage(
                 MeshIconButton(buttonIcon = Icons.Outlined.Add, onClick = onAddKeyClicked)
             }
             if (uiState.applicationKeys.isEmpty()) NoKeys()
-            uiState.applicationKeys.forEach { key ->
-                key.Row(
-                    onClick = { onPublishKeySelected(key) },
-                    titleAction = {
-                        RadioButton(modifier = Modifier.padding(end = 16.dp), selected = key == uiState.publishKey, onClick = null)
+            // The shared publication controls add their own horizontal padding.
+            Box(modifier = Modifier.widenBy(32.dp)) {
+                ApplicationKeys(
+                    keys = uiState.applicationKeys,
+                    selectedKeyIndex = uiState.publishKey?.index?.toInt() ?: -1,
+                    onApplicationKeySelected = { index ->
+                        uiState.applicationKeys
+                            .firstOrNull { it.index.toInt() == index }
+                            ?.let(onPublishKeySelected)
                     }
                 )
             }
             SectionTitle(title = stringResource(R.string.label_destination))
-            if (uiState.groups.isEmpty()) NoGroups()
-            uiState.groups.forEach { group ->
-                GroupRow(group = group, onClick = { onDestinationSelected(group) }) {
-                    RadioButton(modifier = Modifier.padding(end = 16.dp), selected = group == uiState.destination, onClick = null)
-                }
+            // The shared publication controls add their own horizontal padding.
+            Column(
+                modifier = Modifier.widenBy(32.dp),
+                verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+            ) {
+                Destination(
+                    network = uiState.node?.network,
+                    destination = uiState.destination,
+                    onDestinationSelected = onDestinationSelected
+                )
+                Ttl(ttl = uiState.ttl, onTtlChanged = onTtlChanged)
+                PeriodicPublishingInterval(
+                    publishPeriod = uiState.period,
+                    onPeriodChanged = onPeriodChanged
+                )
+                FriendshipCredential(
+                    credentials = uiState.credentials,
+                    onCredentialsChanged = onCredentialsChanged
+                )
+                RetransmissionCountAndInterval(
+                    retransmit = uiState.retransmit,
+                    onRetransmitChanged = onRetransmitChanged
+                )
             }
         }
     }
@@ -563,6 +639,18 @@ private fun QuickConfigurationMode.description(): Int = when (this) {
 }
 
 /** A section title with a button that selects or deselects all the items of the section. */
+/**
+ * Negative padding is not allowed, so the content is widened by [extra] and shifted to compensate.
+ * It is used for the shared publication controls, which add their own horizontal padding.
+ */
+private fun Modifier.widenBy(extra: androidx.compose.ui.unit.Dp) = layout { measurable, constraints ->
+    val px = extra.roundToPx()
+    val placeable = measurable.measure(
+        constraints.copy(minWidth = constraints.maxWidth + px, maxWidth = constraints.maxWidth + px)
+    )
+    layout(constraints.maxWidth, placeable.height) { placeable.place(x = -px / 2, y = 0) }
+}
+
 @Composable
 private fun SelectableHeader(
     title: String,
