@@ -32,7 +32,14 @@ class FirmwareDistributionUploadOOBStart(
 ) : AcknowledgedApplicationMessage {
     override val opCode: UInt = Initializer.opCode
     override val responseOpCode = FirmwareDistributionUploadStatus.opCode
-    override val parameters = url.toString().encodeToByteArray() + currentFirmwareId.bytes
+    override val parameters: ByteArray
+
+    init {
+        val uri = url.toString().encodeToByteArray()
+        require(uri.size in 1..255) { "URI must be 1 to 255 bytes long when UTF-8 encoded" }
+        // URI Length (1 octet), URI and Firmware ID.
+        parameters = byteArrayOf(uri.size.toByte()) + uri + currentFirmwareId.bytes
+    }
 
     companion object Initializer : FirmwareDistributionMessageInitializer {
         override val opCode = 0x8320u
