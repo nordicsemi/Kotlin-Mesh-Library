@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +18,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -88,7 +91,9 @@ internal fun NetworkWizardScreen(
             .background(
                 color = if (!isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant
                 else MaterialTheme.colorScheme.background
-            ),
+            )
+            // Keeps the content clear of the status bar and the display cutout (camera).
+            .windowInsetsPadding(WindowInsets.safeDrawing),
         horizontalArrangement = Arrangement.Center
     ) {
         Column(
@@ -107,11 +112,12 @@ internal fun NetworkWizardScreen(
                 colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.secondary)
             )
             Text(
-                modifier = Modifier.padding(vertical = 16.dp),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp),
                 text = stringResource(R.string.label_app_welcome_rationale),
                 textAlign = TextAlign.Center
             )
             Text(
+                modifier = Modifier.padding(horizontal = 8.dp),
                 text = stringResource(R.string.label_start_creating),
                 textAlign = TextAlign.Center
             )
@@ -194,13 +200,13 @@ internal fun NetworkWizardScreen(
                     },
                     subtitle = when (configuration) {
                         is Configuration.Empty if (property == ConfigurationProperty.NETWORK_KEYS ||
-                                property == ConfigurationProperty.APPLICATION_KEYS) -> "Random"
+                                property == ConfigurationProperty.APPLICATION_KEYS) -> stringResource(R.string.label_key_random)
 
                         is Configuration.Custom if (property == ConfigurationProperty.NETWORK_KEYS ||
-                                property == ConfigurationProperty.APPLICATION_KEYS) -> "Random"
+                                property == ConfigurationProperty.APPLICATION_KEYS) -> stringResource(R.string.label_key_random)
 
                         is Configuration.Debug if (property == ConfigurationProperty.NETWORK_KEYS ||
-                                property == ConfigurationProperty.APPLICATION_KEYS) -> "Fixed"
+                                property == ConfigurationProperty.APPLICATION_KEYS) -> stringResource(R.string.label_key_fixed)
 
                         else -> null
                     }
