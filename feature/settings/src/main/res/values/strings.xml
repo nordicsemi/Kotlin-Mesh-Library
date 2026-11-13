@@ -12,6 +12,8 @@
     <string name="label_about">About</string>
     <string name="label_version">Version</string>
     <string name="label_version_code">Version Code</string>
+    <string name="label_nrf_mesh_sniffer">nRF Mesh Sniffer</string>
+    <string name="label_nrf_mesh_sniffer_rationale">Open the app, or get it on Google Play</string>
     <string name="label_network">Network</string>
     <string name="label_import">Import</string>
     <string name="label_export">Export</string>
