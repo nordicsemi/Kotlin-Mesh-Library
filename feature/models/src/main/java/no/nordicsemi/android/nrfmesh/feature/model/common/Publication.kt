@@ -82,6 +82,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Credentials
 import no.nordicsemi.kotlin.mesh.core.model.FriendshipSecurity
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.MasterSecurity
+import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.PublicationAddress
 import no.nordicsemi.kotlin.mesh.core.model.Publish
@@ -262,7 +263,7 @@ internal fun Publication(
                         title = stringResource(R.string.label_destination)
                     )
                     Destination(
-                        model = model,
+                        network = model.parentElement?.parentNode?.network,
                         destination = destination,
                         onDestinationSelected = { destination = it }
                     )
@@ -287,12 +288,12 @@ internal fun Publication(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Destination(
-    model: Model,
+fun Destination(
+    network: MeshNetwork?,
     destination: PublicationAddress?,
     onDestinationSelected: (PublicationAddress) -> Unit,
 ) {
-    val network = model.parentElement?.parentNode?.network ?: return
+    if (network == null) return
     var expanded by rememberSaveable { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     ExposedDropdownMenuBox(
@@ -336,7 +337,7 @@ private fun Destination(
             shape = RoundedCornerShape(size = 16.dp),
             onDismissRequest = { expanded = !expanded },
             content = {
-                model.parentElement?.parentNode?.network?.let { network ->
+                network.let { network ->
                     Text(
                         modifier = Modifier.padding(start = 16.dp, top = 8.dp),
                         text = stringResource(R.string.label_unicast_destinations)
@@ -453,7 +454,7 @@ private fun Destination(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ApplicationKeys(
+fun ApplicationKeys(
     keys: List<ApplicationKey>,
     selectedKeyIndex: Int,
     onApplicationKeySelected: (Int) -> Unit,
@@ -509,13 +510,13 @@ private fun ApplicationKeys(
 }
 
 @Composable
-private fun Ttl(ttl: Int, onTtlChanged: (Int) -> Unit) {
+fun Ttl(ttl: Int, onTtlChanged: (Int) -> Unit) {
     ElevatedCardItemTextField(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Timer,
         title = stringResource(id = R.string.label_initial_ttl),
         subtitle = "$ttl",
-        onValueChanged = { onTtlChanged(it.toInt()) },
+        onValueChanged = { value -> value.toIntOrNull()?.let(onTtlChanged) },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number
         )
@@ -523,7 +524,7 @@ private fun Ttl(ttl: Int, onTtlChanged: (Int) -> Unit) {
 }
 
 @Composable
-private fun PeriodicPublishingInterval(
+fun PeriodicPublishingInterval(
     publishPeriod: PublishPeriod?,
     onPeriodChanged: (PublishPeriod) -> Unit,
 ) {
@@ -620,7 +621,7 @@ private fun PeriodicPublishingInterval(
 }
 
 @Composable
-private fun FriendshipCredential(
+fun FriendshipCredential(
     credentials: Credentials,
     onCredentialsChanged: (Credentials) -> Unit,
 ) {
@@ -643,7 +644,7 @@ private fun FriendshipCredential(
 }
 
 @Composable
-private fun RetransmissionCountAndInterval(
+fun RetransmissionCountAndInterval(
     retransmit: Retransmit?,
     onRetransmitChanged: (Retransmit) -> Unit,
 ) {

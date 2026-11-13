@@ -250,12 +250,13 @@ fun MeshMessageStatusDialog(
     text: String,
     showDismissButton: Boolean,
     onDismissRequest: () -> Unit,
+    usePlatformDefaultWidth: Boolean = !isCompactWidth(),
 ) {
     AlertDialog(
         properties = DialogProperties(
             dismissOnBackPress = false,
             dismissOnClickOutside = false,
-            usePlatformDefaultWidth = !isCompactWidth(),
+            usePlatformDefaultWidth = usePlatformDefaultWidth,
             decorFitsSystemWindows = !isCompactWidth()
         ),
         onDismissRequest = onDismissRequest,
