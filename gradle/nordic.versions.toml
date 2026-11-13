@@ -3,7 +3,7 @@ common = "2.12.2"     # https://github.com/nordicsemi/Android-Common-Libraries
 blek = "2.0.0-beta11"
 log = "2.6.0"
 util = "1.2.0"
-mcumgr = "3.5.0-alpha02"       # https://github.com/nordicsemi/Android-nRF-Connect-Device-Manager
+mcumgr = "3.5.0-alpha03"       # https://github.com/nordicsemi/Android-nRF-Connect-Device-Manager
 
 [libraries]
 blek-client-core = { group = "no.nordicsemi.kotlin.ble", name = "client-core", version.ref = "blek" }
