@@ -19,7 +19,6 @@ import no.nordicsemi.kotlin.mesh.core.model.PeriodLog
 import no.nordicsemi.kotlin.mesh.core.model.RemainingHeartbeatPublicationCount
 import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
 import no.nordicsemi.kotlin.mesh.core.model.isValidKeyIndex
-import no.nordicsemi.kotlin.mesh.core.model.toFeatures
 import no.nordicsemi.kotlin.mesh.core.model.toUShort
 import no.nordicsemi.kotlin.data.ByteOrder
 import kotlin.math.pow
@@ -92,7 +91,7 @@ class ConfigHeartbeatPublicationSet(
         get() = isPublicationEnabled && periodLog > 0x00.toUByte()
 
     val enablesFeatureTriggeredPublication: Boolean
-        get() = isPublicationEnabled && features.toFeatures().rawValue > 0x0000u
+        get() = isPublicationEnabled && features.isNotEmpty()
 
     /**
      * Convenience constructor to disable heartbeat publications.
@@ -119,12 +118,13 @@ class ConfigHeartbeatPublicationSet(
                 countLog = params[2].toUByte(),
                 periodLog = params[3].toUByte(),
                 ttl = params[4].toUByte(),
+                // Only the features that trigger heartbeats are kept.
                 features = Features(
                     rawValue = params.getUShort(
                         offset = 5,
                         order = ByteOrder.LITTLE_ENDIAN
                     )
-                ).toList(),
+                ).toList().filter { it.isSupported },
                 networkKeyIndex = params.getUShort(offset = 7, order = ByteOrder.LITTLE_ENDIAN)
             )
         }
@@ -162,7 +162,8 @@ class ConfigHeartbeatPublicationSet(
                 countLog = countLog,
                 periodLog = periodLog,
                 ttl = ttl,
-                features = features.toList(),
+                features = Features(rawValue = features.rawValue).toList()
+                    .filter { it.isSupported },
                 networkKeyIndex = networkKey.index
             )
         }

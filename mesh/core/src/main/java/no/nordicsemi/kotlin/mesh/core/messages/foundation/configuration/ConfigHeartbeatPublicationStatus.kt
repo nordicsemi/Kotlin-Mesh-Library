@@ -130,12 +130,13 @@ class ConfigHeartbeatPublicationStatus(
                     countLog = parameters[3].toUByte(),
                     periodLog = parameters[4].toUByte(),
                     ttl = parameters[5].toUByte(),
+                    // Only the features that trigger heartbeats are kept.
                     features = Features(
                         rawValue = parameters.getUShort(
                             offset = 6,
                             order = ByteOrder.LITTLE_ENDIAN
                         )
-                    ).toList(),
+                    ).toList().filter { it.isSupported },
                     networkKeyIndex = parameters.getUShort(
                         offset = 8,
                         order = ByteOrder.LITTLE_ENDIAN

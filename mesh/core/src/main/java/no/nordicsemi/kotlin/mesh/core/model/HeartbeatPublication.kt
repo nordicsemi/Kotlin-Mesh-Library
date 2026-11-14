@@ -4,6 +4,7 @@ package no.nordicsemi.kotlin.mesh.core.model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import no.nordicsemi.kotlin.mesh.core.model.serialization.HeartbeatFeaturesSerializer
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigHeartbeatPublicationSet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigHeartbeatPublicationStatus
 import kotlin.math.log2
@@ -50,13 +51,15 @@ data class HeartbeatPublication internal constructor(
     val period: UShort,
     val ttl: UByte,
     val index: KeyIndex,
+    @Serializable(with = HeartbeatFeaturesSerializer::class)
     val features: List<Feature>,
 ) {
 
     @Transient
     internal var state: PeriodicHeartbeatState? = null
 
-    var periodLog: UByte = 0u
+    @Transient
+    var periodLog: UByte = period2PeriodLog(value = period) ?: 0u
         internal set
 
     val isEnabled: Boolean
@@ -167,8 +170,7 @@ data class HeartbeatPublication internal constructor(
                 0x11.toUByte()
 
             else -> {
-                val exponent =
-                    ((log2(value.toDouble()) * 2 + 1).toInt().toUByte() + 1u).toUByte()
+                val exponent = (log2(value.toDouble() * 2 - 1).toInt() + 1).toUByte()
                 // Ensure power of 2.
                 if (2.0.pow(exponent.toDouble() - 1) != value.toDouble()) null
                 else exponent
