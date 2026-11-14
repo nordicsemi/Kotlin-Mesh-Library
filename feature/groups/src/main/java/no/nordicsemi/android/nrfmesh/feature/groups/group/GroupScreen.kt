@@ -22,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalClipboard
+import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
@@ -153,14 +155,22 @@ private fun NodeNameRow(name: String, onNameChanged: (String) -> Unit) {
 
 @Composable
 private fun AddressRow(address: PrimaryGroupAddress) {
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
+    val label = stringResource(id = R.string.label_address)
+    // Group addresses are copied as hex, while virtual groups copy their label UUID.
+    val text = if (address is GroupAddress) {
+        "0x${address.address.toHexString(format = HexFormat.UpperCase)}"
+    } else {
+        (address as VirtualAddress).uuid.toString().uppercase()
+    }
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Lan,
-        title = stringResource(id = R.string.label_address),
-        subtitle = if (address is GroupAddress) {
-            "0x${address.address.toHexString(format = HexFormat.UpperCase)}"
-        } else {
-            (address as VirtualAddress).uuid.toString().uppercase()
+        title = label,
+        subtitle = text,
+        onClick = {
+            copyToClipboard(scope = scope, clipboard = clipboard, text = text, label = label)
         }
     )
 }

@@ -16,6 +16,9 @@ import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalClipboard
+import no.nordicsemi.android.nrfmesh.core.common.copyToClipboard
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -102,11 +105,18 @@ private fun NameRow(name: String, onNameChanged: (String) -> Unit) {
 
 @Composable
 private fun AddressRow(address: UnicastAddress) {
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
+    val label = stringResource(id = R.string.label_address)
+    val text = address.toHexString()
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Lan,
-        title = stringResource(id = R.string.label_address),
-        subtitle = address.toHexString(),
+        title = label,
+        subtitle = text,
+        onClick = {
+            copyToClipboard(scope = scope, clipboard = clipboard, text = text, label = label)
+        }
     )
 }
 

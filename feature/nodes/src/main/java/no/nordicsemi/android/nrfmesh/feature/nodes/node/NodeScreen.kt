@@ -281,16 +281,23 @@ private fun NodeNameRow(name: String, onNameChanged: (String) -> Unit) {
 
 @Composable
 private fun AddressRow(address: UnicastAddress) {
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
+    val label = stringResource(id = R.string.label_unicast_address)
+    val text = address.address.toHexString(
+        format = HexFormat {
+            number.prefix = "0x"
+            upperCase = true
+        }
+    )
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = Icons.Outlined.Lan,
-        title = stringResource(id = R.string.label_unicast_address),
-        subtitle = address.address.toHexString(
-            format = HexFormat {
-                number.prefix = "0x"
-                upperCase = true
-            }
-        )
+        title = label,
+        subtitle = text,
+        onClick = {
+            copyToClipboard(scope = scope, clipboard = clipboard, text = text, label = label)
+        }
     )
 }
 
