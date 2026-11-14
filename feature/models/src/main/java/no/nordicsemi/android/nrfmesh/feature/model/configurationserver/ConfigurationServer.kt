@@ -112,21 +112,17 @@ internal fun ConfigurationServer(
         send = send,
         requestNodeIdentityStates = requestNodeIdentityStates
     )
-    SectionTitle(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        title = stringResource(id = R.string.title_heartbeat)
+    HeartBeatPublicationRow(
+        messageState = messageState,
+        model = model,
+        publication = model.parentElement?.parentNode?.heartbeatPublication,
+        send = send,
+        onAddGroupClicked = onAddGroupClicked
     )
     HeartBeatSubscriptionRow(
         messageState = messageState,
         model = model,
         subscription = model.parentElement?.parentNode?.heartbeatSubscription,
-        send = send,
-        onAddGroupClicked = onAddGroupClicked
-    )
-    HeartBeatPublicationRow(
-        messageState = messageState,
-        model = model,
-        publication = model.parentElement?.parentNode?.heartbeatPublication,
         send = send,
         onAddGroupClicked = onAddGroupClicked
     )

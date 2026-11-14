@@ -1,10 +1,8 @@
 package no.nordicsemi.android.nrfmesh.feature.model.configurationserver
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,10 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.AutoFixHigh
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.SportsScore
 import androidx.compose.material.icons.outlined.Timer
@@ -29,8 +24,6 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
@@ -39,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -65,13 +59,10 @@ import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigHeartbeatPublicationGet
 import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigHeartbeatPublicationSet
-import no.nordicsemi.kotlin.mesh.core.model.AllFriends
-import no.nordicsemi.kotlin.mesh.core.model.AllNodes
-import no.nordicsemi.kotlin.mesh.core.model.AllProxies
-import no.nordicsemi.kotlin.mesh.core.model.AllRelays
+import no.nordicsemi.kotlin.mesh.core.messages.foundation.configuration.ConfigHeartbeatPublicationStatus
 import no.nordicsemi.kotlin.mesh.core.model.Feature
+import no.nordicsemi.kotlin.mesh.core.model.FeatureState
 import no.nordicsemi.kotlin.mesh.core.model.Friend
-import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.HeartbeatPublication
 import no.nordicsemi.kotlin.mesh.core.model.HeartbeatPublicationDestination
 import no.nordicsemi.kotlin.mesh.core.model.LowPower
@@ -80,8 +71,7 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.Node
 import no.nordicsemi.kotlin.mesh.core.model.Proxy
 import no.nordicsemi.kotlin.mesh.core.model.Relay
-import no.nordicsemi.kotlin.mesh.core.model.UnassignedAddress
-import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
+import no.nordicsemi.kotlin.mesh.core.model.RemainingHeartbeatPublicationCount
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,43 +91,84 @@ internal fun HeartBeatPublicationContent(
     var destination by remember { mutableStateOf(publication?.address) }
     var countLog by remember { mutableStateOf(0.toUByte()) }
     var periodLog by remember { mutableStateOf(publication?.periodLog ?: 1u) }
-    var features by remember { mutableStateOf(publication?.features?.toList() ?: listOf()) }
+    var features by remember {
+        mutableStateOf(publication?.features?.filter { it.isSupported } ?: listOf())
+    }
 
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.MonitorHeart,
-        title = stringResource(R.string.label_publications),
-        titleAction = {
-            AnimatedVisibility(visible = publication != null) {
-                IconButton(
-                    enabled = !messageState.isInProgress(),
-                    onClick = { send(ConfigHeartbeatPublicationSet()) },
-                    content = {
-                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-                    }
-                )
-            }
-        },
-        actions = {
-            MeshOutlinedButton(
-                enabled = !messageState.isInProgress(),
-                isOnClickActionInProgress = messageState.isInProgress()
-                        && messageState.message is ConfigHeartbeatPublicationGet,
-                onClick = { send(ConfigHeartbeatPublicationGet()) },
-                buttonIcon = Icons.Outlined.Download,
-                text = stringResource(R.string.label_get_state)
-            )
-            Spacer(modifier = Modifier.padding(8.dp))
-            MeshOutlinedButton(
-                enabled = !messageState.isInProgress(),
-                isOnClickActionInProgress = messageState.isInProgress()
-                        && messageState.message is ConfigHeartbeatPublicationSet,
-                onClick = { showBottomSheet = true },
-                buttonIcon = Icons.Outlined.Upload,
-                text = stringResource(R.string.label_set_state)
-            )
-        }
+    val network = model.parentElement?.parentNode?.network
+    // As the remaining count is dynamic it is not stored in the publication. It is kept from the
+    // last received status instead, which also holds the features.
+    var lastStatus by remember { mutableStateOf<ConfigHeartbeatPublicationStatus?>(null) }
+    LaunchedEffect(messageState) {
+        (messageState.response as? ConfigHeartbeatPublicationStatus)?.let { lastStatus = it }
+    }
+    HeartbeatSectionTitle(
+        title = stringResource(R.string.label_heartbeat_publication),
+        enabled = !messageState.isInProgress(),
+        isRefreshInProgress = messageState.isInProgress()
+                && messageState.message is ConfigHeartbeatPublicationGet,
+        isAddInProgress = messageState.isInProgress()
+                && messageState.message is ConfigHeartbeatPublicationSet,
+        showDelete = true,
+        onRefresh = { send(ConfigHeartbeatPublicationGet()) },
+        onAdd = { showBottomSheet = true },
+        onDelete = { send(ConfigHeartbeatPublicationSet()) }
     )
+    val unknown = stringResource(R.string.label_unknown)
+    if (publication == null || !publication.isEnabled) {
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.MonitorHeart,
+            title = stringResource(R.string.label_no_publication)
+        )
+    } else {
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.SportsScore,
+            title = stringResource(R.string.label_destination),
+            subtitle = addressText(network = network, address = publication.address)
+        )
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.VpnKey,
+            title = stringResource(R.string.label_network_key),
+            subtitle = network?.networkKeys
+                ?.firstOrNull { it.index == publication.index }?.name ?: unknown
+        )
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.Timer,
+            title = stringResource(R.string.label_remaining_count),
+            subtitle = when (val count = lastStatus?.count) {
+                null, is RemainingHeartbeatPublicationCount.Invalid -> unknown
+                is RemainingHeartbeatPublicationCount.Disabled ->
+                    stringResource(R.string.label_disabled)
+
+                is RemainingHeartbeatPublicationCount.Indefinitely ->
+                    stringResource(R.string.label_indefinitely)
+
+                is RemainingHeartbeatPublicationCount.Exact -> "${count.value}"
+                is RemainingHeartbeatPublicationCount.Range -> "${count.low} - ${count.high}"
+            }
+        )
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.AutoFixHigh,
+            title = stringResource(R.string.label_features),
+            subtitle = (lastStatus?.features ?: publication.features)
+                .filter { it.isSupported }
+                .map {
+                    when (it) {
+                        is Friend -> stringResource(R.string.label_friend)
+                        is LowPower -> stringResource(R.string.label_low_power)
+                        is Proxy -> stringResource(R.string.label_proxy)
+                        is Relay -> stringResource(R.string.label_relay)
+                    }
+                }
+                .ifEmpty { listOf(stringResource(R.string.label_none)) }
+                .joinToString(separator = ", ")
+        )
+    }
     DisposableEffect(showBottomSheet) {
         onDispose {
             if (!showBottomSheet) {
@@ -164,7 +195,9 @@ internal fun HeartBeatPublicationContent(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         content = {
@@ -182,9 +215,9 @@ internal fun HeartBeatPublicationContent(
                                             networkKeyIndex = keyIndex.toUShort(),
                                             destination = destination!!,
                                             countLog = countLog,
-                                            periodLog = periodLog,
+                                            periodLog = if (countLog > 0.toUByte()) periodLog else 0u,
                                             ttl = ttl.toUByte(),
-                                            features = emptyList()//features
+                                            features = features
                                         )
                                     ).also {
                                         scope
@@ -196,8 +229,8 @@ internal fun HeartBeatPublicationContent(
                                             }
                                     }
                                 },
-                                buttonIcon = Icons.AutoMirrored.Outlined.Send,
-                                text = stringResource(R.string.label_send),
+                                buttonIcon = Icons.Outlined.Upload,
+                                text = stringResource(R.string.label_set),
                             )
                         }
                     )
@@ -219,7 +252,6 @@ internal fun HeartBeatPublicationContent(
                     )
                     TtlRow(ttl = ttl, onTtlChanged = { ttl = it })
                     PeriodicHeartbeatsRow(
-                        publication = publication,
                         countLog = countLog,
                         onCountLogChanged = { countLog = it },
                         periodLog = periodLog,
@@ -230,10 +262,10 @@ internal fun HeartBeatPublicationContent(
                             ?: throw IllegalStateException("Model does not belong to a node!"),
                         features = features,
                         onFeatureChanged = { feature, isEnabled ->
-                            when (isEnabled) {
-                                true -> features += feature
-                                false -> features -= feature
-                            }
+                            // Features are tracked by type as the state of the node's feature is
+                            // irrelevant for triggering heartbeats.
+                            features = features.filterNot { it::class == feature::class }
+                                .let { if (isEnabled) it + feature else it }
                         }
                     )
                 }
@@ -321,21 +353,8 @@ private fun DestinationRow(
                 .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
             // onClick = { expanded = true }, menuAnchor handles the expansion by default
             imageVector = Icons.Outlined.SportsScore,
-            title = when (destination) {
-                is UnicastAddress -> network
-                    ?.node(address = destination.address)
-                    ?.name ?: destination.toHexString()
-
-                is AllRelays -> stringResource(R.string.label_all_relays)
-                is AllFriends -> stringResource(R.string.label_all_friends)
-                is AllProxies -> stringResource(R.string.label_all_proxies)
-                is AllNodes -> stringResource(R.string.label_all_nodes)
-                is GroupAddress -> network?.group(address = destination.address)?.name
-                    ?: destination.toHexString()
-
-                is UnassignedAddress -> stringResource(R.string.label_unassigned_address)
-                else -> stringResource(R.string.label_select_destination)
-            },
+            title = destination?.let { addressName(network = network, address = it) }
+                ?: stringResource(R.string.label_select_destination),
             titleAction = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -367,7 +386,10 @@ private fun TtlRow(ttl: Int, onTtlChanged: (Int) -> Unit) {
         imageVector = Icons.Outlined.Timer,
         title = stringResource(id = R.string.label_initial_ttl),
         subtitle = "$ttl",
-        onValueChanged = { onTtlChanged(it.toInt()) },
+        onValueChanged = { text ->
+            text.toIntOrNull()?.takeIf { it in 0..127 }?.let { onTtlChanged(it) }
+        },
+        regex = Regex("^(?:[0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])$"),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number
         )
@@ -376,13 +398,16 @@ private fun TtlRow(ttl: Int, onTtlChanged: (Int) -> Unit) {
 
 @Composable
 private fun PeriodicHeartbeatsRow(
-    publication: HeartbeatPublication?,
     countLog: UByte,
     onCountLogChanged: (UByte) -> Unit,
     periodLog: UByte,
     onPeriodLogChanged: (UByte) -> Unit,
 ) {
-    var countLogValue by rememberSaveable { mutableIntStateOf(countLog.toInt()) }
+    // Indefinite (0xFF) is represented as MAX_COUNT_LOG + 1 on the slider.
+    val countLogValue = when (countLog.toInt()) {
+        HeartbeatPublication.INDEFINITE_COUNT_LOG -> HeartbeatPublication.MAX_COUNT_LOG + 1
+        else -> countLog.toInt()
+    }
     ElevatedCardItem(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -391,20 +416,20 @@ private fun PeriodicHeartbeatsRow(
         title = stringResource(R.string.title_heartbeat_count_and_period),
         body = {
             Slider(
-                value = countLog.toFloat(),
+                value = countLogValue.toFloat(),
                 onValueChange = {
-                    countLogValue = it.roundToInt()
-                    if (countLogValue > 1 && periodLog == 0.toUByte()) {
+                    val newValue = it.roundToInt()
+                    if (newValue > 1 && periodLog == 0.toUByte()) {
                         onPeriodLogChanged(HeartbeatPublication.MIN_PERIOD_LOG.toUByte())
                     }
-                    if (countLogValue == HeartbeatPublication.MAX_COUNT_LOG + 1)
+                    if (newValue == HeartbeatPublication.MAX_COUNT_LOG + 1)
                         onCountLogChanged(HeartbeatPublication.INDEFINITE_COUNT_LOG.toUByte())
                     else {
-                        onCountLogChanged(countLogValue.toUByte())
+                        onCountLogChanged(newValue.toUByte())
                     }
                 },
                 valueRange = HeartbeatPublication.MIN_COUNT_LOG.toFloat()..(HeartbeatPublication.MAX_COUNT_LOG + 1).toFloat(),
-                steps = 16,
+                steps = 17, // 0..18 -> 19 positions
                 colors = NordicSliderDefaults.colors()
             )
             Text(
@@ -412,19 +437,14 @@ private fun PeriodicHeartbeatsRow(
                     .fillMaxWidth()
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
-                text = when (publication) {
-                    null -> stringResource(R.string.label_unknown)
-                    else -> "${
-                        when (countLogValue) {
-                            HeartbeatPublication.MIN_COUNT_LOG ->
-                                stringResource(R.string.label_disabled)
+                text = when (countLogValue) {
+                    HeartbeatPublication.MIN_COUNT_LOG ->
+                        stringResource(R.string.label_disabled)
 
-                            in ((HeartbeatPublication.MIN_COUNT_LOG)..HeartbeatPublication.MAX_COUNT_LOG) ->
-                                HeartbeatPublication.countLog2Count(countLog = countLog)
+                    in ((HeartbeatPublication.MIN_COUNT_LOG)..HeartbeatPublication.MAX_COUNT_LOG) ->
+                        "${HeartbeatPublication.countLog2Count(countLog = countLog)}"
 
-                            else -> stringResource(R.string.label_indefinitely)
-                        }
-                    }"
+                    else -> stringResource(R.string.label_indefinitely)
                 },
                 textAlign = TextAlign.End
             )
@@ -433,7 +453,7 @@ private fun PeriodicHeartbeatsRow(
                 value = periodLog.toFloat(),
                 onValueChange = { onPeriodLogChanged(it.roundToInt().toUByte()) },
                 valueRange = HeartbeatPublication.PERIOD_LOG_RANGE.toFloat(),
-                steps = 30,
+                steps = 15, // 1..17 -> 17 positions
                 colors = NordicSliderDefaults.colors()
             )
 
@@ -442,14 +462,11 @@ private fun PeriodicHeartbeatsRow(
                     .fillMaxWidth()
                     .padding(start = 16.dp)
                     .sizeIn(minWidth = 80.dp),
-                text = when (publication) {
-                    null -> stringResource(R.string.label_unknown)
-                    else -> if (countLog > 0.toUByte()) {
-                        val periodValue =
-                            HeartbeatPublication.periodLog2Period(periodLog = periodLog)
-                        periodToTime(periodValue.toInt())
-                    } else stringResource(R.string.label_not_applicable)
-                },
+                text = if (countLog > 0.toUByte()) {
+                    val periodValue =
+                        HeartbeatPublication.periodLog2Period(periodLog = periodLog)
+                    periodToTime(periodValue.toInt())
+                } else stringResource(R.string.label_not_applicable),
                 textAlign = TextAlign.End
             )
         }
@@ -462,7 +479,16 @@ private fun FeaturesRow(
     features: List<Feature>,
     onFeatureChanged: (Feature, Boolean) -> Unit,
 ) {
-    val nodeFeatures = node.features.toList()
+    // Features whose state is unknown (null) are treated as supported, as only features known to
+    // be unsupported can't trigger heartbeats.
+    val nodeFeatures = with(node.features) {
+        listOf(
+            relay ?: Relay(state = FeatureState.Disabled),
+            proxy ?: Proxy(state = FeatureState.Disabled),
+            friend ?: Friend(state = FeatureState.Disabled),
+            lowPower ?: LowPower(state = FeatureState.Disabled)
+        )
+    }
     ElevatedCardItem(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -479,7 +505,7 @@ private fun FeaturesRow(
                         is Relay -> stringResource(id = R.string.label_relay)
                     },
                     isSupported = feature.isSupported,
-                    isChecked = features.firstOrNull { it == feature }?.isEnabled ?: false,
+                    isChecked = features.any { it::class == feature::class },
                     onCheckedChange = { onFeatureChanged(feature, it) }
                 )
             }

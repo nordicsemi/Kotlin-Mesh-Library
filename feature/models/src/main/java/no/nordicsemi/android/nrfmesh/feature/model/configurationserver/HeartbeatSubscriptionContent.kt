@@ -1,32 +1,26 @@
 package no.nordicsemi.android.nrfmesh.feature.model.configurationserver
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Send
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.ArrowDownward
+import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.SportsScore
 import androidx.compose.material.icons.outlined.Start
+import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
@@ -49,7 +43,6 @@ import no.nordicsemi.android.common.ui.view.NordicSliderDefaults
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
-import no.nordicsemi.android.nrfmesh.core.ui.MeshTwoLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.model.utils.periodToTime
 import no.nordicsemi.android.nrfmesh.feature.models.R
@@ -87,107 +80,68 @@ internal fun HeartBeatSubscriptionContent(
     var destination by remember { mutableStateOf(subscription?.destination) }
     var periodLog by remember { mutableStateOf(subscription?.state?.periodLog ?: 1.toUByte()) }
 
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.MonitorHeart,
-        title = stringResource(R.string.label_subscriptions),
-        titleAction = {
-            AnimatedVisibility(visible = subscription != null) {
-                IconButton(
-                    enabled = !messageState.isInProgress(),
-                    onClick = { send(ConfigHeartbeatSubscriptionSet()) },
-                    content = {
-                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-                    }
-                )
-            }
-        },
-        body = {
-            if (subscription != null &&
-                subscription.source !is UnassignedAddress &&
-                subscription.destination !is UnassignedAddress
-            ) {
-                Spacer(modifier = Modifier.size(16.dp))
-                MeshTwoLineListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(height = 50.dp)
-                        .padding(horizontal = 40.dp),
-                    title = stringResource(R.string.label_source),
-                    subtitle = with(subscription.source) {
-                        model.parentElement?.parentNode?.network?.node(address)?.name
-                            ?: toHexString()
-                    }
-                )
-                MeshTwoLineListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(height = 50.dp)
-                        .padding(horizontal = 40.dp),
-                    title = stringResource(R.string.label_destination),
-                    subtitle = with(subscription.destination) {
-                        model.parentElement?.parentNode?.network?.node(address)?.name
-                            ?: toHexString()
-                    }
-                )
-                MeshTwoLineListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(height = 50.dp)
-                        .padding(horizontal = 40.dp),
-                    title = stringResource(R.string.label_remaining_period),
-                    subtitle = subscription.state?.period?.toString()
-                        ?: stringResource(R.string.label_unknown)
-                )
-                MeshTwoLineListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(height = 50.dp)
-                        .padding(horizontal = 40.dp),
-                    title = stringResource(R.string.label_count),
-                    subtitle = subscription.state?.count?.toString()
-                        ?: stringResource(R.string.label_unknown)
-                )
-                MeshTwoLineListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(height = 50.dp)
-                        .padding(horizontal = 40.dp),
-                    title = stringResource(R.string.label_min_hops),
-                    subtitle = subscription.state?.minHops?.toString()
-                        ?: stringResource(R.string.label_unknown)
-                )
-                MeshTwoLineListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(height = 50.dp)
-                        .padding(horizontal = 40.dp),
-                    title = stringResource(R.string.label_max_hops),
-                    subtitle = subscription.state?.maxHops?.toString()
-                        ?: stringResource(R.string.label_unknown)
-                )
-            }
-        },
-        actions = {
-            MeshOutlinedButton(
-                enabled = !messageState.isInProgress(),
-                buttonIcon = Icons.Outlined.Download,
-                text = stringResource(R.string.label_get_state),
-                isOnClickActionInProgress = messageState.isInProgress()
-                        && messageState.message is ConfigHeartbeatSubscriptionGet,
-                onClick = { send(ConfigHeartbeatSubscriptionGet()) },
-            )
-            Spacer(modifier = Modifier.size(8.dp))
-            MeshOutlinedButton(
-                enabled = !messageState.isInProgress(),
-                buttonIcon = Icons.Outlined.Upload,
-                text = stringResource(R.string.label_set_state),
-                isOnClickActionInProgress = messageState.isInProgress()
-                        && messageState.message is ConfigHeartbeatSubscriptionSet,
-                onClick = { showBottomSheet = true }
-            )
-        }
+    val network = model.parentElement?.parentNode?.network
+    HeartbeatSectionTitle(
+        title = stringResource(R.string.label_heartbeat_subscriptions),
+        enabled = !messageState.isInProgress(),
+        isRefreshInProgress = messageState.isInProgress()
+                && messageState.message is ConfigHeartbeatSubscriptionGet,
+        isAddInProgress = messageState.isInProgress()
+                && messageState.message is ConfigHeartbeatSubscriptionSet,
+        showDelete = true,
+        onRefresh = { send(ConfigHeartbeatSubscriptionGet()) },
+        onAdd = { showBottomSheet = true },
+        onDelete = { send(ConfigHeartbeatSubscriptionSet()) }
     )
+    val unknown = stringResource(R.string.label_unknown)
+    val state = subscription?.state
+    if (subscription == null ||
+        subscription.source is UnassignedAddress ||
+        subscription.destination is UnassignedAddress
+    ) {
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.MonitorHeart,
+            title = stringResource(R.string.label_no_subscriptions)
+        )
+    } else {
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.Start,
+            title = stringResource(R.string.label_source),
+            subtitle = addressText(network = network, address = subscription.source)
+        )
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.SportsScore,
+            title = stringResource(R.string.label_destination),
+            subtitle = addressText(network = network, address = subscription.destination)
+        )
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.Timer,
+            title = stringResource(R.string.label_remaining_period),
+            subtitle = state?.period?.toString() ?: unknown
+        )
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.Tag,
+            title = stringResource(R.string.label_count),
+            subtitle = state?.count?.toString() ?: unknown
+        )
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.ArrowDownward,
+            title = stringResource(R.string.label_min_hops),
+            subtitle = state?.minHops?.toString() ?: unknown
+        )
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.ArrowUpward,
+            title = stringResource(R.string.label_max_hops),
+            subtitle = state?.maxHops?.toString() ?: unknown
+        )
+    }
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -233,8 +187,8 @@ internal fun HeartBeatSubscriptionContent(
                                             }
                                     }
                                 },
-                                buttonIcon = Icons.AutoMirrored.Outlined.Send,
-                                text = stringResource(R.string.label_send),
+                                buttonIcon = Icons.Outlined.Upload,
+                                text = stringResource(R.string.label_set),
                             )
                         }
                     )
