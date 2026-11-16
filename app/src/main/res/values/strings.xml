@@ -40,7 +40,7 @@
     <string name="label_select_provisioner">Select a Provisioner</string>
     <string name="label_select_provisioner_rationale">Select a Provisioner to use with this device</string>
     <string name="label_network_keys">Network Keys</string>
-    <string name="label_control">Local Node</string>
+    <string name="label_local_node">Local Node</string>
     <string name="label_nodes">Network</string>
     <string name="label_application_keys">Application Keys</string>
     <string name="label_groups">Groups</string>

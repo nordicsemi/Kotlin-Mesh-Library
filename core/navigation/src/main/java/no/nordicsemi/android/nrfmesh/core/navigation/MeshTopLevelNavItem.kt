@@ -40,8 +40,8 @@ data class MeshTopLevelNavItem(
 val CONTROL = MeshTopLevelNavItem(
     selectedIcon = Icons.Filled.Lightbulb,
     unselectedIcon = Icons.Outlined.Lightbulb,
-    iconTextId = R.string.label_nav_bar_control,
-    titleTextId = R.string.label_nav_bar_control
+    iconTextId = R.string.label_nav_bar_local_node,
+    titleTextId = R.string.label_nav_bar_local_node
 )
 
 /**
@@ -88,7 +88,7 @@ val SETTINGS = MeshTopLevelNavItem(
  * Unique key identifying [CONTROL] top level navigation item.
  */
 @Serializable
-object ControlKey : NavKey
+object LocalNodeKey : NavKey
 
 /**
  * Unique key identifying [NODES] top level navigation item.
@@ -124,7 +124,7 @@ data class ScannerKey(val uuid: Uuid) : NavKey
  * Map of top level navigation items.
  */
 val MESH_TOP_LEVEL_NAV_ITEMS = mapOf(
-    ControlKey to CONTROL,
+    LocalNodeKey to CONTROL,
     NodesKey to NODES,
     GroupsKey to GROUPS,
     ProxyKey to PROXY,

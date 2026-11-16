@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import no.nordicsemi.android.nrfmesh.core.common.VendorModelIds
 import no.nordicsemi.android.nrfmesh.core.common.NORDIC_SEMICONDUCTOR_COMPANY_ID
+import no.nordicsemi.android.nrfmesh.core.common.VendorModelIds
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericLevelClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient

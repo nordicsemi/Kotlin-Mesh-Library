@@ -9,7 +9,7 @@ import no.nordicsemi.android.nrfmesh.core.data.name
 import no.nordicsemi.android.nrfmesh.core.navigation.GroupsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NavigationState
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
-import no.nordicsemi.android.nrfmesh.core.navigation.ControlKey
+import no.nordicsemi.android.nrfmesh.core.navigation.LocalNodeKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.ProxyKey
 import no.nordicsemi.android.nrfmesh.core.navigation.ScannerKey
@@ -70,7 +70,7 @@ internal fun title(
     isCompactWidth: Boolean,
 ): String = when (val key = navigationState.currentKey) {
     is ProvisioningKey -> resources.getString(R.string.label_add_node)
-    is ControlKey -> resources.getString(R.string.label_control)
+    is LocalNodeKey -> resources.getString(R.string.label_local_node)
     is NodesKey -> resources.getString(R.string.label_nodes)
     is NodeKey -> network.node(uuid = Uuid.parse(uuidString = key.nodeUuid))?.name
         ?: resources.getString(R.string.label_unknown)
