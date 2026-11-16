@@ -8,14 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.LightMode
-import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.SensorOccupied
 import androidx.compose.material.icons.outlined.VpnKey
@@ -28,12 +27,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.common.theme.nordicFall
 import no.nordicsemi.android.common.theme.nordicGrass
 import no.nordicsemi.android.common.theme.nordicLake
 import no.nordicsemi.android.common.theme.nordicSky
@@ -42,7 +40,13 @@ import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLCServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneServer
 import no.nordicsemi.android.nrfmesh.core.common.isSceneSetupServer
+import no.nordicsemi.android.nrfmesh.core.data.name
+import no.nordicsemi.android.nrfmesh.core.ui.GenericLevelCard
+import no.nordicsemi.android.nrfmesh.core.ui.GenericOnOffCard
+import no.nordicsemi.android.nrfmesh.core.ui.ModelControlCardDefaults
 import no.nordicsemi.android.nrfmesh.core.ui.MeshNoItemsAvailable
+import no.nordicsemi.android.nrfmesh.core.ui.ModelInfoBottomSheet
+import no.nordicsemi.android.nrfmesh.core.ui.ModelInfoItem
 import no.nordicsemi.android.nrfmesh.core.ui.SceneSelectionBottomSheet
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.groups.R
@@ -133,10 +137,10 @@ internal fun GroupControls(
                 }?.let { models ->
                     when {
                         models.first().isGenericOnOffServer() ->
-                            GenericOnOffItem(count = models.size, key = key, send = send)
+                            GenericOnOffItem(models = models, key = key, send = send)
 
                         models.first().isGenericLevelServer() ->
-                            GenericLevelItem(count = models.size, key = key, send = send)
+                            GenericLevelItem(models = models, key = key, send = send)
 
                         models.first().isSceneServer() ->
                             SceneServerGroupItem(
@@ -171,106 +175,100 @@ internal fun GroupControls(
 
 @Composable
 private fun GenericOnOffItem(
+    models: List<Model>,
     key: ApplicationKey,
     send: (UnacknowledgedMeshMessage, ApplicationKey) -> Unit,
-    count: Int,
 ) {
-    OutlinedCard(
-        modifier = Modifier.width(width = 150.dp),
-        content = {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .padding(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    modifier = Modifier.size(50.dp),
-                    imageVector = Icons.Outlined.Lightbulb,
-                    contentDescription = null,
-                    tint = nordicLake
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = 8.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
-                    content = {
-                        TextButton(
-                            onClick = { send(GenericOnOffSetUnacknowledged(on = true), key) },
-                            content = { Text(text = stringResource(R.string.label_on).uppercase()) },
-                        )
-                        TextButton(
-                            onClick = { send(GenericOnOffSetUnacknowledged(on = false), key) },
-                            content = { Text(text = stringResource(R.string.label_off).uppercase()) },
-                        )
-                    }
-                )
-                KeyRow(key = key)
-                CountRow(count = count)
-            }
-        }
+    var showInfo by remember { mutableStateOf(value = false) }
+    GenericOnOffCard(
+        modifier = Modifier
+            .width(width = 150.dp)
+            .height(height = 130.dp),
+        onOn = { send(GenericOnOffSetUnacknowledged(on = true), key) },
+        onOff = { send(GenericOnOffSetUnacknowledged(on = false), key) },
+        onClick = { showInfo = true }
     )
+    if (showInfo) {
+        GroupControlInfoSheet(
+            icon = ModelControlCardDefaults.OnOffIcon,
+            models = models,
+            key = key,
+            onDismissRequest = { showInfo = false }
+        )
+    }
 }
 
 @Composable
 private fun GenericLevelItem(
+    models: List<Model>,
     key: ApplicationKey,
     send: (UnacknowledgedMeshMessage, ApplicationKey) -> Unit,
-    count: Int,
 ) {
-    OutlinedCard(
-        modifier = Modifier.width(width = 150.dp),
-        content = {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .padding(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(space = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    modifier = Modifier.size(50.dp),
-                    imageVector = Icons.Outlined.LightMode,
-                    contentDescription = null,
-                    tint = nordicFall
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = 8.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
-                    content = {
-                        TextButton(
-                            onClick = { send(GenericDeltaSetUnacknowledged(delta = -8192), key) },
-                            content = {
-                                Text(
-                                    text = stringResource(R.string.label_minus),
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            },
-                        )
-                        TextButton(
-                            onClick = { send(GenericDeltaSetUnacknowledged(delta = +8192), key) },
-                            content = {
-                                Text(
-                                    text = stringResource(R.string.label_plus),
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            },
-                        )
-                    }
-                )
-                KeyRow(key = key)
-                CountRow(count = count)
-            }
-        }
+    var showInfo by remember { mutableStateOf(value = false) }
+    GenericLevelCard(
+        modifier = Modifier
+            .width(width = 150.dp)
+            .height(height = 130.dp),
+        onMinus = { send(GenericDeltaSetUnacknowledged(delta = -8192), key) },
+        onPlus = { send(GenericDeltaSetUnacknowledged(delta = +8192), key) },
+        onClick = { showInfo = true }
     )
+    if (showInfo) {
+        GroupControlInfoSheet(
+            icon = ModelControlCardDefaults.LevelIcon,
+            models = models,
+            key = key,
+            onDismissRequest = { showInfo = false }
+        )
+    }
+}
+
+/**
+ * A bottom sheet listing the models that are controlled by a group control item, along with the
+ * application key used to control them. Each model is shown with the name of the element it
+ * belongs to and the name of the node.
+ */
+@Composable
+private fun GroupControlInfoSheet(
+    icon: ImageVector,
+    models: List<Model>,
+    key: ApplicationKey,
+    onDismissRequest: () -> Unit,
+) {
+    ModelInfoBottomSheet(title = models.first().name(), onDismissRequest = onDismissRequest) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier.size(16.dp),
+                imageVector = Icons.Outlined.VpnKey,
+                contentDescription = null
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(
+                text = stringResource(R.string.label_group_control_application_key, key.name),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        SectionTitle(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            title = stringResource(R.string.label_subscribed_models)
+        )
+        models.forEach { model ->
+            val element = model.parentElement
+            ModelInfoItem(
+                imageVector = icon,
+                title = element?.name ?: stringResource(
+                    R.string.label_element_n,
+                    (element?.index ?: 0) + 1
+                ),
+                subtitle = element?.parentNode?.name
+            )
+        }
+    }
 }
 
 /**
