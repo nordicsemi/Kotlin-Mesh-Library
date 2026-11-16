@@ -18,7 +18,7 @@ class LightLCLightOnOffGet : AcknowledgedApplicationMessage {
     companion object Initializer : LightingMessageInitializer {
         override val opCode = 0x8299u
 
-        override fun init(parameters: ByteArray?) = if (parameters == null)
+        override fun init(parameters: ByteArray?) = if (parameters == null || parameters.isEmpty())
             LightLCLightOnOffGet()
         else null
     }

@@ -16,7 +16,7 @@ class GenericLevelGet : AcknowledgedApplicationMessage {
     companion object Initializer : GenericMessageInitializer {
         override val opCode = 0x8205u
 
-        override fun init(parameters: ByteArray?) = if (parameters == null)
+        override fun init(parameters: ByteArray?) = if (parameters == null || parameters.isEmpty())
             GenericLevelGet()
         else null
     }

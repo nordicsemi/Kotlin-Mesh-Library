@@ -16,7 +16,7 @@ class GenericOnOffGet : AcknowledgedApplicationMessage {
     companion object Initializer : GenericMessageInitializer {
         override val opCode = 0x8201u
 
-        override fun init(parameters: ByteArray?) = if (parameters == null)
+        override fun init(parameters: ByteArray?) = if (parameters == null || parameters.isEmpty())
             GenericOnOffGet()
         else null
     }

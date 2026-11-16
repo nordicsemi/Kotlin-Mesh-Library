@@ -18,7 +18,7 @@ class LightLCOccupancyModeGet : AcknowledgedApplicationMessage {
     companion object Initializer : LightingMessageInitializer {
         override val opCode = 0x8295u
 
-        override fun init(parameters: ByteArray?) = if (parameters == null)
+        override fun init(parameters: ByteArray?) = if (parameters == null || parameters.isEmpty())
             LightLCOccupancyModeGet()
         else null
     }
