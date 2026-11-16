@@ -527,10 +527,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
                     //         processed if the Model is explicitly subscribed to these
                     //         addresses.
 
-                    if ((accessPdu.destination is AllNodes && element.isPrimary) ||
-                        accessPdu.destination.address == element.unicastAddress.address ||
-                        model.isSubscribedTo(accessPdu.destination as PrimaryGroupAddress)
-                    ) {
+                    if (model.isTargetedBy(destination = accessPdu.destination, element = element)) {
                         if (keySet.applicationKey.isBoundTo(model = model)) {
                             eventHandler.onMeshMessageReceived(
                                 model = model,
@@ -859,3 +856,19 @@ private suspend fun ModelEventHandler.onMeshMessageReceived(
 
     else -> error("$message is neither Acknowledged nor Unacknowledged")
 }
+
+/**
+ * Returns whether a message sent to the given destination address should be delivered to this
+ * model, which is when the message targets the element the model belongs to, is sent to the All
+ * Nodes address and the element is the primary element, or the model is subscribed to the
+ * destination.
+ *
+ * @param destination Destination address of the message.
+ * @param element     Element the model belongs to.
+ */
+internal fun Model.isTargetedBy(destination: MeshAddress, element: Element) =
+    (destination is AllNodes && element.isPrimary) ||
+            destination.address == element.unicastAddress.address ||
+            // A unicast address, e.g. of another local element, is not a group address, so the
+            // model can not be subscribed to it.
+            (destination as? PrimaryGroupAddress)?.let { isSubscribedTo(it) } == true
