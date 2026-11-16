@@ -536,7 +536,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
                                 model = model,
                                 message = message,
                                 source = accessPdu.source,
-                                destination = accessPdu.destination.address,
+                                destination = accessPdu.destination,
                                 request = request
                             )?.let { response ->
                                 networkManager.reply(
@@ -590,7 +590,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
                         model = model,
                         message = message,
                         source = accessPdu.source,
-                        destination = accessPdu.destination.address,
+                        destination = accessPdu.destination,
                         request = request
                     )?.let { response ->
                         networkManager.reply(
@@ -821,7 +821,7 @@ private suspend fun ModelEventHandler.onMeshMessageReceived(
     model: Model,
     message: MeshMessage,
     source: Address,
-    destination: Address,
+    destination: MeshAddress,
     request: AcknowledgedMeshMessage?,
 ) = when {
     request != null -> {
@@ -843,7 +843,7 @@ private suspend fun ModelEventHandler.onMeshMessageReceived(
                 model = model,
                 request = message,
                 source = source,
-                destination = MeshAddress.create(address = destination)
+                destination = destination
             )
         )
     }.getOrNull()
@@ -853,7 +853,7 @@ private suspend fun ModelEventHandler.onMeshMessageReceived(
             model = model,
             message = message,
             source = source,
-            destination = MeshAddress.create(address = destination)
+            destination = destination
         )
     )
 
