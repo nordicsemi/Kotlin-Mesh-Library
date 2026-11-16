@@ -3,6 +3,17 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!--
+        Required to add the GATT PDUs to the nRF Mesh Sniffer. It is declared in the Sniffer as
+        well, so it exists whichever app was installed first, and only an app signed with the same
+        certificate gets it.
+    -->
+    <permission
+        android:name="no.nordicsemi.android.mesh.sniffer.permission.ACCESS_PROXY_PDU"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="no.nordicsemi.android.mesh.sniffer.permission.ACCESS_PROXY_PDU" />
+
     <!-- Package visibility of the nRF Mesh Sniffer content provider. -->
     <queries>
         <provider android:authorities="no.nordicsemi.android.mesh.sniffer.provider" />
