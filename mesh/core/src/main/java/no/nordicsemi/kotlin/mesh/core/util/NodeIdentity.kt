@@ -114,7 +114,9 @@ data class PrivateNodeIdentity internal constructor(
     override val random: ByteArray,
 ) : NodeIdentity {
     override fun matches(node: Node): Boolean {
-        val data = ByteArray(5) { 0 } + random + node.primaryUnicastAddress.address.toByteArray()
+        // 40 bits of padding, 0x03 (the Private Node Identity type), 64-bit random and the address
+        val data = ByteArray(5) { 0 } + 0x03.toByte() + random +
+                node.primaryUnicastAddress.address.toByteArray()
         for (key in node.networkKeys) {
             val calculatedHash =
                 Crypto.calculateHash(data = data, identityKey = key.derivatives.identityKey)
