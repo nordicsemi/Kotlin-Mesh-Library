@@ -5,6 +5,7 @@ import no.nordicsemi.kotlin.mesh.core.ModelError
 import no.nordicsemi.kotlin.mesh.core.ModelEvent
 import no.nordicsemi.kotlin.mesh.core.ModelEventHandler
 import no.nordicsemi.kotlin.mesh.core.messages.HasInitializer
+import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLevelSetUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLevelStatus
 
 /**
@@ -16,7 +17,19 @@ class GenericLevelClient : ModelEventHandler() {
         GenericLevelStatus.opCode to GenericLevelStatus.Initializer,
     )
     override val isSubscriptionSupported = true
-    override val publicationMessageComposer: MessageComposer? = null
+    override val publicationMessageComposer: MessageComposer
+        get() = { GenericLevelSetUnacknowledged(tid = null, level = state) }
+
+    /**
+     * The level that is published to the network when set. The level wraps around when it is
+     * incremented or decremented beyond its limits.
+     */
+    var state: Short = 0
+        set(value) {
+            field = value
+            // Publishes the state change to the model.
+            val _ = publish()
+        }
 
     override suspend fun handle(event: ModelEvent) = when (event) {
         is ModelEvent.AcknowledgedMessageReceived -> throw ModelError.InvalidMessage(
