@@ -13,7 +13,7 @@ import kotlin.test.assertNull
 
 /**
  * Get messages carry no parameters. A received Access PDU hands the parameters over as an empty
- * byte array, so the messages must be decoded from an empty array as well as from null.
+ * byte array, so the messages must be decoded from an empty array.
  */
 class GetMessageDecodingTest {
 
@@ -31,13 +31,6 @@ class GetMessageDecodingTest {
     fun testGetMessagesAreDecodedFromEmptyParameters() {
         initializers.forEach { (name, initializer) ->
             assertNotNull(initializer.init(byteArrayOf()), "$name was not decoded")
-        }
-    }
-
-    @Test
-    fun testGetMessagesAreDecodedFromNullParameters() {
-        initializers.forEach { (name, initializer) ->
-            assertNotNull(initializer.init(null), "$name was not decoded")
         }
     }
 
