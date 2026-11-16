@@ -10,15 +10,15 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.AutoFixHigh
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Upload
@@ -65,21 +65,21 @@ import no.nordicsemi.android.common.theme.nordicSun
 import no.nordicsemi.android.common.ui.view.NordicAppBar
 import no.nordicsemi.android.nrfmesh.MeshAppState
 import no.nordicsemi.android.nrfmesh.R
+import no.nordicsemi.android.nrfmesh.core.common.Failed
+import no.nordicsemi.android.nrfmesh.core.common.MessageState
+import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.navigation.FirmwareUpdateKey
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
 import no.nordicsemi.android.nrfmesh.core.navigation.Navigator
 import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
-import no.nordicsemi.android.nrfmesh.feature.quickconfiguration.navigation.QuickConfigurationKey
-import no.nordicsemi.android.nrfmesh.core.common.Failed
-import no.nordicsemi.android.nrfmesh.core.common.MessageState
-import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
-import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.navigation.SettingsKey
 import no.nordicsemi.android.nrfmesh.core.navigation.toEntries
 import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
+import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
+import no.nordicsemi.android.nrfmesh.feature.control.navigation.controlEntry
 import no.nordicsemi.android.nrfmesh.feature.dfu.navigation.firmwareUpdateEntry
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.exportEntry
@@ -87,6 +87,7 @@ import no.nordicsemi.android.nrfmesh.feature.groups.navigation.groupsEntry
 import no.nordicsemi.android.nrfmesh.feature.nodes.navigation.nodesEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.provisioningEntry
 import no.nordicsemi.android.nrfmesh.feature.proxy.navigation.proxyEntry
+import no.nordicsemi.android.nrfmesh.feature.quickconfiguration.navigation.QuickConfigurationKey
 import no.nordicsemi.android.nrfmesh.feature.scanner.navigation.scannerEntry
 import no.nordicsemi.android.nrfmesh.feature.settings.navigation.settingsEntry
 import no.nordicsemi.android.nrfmesh.network.provisioner.navigation.ProvisionerSelectorKey
@@ -231,6 +232,7 @@ private fun NetworkContent(
         val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
         val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
         val entryProvider = entryProvider {
+            controlEntry(navigator = navigator)
             nodesEntry(
                 appState = appState,
                 navigator = navigator,

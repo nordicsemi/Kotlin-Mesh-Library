@@ -8,8 +8,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
+import no.nordicsemi.android.nrfmesh.core.navigation.ControlKey
 import no.nordicsemi.android.nrfmesh.core.navigation.MESH_TOP_LEVEL_NAV_ITEMS
-import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.core.navigation.rememberNavigationState
 import no.nordicsemi.android.nrfmesh.network.NetworkScreen
 import no.nordicsemi.android.nrfmesh.rememberMeshAppState
@@ -23,7 +23,7 @@ fun EntryProviderScope<NavKey>.networkScreenEntry(
 ) = entry<NetworkScreenKey> {
     val snackbarHostState = remember { SnackbarHostState() }
     val navigationState = rememberNavigationState(
-        startKey = NodesKey,
+        startKey = ControlKey,
         topLevelKeys = MESH_TOP_LEVEL_NAV_ITEMS.keys
     )
     val appState = rememberMeshAppState(

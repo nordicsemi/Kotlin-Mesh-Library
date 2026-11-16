@@ -34,7 +34,10 @@ internal class NodesViewModel @Inject internal constructor(
         repository.networkEvents
             .mapNotNull { repository.meshNetwork }
             .onEach { network ->
-                _uiState.update { NodesScreenUiState(nodes = network.nodes.toList()) }
+                _uiState.update { NodesScreenUiState(
+                    // The local node is pinned to the top of the list.
+                    nodes = network.nodes.sortedByDescending { it.isLocalProvisioner }
+                ) }
             }
             .launchIn(scope = viewModelScope)
     }
