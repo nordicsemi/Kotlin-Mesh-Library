@@ -8,6 +8,10 @@
     <string name="label_settings">Settings</string>
     <string name="not_allocated">Not allocated</string>
     <string name="cancel">Cancel</string>
+    <string name="label_control_on">ON</string>
+    <string name="label_control_off">OFF</string>
+    <string name="label_control_plus">+</string>
+    <string name="label_control_minus">-</string>
     <string name="confirm">Confirm</string>
 
     <string name="conflicting_with_another_provisioner">Conflicting with another provisioner</string>

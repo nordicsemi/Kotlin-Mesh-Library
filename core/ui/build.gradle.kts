@@ -11,6 +11,7 @@ android {
 dependencies {
     api(nordic.ui)
     api(libs.androidx.compose.material.icons.extended)
+    implementation(nordic.theme)
     implementation(nordic.logger)
     implementation(nordic.log.timber)
     api("androidx.compose.material3:material3:1.4.0")
