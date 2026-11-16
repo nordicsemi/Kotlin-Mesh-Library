@@ -79,7 +79,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
-import no.nordicsemi.android.nrfmesh.feature.control.navigation.controlEntry
+import no.nordicsemi.android.nrfmesh.feature.localnode.navigation.localNodeEntry
 import no.nordicsemi.android.nrfmesh.feature.dfu.navigation.firmwareUpdateEntry
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.exportEntry
@@ -232,7 +232,7 @@ private fun NetworkContent(
         val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
         val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>()
         val entryProvider = entryProvider {
-            controlEntry(navigator = navigator)
+            localNodeEntry(navigator = navigator)
             nodesEntry(
                 appState = appState,
                 navigator = navigator,

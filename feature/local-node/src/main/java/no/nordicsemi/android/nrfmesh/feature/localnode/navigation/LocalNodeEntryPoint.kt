@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.control.navigation
+package no.nordicsemi.android.nrfmesh.feature.localnode.navigation
 
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -11,14 +11,14 @@ import no.nordicsemi.android.nrfmesh.core.navigation.NodeKey
 import no.nordicsemi.android.nrfmesh.core.navigation.NodesKey
 import no.nordicsemi.android.nrfmesh.feature.model.navigation.ModelKey
 import no.nordicsemi.android.nrfmesh.feature.nodes.node.element.navigation.ElementKey
-import no.nordicsemi.android.nrfmesh.feature.control.ControlScreen
-import no.nordicsemi.android.nrfmesh.feature.control.ControlViewModel
+import no.nordicsemi.android.nrfmesh.feature.localnode.LocalNodeScreen
+import no.nordicsemi.android.nrfmesh.feature.localnode.LocalNodeViewModel
 
-fun EntryProviderScope<NavKey>.controlEntry(navigator: Navigator) {
+fun EntryProviderScope<NavKey>.localNodeEntry(navigator: Navigator) {
     entry<ControlKey> {
-        val viewModel = hiltViewModel<ControlViewModel>()
+        val viewModel = hiltViewModel<LocalNodeViewModel>()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        ControlScreen(
+        LocalNodeScreen(
             uiState = uiState,
             onOnOff = viewModel::setOnOff,
             onLevelStep = viewModel::stepLevel,

@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.control
+package no.nordicsemi.android.nrfmesh.feature.localnode
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,14 +25,14 @@ import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import javax.inject.Inject
 
 @HiltViewModel
-internal class ControlViewModel @Inject internal constructor(
+internal class LocalNodeViewModel @Inject internal constructor(
     private val repository: CoreDataRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(value = ControlUiState())
-    val uiState: StateFlow<ControlUiState> = _uiState.stateIn(
+    private val _uiState = MutableStateFlow(value = LocalNodeUiState())
+    val uiState: StateFlow<LocalNodeUiState> = _uiState.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = ControlUiState()
+        initialValue = LocalNodeUiState()
     )
 
     init {
@@ -48,10 +48,10 @@ internal class ControlViewModel @Inject internal constructor(
         val sections = provisioner?.node?.elements.orEmpty().mapNotNull { element ->
             element.models.filter { it.isSupported() }
                 .takeIf { it.isNotEmpty() }
-                ?.let { ControlSection(element = element, models = it) }
+                ?.let { LocalNodeSection(element = element, models = it) }
         }
         _uiState.update {
-            ControlUiState(
+            LocalNodeUiState(
                 sections = sections,
                 // The messages are sent using the keys of the local node, which requires the
                 // provisioner to have a unicast address assigned.
@@ -87,12 +87,12 @@ internal class ControlViewModel @Inject internal constructor(
  * @property sections  Elements of the local node with the models that can be controlled.
  * @property isEnabled True if the controls can be used.
  */
-internal data class ControlUiState(
-    val sections: List<ControlSection> = emptyList(),
+internal data class LocalNodeUiState(
+    val sections: List<LocalNodeSection> = emptyList(),
     val isEnabled: Boolean = false,
 )
 
-internal data class ControlSection(val element: Element, val models: List<Model>)
+internal data class LocalNodeSection(val element: Element, val models: List<Model>)
 
 /** The kind of control that is shown for a model. */
 internal enum class ControlType { ON_OFF_CLIENT, ON_OFF_SERVER, LEVEL_CLIENT, LEVEL_SERVER }

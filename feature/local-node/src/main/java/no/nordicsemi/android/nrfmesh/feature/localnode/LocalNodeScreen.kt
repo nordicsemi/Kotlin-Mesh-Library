@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfmesh.feature.control
+package no.nordicsemi.android.nrfmesh.feature.localnode
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
@@ -60,8 +60,8 @@ import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-internal fun ControlScreen(
-    uiState: ControlUiState,
+internal fun LocalNodeScreen(
+    uiState: LocalNodeUiState,
     onOnOff: (Model, Boolean) -> Unit,
     onLevelStep: (Model, Boolean) -> Unit,
     navigateToModel: (Model) -> Unit,

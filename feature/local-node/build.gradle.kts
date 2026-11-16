@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "no.nordicsemi.android.nrfmesh.feature.control"
+    namespace = "no.nordicsemi.android.nrfmesh.feature.localnode"
 }
 
 dependencies {
