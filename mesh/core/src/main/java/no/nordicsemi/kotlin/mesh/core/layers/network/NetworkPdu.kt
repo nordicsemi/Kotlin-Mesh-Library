@@ -16,6 +16,7 @@ import no.nordicsemi.kotlin.mesh.core.layers.lowertransport.LowerTransportPduTyp
 import no.nordicsemi.kotlin.mesh.core.model.IvIndex
 import no.nordicsemi.kotlin.mesh.core.model.MeshAddress
 import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
+import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKey
 import no.nordicsemi.kotlin.mesh.core.model.NetworkKeyDerivatives
 import no.nordicsemi.kotlin.mesh.crypto.Crypto
@@ -149,7 +150,8 @@ internal object NetworkPduDecoder {
                 pdu = pdu,
                 pduType = pduType,
                 networkKey = networkKey,
-                ivIndex = meshNetwork.ivIndex
+                ivIndex = meshNetwork.ivIndex,
+                meshNetwork = meshNetwork
             )?.let {
                 return it
             }
@@ -173,6 +175,7 @@ internal object NetworkPduDecoder {
         pduType: PduType,
         networkKey: NetworkKey,
         ivIndex: IvIndex,
+        meshNetwork: MeshNetwork,
     ): NetworkPdu? {
         // The first byte is not obfuscated.
         val ivi: Byte = pdu[0] ushr 7
@@ -251,7 +254,7 @@ internal object NetworkPduDecoder {
                     ttl = ttl,
                     sequence = sequence,
                     source = MeshAddress.create(address = src),
-                    destination = MeshAddress.create(address = dst),
+                    destination = destinationAddress(address = dst, meshNetwork = meshNetwork),
                     transportPdu = decryptedData.copyOfRange(
                         fromIndex = 2, toIndex = decryptedData.size
                     )
@@ -262,6 +265,18 @@ internal object NetworkPduDecoder {
         }
         return null
     }
+
+    /**
+     * Resolves the destination address of a received PDU. Virtual addresses cannot be created from
+     * the 16-bit value alone as they require the label UUID, hence they are resolved using the
+     * groups in the network.
+     */
+    private fun destinationAddress(address: UShort, meshNetwork: MeshNetwork): MeshAddress =
+        if (address.toInt() and 0xC000 == 0x8000) {
+            meshNetwork.groups.firstNotNullOfOrNull { group ->
+                (group.address as? VirtualAddress)?.takeIf { it.address == address }
+            } ?: throw IllegalArgumentException("Unknown virtual address")
+        } else MeshAddress.create(address = address)
 
     /**
      * Creates the Network PDU. This method encrypts and deobfuscates data that are to be send to

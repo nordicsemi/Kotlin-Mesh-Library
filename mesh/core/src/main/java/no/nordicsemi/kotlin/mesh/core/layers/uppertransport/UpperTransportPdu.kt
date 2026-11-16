@@ -99,9 +99,7 @@ internal class UpperTransportPdu(
 
             return UpperTransportPdu(
                 source = message.source.address,
-                destination = virtualGroup?.address?.address?.let { address ->
-                    MeshAddress.create(address = address)
-                } ?: message.destination,
+                destination = virtualGroup?.address as? MeshAddress ?: message.destination,
                 aid = message.aid,
                 transportMicSize = message.transportMicSize,
                 transportPdu = message.upperTransportPdu,
