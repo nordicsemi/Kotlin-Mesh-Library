@@ -259,12 +259,15 @@ private fun GroupControlInfoSheet(
         )
         models.forEach { model ->
             val element = model.parentElement
+            val elementName = element?.name ?: stringResource(
+                R.string.label_element_n,
+                (element?.index ?: 0) + 1
+            )
             ModelInfoItem(
                 imageVector = icon,
-                title = element?.name ?: stringResource(
-                    R.string.label_element_n,
-                    (element?.index ?: 0) + 1
-                ),
+                title = element?.unicastAddress?.let {
+                    stringResource(R.string.label_element_with_address, elementName, it.toHexString())
+                } ?: elementName,
                 subtitle = element?.parentNode?.name
             )
         }
