@@ -19,4 +19,8 @@ dependencies {
     implementation(project(":feature:models"))
     implementation(project(":feature:nodes"))
     implementation(project(":mesh:core"))
+
+    testImplementation(libs.junit4)
+    testImplementation(libs.kotlin.junit)
+    testImplementation(libs.kotlin.test)
 }
