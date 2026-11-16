@@ -135,7 +135,8 @@ fun ByteArray.networkIdentity() = when (size) {
         networkId = sliceArray(1 until 9)
     )
 
-    9 if get(0) == 0x02.toByte() -> PrivateNetworkIdentity(
+    // the type, the 64-bit hash and the 64-bit random
+    17 if get(0) == 0x02.toByte() -> PrivateNetworkIdentity(
         hash = sliceArray(1 until 9),
         random = sliceArray(9 until 17)
     )
