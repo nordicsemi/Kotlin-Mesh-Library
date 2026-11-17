@@ -539,7 +539,12 @@ private fun ModelsPage(
             imageVector = Icons.Outlined.Widgets,
             title = model.name(),
             subtitle = model.parentElement?.let {
-                it.name ?: stringResource(R.string.label_element, it.index + 1)
+                val name = it.name ?: stringResource(R.string.label_element, it.index + 1)
+                stringResource(
+                    R.string.label_element_with_address,
+                    name,
+                    "0x${it.unicastAddress.address.toHexString(HexFormat.UpperCase)}"
+                )
             },
             onClick = { onModelToggled(model) },
             titleAction = {

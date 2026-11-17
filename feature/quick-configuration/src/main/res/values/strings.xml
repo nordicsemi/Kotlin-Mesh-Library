@@ -30,4 +30,5 @@
     <string name="label_key_already_bound">%1$s is already bound to %2$s.</string>
     <string name="label_model_already_subscribed">%1$s is already subscribed to %2$s.</string>
     <string name="label_element">Element %1$d</string>
+    <string name="label_element_with_address">%1$s (%2$s)</string>
 </resources>

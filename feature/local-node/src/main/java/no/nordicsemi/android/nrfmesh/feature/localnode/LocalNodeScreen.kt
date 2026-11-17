@@ -257,7 +257,7 @@ private fun ModelSheet(
                     } else groupLabel(network, destination)
                 },
                 subtitle = model.publishKey()?.name
-                    ?: stringResource(R.string.label_key_index, it.index.toInt())
+                    ?: stringResource(R.string.label_key_with_index, it.index.toInt())
             )
         }
     }
