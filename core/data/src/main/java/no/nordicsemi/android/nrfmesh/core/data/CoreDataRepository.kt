@@ -379,10 +379,30 @@ class CoreDataRepository @Inject constructor(
             _name = "Secondary Element",
             location = Location.SECOND,
             _models = mutableListOf(
-                Model(modelId = SigModelId(Model.GENERIC_ON_OFF_SERVER_MODEL_ID)),
-                Model(modelId = SigModelId(Model.GENERIC_LEVEL_SERVER_MODEL_ID)),
-                Model(modelId = SigModelId(Model.GENERIC_ON_OFF_CLIENT_MODEL_ID)),
-                Model(modelId = SigModelId(Model.GENERIC_LEVEL_CLIENT_MODEL_ID))
+                Model(
+                    modelId = SigModelId(Model.GENERIC_ON_OFF_SERVER_MODEL_ID),
+                    handler = GenericOnOffServer(
+                        ioDispatcher = ioDispatcher,
+                        storage = storage,
+                        defaultTransitionTimeServer = defaultTransitionTimeServer
+                    )
+                ),
+                Model(
+                    modelId = SigModelId(Model.GENERIC_LEVEL_SERVER_MODEL_ID),
+                    handler = GenericLevelServer(
+                        ioDispatcher = ioDispatcher,
+                        storage = storage,
+                        defaultTransitionTimeServer = defaultTransitionTimeServer
+                    )
+                ),
+                Model(
+                    modelId = SigModelId(Model.GENERIC_ON_OFF_CLIENT_MODEL_ID),
+                    handler = GenericOnOffClient()
+                ),
+                Model(
+                    modelId = SigModelId(Model.GENERIC_LEVEL_CLIENT_MODEL_ID),
+                    handler = GenericLevelClient()
+                )
             )
         )
         meshNetworkManager.localElements = listOf(element0, element1)

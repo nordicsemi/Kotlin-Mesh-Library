@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">nRF Mesh(New)</string>
     <string name="label_export">Export</string>
-    <string name="label_nav_bar_nodes">Nodes</string>
+    <string name="label_nav_bar_nodes">Network</string>
     <string name="label_nav_bar_groups">Groups</string>
     <string name="label_nav_bar_proxy">Proxy</string>
     <string name="label_nav_bar_settings">Settings</string>
@@ -40,7 +40,8 @@
     <string name="label_select_provisioner">Select a Provisioner</string>
     <string name="label_select_provisioner_rationale">Select a Provisioner to use with this device</string>
     <string name="label_network_keys">Network Keys</string>
-    <string name="label_nodes">Nodes</string>
+    <string name="label_local_node">Local Node</string>
+    <string name="label_nodes">Network</string>
     <string name="label_application_keys">Application Keys</string>
     <string name="label_groups">Groups</string>
     <string name="label_group">Group</string>

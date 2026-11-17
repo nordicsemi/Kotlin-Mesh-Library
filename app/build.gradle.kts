@@ -35,6 +35,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:navigation"))
     implementation(project(":feature:nodes"))
+    implementation(project(":feature:local-node"))
     implementation(project(":feature:models"))
     implementation(project(":feature:groups"))
     implementation(project(":feature:proxy"))

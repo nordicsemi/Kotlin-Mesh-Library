@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="label_nav_bar_nodes">Nodes</string>
+    <string name="label_nav_bar_local_node">Local Node</string>
+    <string name="label_nav_bar_nodes">Network</string>
     <string name="label_nav_bar_groups">Groups</string>
     <string name="label_nav_bar_proxy">Proxy</string>
     <string name="label_nav_bar_settings">Settings</string>

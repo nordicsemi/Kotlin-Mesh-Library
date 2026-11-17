@@ -5,10 +5,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GroupWork
 import androidx.compose.material.icons.filled.Hive
 import androidx.compose.material.icons.filled.Hub
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.GroupWork
 import androidx.compose.material.icons.outlined.Hive
 import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
@@ -29,6 +31,17 @@ data class MeshTopLevelNavItem(
     val unselectedIcon: ImageVector,
     @StringRes val iconTextId: Int,
     @StringRes val titleTextId: Int,
+)
+
+/**
+ * Top level control navigation item. It shows the models of the local node, which are used to
+ * control the network from the phone.
+ */
+val CONTROL = MeshTopLevelNavItem(
+    selectedIcon = Icons.Filled.Lightbulb,
+    unselectedIcon = Icons.Outlined.Lightbulb,
+    iconTextId = R.string.label_nav_bar_local_node,
+    titleTextId = R.string.label_nav_bar_local_node
 )
 
 /**
@@ -72,6 +85,12 @@ val SETTINGS = MeshTopLevelNavItem(
 )
 
 /**
+ * Unique key identifying [CONTROL] top level navigation item.
+ */
+@Serializable
+object LocalNodeKey : NavKey
+
+/**
  * Unique key identifying [NODES] top level navigation item.
  */
 @Serializable
@@ -105,6 +124,7 @@ data class ScannerKey(val uuid: Uuid) : NavKey
  * Map of top level navigation items.
  */
 val MESH_TOP_LEVEL_NAV_ITEMS = mapOf(
+    LocalNodeKey to CONTROL,
     NodesKey to NODES,
     GroupsKey to GROUPS,
     ProxyKey to PROXY,

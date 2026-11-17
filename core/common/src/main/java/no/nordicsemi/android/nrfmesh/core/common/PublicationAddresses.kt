@@ -4,6 +4,7 @@ import no.nordicsemi.kotlin.mesh.core.model.FixedGroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.GroupAddress
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
+import no.nordicsemi.kotlin.mesh.core.model.VirtualAddress
 
 /**
  * Returns a list of addresses or names of the destination of the model's publication.
@@ -21,7 +22,8 @@ fun Model.publishDestination() = publish?.let { publish ->
                 } ?: publish.address.toHexString()
             }
 
-            is GroupAddress -> network
+            // Groups are also found by the address of a virtual address, which is a hash of the label.
+            is GroupAddress, is VirtualAddress -> network
                 .group(address = publish.address.address)
                 ?.name
                 ?: publish.address.toHexString()

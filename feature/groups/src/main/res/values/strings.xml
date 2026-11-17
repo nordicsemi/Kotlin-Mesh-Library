@@ -11,6 +11,9 @@
     <string name="label_recall">RECALL</string>
     <string name="label_store">STORE</string>
     <string name="label_subscribed_models">Subscribed Models</string>
+    <string name="label_element_n">Element %1$d</string>
+    <string name="label_element_with_address">%1$s (%2$s)</string>
+    <string name="label_group_control_application_key">%1$s</string>
     <string name="label_plus">+</string>
     <string name="label_minus">-</string>
     <string name="goup_controls">Group Controls</string>

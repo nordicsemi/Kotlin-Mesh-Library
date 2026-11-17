@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
 import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -165,6 +166,23 @@ private fun SwipeToIdentifyNode(
     navigateToNode: (Uuid) -> Unit,
     identify: (Node) -> Unit,
 ) {
+    if (node.isLocalProvisioner) {
+        // The local node is this phone, so there's nothing to identify.
+        MeshItem(
+            modifier = modifier.then(itemModifier),
+            icon = { CircularIcon(imageVector = Icons.Outlined.PhoneAndroid) },
+            title = node.name,
+            subtitle = stringResource(R.string.label_this_phone) + " · " +
+                    node.primaryUnicastAddress.address.toHexString(
+                        format = HexFormat {
+                            number.prefix = "0x"
+                            upperCase = true
+                        }
+                    ),
+            onClick = { navigateToNode(node.uuid) },
+        )
+        return
+    }
     val currentIdentify by rememberUpdatedState(identify)
     // Maximum distance the item can be swiped, just enough to reveal the icon.
     val maxOffset = with(LocalDensity.current) { RevealWidth.toPx() }
