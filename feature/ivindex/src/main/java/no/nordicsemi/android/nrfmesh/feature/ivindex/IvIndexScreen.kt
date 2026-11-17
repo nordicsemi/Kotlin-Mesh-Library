@@ -9,10 +9,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.outlined.ChangeCircle
-import androidx.compose.material.icons.outlined.FormatListNumbered
 import androidx.compose.material.icons.outlined.Science
+import androidx.compose.material.icons.rounded.Tag
 import androidx.compose.material3.AlertDialogDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -94,7 +93,7 @@ private fun IvIndex(
     var errorMessage by remember { mutableStateOf("") }
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.FormatListNumbered,
+        imageVector = Icons.Rounded.Tag,
         title = stringResource(R.string.label_iv_index),
         subtitle = ivIndex.index.toString(),
         body = {
@@ -139,22 +138,13 @@ private fun IvIndex(
                 }
             },
             onDismissClick = { showIvIndexDialog = !showIvIndexDialog },
-            icon = Icons.Outlined.FormatListNumbered,
+            icon = Icons.Rounded.Tag,
             iconColor = AlertDialogDefaults.iconContentColor,
             title = stringResource(R.string.label_change_iv_index),
             content = {
                 Column(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
                     MeshOutlinedTextField(
                         modifier = Modifier.padding(horizontal = 16.dp),
-                        externalLeadingIcon = {
-                            Icon(
-                                modifier = Modifier
-                                    .padding(horizontal = 8.dp)
-                                    .padding(end = 8.dp),
-                                imageVector = Icons.Outlined.FormatListNumbered,
-                                contentDescription = null
-                            )
-                        },
                         value = ivIndexValue,
                         onValueChanged = { ivIndexValue = it },
                         label = { Text(text = stringResource(R.string.label_iv_index)) },
