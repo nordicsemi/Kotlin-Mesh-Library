@@ -6,7 +6,7 @@
     <string name="label_no_local_node">No local node</string>
     <string name="label_no_local_node_rationale">The local provisioner has no unicast address assigned. Go to Settings to set the address.</string>
     <string name="label_model_subscribed">Subscriptions</string>
-    <string name="label_key_index">Key %1$d</string>
+    <string name="label_key_with_index">Key %1$d</string>
     <string name="label_model_publishes_to">Publications</string>
     <string name="label_model_not_configured">The %1$s on %2$s has no subscriptions or publication set. Use the settings button to configure them.</string>
     <string name="label_element_in_node">%1$s in %2$s</string>
