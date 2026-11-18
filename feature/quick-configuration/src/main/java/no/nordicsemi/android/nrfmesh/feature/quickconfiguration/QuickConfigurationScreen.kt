@@ -173,7 +173,13 @@ internal fun QuickConfigurationScreen(
         modifier = Modifier.consumeWindowInsets(WindowInsets(0)),
         topBar = {
             NordicAppBar(
-                title = { Text(text = stringResource(R.string.label_quick_configuration)) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.label_quick_configuration),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 showBackButton = true,
                 backButtonIcon = Icons.Outlined.Close,
                 onNavigationButtonClick = onClose,
@@ -232,7 +238,11 @@ internal fun QuickConfigurationScreen(
                                 onAllModelsToggled = onAllModelsToggled
                             )
 
-                            QuickConfigurationStep.Configuration -> ConfigurationPage(uiState, scrollState, viewportHeight)
+                            QuickConfigurationStep.Configuration -> ConfigurationPage(
+                                uiState,
+                                scrollState,
+                                viewportHeight
+                            )
                         }
                     }
                     Row(
@@ -415,7 +425,11 @@ private fun SelectionPage(
                 key.Row(
                     onClick = { onKeyToggled(key) },
                     titleAction = {
-                        Checkbox(modifier = Modifier.padding(end = 16.dp), checked = key in uiState.selectedKeys, onCheckedChange = null)
+                        Checkbox(
+                            modifier = Modifier.padding(end = 16.dp),
+                            checked = key in uiState.selectedKeys,
+                            onCheckedChange = null
+                        )
                     }
                 )
             }
@@ -433,7 +447,11 @@ private fun SelectionPage(
             if (uiState.groups.isEmpty()) NoGroups()
             uiState.groups.forEach { group ->
                 GroupRow(group = group, onClick = { onGroupToggled(group) }) {
-                    Checkbox(modifier = Modifier.padding(end = 16.dp), checked = group in uiState.selectedGroups, onCheckedChange = null)
+                    Checkbox(
+                        modifier = Modifier.padding(end = 16.dp),
+                        checked = group in uiState.selectedGroups,
+                        onCheckedChange = null
+                    )
                 }
             }
             SelectableHeader(
@@ -697,13 +715,17 @@ private fun QuickConfigurationMode.description(): Int = when (this) {
  * Negative padding is not allowed, so the content is widened by [extra] and shifted to compensate.
  * It is used for the shared publication controls, which add their own horizontal padding.
  */
-private fun Modifier.widenBy(extra: androidx.compose.ui.unit.Dp) = layout { measurable, constraints ->
-    val px = extra.roundToPx()
-    val placeable = measurable.measure(
-        constraints.copy(minWidth = constraints.maxWidth + px, maxWidth = constraints.maxWidth + px)
-    )
-    layout(constraints.maxWidth, placeable.height) { placeable.place(x = -px / 2, y = 0) }
-}
+private fun Modifier.widenBy(extra: androidx.compose.ui.unit.Dp) =
+    layout { measurable, constraints ->
+        val px = extra.roundToPx()
+        val placeable = measurable.measure(
+            constraints.copy(
+                minWidth = constraints.maxWidth + px,
+                maxWidth = constraints.maxWidth + px
+            )
+        )
+        layout(constraints.maxWidth, placeable.height) { placeable.place(x = -px / 2, y = 0) }
+    }
 
 @Composable
 private fun SelectableHeader(
