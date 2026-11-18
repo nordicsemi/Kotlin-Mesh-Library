@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -79,11 +80,11 @@ import no.nordicsemi.android.nrfmesh.core.ui.BottomSheetSceneStrategy
 import no.nordicsemi.android.nrfmesh.core.ui.MeshAlertDialog
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.isCompactWidth
-import no.nordicsemi.android.nrfmesh.feature.localnode.navigation.localNodeEntry
 import no.nordicsemi.android.nrfmesh.feature.dfu.navigation.firmwareUpdateEntry
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.ExportKey
 import no.nordicsemi.android.nrfmesh.feature.export.navigation.exportEntry
 import no.nordicsemi.android.nrfmesh.feature.groups.navigation.groupsEntry
+import no.nordicsemi.android.nrfmesh.feature.localnode.navigation.localNodeEntry
 import no.nordicsemi.android.nrfmesh.feature.nodes.navigation.nodesEntry
 import no.nordicsemi.android.nrfmesh.feature.provisioning.navigation.provisioningEntry
 import no.nordicsemi.android.nrfmesh.feature.proxy.navigation.proxyEntry
@@ -265,7 +266,7 @@ private fun NetworkContent(
             snackbarHost = { SnackbarHost(hostState = appState.snackbarHostState) },
             topBar = {
                 NordicAppBar(
-                    title = { Text(text = topAppBarTitle) },
+                    title = { Text(text = topAppBarTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     backButtonIcon = Icons.AutoMirrored.Outlined.ArrowBack,
                     showBackButton = appState.showBackButton,
                     onNavigationButtonClick = {
