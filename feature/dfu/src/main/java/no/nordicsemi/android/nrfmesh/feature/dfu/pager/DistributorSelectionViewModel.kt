@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import no.nordicsemi.android.nrfmesh.core.common.Completed
 import no.nordicsemi.android.nrfmesh.core.common.Failed
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
@@ -53,6 +54,13 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
         field = MutableStateFlow(DistributorSelectionScreenUiState())
     private lateinit var network: MeshNetwork
 
+    // Whether the keys bound to the Firmware Distribution Server model have been read from the node
+    // after the proxy was connected.
+    private var isBoundKeyChecked = false
+
+    // Index of the key for which the status and the capabilities of the Distributor were requested.
+    private var statusRequestedForKey: Int? = null
+
     init {
         observeNetwork()
         observeProxyConnectionState()
@@ -71,6 +79,7 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
                 uiState.update { state ->
                     state.copy(selectedKey = selectedKey)
                 }
+                loadStatusOfBoundKey()
             }
             .launchIn(scope = viewModelScope)
     }
@@ -79,6 +88,10 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
         repository.proxyConnectionStateFlow
             .onEach { proxyConnectionState ->
                 val state = proxyConnectionState.connectionState
+                if (state !is NetworkConnectionState.Connected) {
+                    isBoundKeyChecked = false
+                    statusRequestedForKey = null
+                }
                 uiState.update {
                     it.copy(
                         proxyConnectionState = proxyConnectionState,
@@ -187,25 +200,9 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
                                         if (appKeyList.applicationKeyIndexes.isNotEmpty()) {
                                             val key = model.boundApplicationKeys.firstOrNull()
                                             uiState.update { it.copy(selectedKey = key) }
-                                            // The status and the capabilities are read separately, as the
-                                            // status may have been refreshed by the user already.
-                                            if (uiState.value.distributionStatus == null && key != null) {
-                                                val distributionStatus = send(
-                                                    model = model,
-                                                    message = FirmwareDistributionGet()
-                                                ) as? FirmwareDistributionStatus
-                                                uiState.update { state ->
-                                                    state.copy(distributionStatus = distributionStatus)
-                                                }
-                                            }
-                                            if (uiState.value.capabilitiesStatus == null && key != null) {
-                                                val capabilitiesStatus = send(
-                                                    model = model,
-                                                    message = FirmwareDistributionCapabilitiesGet()
-                                                ) as? FirmwareDistributionCapabilitiesStatus
-                                                uiState.update { state ->
-                                                    state.copy(capabilitiesStatus = capabilitiesStatus)
-                                                }
+                                            if (key != null) {
+                                                statusRequestedForKey = key.index.toInt()
+                                                loadDistributorStatus(model = model)
                                             }
                                         }
                                     }
@@ -231,6 +228,8 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
                                     // }
                                 } catch (e: Exception) {
 
+                                } finally {
+                                    isBoundKeyChecked = true
                                 }
                             }
                     }
@@ -241,6 +240,45 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
                 }
             }
             .launchIn(scope = viewModelScope)
+    }
+
+    /**
+     * Reads the status and the capabilities of the Distributor, when a key is bound to the Firmware
+     * Distribution Server model after the proxy was connected, for example using the bind button.
+     *
+     * The requests are sent once for a key, so a response that is not understood is not requested
+     * again for every message that is received.
+     */
+    private fun loadStatusOfBoundKey() {
+        val key = uiState.value.selectedKey ?: return
+        if (!isBoundKeyChecked || statusRequestedForKey == key.index.toInt()) return
+        val model = repository.proxyFilter.proxy
+            ?.model(modelId = firmwareDistributionServer) ?: return
+        statusRequestedForKey = key.index.toInt()
+        viewModelScope.launch { loadDistributorStatus(model = model) }
+    }
+
+    /**
+     * Reads the status and the capabilities of the Distributor, if they are not known yet.
+     *
+     * They are read separately, as the status may have been refreshed by the user already.
+     */
+    private suspend fun loadDistributorStatus(model: Model) {
+        if (uiState.value.selectedKey == null) return
+        if (uiState.value.distributionStatus == null) {
+            val distributionStatus = send(
+                model = model,
+                message = FirmwareDistributionGet()
+            ) as? FirmwareDistributionStatus
+            uiState.update { state -> state.copy(distributionStatus = distributionStatus) }
+        }
+        if (uiState.value.capabilitiesStatus == null) {
+            val capabilitiesStatus = send(
+                model = model,
+                message = FirmwareDistributionCapabilitiesGet()
+            ) as? FirmwareDistributionCapabilitiesStatus
+            uiState.update { state -> state.copy(capabilitiesStatus = capabilitiesStatus) }
+        }
     }
 
     internal fun resetMessageState() {
