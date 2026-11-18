@@ -130,11 +130,11 @@ class ConfigModelSubscriptionVirtualAddressAdd(
                     address = params.getUShort(offset = 0, order = ByteOrder.LITTLE_ENDIAN)
                 ),
                 virtualLabel = params.getUuid(offset = 2),
-                companyIdentifier = if (params.size == 24) params.getUShort(
+                companyIdentifier = if (params.size == 22) params.getUShort(
                     offset = 18,
                     order = ByteOrder.LITTLE_ENDIAN
                 ) else null,
-                modelIdentifier = if (params.size == 24) params.getUShort(
+                modelIdentifier = if (params.size == 22) params.getUShort(
                     offset = 20,
                     order = ByteOrder.LITTLE_ENDIAN
                 ) else params.getUShort(offset = 18, order = ByteOrder.LITTLE_ENDIAN)
