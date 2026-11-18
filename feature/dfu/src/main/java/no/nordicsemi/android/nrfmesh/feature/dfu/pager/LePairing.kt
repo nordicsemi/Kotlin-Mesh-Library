@@ -28,16 +28,20 @@ import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.models.R
 
 @Composable
-internal fun LePairing(goToNext: () -> Unit, onPairedChanged: (Boolean) -> Unit) {
+internal fun LePairing(
+    isCurrentStep: Boolean,
+    goToNext: () -> Unit,
+    onPairedChanged: (Boolean) -> Unit,
+) {
     val resources = LocalResources.current
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     val viewModel = hiltViewModel<LePairingViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val state = uiState.state
-    // The bond state of the phone is not used, as it may not be correct. Pairing is attempted every
-    // time the page is shown.
-    LaunchedEffect(Unit) { viewModel.pair() }
+    // The bond state of the phone is not used, as it may not be correct. Pairing, which sends the
+    // pairing request, is only attempted while this is the current step of the firmware update.
+    LaunchedEffect(isCurrentStep) { if (isCurrentStep) viewModel.pair() }
     Row(
         modifier = Modifier.fillMaxSize(),
         verticalAlignment = Alignment.CenterVertically,
@@ -81,8 +85,10 @@ internal fun LePairing(goToNext: () -> Unit, onPairedChanged: (Boolean) -> Unit)
             )
         }
     }
-    LaunchedEffect(state) {
+    LaunchedEffect(state, isCurrentStep) {
         onPairedChanged(state is PairingState.Paired)
-        if (state is PairingState.Paired) goToNext()
+        // The step is only left from here, so a result from before this step was shown, or from a
+        // page that is composed in the background, must not move the flow on.
+        if (isCurrentStep && state is PairingState.Paired) goToNext()
     }
 }
