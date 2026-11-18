@@ -281,6 +281,17 @@ internal class DistributorSelectionViewModel @Inject internal constructor(
         }
     }
 
+    /**
+     * Generates a new application key in the network, bound to a network key known to the
+     * Distributor, so that it can be added to the node and bound to the Firmware Distribution
+     * Server model.
+     */
+    internal fun addApplicationKey() {
+        val boundNetworkKey = uiState.value.node?.networkKeys?.firstOrNull()
+            ?: network.networkKeys.first()
+        val _ = repository.addApplicationKey(boundNetworkKey = boundNetworkKey)
+    }
+
     internal fun resetMessageState() {
         uiState.update { it.copy(messageState = NotStarted) }
     }
