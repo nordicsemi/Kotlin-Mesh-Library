@@ -43,22 +43,33 @@ internal class LePairingViewModel @Inject internal constructor(
     /**
      * Pairs with the connected proxy.
      *
-     * The Mcu Manager transport is connected first, which requires an encrypted link. The bond
-     * state of the phone is not used, as a bond that is stored on the phone may be stale.
+     * If the node has the LE Pairing Responder model, an application key is bound to it, if it has
+     * none, and a [PairingRequest] is sent to get the pass key. This has to be done before the
+     * connection is started, as messages cannot be sent to the node once the pairing is waiting
+     * for the pass key. The Mcu Manager transport is then connected, which requires an encrypted
+     * link. The bond state of the phone is not used, as a bond that is stored on the phone may be
+     * stale.
      *
      * If the connection completes within [BONDED_CONNECTION_DELAY] the device was bonded already
-     * and the state becomes [PairingState.Paired]. Otherwise, the device is waiting for the pass
-     * key to be entered, so a [PairingRequest] is sent to the LE Pairing Responder model, if the
-     * node has one, and the pass key is shown for the user to enter in the pairing dialog. The
-     * connection is then awaited with no timeout.
+     * and the state becomes [PairingState.Paired]. Otherwise, the pass key is shown for the user to
+     * enter in the pairing dialog, and the connection is awaited with no timeout.
      *
      * Nothing is done if the pairing is already in progress.
      */
     internal fun pair() {
         if (pairingJob?.isActive == true) return
         // Updated before launching, so that a previous result is never seen when the page is shown.
-        uiState.update { it.copy(passKey = null, state = PairingState.Connecting) }
+        uiState.update { it.copy(passKey = null, state = PairingState.RequestingPassKey) }
         pairingJob = viewModelScope.launch {
+            val passKey = try {
+                requestPassKey()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                uiState.update { it.copy(state = PairingState.RequestFailed(error = e)) }
+                return@launch
+            }
+            uiState.update { it.copy(state = PairingState.Connecting) }
             val connection = async {
                 try {
                     repository.connectMcuMgrTransport()
@@ -74,20 +85,7 @@ internal class LePairingViewModel @Inject internal constructor(
                 ?: run {
                     // The device is not bonded, the user has to enter the pass key in the pairing
                     // dialog of the system.
-                    uiState.update { it.copy(state = PairingState.RequestingPassKey) }
-                    try {
-                        requestPassKey()?.let { passKey ->
-                            uiState.update { it.copy(passKey = passKey) }
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        // The connection is canceled so that a retry starts a new one.
-                        connection.cancel()
-                        uiState.update { it.copy(state = PairingState.RequestFailed(error = e)) }
-                        return@launch
-                    }
-                    uiState.update { it.copy(state = PairingState.Connecting) }
+                    uiState.update { it.copy(passKey = passKey) }
                     connection.await()
                 }
             uiState.update {
@@ -102,7 +100,8 @@ internal class LePairingViewModel @Inject internal constructor(
     }
 
     /**
-     * Requests the pass key from the LE Pairing Responder model of the connected proxy.
+     * Requests the pass key from the LE Pairing Responder model of the connected proxy, after
+     * binding an application key to the model, if it has none.
      *
      * @return The pass key, or null if the node does not have the model.
      * @throws IllegalStateException if no response was received, or the request was rejected.
