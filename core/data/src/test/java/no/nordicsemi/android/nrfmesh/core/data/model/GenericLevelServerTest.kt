@@ -232,6 +232,41 @@ class GenericLevelServerTest {
     }
 
     @Test
+    fun testRepeatedMoveWithTheSameTidIsIgnored() = runBlocking {
+        val fiveSeconds = TransitionParameters(
+            transitionTime = TransitionTime(rawValue = 0x45u),
+            delay = 0u
+        )
+        send(GenericMoveSet(tid = 7u, deltaLevel = 1000, transitionParams = fiveSeconds))
+        val first = observed?.animation
+        assertNotNull(first)
+        assertEquals(200, first.speed.toInt())
+
+        // The same transaction (same TID, source and destination) shall not be applied again.
+        send(GenericMoveSet(tid = 7u, deltaLevel = 5000, transitionParams = fiveSeconds))
+        assertEquals(200, observed?.animation?.speed?.toInt())
+
+        // A new TID starts a new move.
+        send(GenericMoveSetUnacknowledged(tid = 8u, deltaLevel = 5000, transitionParams = fiveSeconds))
+        assertEquals(1000, observed?.animation?.speed?.toInt())
+    }
+
+    @Test
+    fun testDeltaWithTheSameTidContinuesTheTransition() = runBlocking {
+        val fiveSeconds = TransitionParameters(
+            transitionTime = TransitionTime(rawValue = 0x45u),
+            delay = 0u
+        )
+        send(GenericDeltaSet(tid = 5u, delta = 1000, transitionParams = fiveSeconds))
+        assertNotNull(observed?.transition)
+
+        // Same TID: the transition continues, it is not restarted.
+        send(GenericDeltaSetUnacknowledged(tid = 5u, delta = 2000, transitionParams = fiveSeconds))
+        // The target is cumulative from the level at the start of the transaction.
+        assertEquals(Short.MIN_VALUE + 2000, observed?.transition?.targetValue?.toInt())
+    }
+
+    @Test
     fun testPublicationComposerReportsTheCurrentLevel() = runBlocking {
         send(GenericLevelSet(tid = 1u, level = 42))
         val published = server.publicationMessageComposer.invoke()
