@@ -74,16 +74,7 @@ internal fun BoundApplicationKeys(
     send: (AcknowledgedConfigMessage) -> Unit,
     addApplicationKey: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
-    var showAddKeySheet by rememberSaveable { mutableStateOf(false) }
-    // Set when the add key sheet was opened because there were no keys left to bind, so that the
-    // bind sheet is shown again once a key is added to the node.
-    var returnToBindSheet by rememberSaveable { mutableStateOf(false) }
-    // The network is a mutable object that does not notify the UI when a key is generated, so a
-    // counter is bumped to recompose the available keys.
-    var generatedKeys by remember { mutableIntStateOf(0) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -150,13 +141,52 @@ internal fun BoundApplicationKeys(
             title = stringResource(R.string.label_no_application_keys_bound)
         )
     }
+    BindApplicationKeysSheets(
+        model = model,
+        isBindSheetVisible = showBottomSheet,
+        onBindSheetVisibleChanged = { showBottomSheet = it },
+        messageState = messageState,
+        send = send,
+        addApplicationKey = addApplicationKey
+    )
+}
 
-    if (showBottomSheet) {
+/**
+ * The sheets to bind application keys to a model: one lists the keys that are not bound to the
+ * model yet, the other the keys of the network that can be added to the node, or generated.
+ *
+ * @param model                     Model to bind the keys to.
+ * @param isBindSheetVisible        Whether the sheet with the keys to bind is shown.
+ * @param onBindSheetVisibleChanged Called when the sheet is opened again or dismissed.
+ * @param messageState              State of the message that was sent last.
+ * @param send                      Sends the message to the node of the model.
+ * @param addApplicationKey         Generates a new application key in the network.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BindApplicationKeysSheets(
+    model: Model,
+    isBindSheetVisible: Boolean,
+    onBindSheetVisibleChanged: (Boolean) -> Unit,
+    messageState: MessageState,
+    send: (AcknowledgedConfigMessage) -> Unit,
+    addApplicationKey: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    var showAddKeySheet by rememberSaveable { mutableStateOf(false) }
+    // Set when the add key sheet was opened because there were no keys left to bind, so that the
+    // bind sheet is shown again once a key is added to the node.
+    var returnToBindSheet by rememberSaveable { mutableStateOf(false) }
+    // The network is a mutable object that does not notify the UI when a key is generated, so a
+    // counter is bumped to recompose the available keys.
+    var generatedKeys by remember { mutableIntStateOf(0) }
+    if (isBindSheetVisible) {
         val unboundKeys = model.parentElement?.parentNode?.applicationKeys.orEmpty()
             .filterNot { it.isBoundTo(model = model) }
         ModalBottomSheet(
             sheetState = bottomSheetState,
-            onDismissRequest = { showBottomSheet = false },
+            onDismissRequest = { onBindSheetVisibleChanged(false) },
             content = {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -177,7 +207,7 @@ internal fun BoundApplicationKeys(
                                 bottomSheetState.hide()
                             }.invokeOnCompletion {
                                 if (!bottomSheetState.isVisible) {
-                                    showBottomSheet = false
+                                    onBindSheetVisibleChanged(false)
                                     returnToBindSheet = unboundKeys.isEmpty()
                                     showAddKeySheet = true
                                 }
@@ -211,7 +241,7 @@ internal fun BoundApplicationKeys(
                                     bottomSheetState.hide()
                                 }.invokeOnCompletion {
                                     if (!bottomSheetState.isVisible) {
-                                        showBottomSheet = false
+                                        onBindSheetVisibleChanged(false)
                                     }
                                 }
                                 send(
@@ -239,7 +269,7 @@ internal fun BoundApplicationKeys(
                     showAddKeySheet = false
                     if (returnToBindSheet) {
                         returnToBindSheet = false
-                        showBottomSheet = true
+                        onBindSheetVisibleChanged(true)
                     }
                 }
             }

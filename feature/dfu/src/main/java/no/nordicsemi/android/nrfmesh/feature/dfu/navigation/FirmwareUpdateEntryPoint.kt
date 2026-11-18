@@ -17,7 +17,6 @@ import no.nordicsemi.android.nrfmesh.feature.dfu.FirmwareUpdateScreen
 import no.nordicsemi.kotlin.mesh.bearer.gatt.utils.MeshProxyService
 
 fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
-    var viewModel: DfuSessionViewModel? = null
     entry<FirmwareUpdateKey>(
         metadata = DialogSceneStrategy.dialog(
             dialogProperties = DialogProperties(
@@ -30,7 +29,6 @@ fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
     ) {
         val sessionViewModel = hiltViewModel<DfuSessionViewModel>()
         val nodeConfigurationViewModel = hiltViewModel<NodeConfigurationViewModel>()
-        viewModel = sessionViewModel
         val uiState by sessionViewModel.uiState.collectAsStateWithLifecycle()
         val session by sessionViewModel.session.collectAsStateWithLifecycle()
         FirmwareUpdateScreen(
@@ -39,7 +37,6 @@ fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
             onGattProxyClicked = {
                 navigator.navigate(key = ScannerKey(uuid = MeshProxyService.uuid))
             },
-            onBindAppKeysClicked = { navigator.navigate(key = DfuBindAppKeysKey(model = it)) },
             onKeyIndexChanged = { sessionViewModel.setKeyIndex(index = it) },
             onMaxReceiversListSizeChanged = { sessionViewModel.setMaxReceiversListSize(size = it) },
             onOngoingFirmwareSizeChanged = { sessionViewModel.setOngoingFirmwareSize(size = it) },
@@ -50,9 +47,4 @@ fun EntryProviderScope<NavKey>.firmwareUpdateEntry(navigator: Navigator) {
             onClearTasks = nodeConfigurationViewModel::clear
         )
     }
-    dfuBindAppKeysEntry(
-        send = { model, message ->
-            viewModel?.send(model = model, message = message)
-        }
-    )
 }

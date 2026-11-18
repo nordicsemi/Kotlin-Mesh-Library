@@ -48,6 +48,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.core.ui.successColor
 import no.nordicsemi.android.nrfmesh.core.ui.warningColor
 import no.nordicsemi.android.nrfmesh.feature.dfu.R
+import no.nordicsemi.android.nrfmesh.feature.model.common.BindApplicationKeysSheets
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.FirmwareDistributionPhase
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
@@ -77,7 +78,7 @@ internal fun SmpContent(
     onGattProxyClicked: () -> Unit,
     selectedKey: ApplicationKey?,
     onApplicationKeyClicked: (ApplicationKey) -> Unit,
-    onBindAppKeysClicked: (Model) -> Unit,
+    addApplicationKey: () -> Unit,
     firmwareDistributionStatus: FirmwareDistributionStatus?,
     capabilitiesStatus: FirmwareDistributionCapabilitiesStatus?,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
@@ -112,7 +113,7 @@ internal fun SmpContent(
                 messageState = messageState,
                 model = model,
                 selectedKey = selectedKey,
-                onBindAppKeyClicked = onBindAppKeysClicked,
+                addApplicationKey = addApplicationKey,
                 onApplicationKeyClicked = onApplicationKeyClicked,
                 send = send
             )
@@ -427,11 +428,12 @@ private fun BoundApplicationKeys(
     messageState: MessageState,
     model: Model,
     selectedKey: ApplicationKey?,
-    onBindAppKeyClicked: (Model) -> Unit,
+    addApplicationKey: () -> Unit,
     onApplicationKeyClicked: (ApplicationKey) -> Unit,
     send: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
 ) {
     val scope = rememberCoroutineScope()
+    var isBindSheetVisible by rememberSaveable { mutableStateOf(false) }
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         SectionTitle(
             modifier = Modifier.weight(weight = 1f),
@@ -469,7 +471,7 @@ private fun BoundApplicationKeys(
                             messageState.message is ConfigVendorModelAppGet)
         )
         MeshIconButton(
-            onClick = dropUnlessResumed { onBindAppKeyClicked(model) },
+            onClick = dropUnlessResumed { isBindSheetVisible = true },
             buttonIcon = Icons.Outlined.Link,
             enabled = !messageState.isInProgress(),
             isOnClickActionInProgress = messageState.isInProgress() &&
@@ -514,6 +516,14 @@ private fun BoundApplicationKeys(
         modifier = Modifier.padding(horizontal = 8.dp),
         text = stringResource(R.string.label_app_key_selection_rationale),
         style = MaterialTheme.typography.bodySmall
+    )
+    BindApplicationKeysSheets(
+        model = model,
+        isBindSheetVisible = isBindSheetVisible,
+        onBindSheetVisibleChanged = { isBindSheetVisible = it },
+        messageState = messageState,
+        send = { message -> scope.launch { send(model, message) } },
+        addApplicationKey = addApplicationKey
     )
 }
 
