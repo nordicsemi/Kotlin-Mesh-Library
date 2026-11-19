@@ -1,6 +1,8 @@
 package no.nordicsemi.kotlin.mesh.core.messages
 
+import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericBatteryGet
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLevelGet
+import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalGet
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericOnOffGet
 import no.nordicsemi.kotlin.mesh.core.messages.lighting.LightLCLightOnOffGet
 import no.nordicsemi.kotlin.mesh.core.messages.lighting.LightLCModeGet
@@ -20,6 +22,8 @@ class GetMessageDecodingTest {
     private val initializers: Map<String, BaseMeshMessageInitializer> = mapOf(
         "GenericOnOffGet" to GenericOnOffGet.Initializer,
         "GenericLevelGet" to GenericLevelGet.Initializer,
+        "GenericBatteryGet" to GenericBatteryGet.Initializer,
+        "GenericLocationGlobalGet" to GenericLocationGlobalGet.Initializer,
         "LightLCModeGet" to LightLCModeGet.Initializer,
         "LightLCOccupancyModeGet" to LightLCOccupancyModeGet.Initializer,
         "LightLCLightOnOffGet" to LightLCLightOnOffGet.Initializer,
