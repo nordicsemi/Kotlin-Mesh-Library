@@ -1,8 +1,9 @@
 package no.nordicsemi.android.nrfmesh.feature.localnode
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.width
@@ -57,6 +58,10 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.UnicastAddress
 import no.nordicsemi.kotlin.mesh.core.model.VendorModelId
+import kotlin.math.abs
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -332,21 +337,9 @@ private fun LevelServerCard(
         server?.observer = { state = it }
         onDispose { server?.observer = null }
     }
-    val transition = state.transition
-    val target = transition?.targetValue ?: when {
-        state.animation == null -> state.value
-        state.animation!!.speed > 0 -> Short.MAX_VALUE
-        else -> Short.MIN_VALUE
-    }
-    val fraction by animateFloatAsState(
-        targetValue = (target.toInt() - Short.MIN_VALUE) / (UShort.MAX_VALUE.toFloat()),
-        animationSpec = tween(
-            durationMillis = transition?.remainingTime?.inWholeMilliseconds?.toInt() ?: 0,
-            easing = LinearEasing
-        ),
-        label = "LevelServerFraction"
-    )
-    val level = fraction.coerceIn(0f, 1f)
+    val fraction = remember { Animatable(initialValue = state.value.toFraction()) }
+    LaunchedEffect(state) { fraction.animateTo(state = state) }
+    val level = fraction.value.coerceIn(0f, 1f)
     ModelControlCard(
         modifier = modifier,
         icon = ModelControlCardDefaults.LevelIcon,
@@ -361,4 +354,79 @@ private fun LevelServerCard(
             )
         }
     )
+}
+
+/** Maps a Generic Level value, which is a signed 16-bit number, to a fraction between 0 and 1. */
+private fun Short.toFraction() = (toInt() - Short.MIN_VALUE) / UShort.MAX_VALUE.toFloat()
+
+/**
+ * Animates the fraction as the given Generic Level state does: a transition (Set or Delta) moves
+ * linearly to the target during the remaining time, while a move runs at its speed towards the
+ * end of the range and then keeps sweeping the whole range until the state changes.
+ */
+private suspend fun Animatable<Float, AnimationVector1D>.animateTo(
+    state: GenericState<Short>,
+) {
+    val transition = state.transition
+    val move = state.animation
+    when {
+        transition != null -> {
+            val now = Clock.System.now()
+            val untilStart = (transition.startTime - now).coerceAtLeast(Duration.ZERO)
+            val remaining = transition.remainingTime
+            val current = when {
+                transition.startTime > now || remaining >= transition.duration -> state.value
+                else -> {
+                    // Linear progress from the start value towards the target.
+                    val progress = remaining / transition.duration
+                    val diff = state.value - transition.targetValue
+                    (transition.targetValue + (diff * progress).toInt()).toShort()
+                }
+            }
+            snapTo(current.toFraction())
+            delay(untilStart)
+            animateTo(
+                targetValue = transition.targetValue.toFraction(),
+                animationSpec = tween(
+                    durationMillis = (remaining - untilStart).inWholeMilliseconds.toInt()
+                        .coerceAtLeast(0),
+                    easing = LinearEasing
+                )
+            )
+        }
+
+        move != null && move.speed.toInt() != 0 -> {
+            val speed = move.speed.toInt()
+            val now = Clock.System.now()
+            val untilStart = (move.startTime - now).coerceAtLeast(Duration.ZERO)
+            val elapsed = (now - move.startTime).coerceAtLeast(Duration.ZERO)
+            val start = (state.value + elapsed.toDouble(DurationUnit.SECONDS) * speed)
+                .toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt())
+            val end = if (speed > 0) 1f else 0f
+            snapTo(start.toShort().toFraction())
+            delay(untilStart)
+            // Run to the end of the range at the speed of the move.
+            animateTo(
+                targetValue = end,
+                animationSpec = tween(
+                    durationMillis = (abs(value - end) * UShort.MAX_VALUE.toFloat() / abs(speed) * 1000)
+                        .toInt(),
+                    easing = LinearEasing
+                )
+            )
+            // Then sweep the whole range over and over.
+            while (true) {
+                snapTo(1f - end)
+                animateTo(
+                    targetValue = end,
+                    animationSpec = tween(
+                        durationMillis = (UShort.MAX_VALUE.toFloat() / abs(speed) * 1000).toInt(),
+                        easing = LinearEasing
+                    )
+                )
+            }
+        }
+
+        else -> snapTo(state.value.toFraction())
+    }
 }
