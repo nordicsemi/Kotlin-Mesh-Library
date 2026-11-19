@@ -41,7 +41,7 @@ class AccessLayerTransactionTest {
     private val clock = TestClock()
     private val manager = MeshNetworkManager(
         storage = TestStorage(),
-        secureProperties = CountingSecureProperties(),
+        secureProperties = NoSecureProperties,
         ioDispatcher = Dispatchers.Unconfined
     )
     private val network = runBlocking {
@@ -152,13 +152,10 @@ class AccessLayerTransactionTest {
         assertEquals(42u.toUByte(), message.tid)
     }
 
-    /** Hands out increasing sequence numbers and ignores everything else. */
-    private class CountingSecureProperties : SecurePropertiesStorage {
-        private var sequence = 0u
+    private object NoSecureProperties : SecurePropertiesStorage {
         override suspend fun ivIndex(uuid: Uuid): IvIndex = IvIndex()
         override suspend fun storeIvIndex(uuid: Uuid, ivIndex: IvIndex) = Unit
-        override suspend fun nextSequenceNumber(uuid: Uuid, address: UnicastAddress): UInt =
-            sequence++
+        override suspend fun nextSequenceNumber(uuid: Uuid, address: UnicastAddress): UInt = 0u
 
         override suspend fun storeNextSequenceNumber(
             uuid: Uuid,
