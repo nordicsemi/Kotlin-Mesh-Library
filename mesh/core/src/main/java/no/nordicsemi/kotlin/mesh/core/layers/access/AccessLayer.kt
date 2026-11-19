@@ -154,8 +154,12 @@ internal class AcknowledgementContext(
  * Defines the behavior of the Access Layer of the Mesh Networking Stack.
  *
  * @property networkManager  Network manager.
+ * @property clock           Clock used to track the lifetime of transactions.
  */
-internal class AccessLayer(private val networkManager: NetworkManager) : AutoCloseable {
+internal class AccessLayer(
+    private val networkManager: NetworkManager,
+    private val clock: Clock = Clock.System,
+) : AutoCloseable {
     private val network: MeshNetwork
         get() = networkManager.meshNetwork
 
@@ -273,7 +277,7 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
         }?.let {
             val k = key(element = element, destination = destination)
             mutex.withLock {
-                transactions[k] = transactions[k] ?: Transaction()
+                transactions[k] = transactions[k] ?: Transaction(clock = clock)
 
                 it.tid = transactions[k]!!.tid(
                     retransmit = retransmit,
