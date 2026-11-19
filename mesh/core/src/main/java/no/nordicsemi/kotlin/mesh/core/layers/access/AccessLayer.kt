@@ -63,26 +63,38 @@ import kotlin.time.toDuration
  * @property nextTid       Next transaction identifier.
  * @property isActive      Whether the transaction can be continued.
  */
-private data class Transaction(
-    var lastTid: UByte = Random.nextInt(0, UByte.MAX_VALUE.toInt()).toUByte(),
-    var timestamp: Instant = Clock.System.now(),
+internal data class Transaction(
+    var lastTid: UByte = Random.nextInt(0, UByte.MAX_VALUE.toInt() + 1).toUByte(),
+    private val clock: Clock = Clock.System,
+    var timestamp: Instant = clock.now(),
 ) {
 
     val currentTid: UByte
         get() {
-            timestamp = Clock.System.now()
+            timestamp = clock.now()
             return lastTid
         }
 
     val nextTid: UByte
         get() {
             lastTid = if (lastTid < UByte.MAX_VALUE) (lastTid + 1u).toUByte() else 0u
-            timestamp = Clock.System.now()
+            timestamp = clock.now()
             return lastTid
         }
 
+    /**
+     * Whether the transaction can be continued. A transaction may last up to 6 seconds.
+     */
     val isActive: Boolean
-        get() = Clock.System.now() - timestamp > 6.toDuration(DurationUnit.SECONDS)
+        get() = clock.now() - timestamp < 6.toDuration(DurationUnit.SECONDS)
+
+    /**
+     * Returns the transaction identifier to be used for the next message. The current TID is
+     * reused for retransmissions and for messages continuing the transaction, but only while the
+     * transaction is active, otherwise a new TID is generated.
+     */
+    fun tid(retransmit: Boolean, continueTransaction: Boolean): UByte =
+        if ((retransmit || continueTransaction) && isActive) currentTid else nextTid
 }
 
 internal class AcknowledgementContext(
@@ -142,8 +154,12 @@ internal class AcknowledgementContext(
  * Defines the behavior of the Access Layer of the Mesh Networking Stack.
  *
  * @property networkManager  Network manager.
+ * @property clock           Clock used to track the lifetime of transactions.
  */
-internal class AccessLayer(private val networkManager: NetworkManager) : AutoCloseable {
+internal class AccessLayer(
+    private val networkManager: NetworkManager,
+    private val clock: Clock = Clock.System,
+) : AutoCloseable {
     private val network: MeshNetwork
         get() = networkManager.meshNetwork
 
@@ -261,13 +277,12 @@ internal class AccessLayer(private val networkManager: NetworkManager) : AutoClo
         }?.let {
             val k = key(element = element, destination = destination)
             mutex.withLock {
-                transactions[k] = transactions[k] ?: Transaction()
+                transactions[k] = transactions[k] ?: Transaction(clock = clock)
 
-                if (retransmit || it.continueTransaction && transactions[k]!!.isActive) {
-                    it.tid = transactions[k]!!.currentTid
-                } else {
-                    it.tid = transactions[k]!!.nextTid
-                }
+                it.tid = transactions[k]!!.tid(
+                    retransmit = retransmit,
+                    continueTransaction = it.continueTransaction
+                )
             }
             msg = it
         }
