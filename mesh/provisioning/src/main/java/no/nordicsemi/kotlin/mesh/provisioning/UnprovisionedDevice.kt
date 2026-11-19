@@ -10,12 +10,29 @@ import kotlin.uuid.Uuid
 data class UnprovisionedDevice(
     var name: String,
     val uuid: Uuid,
-    val oobInformation: OobInformation = OobInformation.None
+    val oobInformation: OobInformation = OobInformation.None,
+    val uriHash: ByteArray? = null
 ) {
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is UnprovisionedDevice) return false
+        return name == other.name &&
+                uuid == other.uuid &&
+                oobInformation == other.oobInformation &&
+                uriHash.contentEquals(other.uriHash)
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + uuid.hashCode()
+        result = 31 * result + oobInformation.hashCode()
+        result = 31 * result + (uriHash?.contentHashCode() ?: 0)
+        return result
+    }
+
     companion object {
-        private const val FLAGS = 0x01
-        private const val COMPLETE_LIST_16_BIT_UUID = 0x03
+        private const val SHORTENED_LOCAL_NAME = 0x08
         private const val SERVICE_DATA_16_BIT_UUID = 0x16
         private const val COMPLETE_LOCAL_NAME = 0x09
 
@@ -26,44 +43,54 @@ data class UnprovisionedDevice(
          * @return UnprovisionedDevice from the given advertisement data.
          */
         fun from(advertisementData: ByteArray): UnprovisionedDevice {
-            var length: Int
-            var type: Int
             var deviceUuid: Uuid? = null
             var oobInformation: OobInformation = OobInformation.Other
+            var uriHash: ByteArray? = null
             var localName = ""
             var i = 0
             while (i < advertisementData.size) {
-                length = advertisementData[i++].toInt()
-                if (length == 0) break
-                type = advertisementData[i++].toInt()
+                val length = advertisementData[i].toInt() and 0xFF
+                if (length == 0 || i + 1 + length > advertisementData.size) break
+                val type = advertisementData[i + 1].toInt() and 0xFF
+                // Data of the AD structure is between i + 2 and i + 1 + length (exclusive).
+                val start = i + 2
+                val end = i + 1 + length
                 when (type) {
-                    FLAGS, COMPLETE_LIST_16_BIT_UUID -> {
-                        /* Do nothing */
-                    }
                     SERVICE_DATA_16_BIT_UUID -> {
-                        val deviceUuidIndex = i + 2
-                        val hexUuid = advertisementData
-                            .copyOfRange(deviceUuidIndex, deviceUuidIndex + 16)
-                            .toHexString()
-                        deviceUuid = Utils.decode(hexUuid)
-
-                        val oobInformationIndex = deviceUuidIndex + 16
-                        oobInformation = OobInformation.from(
-                            advertisementData.getUShort(oobInformationIndex)
-                        )
+                        // 2 bytes service UUID, 16 bytes device UUID and optionally 2 bytes OOB.
+                        if (end - start >= 18 &&
+                            advertisementData[start] == 0x27.toByte() &&
+                            advertisementData[start + 1] == 0x18.toByte()
+                        ) {
+                            val hexUuid = advertisementData
+                                .copyOfRange(start + 2, start + 18)
+                                .toHexString()
+                            deviceUuid = Utils.decode(hexUuid)
+                            if (end - start >= 20) {
+                                oobInformation = OobInformation.from(
+                                    advertisementData.getUShort(start + 18)
+                                )
+                            }
+                            // The optional URI hash follows the OOB information.
+                            if (end - start >= 24) {
+                                uriHash = advertisementData.copyOfRange(start + 20, start + 24)
+                            }
+                        }
                     }
-                    COMPLETE_LOCAL_NAME -> {
-                        localName = advertisementData
-                            .copyOfRange(i, i + length - 1)
-                            .toString(Charsets.UTF_8)
+                    SHORTENED_LOCAL_NAME, COMPLETE_LOCAL_NAME -> {
+                        // A complete name is never replaced by a shortened one.
+                        if (type == COMPLETE_LOCAL_NAME || localName.isEmpty()) {
+                            localName = advertisementData
+                                .copyOfRange(start, end)
+                                .toString(Charsets.UTF_8)
+                        }
                     }
                     else -> {
-                        throw IllegalArgumentException(
-                            "Cannot create an Unprovisioned device with the given advertisement data"
-                        )
+                        /* Other ADs, e.g. flags, UUID lists, TX power or manufacturer data are
+                           not relevant and are ignored. */
                     }
                 }
-                i += length - 1
+                i = end
             }
             require(deviceUuid != null) {
                 "Unprovisioned device UUID cannot be null"
@@ -71,7 +98,8 @@ data class UnprovisionedDevice(
             return UnprovisionedDevice(
                 name = localName,
                 uuid = deviceUuid,
-                oobInformation = oobInformation
+                oobInformation = oobInformation,
+                uriHash = uriHash
             )
         }
     }
