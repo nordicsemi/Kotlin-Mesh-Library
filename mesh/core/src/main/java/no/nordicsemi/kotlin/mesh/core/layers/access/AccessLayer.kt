@@ -64,7 +64,7 @@ import kotlin.time.toDuration
  * @property isActive      Whether the transaction can be continued.
  */
 internal data class Transaction(
-    var lastTid: UByte = Random.nextInt(0, UByte.MAX_VALUE.toInt()).toUByte(),
+    var lastTid: UByte = Random.nextInt(0, UByte.MAX_VALUE.toInt() + 1).toUByte(),
     private val clock: Clock = Clock.System,
     var timestamp: Instant = clock.now(),
 ) {
@@ -90,11 +90,11 @@ internal data class Transaction(
 
     /**
      * Returns the transaction identifier to be used for the next message. The current TID is
-     * reused for retransmissions and for messages continuing an active transaction, otherwise a
-     * new TID is generated.
+     * reused for retransmissions and for messages continuing the transaction, but only while the
+     * transaction is active, otherwise a new TID is generated.
      */
     fun tid(retransmit: Boolean, continueTransaction: Boolean): UByte =
-        if (retransmit || continueTransaction && isActive) currentTid else nextTid
+        if ((retransmit || continueTransaction) && isActive) currentTid else nextTid
 }
 
 internal class AcknowledgementContext(

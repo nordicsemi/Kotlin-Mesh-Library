@@ -71,9 +71,15 @@ class TransactionTest {
     }
 
     @Test
-    fun `retransmission reuses the tid even when the transaction expired`() {
-        clock.advance(7.seconds)
+    fun `retransmission within 6 seconds reuses the tid`() {
+        clock.advance(5.seconds)
         assertEquals(10u.toUByte(), transaction.tid(retransmit = true, continueTransaction = false))
+    }
+
+    @Test
+    fun `retransmission of an expired transaction gets a new tid`() {
+        clock.advance(7.seconds)
+        assertEquals(11u.toUByte(), transaction.tid(retransmit = true, continueTransaction = false))
     }
 
     @Test
