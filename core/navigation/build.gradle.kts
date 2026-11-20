@@ -25,10 +25,10 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
 
     // Material3
-    api("androidx.compose.material3:material3-window-size-class:1.4.0")
+    api("androidx.compose.material3:material3-window-size-class:1.5.0")
 
     // Navigation3
     api("androidx.compose.material3.adaptive:adaptive-navigation3:1.3.0")
-    api("androidx.navigation3:navigation3-runtime:1.1.3")
-    api("androidx.lifecycle:lifecycle-viewmodel-navigation3-android:2.11.0")
+    api("androidx.navigation3:navigation3-runtime:1.2.2")
+    api("androidx.lifecycle:lifecycle-viewmodel-navigation3-android:2.11.1")
 }
