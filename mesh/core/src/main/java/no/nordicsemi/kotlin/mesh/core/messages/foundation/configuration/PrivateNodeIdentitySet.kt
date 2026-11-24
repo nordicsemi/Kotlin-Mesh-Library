@@ -12,6 +12,8 @@ import no.nordicsemi.kotlin.mesh.core.model.KeyIndex
  *
  * @property networkKeyIndex Network Key Index of the Private Node Identity state.
  * @property enabled         True to start advertising with the Private Node Identity.
+ *
+ * When decoded, any state other than 0x01 is treated as disabled, as on iOS.
  */
 class PrivateNodeIdentitySet(
     override val networkKeyIndex: KeyIndex,
@@ -28,7 +30,7 @@ class PrivateNodeIdentitySet(
         override val opCode = 0x8067u
 
         override fun init(parameters: ByteArray?) = parameters
-            ?.takeIf { it.size == 3 && it[2] in 0..1 }
+            ?.takeIf { it.size == 3 }
             ?.let {
                 PrivateNodeIdentitySet(
                     networkKeyIndex = decodeNetKeyIndex(data = it, offset = 0),
