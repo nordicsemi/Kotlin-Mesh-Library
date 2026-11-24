@@ -235,4 +235,9 @@
     <string name="label_file">File</string>
     <string name="label_application_keys">Application Keys</string>
     <string name="label_application">Application</string>
+    <string name="label_default_transition_time">Default Transition Time</string>
+    <string name="label_transition_time">Transition Time</string>
+    <string name="label_on_power_up">On Power Up</string>
+    <string name="label_on_power_up_behavior">Behavior</string>
+    <string name="label_restore">Restore</string>
 </resources>

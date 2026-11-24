@@ -10,6 +10,15 @@ fun Model.isGenericOnOffServer() =
 fun Model.isGenericLevelServer() =
     (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_LEVEL_SERVER_MODEL_ID
 
+fun Model.isGenericDefaultTransitionTimeServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_DEFAULT_TRANSITION_TIME_SERVER_MODEL_ID
+
+fun Model.isGenericPowerOnOffServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_POWER_ON_OFF_SERVER_MODEL_ID
+
+fun Model.isGenericPowerOnOffSetupServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_POWER_ON_OFF_SETUP_SERVER_MODEL_ID
+
 fun Model.isSceneServer() =
     (modelId as? SigModelId)?.modelIdentifier == Model.SCENE_SERVER_MODEL_ID
 
