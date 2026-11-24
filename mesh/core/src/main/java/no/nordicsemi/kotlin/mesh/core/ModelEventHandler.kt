@@ -17,6 +17,7 @@ import no.nordicsemi.kotlin.mesh.core.model.MeshNetwork
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import no.nordicsemi.kotlin.mesh.core.model.SceneNumber
 import no.nordicsemi.kotlin.mesh.core.model.TransitionTime
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 sealed class ModelError : Exception() {
@@ -249,7 +250,8 @@ class TransactionHelper {
 
     private val mutex = Mutex()
 
-    private var lastTransactions = mutableMapOf<Address, Transaction>()
+    // The last transaction is tracked per message opcode, as in the iOS library.
+    private var lastTransactions = mutableMapOf<UInt, Transaction>()
 
     /**
      * Checks whether the given Transaction Message was sent as a new transaction or is part of the
@@ -265,13 +267,20 @@ class TransactionHelper {
         source: Address,
         destination: MeshAddress,
     ) = mutex.withLock {
-        val lastTransaction = lastTransactions[source]
-        (lastTransaction == null) || (lastTransaction.source != source) ||
+        val lastTransaction = lastTransactions[message.opCode]
+        val isNew = (lastTransaction == null) || (lastTransaction.source != source) ||
                 (lastTransaction.destination != destination) ||
                 message.isNewTransaction(
                     previousTid = lastTransaction.tid,
                     timestamp = lastTransaction.timestamp
                 )
+        lastTransactions[message.opCode] = Transaction(
+            source = source,
+            destination = destination,
+            tid = message.tid ?: 0u,
+            timestamp = Clock.System.now()
+        )
+        isNew
     }
 
     /**

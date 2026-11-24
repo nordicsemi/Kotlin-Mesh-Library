@@ -198,7 +198,7 @@ interface TransactionMessage : MeshMessage {
      * @return true if the message is a continuation of the previous message.
      */
     fun isNewTransaction(previousTid: UByte, timestamp: Instant) = tid != previousTid ||
-            (Clock.System.now() - timestamp) < 6.toDuration(DurationUnit.SECONDS)
+            (Clock.System.now() - timestamp) >= 6.toDuration(DurationUnit.SECONDS)
 }
 
 /**

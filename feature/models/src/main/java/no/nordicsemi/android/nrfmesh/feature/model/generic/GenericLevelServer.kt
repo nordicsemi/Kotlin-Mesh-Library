@@ -3,7 +3,6 @@ package no.nordicsemi.android.nrfmesh.feature.model.generic
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +12,7 @@ import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Radar
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -40,6 +40,7 @@ import no.nordicsemi.android.common.ui.view.NordicSliderDefaults
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
+import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshSingleLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.model.utils.GenericLevelOptions
@@ -163,7 +164,7 @@ private fun Controls(
                         delayLabel = if (delay == 0) {
                             resources.getString(R.string.label_no_delay)
                         } else {
-                            resources.getString(R.string.delay_ms, delay.toInt() * 5)
+                            resources.getString(R.string.delay_ms, delay * 5)
                         }
                     },
                     valueRange = 0f..255f,
@@ -193,19 +194,6 @@ private fun Controls(
                     modifier = Modifier.fillMaxWidth(),
                     value = percent,
                     onValueChange = { percent = it },
-                    onValueChangeFinished = {
-                        onSliderValueChanged(
-                            levelOption = levelOption,
-                            percent = percent,
-                            acknowledged = acknowledged,
-                            model = model,
-                            delay = delay,
-                            defaultTransitionEnabled = defaultTransitionEnabled,
-                            transitionTime = transitionTime,
-                            sendApplicationMessage = sendApplicationMessage,
-                        )
-
-                    },
                     valueRange = 0f..200f,
                     steps = 199,
                     enabled = !messageState.isInProgress(),
@@ -225,31 +213,60 @@ private fun Controls(
             }
         },
         actions = {
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(space = 8.dp)
             ) {
-                GenericLevelOptions.entries.forEachIndexed { index, option ->
-                    SegmentedButton(
-                        modifier = Modifier.defaultMinSize(minWidth = 60.dp),
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = GenericLevelOptions.entries.size
-                        ),
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(alignment = Alignment.CenterHorizontally)
+                ) {
+                    GenericLevelOptions.entries.forEachIndexed { index, option ->
+                        SegmentedButton(
+                            //modifier = Modifier.defaultMinSize(minWidth = 60.dp),
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = GenericLevelOptions.entries.size
+                            ),
+                            onClick = { levelOption = option.value },
+                            selected = option.value == levelOption,
+                            icon = {
+                                SegmentedButtonDefaults.Icon(active = option.value == levelOption) {
+                                    Icon(
+                                        imageVector = option.icon(),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                                    )
+                                }
+                            },
+                            label = { Text(text = option.description()) }
+                        )
+                    }
+                }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    MeshOutlinedButton(
+                        text = stringResource(R.string.label_set),
+                        buttonIcon = Icons.Outlined.Upload,
+                        enabled = !messageState.isInProgress(),
+                        isOnClickActionInProgress = messageState.isInProgress() &&
+                                messageState.message?.let {
+                                    it is GenericLevelSet || it is GenericLevelSetUnacknowledged ||
+                                            it is GenericDeltaSet || it is GenericDeltaSetUnacknowledged ||
+                                            it is GenericMoveSet || it is GenericMoveSetUnacknowledged
+                                } == true,
                         onClick = {
-                            levelOption = option.value
-                        },
-                        selected = option.value == levelOption,
-                        icon = {
-                            SegmentedButtonDefaults.Icon(active = option.value == levelOption) {
-                                Icon(
-                                    imageVector = option.icon(),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
-                                )
-                            }
-                        },
-                        label = { Text(text = option.description()) }
+                            onSliderValueChanged(
+                                levelOption = levelOption,
+                                percent = percent,
+                                acknowledged = acknowledged,
+                                model = model,
+                                delay = delay,
+                                defaultTransitionEnabled = defaultTransitionEnabled,
+                                transitionTime = transitionTime,
+                                sendApplicationMessage = sendApplicationMessage,
+                            )
+                        }
                     )
                 }
             }
@@ -318,7 +335,7 @@ private fun Status(
 /** Converts a signed 16-bit level to a percentage between 0 and 100. */
 private fun Short.toPercent(): Int = ((toInt() + 32768) / 655.35).roundToInt()
 
-private fun onSliderValueChanged(
+internal fun onSliderValueChanged(
     levelOption: Int,
     percent: Float,
     acknowledged: Boolean,
