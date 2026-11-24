@@ -6,6 +6,8 @@ option java_multiple_files = true;
 message ProtoSceneStatesDataStore {
   // Map uses network uuid as key and SceneStates as value
   map<string, SceneStates> sceneStates = 1;
+  // Map uses network uuid as key and the raw value of the Default Transition Time as value
+  map<string, uint32> defaultTransitionTimes = 2;
 }
 
 message SceneStates {
