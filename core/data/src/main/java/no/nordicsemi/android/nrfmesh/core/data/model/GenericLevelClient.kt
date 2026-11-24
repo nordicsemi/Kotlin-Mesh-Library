@@ -24,12 +24,24 @@ class GenericLevelClient : ModelEventHandler() {
      * The level that is published to the network when set. The level wraps around when it is
      * incremented or decremented beyond its limits.
      */
-    var state: Short = 0
+    var state: Short = Short.MIN_VALUE
         set(value) {
             field = value
             // Publishes the state change to the model.
             val _ = publish()
         }
+
+    companion object {
+        /** Amount by which the level is incremented or decremented in a single step. */
+        const val LEVEL_STEP = 8192
+
+        /**
+         * Returns the level after a single step, wrapping around when the limits of a 16-bit
+         * signed level are exceeded, like the iOS app does with `&+` and `&-`.
+         */
+        fun nextLevel(current: Short, increase: Boolean): Short =
+            (current + if (increase) LEVEL_STEP else -LEVEL_STEP).toShort()
+    }
 
     override suspend fun handle(event: ModelEvent) = when (event) {
         is ModelEvent.AcknowledgedMessageReceived -> throw ModelError.InvalidMessage(

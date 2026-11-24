@@ -72,12 +72,8 @@ internal class LocalNodeViewModel @Inject internal constructor(
     /** Increments or decrements the Generic Level Client state, which is then published. */
     fun stepLevel(model: Model, increase: Boolean) {
         (model.eventHandler as? GenericLevelClient)?.let { handler ->
-            handler.state = (handler.state + if (increase) LEVEL_STEP else -LEVEL_STEP).toShort()
+            handler.state = GenericLevelClient.nextLevel(current = handler.state, increase = increase)
         }
-    }
-
-    private companion object {
-        const val LEVEL_STEP = 8192
     }
 }
 
