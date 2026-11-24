@@ -27,8 +27,11 @@ import no.nordicsemi.android.nrfmesh.core.common.Sending
 import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.common.isFirmwareDistributionServer
 import no.nordicsemi.android.nrfmesh.core.common.isFirmwareUpdateServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericPowerOnOffServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericPowerOnOffSetupServer
 import no.nordicsemi.android.nrfmesh.core.common.isLePairingResponderServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLCServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLCSetupServer
@@ -45,8 +48,11 @@ import no.nordicsemi.android.nrfmesh.feature.model.common.Subscriptions
 import no.nordicsemi.android.nrfmesh.feature.model.configurationserver.ConfigurationServer
 import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareDistributionServer
 import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareUpdateServer
+import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericPowerOnOffServer
+import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericPowerOnOffSetupServer
 import no.nordicsemi.android.nrfmesh.feature.model.lepairing.LePairingResponder
 import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLCServer
 import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLCSetupServer
@@ -156,6 +162,27 @@ internal fun ModelScreen(
 
             model.isGenericLevelServer() ->
                 GenericLevelServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericDefaultTransitionTimeServer() ->
+                GenericDefaultTransitionTimeServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericPowerOnOffServer() ->
+                GenericPowerOnOffServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericPowerOnOffSetupServer() ->
+                GenericPowerOnOffSetupServer(
                     model = model,
                     messageState = messageState,
                     sendApplicationMessage = sendApplicationMessage

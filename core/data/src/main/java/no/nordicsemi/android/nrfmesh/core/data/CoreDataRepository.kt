@@ -38,11 +38,13 @@ import no.nordicsemi.android.nrfmesh.core.common.VendorModelIds
 import no.nordicsemi.android.nrfmesh.core.common.di.IoDispatcher
 import no.nordicsemi.android.nrfmesh.core.data.bearer.AndroidGattBearer
 import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericLevelClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericPowerOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.LightLCClient
 import no.nordicsemi.android.nrfmesh.core.data.model.LightLightnessClient
 import no.nordicsemi.android.nrfmesh.core.data.model.SceneServer
@@ -321,9 +323,15 @@ class CoreDataRepository @Inject constructor(
                     modelId = SigModelId(modelIdentifier = Model.SENSOR_CLIENT_MODEL_ID),
                     handler = SensorClientEventHandler()
                 ),
-                Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_POWER_ON_OFF_CLIENT_MODEL_ID)),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.GENERIC_POWER_ON_OFF_CLIENT_MODEL_ID),
+                    handler = GenericPowerOnOffClient()
+                ),
                 Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_SERVER_MODEL_ID)),
-                Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_CLIENT_MODEL_ID)),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_CLIENT_MODEL_ID),
+                    handler = GenericDefaultTransitionTimeClient()
+                ),
                 // Generic OnOff and Generic Level models defined by SIG
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.GENERIC_ON_OFF_SERVER_MODEL_ID),
