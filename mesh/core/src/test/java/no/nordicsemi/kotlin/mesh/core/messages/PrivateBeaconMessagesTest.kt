@@ -195,7 +195,8 @@ class PrivateBeaconMessagesTest {
         assertEquals(0x123u.toUShort(), decoded.networkKeyIndex)
         assertTrue(decoded.enabled)
         assertFalse(PrivateNodeIdentitySet.init(byteArrayOf(0x00, 0x00, 0x00))!!.enabled)
-        assertNull(PrivateNodeIdentitySet.init(byteArrayOf(0x00, 0x00, 0x02)))
+        // Any state other than 0x01 is treated as disabled, as on iOS.
+        assertEquals(false, PrivateNodeIdentitySet.init(byteArrayOf(0x00, 0x00, 0x02))?.enabled)
         assertNull(PrivateNodeIdentitySet.init(byteArrayOf(0x00, 0x00)))
         assertNull(PrivateNodeIdentitySet.init(byteArrayOf(0x00, 0x00, 0x01, 0x00)))
         assertNull(PrivateNodeIdentitySet.init(null))
