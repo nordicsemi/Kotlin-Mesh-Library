@@ -327,7 +327,10 @@ class CoreDataRepository @Inject constructor(
                     modelId = SigModelId(modelIdentifier = Model.GENERIC_POWER_ON_OFF_CLIENT_MODEL_ID),
                     handler = GenericPowerOnOffClient()
                 ),
-                Model(modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_SERVER_MODEL_ID)),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_SERVER_MODEL_ID),
+                    handler = defaultTransitionTimeServer
+                ),
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_CLIENT_MODEL_ID),
                     handler = GenericDefaultTransitionTimeClient()
