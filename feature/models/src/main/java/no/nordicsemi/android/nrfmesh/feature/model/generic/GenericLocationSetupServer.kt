@@ -3,30 +3,21 @@ package no.nordicsemi.android.nrfmesh.feature.model.generic
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.outlined.GpsFixed
-import androidx.compose.material3.Icon
-import no.nordicsemi.android.nrfmesh.core.ui.MeshIconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Apartment
-import androidx.compose.material.icons.outlined.Autorenew
-import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.East
+import androidx.compose.material.icons.outlined.GpsFixed
 import androidx.compose.material.icons.outlined.MyLocation
-import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.North
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.SwapVert
@@ -39,6 +30,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,11 +40,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -71,8 +68,8 @@ import no.nordicsemi.kotlin.mesh.core.messages.LocationUncertainty
 import no.nordicsemi.kotlin.mesh.core.messages.Longitude
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalSet
-import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalStatus
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalSetUnacknowledged
+import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalStatus
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationLocalSet
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationLocalSetUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationLocalStatus
@@ -80,6 +77,11 @@ import no.nordicsemi.kotlin.mesh.core.model.Model
 import java.util.Locale
 
 /** Floors that can be selected: the ground floors, unknown and the numbered floors. */
+// The summit of Mount Everest, which the global location fields start with.
+private const val EVEREST_LATITUDE = "27.988056"
+private const val EVEREST_LONGITUDE = "86.925278"
+private const val EVEREST_ALTITUDE = "8849"
+
 internal val floors: List<FloorNumber> =
     listOf(FloorNumber.GROUND_FLOOR_0, FloorNumber.GROUND_FLOOR_1, FloorNumber.UNKNOWN) +
             (FloorNumber.MIN..FloorNumber.MAX).mapNotNull { FloorNumber.of(it) }
@@ -95,7 +97,10 @@ internal fun GenericLocationSetupServer(
     messageState: MessageState,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
-    val enabled = model.boundApplicationKeys.isNotEmpty() && !messageState.isInProgress()
+    val hasBoundKey = model.boundApplicationKeys.isNotEmpty()
+    // The values cannot be changed while a message is sent, so that the screen always shows what
+    // was sent until the response is received.
+    val enabled = hasBoundKey && !messageState.isInProgress()
     // Keeps the location of the node received as a response to a Set.
     val state = rememberLocationState(messageState = messageState)
     var selected by rememberSaveable { mutableStateOf(LocationKind.GLOBAL) }
@@ -103,7 +108,7 @@ internal fun GenericLocationSetupServer(
         modifier = Modifier.padding(horizontal = 16.dp),
         title = stringResource(R.string.label_controls)
     )
-    LocationSelector(selected = selected, onSelected = { selected = it }, enabled = enabled)
+    LocationSelector(selected = selected, onSelected = { selected = it }, enabled = hasBoundKey)
     // The state of each side is kept while the other one is shown, so that typed values are not lost.
     val stateHolder = rememberSaveableStateHolder()
     StableHeight {
@@ -201,12 +206,12 @@ private fun LocalStatus(status: GenericLocationLocalStatus?) {
         title = stringResource(R.string.label_status)
     )
     StatusItem(
-        icon = Icons.Outlined.Explore,
+        icon = Icons.Outlined.North,
         title = stringResource(R.string.label_north),
         value = status?.north?.describeCoordinate(resources)
     )
     StatusItem(
-        icon = Icons.Outlined.Explore,
+        icon = Icons.Outlined.East,
         title = stringResource(R.string.label_east),
         value = status?.east?.describeCoordinate(resources)
     )
@@ -268,26 +273,19 @@ private fun GlobalControls(
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
     var latitude by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue())
+        mutableStateOf(TextFieldValue(EVEREST_LATITUDE))
     }
     var longitude by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue())
+        mutableStateOf(TextFieldValue(EVEREST_LONGITUDE))
     }
     var altitude by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue())
+        mutableStateOf(TextFieldValue(EVEREST_ALTITUDE))
     }
     var acknowledged by rememberSaveable { mutableStateOf(true) }
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     var usePhoneLocation by rememberSaveable { mutableStateOf(false) }
-    var isFetching by remember { mutableStateOf(false) }
     var phoneResult by remember { mutableStateOf<PhoneLocationResult?>(null) }
-
-    // The field whose refresh button was pressed, or -1 when the switch was used.
-    var refreshSource by remember { mutableIntStateOf(-1) }
     var hasPermission by remember { mutableStateOf(context.hasLocationPermission()) }
-    // True when the permission was requested to follow the phone, false for a single refresh.
-    var followAfterPermission by remember { mutableStateOf(false) }
 
     fun show(location: PhoneLocation) {
         latitude = TextFieldValue("%.6f".format(Locale.US, location.latitude))
@@ -295,33 +293,18 @@ private fun GlobalControls(
         location.altitudeMeters?.let { altitude = TextFieldValue(it.toString()) }
     }
 
-    // Fills in the fields once with the location of the phone.
-    fun fetchPhoneLocation() {
-        scope.launch {
-            isFetching = true
-            phoneResult = null
-            val result = context.readPhoneLocation()
-            isFetching = false
-            refreshSource = -1
-            phoneResult = result
-            if (result is PhoneLocationResult.Found) show(result.location)
-        }
-    }
-
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { granted ->
         hasPermission = granted.values.any { it } || context.hasLocationPermission()
         if (hasPermission) {
-            if (followAfterPermission) usePhoneLocation = true else fetchPhoneLocation()
+            usePhoneLocation = true
         } else {
-            refreshSource = -1
             phoneResult = PhoneLocationResult.PermissionDenied
         }
     }
 
-    fun requestPermission(follow: Boolean) {
-        followAfterPermission = follow
+    fun requestPermission() {
         permissionLauncher.launch(
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -330,11 +313,8 @@ private fun GlobalControls(
         )
     }
 
-    // Reads the location of the phone once, asking for the permission first if it is not granted.
-    fun requestPhoneLocation(source: Int) {
-        refreshSource = source
-        if (hasPermission) fetchPhoneLocation() else requestPermission(follow = false)
-    }
+    // The fields keep their values while a message is sent, so that they show what was sent.
+    val isSending by rememberUpdatedState(newValue = messageState.isInProgress())
 
     // Keeps the fields in sync with the location of the phone while the switch is on.
     LaunchedEffect(key1 = usePhoneLocation, key2 = hasPermission) {
@@ -342,19 +322,15 @@ private fun GlobalControls(
             phoneResult = null
             context.phoneLocationUpdates().collect { result ->
                 phoneResult = result
-                if (result is PhoneLocationResult.Found) show(result.location)
-                else usePhoneLocation = false
+                if (result is PhoneLocationResult.Found) {
+                    if (!isSending) show(result.location)
+                } else {
+                    usePhoneLocation = false
+                }
             }
         }
     }
 
-    // Typing a value stops following the phone so that it is not overwritten.
-    fun stopFollowing() {
-        if (usePhoneLocation) {
-            usePhoneLocation = false
-            phoneResult = null
-        }
-    }
     // Shows the location reported by the node when it is read.
     LaunchedEffect(key1 = status) {
         status?.let {
@@ -375,7 +351,7 @@ private fun GlobalControls(
                     title = stringResource(R.string.label_use_phone_location),
                     trailingComposable = {
                         Switch(
-                            enabled = enabled && !isFetching,
+                            enabled = enabled,
                             checked = usePhoneLocation,
                             onCheckedChange = { checked ->
                                 if (!checked) {
@@ -384,59 +360,46 @@ private fun GlobalControls(
                                 } else if (hasPermission) {
                                     usePhoneLocation = true
                                 } else {
-                                    requestPermission(follow = true)
+                                    requestPermission()
                                 }
                             }
                         )
                     }
                 )
                 PhoneLocationMessage(
-                    isFetching = isFetching || (usePhoneLocation && phoneResult == null),
+                    isFetching = usePhoneLocation && phoneResult == null,
                     result = phoneResult
                 )
                 NumberField(
                     label = stringResource(R.string.label_latitude),
                     value = latitude,
-                    onValueChanged = {
-                        if (it.text != latitude.text) stopFollowing()
-                        latitude = it
-                    },
+                    onValueChanged = { latitude = it },
                     enabled = enabled,
+                    readOnly = usePhoneLocation,
                     isError = parsedLatitude == null,
                     isDecimal = true,
-                    leadingIcon = Icons.Outlined.SwapVert,
-                    onRefresh = { requestPhoneLocation(source = 0) },
-                    isRefreshing = isFetching && refreshSource == 0,
-                    isRefreshEnabled = enabled && !isFetching && !usePhoneLocation
+                    suffix = "°",
+                    leadingIcon = Icons.Outlined.SwapVert
                 )
                 NumberField(
                     label = stringResource(R.string.label_longitude),
                     value = longitude,
-                    onValueChanged = {
-                        if (it.text != longitude.text) stopFollowing()
-                        longitude = it
-                    },
+                    onValueChanged = { longitude = it },
                     enabled = enabled,
+                    readOnly = usePhoneLocation,
                     isError = parsedLongitude == null,
                     isDecimal = true,
-                    leadingIcon = Icons.Outlined.SwapHoriz,
-                    onRefresh = { requestPhoneLocation(source = 1) },
-                    isRefreshing = isFetching && refreshSource == 1,
-                    isRefreshEnabled = enabled && !isFetching && !usePhoneLocation
+                    suffix = "°",
+                    leadingIcon = Icons.Outlined.SwapHoriz
                 )
                 NumberField(
                     label = stringResource(R.string.label_altitude_meters),
                     value = altitude,
-                    onValueChanged = {
-                        if (it.text != altitude.text) stopFollowing()
-                        altitude = it
-                    },
+                    onValueChanged = { altitude = it },
                     enabled = enabled,
+                    readOnly = usePhoneLocation,
                     isError = parsedAltitude == null,
-                    leadingIcon = Icons.Outlined.Terrain,
-                    onRefresh = { requestPhoneLocation(source = 2) },
-                    isRefreshing = isFetching && refreshSource == 2,
-                    isRefreshEnabled = enabled && !isFetching && !usePhoneLocation
+                    leadingIcon = Icons.Outlined.Terrain
                 )
                 AcknowledgedItem(
                     enabled = enabled,
@@ -589,21 +552,24 @@ private fun LocalControls(
                     value = north,
                     onValueChanged = { north = it },
                     enabled = enabled,
-                    isError = parsedNorth == null
+                    isError = parsedNorth == null,
+                    leadingIcon = Icons.Outlined.North
                 )
                 NumberField(
                     label = stringResource(R.string.label_east_decimeters),
                     value = east,
                     onValueChanged = { east = it },
                     enabled = enabled,
-                    isError = parsedEast == null
+                    isError = parsedEast == null,
+                    leadingIcon = Icons.Outlined.East
                 )
                 NumberField(
                     label = stringResource(R.string.label_altitude_decimeters),
                     value = altitude,
                     onValueChanged = { altitude = it },
                     enabled = enabled,
-                    isError = parsedAltitude == null
+                    isError = parsedAltitude == null,
+                    leadingIcon = Icons.Outlined.Terrain
                 )
                 ExposedDropdownMenuBox(
                     expanded = isFloorExpanded,
@@ -613,6 +579,14 @@ private fun LocalControls(
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                        externalLeadingIcon = {
+                            Icon(
+                                modifier = Modifier.padding(end = 16.dp),
+                                imageVector = Icons.Outlined.Apartment,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
                         label = { Text(text = stringResource(R.string.label_floor)) },
                         value = TextFieldValue(floors[floorIndex].describe(resources)),
                         onValueChanged = {},
@@ -690,11 +664,10 @@ private fun NumberField(
     onValueChanged: (TextFieldValue) -> Unit,
     enabled: Boolean,
     isError: Boolean,
+    readOnly: Boolean = false,
     isDecimal: Boolean = false,
+    suffix: String? = null,
     leadingIcon: ImageVector? = null,
-    onRefresh: (() -> Unit)? = null,
-    isRefreshing: Boolean = false,
-    isRefreshEnabled: Boolean = true,
 ) {
     MeshOutlinedTextField(
         modifier = Modifier.fillMaxWidth(),
@@ -708,20 +681,13 @@ private fun NumberField(
                 )
             }
         },
-        content = {
-            onRefresh?.let {
-                MeshIconButton(
-                    onClick = it,
-                    buttonIcon = Icons.Outlined.Autorenew,
-                    enabled = isRefreshEnabled,
-                    isOnClickActionInProgress = isRefreshing
-                )
-            }
-        },
         label = { Text(text = label) },
+        suffix = suffix?.let { { Text(text = it) } },
         value = value,
         onValueChanged = onValueChanged,
         enabled = enabled,
+        readOnly = readOnly,
+        focusable = !readOnly,
         isError = isError && value.text.isNotEmpty(),
         keyboardOptions = KeyboardOptions(
             keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number

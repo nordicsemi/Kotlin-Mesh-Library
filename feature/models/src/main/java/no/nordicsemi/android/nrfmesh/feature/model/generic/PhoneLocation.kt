@@ -14,8 +14,6 @@ import androidx.core.location.LocationRequestCompat
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
 
 /** Lowest altitude in meters that a Generic Location global altitude can hold. */
@@ -23,9 +21,6 @@ private const val MIN_ALTITUDE_METERS = Short.MIN_VALUE.toInt()
 
 /** Highest altitude in meters that a Generic Location global altitude can hold. */
 private const val MAX_ALTITUDE_METERS = 32765
-
-/** How long to wait for the phone to report a location. */
-private const val LOCATION_TIMEOUT_MILLIS = 15_000L
 
 /** How often the phone is asked for a new location while following it. */
 private const val LIVE_UPDATE_INTERVAL_MILLIS = 500L
@@ -87,13 +82,6 @@ private fun Context.isGranted(permission: String) =
 internal fun Context.hasLocationPermission() =
     isGranted(Manifest.permission.ACCESS_FINE_LOCATION) ||
             isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
-
-/**
- * Reads the current location of the phone once: the first location reported by GPS or the network.
- */
-internal suspend fun Context.readPhoneLocation(): PhoneLocationResult =
-    withTimeoutOrNull(LOCATION_TIMEOUT_MILLIS) { phoneLocationUpdates().first() }
-        ?: PhoneLocationResult.Unavailable
 
 /**
  * Emits the location of the phone every time it changes, until the collector is cancelled.
