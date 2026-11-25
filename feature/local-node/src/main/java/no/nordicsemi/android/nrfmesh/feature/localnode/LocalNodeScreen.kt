@@ -298,15 +298,15 @@ private fun OnOffServerCard(
     }
     var isOn by remember { mutableStateOf(state.value) }
     LaunchedEffect(state) {
-        val transition = state.transition
-        when {
-            transition == null -> isOn = state.value
-            transition.targetValue -> isOn = true
-            else -> {
-                isOn = true
-                delay(transition.remainingTime + 100.milliseconds)
-                isOn = false
-            }
+        val bulb = onOffBulbOf(
+            value = state.value,
+            targetValue = state.transition?.targetValue,
+            remainingTime = state.transition?.remainingTime ?: Duration.ZERO
+        )
+        isOn = bulb.isOn
+        bulb.turnsOffAfter?.let {
+            delay(it)
+            isOn = false
         }
     }
     val tint by animateColorAsState(
@@ -319,6 +319,34 @@ private fun OnOffServerCard(
         tint = tint,
         onClick = onClick
     )
+}
+
+/**
+ * The state of the bulb of the Generic OnOff Server card.
+ *
+ * @property isOn             Whether the bulb is lit.
+ * @property turnsOffAfter    Time after which the bulb is turned off, or null if it stays as is.
+ */
+internal data class OnOffBulb(val isOn: Boolean, val turnsOffAfter: Duration? = null)
+
+/**
+ * Returns the state of the bulb of the Generic OnOff Server card, as the Mesh Model specification
+ * defines in 3.1.1.1 and as the iOS app does. A binary state cannot transition, so when changing
+ * to On, the state changes as soon as the transition starts, and when changing to Off, it changes
+ * when the transition ends.
+ *
+ * @param value            Current value of the state.
+ * @param targetValue      Target of the transition in progress, or null if there is none.
+ * @param remainingTime    Time left of the transition in progress, including its delay.
+ */
+internal fun onOffBulbOf(
+    value: Boolean,
+    targetValue: Boolean?,
+    remainingTime: Duration,
+): OnOffBulb = when (targetValue) {
+    null -> OnOffBulb(isOn = value)
+    true -> OnOffBulb(isOn = true)
+    false -> OnOffBulb(isOn = true, turnsOffAfter = remainingTime + 100.milliseconds)
 }
 
 /**
