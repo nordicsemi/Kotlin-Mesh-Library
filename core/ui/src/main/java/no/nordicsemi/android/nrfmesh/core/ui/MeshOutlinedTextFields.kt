@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -28,10 +29,12 @@ fun MeshOutlinedTextField(
     label: @Composable (() -> Unit)? = null,
     placeholder: @Composable (() -> Unit)? = null,
     prefix: @Composable (() -> Unit)? = null,
+    suffix: @Composable (() -> Unit)? = null,
     value: TextFieldValue,
     onValueChanged: (TextFieldValue) -> Unit,
     internalTrailingIcon: @Composable (() -> Unit)? = null,
     readOnly: Boolean = false,
+    focusable: Boolean = true,
     enabled: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -49,9 +52,11 @@ fun MeshOutlinedTextField(
         OutlinedTextField(
             modifier = Modifier
                 .weight(1f)
+                .focusProperties { canFocus = focusable }
                 .focusRequester(requester),
             enabled = enabled,
             prefix = prefix,
+            suffix = suffix,
             value = value,
             onValueChange = { value ->
                 regex?.let {
