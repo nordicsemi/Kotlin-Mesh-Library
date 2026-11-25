@@ -207,52 +207,67 @@ internal fun encodeLocalLocation(
         uncertainty.raw.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
 
 /**
- * Local floor number as defined in the Generic Location Local state.
+ * Local floor number as defined in the Generic Location Floor Number state.
  *
- * @property raw Raw 8-bit value. 0x00 to 0xFB represent floors -20 to 231, [GROUND_FLOOR_0] (0xFC)
- *               and [GROUND_FLOOR_1] (0xFD) represent the ground floor, depending on whether the
- *               ground floor is numbered 0 or 1 and [UNKNOWN] (0xFF) means the floor is not known.
+ * @property raw Raw 8-bit value. 0x01 to 0xFB represent the floors -19 to 231 (floor + 20). 0x00
+ *               represents floor -20 or any floor below, [ABOVE_MAX_RAW] (0xFC) represents floor
+ *               232 or any floor above, [GROUND_FLOOR_0] (0xFD) and [GROUND_FLOOR_1] (0xFE)
+ *               represent the ground floor, depending on whether the ground floor is numbered 0 or
+ *               1, and [UNKNOWN] (0xFF) means the floor is not configured.
  */
 @JvmInline
 value class FloorNumber(val raw: UByte) {
 
-    /** Returns true if the floor is known. */
+    /** Returns true if the floor is configured. */
     val isKnown: Boolean get() = raw != UNKNOWN_RAW
 
     /** Returns true if this is the ground floor. */
     val isGroundFloor: Boolean get() = raw == GROUND_FLOOR_0_RAW || raw == GROUND_FLOOR_1_RAW
 
+    /** Returns true if the floor is [MIN] or any floor below. */
+    val isMinOrBelow: Boolean get() = raw == 0x00.toUByte()
+
+    /** Returns true if the floor is [MAX] or any floor above. */
+    val isMaxOrAbove: Boolean get() = raw == MAX_RAW
+
     /**
-     * Floor number, or null if the floor is not known or the raw value is reserved for future use.
-     * The ground floor is 0 or 1 depending on [raw].
+     * Floor number, or null if the floor is not configured. The ground floor is 0 or 1 depending
+     * on [raw].
      */
     val number: Int?
-        get() = when {
-            raw == GROUND_FLOOR_0_RAW -> 0
-            raw == GROUND_FLOOR_1_RAW -> 1
-            raw <= MAX_FLOOR_RAW -> raw.toInt() - FLOOR_OFFSET
-            else -> null
+        get() = when (raw) {
+            GROUND_FLOOR_0_RAW -> 0
+            GROUND_FLOOR_1_RAW -> 1
+            UNKNOWN_RAW -> null
+            MAX_RAW -> MAX
+            else -> raw.toInt() - FLOOR_OFFSET
         }
 
-    override fun toString() = when {
-        raw == UNKNOWN_RAW -> "FloorNumber(unknown)"
-        raw == GROUND_FLOOR_0_RAW -> "FloorNumber(ground floor, 0)"
-        raw == GROUND_FLOOR_1_RAW -> "FloorNumber(ground floor, 1)"
-        else -> number?.let { "FloorNumber($it)" } ?: "FloorNumber(reserved, 0x${raw.toString(16)})"
+    override fun toString() = when (raw) {
+        UNKNOWN_RAW -> "FloorNumber(not configured)"
+        GROUND_FLOOR_0_RAW -> "FloorNumber(ground floor, 0)"
+        GROUND_FLOOR_1_RAW -> "FloorNumber(ground floor, 1)"
+        else -> "FloorNumber($number${
+            when {
+                isMinOrBelow -> " or below"
+                isMaxOrAbove -> " or above"
+                else -> ""
+            }
+        })"
     }
 
     companion object {
         private const val FLOOR_OFFSET = 20
-        private val MAX_FLOOR_RAW: UByte = 0xFBu
-        private val GROUND_FLOOR_0_RAW: UByte = 0xFCu
-        private val GROUND_FLOOR_1_RAW: UByte = 0xFDu
+        private val MAX_RAW: UByte = 0xFCu
+        private val GROUND_FLOOR_0_RAW: UByte = 0xFDu
+        private val GROUND_FLOOR_1_RAW: UByte = 0xFEu
         private val UNKNOWN_RAW: UByte = 0xFFu
 
-        /** Lowest floor number that can be represented. */
+        /** Lowest floor number, which also stands for any floor below it. */
         const val MIN = -20
 
-        /** Highest floor number that can be represented. */
-        const val MAX = 231
+        /** Highest floor number, which also stands for any floor above it. */
+        const val MAX = 232
 
         /** Ground floor, where the ground floor is referred to as floor 0. */
         val GROUND_FLOOR_0 = FloorNumber(GROUND_FLOOR_0_RAW)
@@ -260,7 +275,7 @@ value class FloorNumber(val raw: UByte) {
         /** Ground floor, where the ground floor is referred to as floor 1. */
         val GROUND_FLOOR_1 = FloorNumber(GROUND_FLOOR_1_RAW)
 
-        /** Floor that is not known. */
+        /** Floor that is not configured. */
         val UNKNOWN = FloorNumber(UNKNOWN_RAW)
 
         /**
@@ -268,17 +283,20 @@ value class FloorNumber(val raw: UByte) {
          *
          * @return The floor or null if the number is out of range.
          */
-        fun of(number: Int): FloorNumber? =
-            if (number in MIN..MAX) FloorNumber((number + FLOOR_OFFSET).toUByte()) else null
+        fun of(number: Int): FloorNumber? = when (number) {
+            MAX -> FloorNumber(MAX_RAW)
+            in MIN until MAX -> FloorNumber((number + FLOOR_OFFSET).toUByte())
+            else -> null
+        }
     }
 }
 
 /**
- * Uncertainty of a local location, which describes whether the device is mobile, how often the
- * location is updated and how precise it is.
+ * Uncertainty of a local location, which describes whether the device is mobile, how long ago the
+ * location was updated and how precise it is.
  *
  * @property raw Raw 16-bit value. Bit 0 is set for a mobile device, bits 8 to 11 hold the update
- *               time and bits 12 to 15 hold the update precision.
+ *               time and bits 12 to 15 hold the precision.
  */
 @JvmInline
 value class LocationUncertainty(val raw: UShort) {
@@ -286,29 +304,29 @@ value class LocationUncertainty(val raw: UShort) {
     /** Returns true if the device is mobile, or false if it is stationary. */
     val isMobile: Boolean get() = raw.toInt() and 0x01 != 0
 
-    /** Raw 4-bit update time. The time is `2^(value - 3)` seconds. 0xF means not known. */
+    /** Raw 4-bit update time. The time is `2^(value - 3)` seconds. */
     val updateTimeRaw: Int get() = (raw.toInt() shr 8) and 0x0F
 
-    /** Raw 4-bit update precision. The precision is `2^(value - 3)` meters. 0xF means not known. */
+    /** Raw 4-bit precision. The precision is `2^(value - 3)` meters. */
     val precisionRaw: Int get() = (raw.toInt() shr 12) and 0x0F
 
-    /** Time between location updates in milliseconds, or null if not known. */
-    val updateTimeMillis: Long? get() = updateTimeRaw.takeIf { it != 0x0F }?.let { 125L shl it }
+    /** Time since the last update of the location in milliseconds, 125 ms to 4096 s. */
+    val updateTimeMillis: Long get() = 125L shl updateTimeRaw
 
-    /** Precision of the location in millimeters, or null if not known. */
-    val precisionMillimeters: Long? get() = precisionRaw.takeIf { it != 0x0F }?.let { 125L shl it }
+    /** Precision of the location in millimeters, 125 mm to 4096 m. */
+    val precisionMillimeters: Long get() = 125L shl precisionRaw
 
     override fun toString() = "LocationUncertainty(" +
-            "mobile: $isMobile, updateTime: ${updateTimeMillis?.let { "$it ms" } ?: "unknown"}, " +
-            "precision: ${precisionMillimeters?.let { "$it mm" } ?: "unknown"})"
+            "mobile: $isMobile, updateTime: $updateTimeMillis ms, " +
+            "precision: $precisionMillimeters mm)"
 
     companion object {
         /**
          * Creates a [LocationUncertainty] from the raw 4-bit update time and precision values.
          *
          * @param isMobile      True if the device is mobile.
-         * @param updateTimeRaw Raw 4-bit update time, 0 to 15 where 15 means not known.
-         * @param precisionRaw  Raw 4-bit precision, 0 to 15 where 15 means not known.
+         * @param updateTimeRaw Raw 4-bit update time, 0 to 15 for 0.125 s to 4096 s.
+         * @param precisionRaw  Raw 4-bit precision, 0 to 15 for 0.125 m to 4096 m.
          */
         fun of(isMobile: Boolean, updateTimeRaw: Int = 0x0F, precisionRaw: Int = 0x0F) =
             LocationUncertainty(

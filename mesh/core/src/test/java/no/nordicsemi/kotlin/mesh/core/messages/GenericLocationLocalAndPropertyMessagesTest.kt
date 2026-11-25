@@ -60,8 +60,8 @@ class GenericLocationLocalAndPropertyMessagesTest {
         assertNull(GenericLocationLocalGet.init(null))
     }
 
-    // north = 0x0102, east = 0xFFFE (-2), altitude = 0x7FFF, floor = 0xFC, uncertainty = 0x3A01
-    private val localBytes = bytes(0x02, 0x01, 0xFE, 0xFF, 0xFF, 0x7F, 0xFC, 0x01, 0x3A)
+    // north = 0x0102, east = 0xFFFE (-2), altitude = 0x7FFF, floor = 0xFD, uncertainty = 0x3A01
+    private val localBytes = bytes(0x02, 0x01, 0xFE, 0xFF, 0xFF, 0x7F, 0xFD, 0x01, 0x3A)
 
     @Test
     fun testLocationLocalEncodingAndDecoding() {
@@ -109,11 +109,12 @@ class GenericLocationLocalAndPropertyMessagesTest {
         assertTrue(FloorNumber.GROUND_FLOOR_1.isGroundFloor)
         assertNull(FloorNumber.UNKNOWN.number)
         assertFalse(FloorNumber.UNKNOWN.isKnown)
-        assertNull(FloorNumber(0xFEu).number)
+        assertEquals(232, FloorNumber(0xFCu).number)
         assertEquals(FloorNumber(0x00u), FloorNumber.of(-20))
         assertEquals(FloorNumber(0xFBu), FloorNumber.of(231))
+        assertEquals(FloorNumber(0xFCu), FloorNumber.of(232))
         assertNull(FloorNumber.of(-21))
-        assertNull(FloorNumber.of(232))
+        assertNull(FloorNumber.of(233))
     }
 
     @Test
@@ -124,10 +125,10 @@ class GenericLocationLocalAndPropertyMessagesTest {
         assertEquals(1000L, uncertainty.updateTimeMillis)
         assertEquals(2000L, uncertainty.precisionMillimeters)
 
-        val unknown = LocationUncertainty.of(isMobile = false)
-        assertFalse(unknown.isMobile)
-        assertNull(unknown.updateTimeMillis)
-        assertNull(unknown.precisionMillimeters)
+        val coarsest = LocationUncertainty.of(isMobile = false)
+        assertFalse(coarsest.isMobile)
+        assertEquals(4_096_000L, coarsest.updateTimeMillis)
+        assertEquals(4_096_000L, coarsest.precisionMillimeters)
     }
 
     // ---------------------------------------------------------------- Property op codes
