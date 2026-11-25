@@ -78,9 +78,12 @@ import java.util.Locale
 
 /** Floors that can be selected: the ground floors, unknown and the numbered floors. */
 // The summit of Mount Everest, which the global location fields start with.
-private const val EVEREST_LATITUDE = "27.988056"
-private const val EVEREST_LONGITUDE = "86.925278"
-private const val EVEREST_ALTITUDE = "8849"
+internal const val EVEREST_LATITUDE = "27.988056"
+internal const val EVEREST_LONGITUDE = "86.925278"
+internal const val EVEREST_ALTITUDE = "8849"
+
+/** Formats a latitude or a longitude with 6 decimals, which is about 0.1 m. */
+internal fun formatDegrees(degrees: Double): String = "%.6f".format(Locale.US, degrees)
 
 internal val floors: List<FloorNumber> =
     listOf(FloorNumber.GROUND_FLOOR_0, FloorNumber.GROUND_FLOOR_1, FloorNumber.UNKNOWN) +
@@ -288,8 +291,8 @@ private fun GlobalControls(
     var hasPermission by remember { mutableStateOf(context.hasLocationPermission()) }
 
     fun show(location: PhoneLocation) {
-        latitude = TextFieldValue("%.6f".format(Locale.US, location.latitude))
-        longitude = TextFieldValue("%.6f".format(Locale.US, location.longitude))
+        latitude = TextFieldValue(formatDegrees(location.latitude))
+        longitude = TextFieldValue(formatDegrees(location.longitude))
         location.altitudeMeters?.let { altitude = TextFieldValue(it.toString()) }
     }
 
@@ -334,8 +337,8 @@ private fun GlobalControls(
     // Shows the location reported by the node when it is read.
     LaunchedEffect(key1 = status) {
         status?.let {
-            latitude = TextFieldValue(it.latitude.degrees?.let { v -> "%.6f".format(Locale.US, v) } ?: "")
-            longitude = TextFieldValue(it.longitude.degrees?.let { v -> "%.6f".format(Locale.US, v) } ?: "")
+            latitude = TextFieldValue(it.latitude.degrees?.let { v -> formatDegrees(v) } ?: "")
+            longitude = TextFieldValue(it.longitude.degrees?.let { v -> formatDegrees(v) } ?: "")
             altitude = TextFieldValue(it.altitude.meters?.toString() ?: "")
         }
     }
