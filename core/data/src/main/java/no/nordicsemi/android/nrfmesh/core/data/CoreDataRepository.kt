@@ -300,7 +300,11 @@ class CoreDataRepository @Inject constructor(
      * the correct network.
      */
     private fun onMeshNetworkChanged() {
-        val defaultTransitionTimeServer = GenericDefaultTransitionTimeServer()
+        val defaultTransitionTimeServer = GenericDefaultTransitionTimeServer(
+            storage = storage,
+            uuid = meshNetwork?.uuid
+        )
+        ioScope.launch { defaultTransitionTimeServer.restore() }
         val sceneServer = SceneServer(
             ioDispatcher = ioDispatcher,
             storage = storage,

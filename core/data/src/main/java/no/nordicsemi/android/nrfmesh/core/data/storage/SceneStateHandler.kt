@@ -104,3 +104,26 @@ interface SceneRegisterStorage {
      */
     fun deleteScene(uuid: Uuid, sceneNumber: SceneNumber)
 }
+
+/**
+ * An interface for storing the Generic Default Transition Time state of the Generic Default
+ * Transition Time Server on the local node using Proto DataStore.
+ */
+interface GenericDefaultTransitionTimeStorage {
+
+    /**
+     * Stores the raw value of the Generic Default Transition Time state of a given network.
+     *
+     * @param uuid        UUID of the network.
+     * @param rawValue    Raw value of the transition time.
+     */
+    fun storeDefaultTransitionTime(uuid: Uuid, rawValue: UByte)
+
+    /**
+     * Reads the raw value of the Generic Default Transition Time state of a given network.
+     *
+     * @param uuid UUID of the network.
+     * @return Raw value of the transition time, or null if none was stored.
+     */
+    suspend fun readDefaultTransitionTime(uuid: Uuid): UByte?
+}

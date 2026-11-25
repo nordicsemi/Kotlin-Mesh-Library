@@ -24,7 +24,8 @@ import kotlin.uuid.Uuid
 class SceneStatesDataStoreStorage @Inject constructor(
     private val sceneStore: DataStore<ProtoSceneStatesDataStore>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : GenericOnOffStateStorage, GenericLevelStateStorage, SceneRegisterStorage {
+) : GenericOnOffStateStorage, GenericLevelStateStorage, SceneRegisterStorage,
+    GenericDefaultTransitionTimeStorage {
      private val scope = CoroutineScope(context = SupervisorJob() + ioDispatcher)
 
     private suspend fun sceneStates(uuid: Uuid, sceneNumber: SceneNumber) = sceneStore.data
@@ -145,6 +146,23 @@ class SceneStatesDataStoreStorage @Inject constructor(
         ?.genericLevelStates[elementIndex]
         ?.level
         ?.toUShort()
+
+    override fun storeDefaultTransitionTime(uuid: Uuid, rawValue: UByte) {
+        scope.launch {
+            sceneStore.updateData {
+                it.copy(
+                    defaultTransitionTimes = it.defaultTransitionTimes
+                        .plus(uuid.toString() to rawValue.toInt())
+                )
+            }
+        }
+    }
+
+    override suspend fun readDefaultTransitionTime(uuid: Uuid) = sceneStore.data
+        .firstOrNull()
+        ?.defaultTransitionTimes
+        ?.get(uuid.toString())
+        ?.toUByte()
 
     override suspend fun readScenes(uuid: Uuid) = sceneStore.data
         .firstOrNull()

@@ -1,6 +1,7 @@
 package no.nordicsemi.android.nrfmesh.core.data.model
 
 import kotlinx.coroutines.runBlocking
+import no.nordicsemi.android.nrfmesh.core.data.storage.GenericDefaultTransitionTimeStorage
 import no.nordicsemi.kotlin.mesh.core.ModelError
 import no.nordicsemi.kotlin.mesh.core.ModelEvent
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
@@ -20,6 +21,18 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.uuid.Uuid
+
+/** Default Transition Time kept in memory. */
+private class InMemoryDefaultTransitionTimeStorage : GenericDefaultTransitionTimeStorage {
+    val values = mutableMapOf<Uuid, UByte>()
+
+    override fun storeDefaultTransitionTime(uuid: Uuid, rawValue: UByte) {
+        values[uuid] = rawValue
+    }
+
+    override suspend fun readDefaultTransitionTime(uuid: Uuid) = values[uuid]
+}
 
 /** Tests the Generic Default Transition Time Server of the local node. */
 class GenericDefaultTransitionTimeServerTest {
@@ -98,5 +111,38 @@ class GenericDefaultTransitionTimeServerTest {
         send(GenericDefaultTransitionTimeSetUnacknowledged(transitionTime = time))
         send(GenericDefaultTransitionTimeSetUnacknowledged(TransitionTime(rawValue = 0x3Fu)))
         assertEquals(time, server.defaultTransitionTime)
+    }
+
+    @Test
+    fun testTimeIsStoredWhenItChanges() = runBlocking {
+        val storage = InMemoryDefaultTransitionTimeStorage()
+        val uuid = Uuid.random()
+        val persisted = GenericDefaultTransitionTimeServer(storage = storage, uuid = uuid)
+        persisted.defaultTransitionTime = time
+        assertEquals(time.rawValue, storage.values[uuid])
+    }
+
+    @Test
+    fun testTimeIsRestoredByANewServer() = runBlocking {
+        val storage = InMemoryDefaultTransitionTimeStorage()
+        val uuid = Uuid.random()
+        GenericDefaultTransitionTimeServer(storage = storage, uuid = uuid)
+            .defaultTransitionTime = time
+
+        val restarted = GenericDefaultTransitionTimeServer(storage = storage, uuid = uuid)
+        assertEquals(TransitionTime(rawValue = 0u), restarted.defaultTransitionTime)
+        restarted.restore()
+        assertEquals(time, restarted.defaultTransitionTime)
+    }
+
+    @Test
+    fun testTimeOfAnotherNetworkIsNotRestored() = runBlocking {
+        val storage = InMemoryDefaultTransitionTimeStorage()
+        GenericDefaultTransitionTimeServer(storage = storage, uuid = Uuid.random())
+            .defaultTransitionTime = time
+
+        val other = GenericDefaultTransitionTimeServer(storage = storage, uuid = Uuid.random())
+        other.restore()
+        assertEquals(TransitionTime(rawValue = 0u), other.defaultTransitionTime)
     }
 }
