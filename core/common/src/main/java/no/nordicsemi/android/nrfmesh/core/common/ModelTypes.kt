@@ -19,6 +19,24 @@ fun Model.isGenericPowerOnOffServer() =
 fun Model.isGenericPowerOnOffSetupServer() =
     (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_POWER_ON_OFF_SETUP_SERVER_MODEL_ID
 
+fun Model.isGenericLocationServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_LOCATION_SERVER_MODEL_ID
+
+fun Model.isGenericLocationSetupServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_LOCATION_SETUP_SERVER_MODEL_ID
+
+fun Model.isGenericManufacturerPropertyServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_MANUFACTURER_PROPERTY_SERVER_MODEL_ID
+
+fun Model.isGenericAdminPropertyServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_ADMIN_PROPERTY_SERVER_MODEL_ID
+
+fun Model.isGenericUserPropertyServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_USER_PROPERTY_SERVER_MODEL_ID
+
+fun Model.isGenericClientPropertyServer() =
+    (modelId as? SigModelId)?.modelIdentifier == Model.GENERIC_CLIENT_PROPERTY_SERVER_MODEL_ID
+
 fun Model.isSceneServer() =
     (modelId as? SigModelId)?.modelIdentifier == Model.SCENE_SERVER_MODEL_ID
 
