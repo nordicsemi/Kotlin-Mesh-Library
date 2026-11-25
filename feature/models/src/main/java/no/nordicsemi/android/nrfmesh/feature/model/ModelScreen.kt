@@ -28,7 +28,13 @@ import no.nordicsemi.android.nrfmesh.core.common.Utils.describe
 import no.nordicsemi.android.nrfmesh.core.common.isFirmwareDistributionServer
 import no.nordicsemi.android.nrfmesh.core.common.isFirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericDefaultTransitionTimeServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericAdminPropertyServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericClientPropertyServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericLevelServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericLocationServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericLocationSetupServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericManufacturerPropertyServer
+import no.nordicsemi.android.nrfmesh.core.common.isGenericUserPropertyServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericPowerOnOffServer
 import no.nordicsemi.android.nrfmesh.core.common.isGenericPowerOnOffSetupServer
@@ -50,7 +56,11 @@ import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareDistributionServe
 import no.nordicsemi.android.nrfmesh.feature.model.dfu.FirmwareUpdateServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLevelServer
+import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLocationServer
+import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericLocationSetupServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericOnOffServer
+import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericPropertyServer
+import no.nordicsemi.android.nrfmesh.feature.model.generic.PropertyServerKind
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericPowerOnOffServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericPowerOnOffSetupServer
 import no.nordicsemi.android.nrfmesh.feature.model.lepairing.LePairingResponder
@@ -184,6 +194,52 @@ internal fun ModelScreen(
             model.isGenericPowerOnOffSetupServer() ->
                 GenericPowerOnOffSetupServer(
                     model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericLocationServer() ->
+                GenericLocationServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericLocationSetupServer() ->
+                GenericLocationSetupServer(
+                    model = model,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericManufacturerPropertyServer() ->
+                GenericPropertyServer(
+                    model = model,
+                    kind = PropertyServerKind.MANUFACTURER,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericAdminPropertyServer() ->
+                GenericPropertyServer(
+                    model = model,
+                    kind = PropertyServerKind.ADMIN,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericUserPropertyServer() ->
+                GenericPropertyServer(
+                    model = model,
+                    kind = PropertyServerKind.USER,
+                    messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isGenericClientPropertyServer() ->
+                GenericPropertyServer(
+                    model = model,
+                    kind = PropertyServerKind.CLIENT,
                     messageState = messageState,
                     sendApplicationMessage = sendApplicationMessage
                 )
