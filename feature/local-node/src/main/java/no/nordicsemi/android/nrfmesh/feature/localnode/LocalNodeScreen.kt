@@ -1,5 +1,6 @@
 package no.nordicsemi.android.nrfmesh.feature.localnode
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.LinearEasing
@@ -31,7 +32,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -280,9 +280,9 @@ private fun groupLabel(network: MeshNetwork?, address: MeshAddress): String = wh
 }
 
 /**
- * A card with a bulb that lights up according to the Generic OnOff Server state of the local node.
- * A transition, with the transition time of the message or the Generic Default Transition Time,
- * fades the bulb in or out linearly over the time it takes.
+ * A card with a bulb that lights up while the Generic OnOff Server model of the local node is on.
+ * As the Mesh Model specification defines, the state turns on as soon as a transition starts, and
+ * turns off when the transition ends.
  */
 @Composable
 private fun OnOffServerCard(
@@ -296,12 +296,22 @@ private fun OnOffServerCard(
         server?.observer = { state = it }
         onDispose { server?.observer = null }
     }
-    val fraction = remember { Animatable(initialValue = if (state.value) 1f else 0f) }
-    LaunchedEffect(state) { fraction.animateToOnOffState(state = state) }
-    val tint = lerp(
-        start = nordicGrass.copy(alpha = 0.4f),
-        stop = nordicGrass,
-        fraction = fraction.value.coerceIn(0f, 1f)
+    var isOn by remember { mutableStateOf(state.value) }
+    LaunchedEffect(state) {
+        val bulb = onOffBulbOf(
+            value = state.value,
+            targetValue = state.transition?.targetValue,
+            remainingTime = state.transition?.remainingTime ?: Duration.ZERO
+        )
+        isOn = bulb.isOn
+        bulb.turnsOffAfter?.let {
+            delay(it)
+            isOn = false
+        }
+    }
+    val tint by animateColorAsState(
+        targetValue = if (isOn) nordicGrass else nordicGrass.copy(alpha = 0.4f),
+        label = "OnOffServerTint"
     )
     ModelControlCard(
         modifier = modifier,
@@ -312,60 +322,31 @@ private fun OnOffServerCard(
 }
 
 /**
- * Animates the fraction, 0 for off and 1 for on, as the given Generic OnOff state does: a
- * transition moves linearly to the target during the remaining time, after its delay.
+ * The state of the bulb of the Generic OnOff Server card.
+ *
+ * @property isOn             Whether the bulb is lit.
+ * @property turnsOffAfter    Time after which the bulb is turned off, or null if it stays as is.
  */
-private suspend fun Animatable<Float, AnimationVector1D>.animateToOnOffState(
-    state: GenericState<Boolean>,
-) {
-    val transition = state.transition
-    if (transition == null) {
-        // Fades quickly to the new state.
-        animateTo(targetValue = if (state.value) 1f else 0f, animationSpec = tween(300))
-        return
-    }
-    val now = Clock.System.now()
-    val untilStart = (transition.startTime - now).coerceAtLeast(Duration.ZERO)
-    val remaining = transition.remainingTime
-    val target = if (transition.targetValue) 1f else 0f
-    snapTo(
-        onOffFractionAt(
-            from = if (state.value) 1f else 0f,
-            to = target,
-            started = transition.startTime <= now,
-            remaining = remaining,
-            duration = transition.duration
-        )
-    )
-    delay(untilStart)
-    animateTo(
-        targetValue = target,
-        animationSpec = tween(
-            durationMillis = (remaining - untilStart).inWholeMilliseconds.toInt().coerceAtLeast(0),
-            easing = LinearEasing
-        )
-    )
-}
+internal data class OnOffBulb(val isOn: Boolean, val turnsOffAfter: Duration? = null)
 
 /**
- * Returns the fraction of a Generic OnOff transition from [from] to [to] that has passed.
+ * Returns the state of the bulb of the Generic OnOff Server card, as the Mesh Model specification
+ * defines in 3.1.1.1 and as the iOS app does. A binary state cannot transition, so when changing
+ * to On, the state changes as soon as the transition starts, and when changing to Off, it changes
+ * when the transition ends.
  *
- * @param from         Fraction the transition started from.
- * @param to           Fraction the transition ends at.
- * @param started      Whether the delay of the transition has passed.
- * @param remaining    Time left of the transition, including the delay.
- * @param duration     Duration of the transition.
+ * @param value            Current value of the state.
+ * @param targetValue      Target of the transition in progress, or null if there is none.
+ * @param remainingTime    Time left of the transition in progress, including its delay.
  */
-internal fun onOffFractionAt(
-    from: Float,
-    to: Float,
-    started: Boolean,
-    remaining: Duration,
-    duration: Duration,
-): Float {
-    if (!started || duration <= Duration.ZERO || remaining >= duration) return from
-    val progress = (1.0 - remaining / duration).coerceIn(0.0, 1.0).toFloat()
-    return from + (to - from) * progress
+internal fun onOffBulbOf(
+    value: Boolean,
+    targetValue: Boolean?,
+    remainingTime: Duration,
+): OnOffBulb = when (targetValue) {
+    null -> OnOffBulb(isOn = value)
+    true -> OnOffBulb(isOn = true)
+    false -> OnOffBulb(isOn = true, turnsOffAfter = remainingTime + 100.milliseconds)
 }
 
 /**
