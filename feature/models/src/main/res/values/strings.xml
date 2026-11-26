@@ -268,14 +268,15 @@
     <string name="label_floor_or_above">%1$d or above</string>
     <string name="label_precision_m">precision %1$s m</string>
     <string name="label_properties">Properties</string>
+    <string name="label_property_id">Property ID: %1$s</string>
     <string name="label_no_properties">No properties</string>
     <string name="label_access">Access</string>
     <string name="label_value">Value</string>
     <string name="label_value_hex">Value (hex)</string>
     <string name="label_prohibited">Prohibited</string>
-    <string name="label_read">Read</string>
+    <string name="label_read">Read only</string>
     <string name="label_write">Write</string>
-    <string name="label_read_write">Read / write</string>
+    <string name="label_read_write">Read/Write</string>
     <string name="label_select_property">Select a property to read or change it.</string>
     <string name="label_use_phone_location">Use phone location</string>
     <string name="label_phone_location_fetching">Getting the location of the phone…</string>

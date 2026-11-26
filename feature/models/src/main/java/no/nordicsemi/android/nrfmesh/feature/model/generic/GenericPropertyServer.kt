@@ -3,19 +3,19 @@ package no.nordicsemi.android.nrfmesh.feature.model.generic
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.Verified
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -31,11 +31,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.nrfmesh.core.common.Completed
@@ -52,6 +56,10 @@ import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic
 import no.nordicsemi.kotlin.mesh.core.messages.GenericPropertyAccess
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
+import no.nordicsemi.kotlin.mesh.core.messages.PropertyField
+import no.nordicsemi.kotlin.mesh.core.messages.PropertyFieldType
+import no.nordicsemi.kotlin.mesh.core.messages.characteristicOf
+import no.nordicsemi.kotlin.mesh.core.messages.inputFields
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericAdminPropertiesGet
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericAdminPropertiesStatus
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericAdminPropertyGet
@@ -105,6 +113,11 @@ internal fun GenericPropertyServer(
     var status by remember { mutableStateOf<PropertyStatus?>(null) }
     var selected by rememberSaveable { mutableIntStateOf(-1) }
     val selectedId = propertyIds?.getOrNull(selected)
+    // The node does not reply to an unacknowledged set, so its status is not known after one is sent.
+    val send: (Model, MeshMessage) -> Unit = { target, message ->
+        if (message.isUnacknowledgedPropertySet()) status = null
+        sendApplicationMessage(target, message)
+    }
 
     LaunchedEffect(key1 = messageState) {
         if (messageState is Completed) {
@@ -114,10 +127,6 @@ internal fun GenericPropertyServer(
                 if (selected !in it.indices) selected = -1
             }
             messageState.response?.toPropertyStatus()?.let { status = it }
-            // There is no response to an unacknowledged set, so the property is read back.
-            if (messageState.message.isUnacknowledgedPropertySet()) {
-                selectedId?.let { kind.propertyGet(it) }?.let { sendApplicationMessage(model, it) }
-            }
         }
     }
 
@@ -142,20 +151,34 @@ internal fun GenericPropertyServer(
                     messageState.message.isPropertiesGet(),
         )
     }
+    if (propertyIds.isNullOrEmpty()) {
+        ElevatedCardItem(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            imageVector = Icons.Outlined.Tune,
+            title = stringResource(R.string.label_no_properties)
+        )
+    }
+    if (!propertyIds.isNullOrEmpty() && kind != PropertyServerKind.CLIENT) {
+        Text(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            text = stringResource(R.string.label_select_property),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
     propertyIds?.let { ids ->
-        if (ids.isEmpty()) {
-            ElevatedCardItem(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                imageVector = Icons.Outlined.Tune,
-                title = stringResource(R.string.label_no_properties)
-            )
-        }
         ids.forEachIndexed { index, id ->
             ElevatedCardItem(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                imageVector = Icons.Outlined.Tune,
+                colors = if (index == selected) {
+                    CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                } else {
+                    CardDefaults.outlinedCardColors()
+                },
+                imageVector = propertyIconFor(propertyName = id.propertyName()),
                 title = id.propertyName(),
-                subtitle = id.toHex(),
+                subtitle = stringResource(R.string.label_property_id, id.toHex()),
                 enabled = enabled && kind != PropertyServerKind.CLIENT,
                 onClick = if (kind == PropertyServerKind.CLIENT) null else {
                     {
@@ -178,38 +201,50 @@ internal fun GenericPropertyServer(
                 }
             )
         }
-        if (selectedId == null && ids.isNotEmpty() && kind != PropertyServerKind.CLIENT) {
-            Text(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                text = stringResource(R.string.label_select_property),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
     }
     if (selectedId != null && kind != PropertyServerKind.CLIENT) {
         PropertyControls(
             model = model,
             kind = kind,
             propertyId = selectedId,
+            currentAccess = status?.takeIf { it.propertyId == selectedId }?.access,
             enabled = enabled,
             messageState = messageState,
-            sendApplicationMessage = sendApplicationMessage
+            sendApplicationMessage = send
         )
-        SectionTitle(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            title = stringResource(R.string.label_status)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SectionTitle(
+                modifier = Modifier
+                    .weight(weight = 1f)
+                    .padding(horizontal = 16.dp),
+                title = stringResource(R.string.label_status)
+            )
+            MeshIconButton(
+                onClick = {
+                    kind.propertyGet(selectedId)?.let { sendApplicationMessage(model, it) }
+                },
+                buttonIcon = Icons.Outlined.Autorenew,
+                enabled = enabled,
+                isOnClickActionInProgress = messageState.isInProgress() &&
+                        messageState.message.isPropertyGet(),
+            )
+        }
         val current = status?.takeIf { it.propertyId == selectedId }
         val unknown = stringResource(R.string.label_unknown)
-        ElevatedCardItem(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            imageVector = Icons.Outlined.Lock,
+        StatusItem(
+            icon = current?.access?.icon() ?: Icons.Outlined.Lock,
             title = stringResource(R.string.label_access),
-            subtitle = current?.access?.label() ?: unknown
+            value = current?.access?.label()
         )
         ElevatedCardItem(
             modifier = Modifier.padding(horizontal = 16.dp),
-            imageVector = Icons.Outlined.Tune,
+            imageVector = propertyIconFor(propertyName = selectedId.propertyName()),
             title = stringResource(R.string.label_value),
             subtitle = current?.value?.description ?: unknown,
             subtitlesMaxLines = Int.MAX_VALUE
@@ -223,10 +258,17 @@ private fun PropertyControls(
     model: Model,
     kind: PropertyServerKind,
     propertyId: UShort,
+    currentAccess: GenericPropertyAccess?,
     enabled: Boolean,
     messageState: MessageState,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
+    // The access is what a user may do with the property. A user cannot write the value unless the
+    // node reported that it can be written, but an admin is not limited by it. Until the access is
+    // known, the value can be tried.
+    val canWrite = kind != PropertyServerKind.USER || currentAccess == null ||
+            currentAccess == GenericPropertyAccess.WRITE ||
+            currentAccess == GenericPropertyAccess.READ_WRITE
     val options = when (kind) {
         PropertyServerKind.ADMIN -> GenericPropertyAccess.entries
         PropertyServerKind.MANUFACTURER ->
@@ -234,21 +276,39 @@ private fun PropertyControls(
 
         else -> emptyList()
     }
-    var accessIndex by rememberSaveable(propertyId) { mutableIntStateOf(options.lastIndex.coerceAtLeast(0)) }
+    var accessIndex by rememberSaveable(propertyId) {
+        mutableIntStateOf(options.lastIndex.coerceAtLeast(minimumValue = 0))
+    }
+    // Shows the access reported by the node.
+    LaunchedEffect(key1 = currentAccess) {
+        options.indexOf(currentAccess).takeIf { it >= 0 }?.let { accessIndex = it }
+    }
     var isAccessExpanded by rememberSaveable { mutableStateOf(false) }
     var hex by rememberSaveable(propertyId, stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue())
     }
     var acknowledged by rememberSaveable { mutableStateOf(true) }
+    // The value is typed when the library knows the characteristic of the property, otherwise it
+    // is given as hexadecimal bytes.
+    val property = remember(propertyId) { DeviceProperty.from(id = propertyId) }
+    val fields = property?.inputFields.takeIf { kind != PropertyServerKind.MANUFACTURER }
+    var entries by rememberSaveable(propertyId, stateSaver = entriesSaver) {
+        mutableStateOf(fields.orEmpty().map { TextFieldValue(text = it.defaultText()) })
+    }
     val bytes = hex.text.parseHexBytes()
-    // A user property always has a value, but an admin property may be set without one.
-    val isValueValid = when (kind) {
-        PropertyServerKind.USER -> bytes != null && bytes.isNotEmpty()
-        PropertyServerKind.ADMIN -> bytes != null
-        else -> true
+    val typed = if (fields != null) property?.characteristicOf(entries.map { it.text }) else null
+    // A user and an admin property are set with a value, so nothing can be set until one is entered.
+    val isValueValid = when {
+        // A read only property cannot be given a value, so only its access may be set.
+        !canWrite -> kind != PropertyServerKind.USER
+        fields != null -> typed != null
+        kind == PropertyServerKind.MANUFACTURER -> true
+        else -> bytes != null && bytes.isNotEmpty()
     }
     val access = options.getOrNull(accessIndex)
-    val value = bytes?.takeIf { it.isNotEmpty() }?.let { DevicePropertyCharacteristic.Other(it) }
+    val value = if (!canWrite) null else if (fields != null) typed else {
+        bytes?.takeIf { it.isNotEmpty() }?.let { DevicePropertyCharacteristic.Other(it) }
+    }
 
     SectionTitle(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -256,9 +316,9 @@ private fun PropertyControls(
     )
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = Icons.Outlined.Lock,
+        imageVector = propertyIconFor(propertyId.propertyName()),
         title = propertyId.propertyName(),
-        subtitle = propertyId.toHex(),
+        subtitle = stringResource(R.string.label_property_id, propertyId.toHex()),
         body = {
             Column(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
                 if (access != null) {
@@ -297,13 +357,39 @@ private fun PropertyControls(
                         }
                     }
                 }
-                if (kind != PropertyServerKind.MANUFACTURER) {
+                if (kind == PropertyServerKind.USER) {
+                    MeshSingleLineListItem(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = currentAccess?.icon() ?: Icons.Outlined.Lock,
+                        title = stringResource(R.string.label_access),
+                        trailingComposable = {
+                            Text(
+                                text = currentAccess?.label()
+                                    ?: stringResource(R.string.label_unknown)
+                            )
+                        }
+                    )
+                }
+                if (fields != null) {
+                    fields.forEachIndexed { index, field ->
+                        PropertyFieldInput(
+                            field = field,
+                            value = entries[index],
+                            enabled = enabled && canWrite,
+                            icon = propertyIconFor(propertyId.propertyName()),
+                            onValueChanged = { new ->
+                                entries = entries.toMutableList().also { it[index] = new }
+                            }
+                        )
+                    }
+                } else if (kind != PropertyServerKind.MANUFACTURER) {
                     MeshOutlinedHexTextField(
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text(text = stringResource(R.string.label_value_hex)) },
                         value = hex,
                         onValueChanged = { hex = it },
-                        enabled = enabled,
+                        regex = Regex(pattern = "^[0-9A-Fa-f]*$"),
+                        enabled = enabled && canWrite,
                         isError = !isValueValid && hex.text.isNotEmpty()
                     )
                 }
@@ -323,15 +409,6 @@ private fun PropertyControls(
         },
         actions = {
             MeshOutlinedButton(
-                text = stringResource(R.string.label_get),
-                buttonIcon = Icons.Outlined.Download,
-                enabled = enabled,
-                isOnClickActionInProgress = messageState.isInProgress() &&
-                        messageState.message.isPropertyGet(),
-                onClick = { kind.propertyGet(propertyId)?.let { sendApplicationMessage(model, it) } }
-            )
-            Spacer(modifier = Modifier.size(16.dp))
-            MeshOutlinedButton(
                 text = stringResource(R.string.label_set),
                 buttonIcon = Icons.Outlined.Upload,
                 enabled = enabled && isValueValid,
@@ -344,6 +421,67 @@ private fun PropertyControls(
             )
         }
     )
+}
+
+/** Keeps the typed values of a property while the screen is rotated. */
+private val entriesSaver = listSaver<List<TextFieldValue>, String>(
+    save = { values -> values.map { it.text } },
+    restore = { texts -> texts.map { TextFieldValue(text = it, selection = TextRange(it.length)) } }
+)
+
+private fun PropertyField.defaultText() = if (type == PropertyFieldType.BOOLEAN) "false" else ""
+
+/** Whether the text is a number in the range of the field, without a fraction when required. */
+internal fun PropertyField.accepts(text: String): Boolean {
+    if (type == PropertyFieldType.BOOLEAN) return text == "true" || text == "false"
+    val number = text.trim().toBigDecimalOrNull() ?: return false
+    val inRange = range?.contains(number) ?: true
+    return inRange && (type != PropertyFieldType.WHOLE_NUMBER || number.stripTrailingZeros().scale() <= 0)
+}
+
+/** A switch for a boolean, or a number field with the unit of the value. */
+@Composable
+private fun PropertyFieldInput(
+    field: PropertyField,
+    value: TextFieldValue,
+    enabled: Boolean,
+    icon: ImageVector,
+    onValueChanged: (TextFieldValue) -> Unit,
+) {
+    if (field.type == PropertyFieldType.BOOLEAN) {
+        MeshSingleLineListItem(
+            modifier = Modifier.fillMaxSize(),
+            imageVector = icon,
+            title = field.name,
+            trailingComposable = {
+                Switch(
+                    enabled = enabled,
+                    checked = value.text == "true",
+                    onCheckedChange = { onValueChanged(TextFieldValue(text = it.toString())) },
+                )
+            }
+        )
+    } else {
+        val isWhole = field.type == PropertyFieldType.WHOLE_NUMBER
+        val allowed = remember(isWhole) {
+            // Negative numbers are accepted only when the range starts below zero.
+            val sign = if (field.range?.start?.signum() == -1) "-?" else ""
+            Regex(if (isWhole) "^$sign\\d*$" else "^$sign\\d*\\.?\\d*$")
+        }
+        MeshOutlinedTextField(
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(text = field.name) },
+            value = value,
+            onValueChanged = onValueChanged,
+            regex = allowed,
+            enabled = enabled,
+            suffix = field.unit?.let { unit -> { Text(text = unit) } },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (isWhole) KeyboardType.Number else KeyboardType.Decimal
+            ),
+            isError = value.text.isNotEmpty() && !field.accepts(value.text)
+        )
+    }
 }
 
 internal fun PropertyServerKind.propertiesGet(): MeshMessage = when (this) {
