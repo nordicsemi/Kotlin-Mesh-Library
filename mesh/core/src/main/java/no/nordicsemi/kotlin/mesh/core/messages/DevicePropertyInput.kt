@@ -99,7 +99,7 @@ private fun DevicePropertyCharacteristic.spec(): Spec? = when (this) {
     is ElectricCurrent -> decimal("A", ZERO..MAX_CURRENT) { ElectricCurrent(it) }
     is Voltage -> decimal("V", ZERO..MAX_VOLTAGE) { Voltage(it) }
     is Illuminance -> decimal("lx", ZERO..BigDecimal("167772.14")) { Illuminance(it) }
-    is Power -> decimal("W", ZERO..BigDecimal("1677721.4")) { Power(it) }
+    is Power -> decimal("W", ZERO..BigDecimal("1677721.3")) { Power(it) }
 
     is AverageCurrent -> average("A", ZERO..MAX_CURRENT) { value, time ->
         AverageCurrent(value, time)

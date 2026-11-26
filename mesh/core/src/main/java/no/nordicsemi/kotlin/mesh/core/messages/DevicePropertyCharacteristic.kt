@@ -554,7 +554,7 @@ sealed class DevicePropertyCharacteristic {
             )
             is Power -> value.toData(
                 length = 3,
-                range = ZERO..BigDecimal("1677721.4"),
+                range = ZERO..BigDecimal("1677721.3"),
                 resolution = DECI,
                 unknownValue = 0xFFFFFF,
             )
@@ -646,8 +646,8 @@ sealed class DevicePropertyCharacteristic {
                         (sensingDuration?.toString() ?: "an unknown time")
                 }
                 ?: UNKNOWN
-            is Illuminance -> value?.format(ZERO..BigDecimal("167772.13"), " lux") ?: UNKNOWN
-            is Power -> value?.format(ZERO..BigDecimal("1677721.4"), " W") ?: UNKNOWN
+            is Illuminance -> value?.format(ZERO..BigDecimal("167772.14"), " lux") ?: UNKNOWN
+            is Power -> value?.format(ZERO..BigDecimal("1677721.3"), " W") ?: UNKNOWN
             is Temperature -> value
                 ?.format(BigDecimal("-273.15")..BigDecimal("327.67"), "°C") ?: UNKNOWN
             is Voltage -> when {
