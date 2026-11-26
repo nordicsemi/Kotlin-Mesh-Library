@@ -5,22 +5,17 @@ import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.BatteryFull
-import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.ElectricBolt
-import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.SensorOccupied
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Thermostat
-import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Waves
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.ui.graphics.vector.ImageVector
-import no.nordicsemi.kotlin.mesh.core.messages.GenericPropertyAccess
 
 /** The keywords of a property name, and the icon shown for a property whose name has one. */
 private val propertyIcons: List<Pair<Set<String>, ImageVector>> = listOf(
@@ -44,12 +39,4 @@ internal fun propertyIconFor(propertyName: String): ImageVector {
     val words = propertyName.lowercase().split(Regex("[^a-z]+")).toSet()
     return propertyIcons.firstOrNull { (keywords, _) -> keywords.any { it in words } }?.second
         ?: Icons.Outlined.SensorOccupied
-}
-
-/** Returns the icon of an access to a property. */
-internal fun GenericPropertyAccess.icon(): ImageVector = when (this) {
-    GenericPropertyAccess.PROHIBITED -> Icons.Outlined.Block
-    GenericPropertyAccess.READ -> Icons.Outlined.Visibility
-    GenericPropertyAccess.WRITE -> Icons.Outlined.Edit
-    GenericPropertyAccess.READ_WRITE -> Icons.Outlined.EditNote
 }

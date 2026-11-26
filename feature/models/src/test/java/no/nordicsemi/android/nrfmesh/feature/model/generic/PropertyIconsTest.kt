@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.SensorOccupied
 import androidx.compose.material.icons.outlined.WbSunny
-import no.nordicsemi.kotlin.mesh.core.messages.GenericPropertyAccess
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -29,12 +28,5 @@ class PropertyIconsTest {
     fun testUnknownPropertyUsesTheGenericIcon() {
         assertEquals(Icons.Outlined.SensorOccupied, propertyIconFor("0x1234"))
         assertEquals(Icons.Outlined.SensorOccupied, propertyIconFor("Device Firmware Revision"))
-    }
-
-    @Test
-    fun testEveryAccessHasItsOwnIcon() {
-        val icons = GenericPropertyAccess.entries.map { it.icon() }
-        assertEquals(icons.size, icons.toSet().size)
-        assertNotEquals(Icons.Outlined.SensorOccupied, icons.first())
     }
 }

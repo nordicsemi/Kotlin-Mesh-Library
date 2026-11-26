@@ -277,7 +277,7 @@
     <string name="label_read">Read only</string>
     <string name="label_write">Write</string>
     <string name="label_read_write">Read/Write</string>
-    <string name="label_select_property">Select a property to read or change it.</string>
+    <string name="label_select_property">Select a property</string>
     <string name="label_use_phone_location">Use phone location</string>
     <string name="label_phone_location_fetching">Getting the location of the phone…</string>
     <string name="label_phone_location_found">Location of the phone</string>

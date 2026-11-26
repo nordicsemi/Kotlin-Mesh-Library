@@ -15,14 +15,16 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.Verified
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,6 +52,7 @@ import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedHexTextField
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedTextField
 import no.nordicsemi.android.nrfmesh.core.ui.MeshSingleLineListItem
+import no.nordicsemi.android.nrfmesh.core.ui.MeshTwoLineListItem
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.models.R
 import no.nordicsemi.kotlin.mesh.core.messages.DeviceProperty
@@ -158,46 +161,26 @@ internal fun GenericPropertyServer(
             title = stringResource(R.string.label_no_properties)
         )
     }
-    if (!propertyIds.isNullOrEmpty() && kind != PropertyServerKind.CLIENT) {
-        Text(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            text = stringResource(R.string.label_select_property),
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
-    propertyIds?.let { ids ->
-        ids.forEachIndexed { index, id ->
-            ElevatedCardItem(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                colors = if (index == selected) {
-                    CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                } else {
-                    CardDefaults.outlinedCardColors()
-                },
-                imageVector = propertyIconFor(propertyName = id.propertyName()),
-                title = id.propertyName(),
-                subtitle = stringResource(R.string.label_property_id, id.toHex()),
-                enabled = enabled && kind != PropertyServerKind.CLIENT,
-                onClick = if (kind == PropertyServerKind.CLIENT) null else {
-                    {
-                        selected = index
-                        status = null
-                        kind.propertyGet(id)?.let { sendApplicationMessage(model, it) }
-                    }
-                },
-                titleAction = {
-                    if (index == selected) {
-                        Icon(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .size(24.dp),
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
+    propertyIds?.takeIf { it.isNotEmpty() }?.let { ids ->
+        if (kind == PropertyServerKind.CLIENT) {
+            // The properties of a Client Property Server can only be listed.
+            ids.forEach { id ->
+                ElevatedCardItem(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    imageVector = propertyIconFor(propertyName = id.propertyName()),
+                    title = id.propertyName(),
+                    subtitle = stringResource(R.string.label_property_id, id.toHex())
+                )
+            }
+        } else {
+            PropertyDropdown(
+                propertyIds = ids,
+                selected = selected,
+                enabled = enabled,
+                onSelected = { index ->
+                    selected = index
+                    status = null
+                    kind.propertyGet(ids[index])?.let { sendApplicationMessage(model, it) }
                 }
             )
         }
@@ -238,7 +221,7 @@ internal fun GenericPropertyServer(
         val current = status?.takeIf { it.propertyId == selectedId }
         val unknown = stringResource(R.string.label_unknown)
         StatusItem(
-            icon = current?.access?.icon() ?: Icons.Outlined.Lock,
+            icon = Icons.Outlined.Lock,
             title = stringResource(R.string.label_access),
             value = current?.access?.label()
         )
@@ -249,6 +232,80 @@ internal fun GenericPropertyServer(
             subtitle = current?.value?.description ?: unknown,
             subtitlesMaxLines = Int.MAX_VALUE
         )
+    }
+}
+
+/** Lets the user pick one of the [propertyIds] from a drop down list. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PropertyDropdown(
+    propertyIds: List<UShort>,
+    selected: Int,
+    enabled: Boolean,
+    onSelected: (Int) -> Unit,
+) {
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
+    val current = propertyIds.getOrNull(selected)
+    ExposedDropdownMenuBox(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        expanded = isExpanded,
+        onExpandedChange = { isExpanded = it && enabled },
+    ) {
+        ElevatedCardItem(
+            modifier = Modifier.menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            imageVector = current?.let { propertyIconFor(propertyName = it.propertyName()) }
+                ?: Icons.Outlined.Tune,
+            title = current?.propertyName() ?: stringResource(R.string.label_select_property),
+            subtitle = current?.let { stringResource(R.string.label_property_id, it.toHex()) },
+            enabled = enabled,
+            titleAction = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    expanded = isExpanded
+                )
+            }
+        )
+        ExposedDropdownMenu(
+            modifier = Modifier.exposedDropdownSize(),
+            expanded = isExpanded,
+            shape = RoundedCornerShape(size = 16.dp),
+            onDismissRequest = { isExpanded = false },
+        ) {
+            propertyIds.forEachIndexed { index, id ->
+                DropdownMenuItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                    text = {
+                        MeshTwoLineListItem(
+                            leadingComposable = {
+                                Icon(
+                                    modifier = Modifier.padding(end = 16.dp),
+                                    imageVector = propertyIconFor(propertyName = id.propertyName()),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            title = id.propertyName(),
+                            subtitle = stringResource(R.string.label_property_id, id.toHex()),
+                            trailingComposable = {
+                                if (index == selected) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        )
+                    },
+                    onClick = {
+                        isExpanded = false
+                        onSelected(index)
+                    }
+                )
+                if (index < propertyIds.lastIndex) HorizontalDivider()
+            }
+        }
     }
 }
 
@@ -308,113 +365,131 @@ private fun PropertyControls(
         modifier = Modifier.padding(horizontal = 16.dp),
         title = stringResource(R.string.label_controls)
     )
-    ElevatedCardItem(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        imageVector = propertyIconFor(propertyId.propertyName()),
-        title = propertyId.propertyName(),
-        subtitle = stringResource(R.string.label_property_id, propertyId.toHex()),
-        body = {
-            Column(verticalArrangement = Arrangement.spacedBy(space = 8.dp)) {
-                if (access != null) {
-                    ExposedDropdownMenuBox(
-                        expanded = isAccessExpanded,
-                        onExpandedChange = { isAccessExpanded = it && enabled },
-                    ) {
-                        MeshOutlinedTextField(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-                            label = { Text(text = stringResource(R.string.label_access)) },
-                            value = TextFieldValue(access.label()),
-                            onValueChanged = {},
-                            readOnly = true,
-                            enabled = enabled,
-                            isError = false,
-                            internalTrailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isAccessExpanded)
-                            }
-                        )
-                        ExposedDropdownMenu(
-                            expanded = isAccessExpanded,
-                            onDismissRequest = { isAccessExpanded = false },
-                        ) {
-                            options.forEachIndexed { index, option ->
-                                DropdownMenuItem(
-                                    text = { Text(text = option.label()) },
-                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                    onClick = {
-                                        accessIndex = index
-                                        isAccessExpanded = false
-                                    }
-                                )
-                            }
+    OutlinedCard(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(all = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+        ) {
+            if (access != null) {
+                ExposedDropdownMenuBox(
+                    expanded = isAccessExpanded,
+                    onExpandedChange = { isAccessExpanded = it && enabled },
+                ) {
+                    MeshOutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                        externalLeadingIcon = {
+                            Icon(
+                                modifier = Modifier.padding(end = 16.dp),
+                                imageVector = Icons.Outlined.Lock,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        label = { Text(text = stringResource(R.string.label_access)) },
+                        value = TextFieldValue(access.label()),
+                        onValueChanged = {},
+                        readOnly = true,
+                        enabled = enabled,
+                        isError = false,
+                        internalTrailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isAccessExpanded)
                         }
-                    }
-                }
-                if (kind == PropertyServerKind.USER) {
-                    MeshSingleLineListItem(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = currentAccess?.icon() ?: Icons.Outlined.Lock,
-                        title = stringResource(R.string.label_access),
-                        trailingComposable = {
-                            Text(
-                                text = currentAccess?.label()
-                                    ?: stringResource(R.string.label_unknown)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = isAccessExpanded,
+                        onDismissRequest = { isAccessExpanded = false },
+                    ) {
+                        options.forEachIndexed { index, option ->
+                            DropdownMenuItem(
+                                text = { Text(text = option.label()) },
+                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                onClick = {
+                                    accessIndex = index
+                                    isAccessExpanded = false
+                                }
                             )
                         }
-                    )
-                }
-                if (fields != null) {
-                    fields.forEachIndexed { index, field ->
-                        PropertyFieldInput(
-                            field = field,
-                            value = entries[index],
-                            enabled = enabled && canWrite,
-                            icon = propertyIconFor(propertyId.propertyName()),
-                            onValueChanged = { new ->
-                                entries = entries.toMutableList().also { it[index] = new }
-                            }
-                        )
                     }
-                } else if (kind != PropertyServerKind.MANUFACTURER) {
-                    MeshOutlinedHexTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text(text = stringResource(R.string.label_value_hex)) },
-                        value = hex,
-                        onValueChanged = { hex = it },
-                        regex = Regex(pattern = "^[0-9A-Fa-f]*$"),
-                        enabled = enabled && canWrite,
-                        isError = !isValueValid && hex.text.isNotEmpty()
-                    )
                 }
+            }
+            if (kind == PropertyServerKind.USER) {
                 MeshSingleLineListItem(
                     modifier = Modifier.fillMaxSize(),
-                    imageVector = Icons.Outlined.Verified,
-                    title = stringResource(R.string.label_acknowledged),
+                    imageVector = Icons.Outlined.Lock,
+                    title = stringResource(R.string.label_access),
                     trailingComposable = {
-                        Switch(
-                            enabled = enabled,
-                            checked = acknowledged,
-                            onCheckedChange = { acknowledged = it },
+                        Text(
+                            text = currentAccess?.label()
+                                ?: stringResource(R.string.label_unknown)
                         )
                     }
                 )
             }
-        },
-        actions = {
-            MeshOutlinedButton(
-                text = stringResource(R.string.label_set),
-                buttonIcon = Icons.Outlined.Upload,
-                enabled = enabled && isValueValid,
-                isOnClickActionInProgress = messageState.isInProgress() &&
-                        messageState.message.isPropertySet(),
-                onClick = {
-                    kind.propertySet(propertyId, access, value, acknowledged)
-                        ?.let { sendApplicationMessage(model, it) }
+            if (fields != null) {
+                fields.forEachIndexed { index, field ->
+                    PropertyFieldInput(
+                        field = field,
+                        value = entries[index],
+                        enabled = enabled && canWrite,
+                        icon = propertyIconFor(propertyId.propertyName()),
+                        onValueChanged = { new ->
+                            entries = entries.toMutableList().also { it[index] = new }
+                        }
+                    )
+                }
+            } else if (kind != PropertyServerKind.MANUFACTURER) {
+                MeshOutlinedHexTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    externalLeadingIcon = {
+                        Icon(
+                            modifier = Modifier.padding(end = 16.dp),
+                            imageVector = propertyIconFor(propertyId.propertyName()),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    label = { Text(text = stringResource(R.string.label_value_hex)) },
+                    value = hex,
+                    onValueChanged = { hex = it },
+                    regex = Regex(pattern = "^[0-9A-Fa-f]*$"),
+                    enabled = enabled && canWrite,
+                    isError = !isValueValid && hex.text.isNotEmpty()
+                )
+            }
+            MeshSingleLineListItem(
+                modifier = Modifier.fillMaxSize(),
+                imageVector = Icons.Outlined.Verified,
+                title = stringResource(R.string.label_acknowledged),
+                trailingComposable = {
+                    Switch(
+                        enabled = enabled,
+                        checked = acknowledged,
+                        onCheckedChange = { acknowledged = it },
+                    )
                 }
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                MeshOutlinedButton(
+                    text = stringResource(R.string.label_set),
+                    buttonIcon = Icons.Outlined.Upload,
+                    enabled = enabled && isValueValid,
+                    isOnClickActionInProgress = messageState.isInProgress() &&
+                            messageState.message.isPropertySet(),
+                    onClick = {
+                        kind.propertySet(propertyId, access, value, acknowledged)
+                            ?.let { sendApplicationMessage(model, it) }
+                    }
+                )
+            }
         }
-    )
+    }
 }
 
 /** Keeps the typed values of a property while the screen is rotated. */
@@ -464,6 +539,14 @@ private fun PropertyFieldInput(
         }
         MeshOutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
+            externalLeadingIcon = {
+                Icon(
+                    modifier = Modifier.padding(end = 16.dp),
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
             label = { Text(text = field.name) },
             value = value,
             onValueChanged = onValueChanged,
