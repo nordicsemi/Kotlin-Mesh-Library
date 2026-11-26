@@ -13,12 +13,18 @@ built with nRF Connect SDK v3.0.2 for the nRF52840 DK (`nrf52840dk/nrf52840`).
 
 Values are kept in RAM and return to these defaults when the board is reset.
 
+Between them the properties have all four user accesses: prohibited, read, write and read / write.
+A manufacturer property can only be prohibited or read. The User Property Server lists a property
+unless its user access is prohibited.
+
 | State | Default |
 |---|---|
 | Global location | 59.9139, 10.7522, 23 m |
 | Local location | north 1250 dm, east -340 dm, altitude 45 dm, ground floor (0), stationary, 1 s, 500 mm |
 | Admin property UV Index `0x00B1` | 3, user access read / write |
 | Admin property Presence Detected `0x004D` | 0, user access read |
+| Admin property Desired Ambient Temperature `0x0071` | `2C` (22.0 °C), user access write |
+| Admin property Total Device Starts `0x00AE` | `05 00 00`, user access prohibited |
 | Manufacturer property Average Input Current `0x0002` | `10 27 00`, user access read |
 | Manufacturer property Average Input Voltage `0x0003` | `20 4E 00`, user access prohibited |
 | Client property | UV Index `0x00B1` |
@@ -29,6 +35,13 @@ A prebuilt image, `mesh_location_property_nrf52840dk.hex`, is included. Connect 
 
 ```bash
 nrfutil device program --firmware mesh_location_property_nrf52840dk.hex --options chip_erase_mode=ERASE_ALL,reset=RESET_SYSTEM
+```
+
+This erases everything on the board, so the node has to be provisioned again. To keep a provisioned
+node when only the properties changed, erase only what the image uses:
+
+```bash
+nrfutil device program --firmware mesh_location_property_nrf52840dk.hex --options chip_erase_mode=ERASE_RANGES_TOUCHED_BY_FIRMWARE,reset=RESET_SYSTEM
 ```
 
 ## Building

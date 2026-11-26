@@ -101,6 +101,8 @@ static void local_set(struct bt_mesh_loc_srv *srv, struct bt_mesh_msg_ctx *ctx,
 #define PROP_ID_PRESENCE_DETECTED  0x004D /* 1 byte  */
 #define PROP_ID_AVERAGE_INPUT_CURRENT 0x0002 /* 3 bytes */
 #define PROP_ID_AVERAGE_INPUT_VOLTAGE 0x0003 /* 3 bytes */
+#define PROP_ID_DESIRED_AMBIENT_TEMPERATURE 0x0071 /* 1 byte, 0.5 degrees Celsius */
+#define PROP_ID_TOTAL_DEVICE_STARTS 0x00AE /* 3 bytes */
 
 struct prop_value {
 	uint16_t id;
@@ -108,20 +110,29 @@ struct prop_value {
 	uint8_t data[PROP_VALUE_MAX];
 };
 
-/* Admin properties can be read and written. Users may read and write the UV index, but only read
- * the presence.
+/* Admin properties can always be read and written by an admin. They have each of the four user
+ * accesses, which decides what a user can do with them: the UV index can be read and written, the
+ * presence only read, the desired temperature only written, and the number of starts is not
+ * available to users at all, so the User Property Server does not list it.
  */
 static struct bt_mesh_prop admin_props[] = {
 	{ .id = PROP_ID_UV_INDEX, .user_access = BT_MESH_PROP_ACCESS_READ_WRITE },
 	{ .id = PROP_ID_PRESENCE_DETECTED, .user_access = BT_MESH_PROP_ACCESS_READ },
+	{ .id = PROP_ID_DESIRED_AMBIENT_TEMPERATURE, .user_access = BT_MESH_PROP_ACCESS_WRITE },
+	{ .id = PROP_ID_TOTAL_DEVICE_STARTS, .user_access = BT_MESH_PROP_ACCESS_PROHIBITED },
 };
 
 static struct prop_value admin_values[] = {
 	{ .id = PROP_ID_UV_INDEX, .size = 1, .data = { 3 } },
 	{ .id = PROP_ID_PRESENCE_DETECTED, .size = 1, .data = { 0 } },
+	/* 22.0 degrees Celsius is 44 times 0.5. */
+	{ .id = PROP_ID_DESIRED_AMBIENT_TEMPERATURE, .size = 1, .data = { 44 } },
+	{ .id = PROP_ID_TOTAL_DEVICE_STARTS, .size = 3, .data = { 5, 0, 0 } },
 };
 
-/* Manufacturer properties can only be read. */
+/* Manufacturer properties can only be read, or not be accessed by users at all, as these are the
+ * only two accesses a manufacturer property has.
+ */
 static struct bt_mesh_prop mfr_props[] = {
 	{ .id = PROP_ID_AVERAGE_INPUT_CURRENT, .user_access = BT_MESH_PROP_ACCESS_READ },
 	{ .id = PROP_ID_AVERAGE_INPUT_VOLTAGE, .user_access = BT_MESH_PROP_ACCESS_PROHIBITED },
