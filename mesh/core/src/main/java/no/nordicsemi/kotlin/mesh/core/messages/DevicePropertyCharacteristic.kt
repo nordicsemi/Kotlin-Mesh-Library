@@ -14,6 +14,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 import kotlin.time.Instant
 
 /**
@@ -48,12 +49,16 @@ sealed class TimeExponential {
      *
      * @property n The raw 8-bit value.
      */
-    data class RawValue(val n: UByte) : TimeExponential()
+    data class RawValue(val n: UByte) : TimeExponential() {
+        override fun toString() = interval?.describe() ?: ""
+    }
 
     /**
      * The total lifetime of the device.
      */
-    data object DeviceLifetime : TimeExponential()
+    data object DeviceLifetime : TimeExponential() {
+        override fun toString() = "the total device lifetime"
+    }
 
     /**
      * Approximate time interval calculated from the raw value, or `null` for [DeviceLifetime].
@@ -71,7 +76,7 @@ sealed class TimeExponential {
             }
         }
 
-    override fun toString() = interval?.toString() ?: "Total device lifetime"
+    override fun toString() = interval?.describe() ?: "the total device lifetime"
 
     companion object {
 
@@ -636,7 +641,10 @@ sealed class DevicePropertyCharacteristic {
             is Temperature8 -> value?.format(BigDecimal("-64")..BigDecimal("63"), "°C") ?: UNKNOWN
             is ElectricCurrent -> value?.format(ZERO..MAX_CURRENT, " A") ?: UNKNOWN
             is AverageCurrent -> value
-                ?.let { "${ElectricCurrent(it).description} over ${sensingDuration ?: "an unknown time"}" }
+                ?.let {
+                    "${ElectricCurrent(it).description} averaged over " +
+                        (sensingDuration?.toString() ?: "an unknown time")
+                }
                 ?: UNKNOWN
             is Illuminance -> value?.format(ZERO..BigDecimal("167772.13"), " lux") ?: UNKNOWN
             is Power -> value?.format(ZERO..BigDecimal("1677721.4"), " W") ?: UNKNOWN
@@ -649,7 +657,10 @@ sealed class DevicePropertyCharacteristic {
                 else -> value.format(ZERO..MAX_VOLTAGE, " V")
             }
             is AverageVoltage -> value
-                ?.let { "${Voltage(it).description} over ${sensingDuration ?: "an unknown time"}" }
+                ?.let {
+                    "${Voltage(it).description} averaged over " +
+                        (sensingDuration?.toString() ?: "an unknown time")
+                }
                 ?: UNKNOWN
 
             // UShort:
@@ -814,6 +825,18 @@ private fun String.toData(length: Int): ByteArray =
     padEnd(length, ' ').toByteArray(Charsets.UTF_8).copyOf(length)
 
 // MARK: - Helper extensions - formatting
+
+/**
+ * Describes a time interval in words, such as "0 seconds", "1 second" or "2.5 seconds". Intervals
+ * of a minute or longer use the format of [Duration].
+ */
+private fun Duration.describe(): String {
+    val seconds = toDouble(DurationUnit.SECONDS)
+    if (seconds >= 60) return toString()
+    val text = BigDecimal(seconds).setScale(3, RoundingMode.HALF_UP).stripTrailingZeros()
+        .toPlainString()
+    return if (text == "1") "1 second" else "$text seconds"
+}
 
 /**
  * Formats the value clamped to the given range, with 1 to 3 fraction digits and the given unit.
