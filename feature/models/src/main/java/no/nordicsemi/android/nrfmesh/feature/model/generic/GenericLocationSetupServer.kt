@@ -106,6 +106,15 @@ internal fun GenericLocationSetupServer(
     val enabled = hasBoundKey && !messageState.isInProgress()
     // Keeps the location of the node received as a response to a Set.
     val state = rememberLocationState(messageState = messageState)
+    // The node does not reply to an unacknowledged set, so its location is not known after one is sent.
+    val send: (Model, MeshMessage) -> Unit = { target, message ->
+        when (message) {
+            is GenericLocationGlobalSetUnacknowledged -> state.global = null
+            is GenericLocationLocalSetUnacknowledged -> state.local = null
+            else -> {}
+        }
+        sendApplicationMessage(target, message)
+    }
     var selected by rememberSaveable { mutableStateOf(LocationKind.GLOBAL) }
     SectionTitle(
         modifier = Modifier.padding(horizontal = 16.dp),
@@ -123,7 +132,7 @@ internal fun GenericLocationSetupServer(
                     status = state.global,
                     messageState = messageState,
                     enabled = enabled,
-                    sendApplicationMessage = sendApplicationMessage
+                    sendApplicationMessage = send
                 )
                 GlobalStatus(status = state.global)
             }
@@ -134,7 +143,7 @@ internal fun GenericLocationSetupServer(
                     status = state.local,
                     messageState = messageState,
                     enabled = enabled,
-                    sendApplicationMessage = sendApplicationMessage
+                    sendApplicationMessage = send
                 )
                 LocalStatus(status = state.local)
             }
@@ -253,7 +262,7 @@ private fun LocalStatus(status: GenericLocationLocalStatus?) {
 
 /** A status card with the title on the left and the value on the right. */
 @Composable
-private fun StatusItem(icon: ImageVector, title: String, value: String?) {
+internal fun StatusItem(icon: ImageVector, title: String, value: String?) {
     ElevatedCardItem(
         modifier = Modifier.padding(horizontal = 16.dp),
         imageVector = icon,

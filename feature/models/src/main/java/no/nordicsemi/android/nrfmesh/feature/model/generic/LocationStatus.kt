@@ -54,8 +54,10 @@ import no.nordicsemi.kotlin.mesh.core.messages.LocationUncertainty
 import no.nordicsemi.kotlin.mesh.core.messages.Longitude
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalGet
+import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalSetUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalStatus
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationLocalGet
+import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationLocalSetUnacknowledged
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationLocalStatus
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import java.math.BigDecimal
@@ -78,6 +80,12 @@ internal fun rememberLocationState(messageState: MessageState): LocationState {
             when (val response = messageState.response) {
                 is GenericLocationGlobalStatus -> state.global = response
                 is GenericLocationLocalStatus -> state.local = response
+                else -> {}
+            }
+            // The node does not report back an unacknowledged set, so the location is no longer known.
+            when (messageState.message) {
+                is GenericLocationGlobalSetUnacknowledged -> state.global = null
+                is GenericLocationLocalSetUnacknowledged -> state.local = null
                 else -> {}
             }
         }
