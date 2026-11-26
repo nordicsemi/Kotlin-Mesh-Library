@@ -116,6 +116,34 @@ sealed class TimeExponential {
     }
 }
 
+/** The state of a door or a window. */
+enum class DoorWindowState(val raw: UByte) {
+    OPEN(0u),
+    CLOSED(1u),
+    TILTED(2u);
+
+    override fun toString() = when (this) {
+        OPEN -> "Open"
+        CLOSED -> "Closed"
+        TILTED -> "Tilted/Ajar"
+    }
+}
+
+/** The state of a button. */
+enum class ButtonStatus {
+    NOT_ACTUATED,
+    PRESSED,
+    RELEASED,
+    HELD;
+
+    override fun toString() = when (this) {
+        NOT_ACTUATED -> "not actuated"
+        PRESSED -> "pressed"
+        RELEASED -> "released"
+        HELD -> "held"
+    }
+}
+
 /**
  * A representation of a Device Property characteristic.
  *
@@ -442,6 +470,132 @@ sealed class DevicePropertyCharacteristic {
     data class Voltage(val value: BigDecimal?) : DevicePropertyCharacteristic()
 
     /**
+     * Whether a change in acceleration was detected.
+     *
+     * @property detected True when a change was detected.
+     */
+    data class AccelerationDetection(val detected: Boolean) : DevicePropertyCharacteristic()
+
+    /**
+     * An acceleration along three axes.
+     *
+     * Unit is the standard acceleration due to gravity (g) with a resolution of 0.01 g, from -1.28
+     * to 1.25. A value which is [ValidDecimal.Invalid] is out of range, and `null` is not known.
+     */
+    data class Acceleration3d(
+        val x: ValidDecimal?,
+        val y: ValidDecimal?,
+        val z: ValidDecimal?,
+    ) : DevicePropertyCharacteristic()
+
+    /**
+     * An acceleration along three axes with a higher resolution.
+     *
+     * Unit is the standard acceleration due to gravity (g) with a resolution of 0.001 g, from
+     * -32.768 to 32.765. A value which is [ValidDecimal.Invalid] is out of range, and `null` is
+     * not known.
+     */
+    data class PreciseAcceleration3d(
+        val x: ValidDecimal?,
+        val y: ValidDecimal?,
+        val z: ValidDecimal?,
+    ) : DevicePropertyCharacteristic()
+
+    /**
+     * The status of eight contacts.
+     *
+     * @property contacts For each contact, in order, true when it is closed and false when it is
+     *                    open or not in use.
+     */
+    data class ContactStatus(val contacts: List<Boolean>) : DevicePropertyCharacteristic()
+
+    /**
+     * The status of a door or a window.
+     *
+     * @property raw The raw value. The values from 3 to 255 are reserved for future use.
+     */
+    data class DoorWindowStatus(val raw: UByte) : DevicePropertyCharacteristic() {
+
+        constructor(state: DoorWindowState) : this(state.raw)
+
+        /** The state, or `null` when the value is reserved. */
+        val state: DoorWindowState? get() = DoorWindowState.entries.firstOrNull { it.raw == raw }
+    }
+
+    /**
+     * The status of four buttons.
+     *
+     * @property buttons The status of each button, in order.
+     */
+    data class PushButtonStatus(val buttons: List<ButtonStatus>) : DevicePropertyCharacteristic()
+
+    /**
+     * A floor number.
+     *
+     * @property value The floor, which is not configured when it is 0xFF.
+     */
+    data class Floor(val value: FloorNumber) : DevicePropertyCharacteristic()
+
+    /**
+     * A relative humidity, encoded on a single octet.
+     *
+     * Unit is percent with a resolution of 0.5%.
+     *
+     * @property value The value, or `null` when it is not known.
+     */
+    data class Humidity8(val value: BigDecimal?) : DevicePropertyCharacteristic()
+
+    /**
+     * An illuminance, encoded on two octets.
+     *
+     * Unit is lux with a resolution of 1 lux, from 0 to 65534.
+     *
+     * @property value The value, or `null` when it is not known.
+     */
+    data class Illuminance16(val value: UShort?) : DevicePropertyCharacteristic()
+
+    /**
+     * The number of steps from the minimum to the maximum value, from 1 to 200.
+     *
+     * @property value The number of steps, or `null` when it is not known.
+     */
+    data class Percentage8Steps(val value: UByte?) : DevicePropertyCharacteristic()
+
+    /**
+     * A temperature and a relative humidity, each encoded on a single octet.
+     *
+     * @property temperature The temperature in degrees Celsius, or `null` when it is not known.
+     * @property humidity    The relative humidity in percent, or `null` when it is not known.
+     */
+    data class TemperatureAndHumidity8(
+        val temperature: BigDecimal?,
+        val humidity: BigDecimal?,
+    ) : DevicePropertyCharacteristic()
+
+    /**
+     * A temperature and a relative humidity, each encoded on two octets.
+     *
+     * @property temperature The temperature in degrees Celsius, or `null` when it is not known.
+     * @property humidity    The relative humidity in percent, or `null` when it is not known.
+     */
+    data class TemperatureAndHumidity(
+        val temperature: BigDecimal?,
+        val humidity: BigDecimal?,
+    ) : DevicePropertyCharacteristic()
+
+    /**
+     * The weights of the probes of a sensor.
+     *
+     * @property steps   The number of steps the weights are given in, or `null` when it is not
+     *                   known.
+     * @property weights The weight of each probe in percent, or `null` when it is not known.
+     */
+    data class SubSensorWeights(
+        val steps: UByte?,
+        val weights: List<BigDecimal?>,
+    ) : DevicePropertyCharacteristic()
+
+    /**
      * A characteristic which is not supported by this library, returned as raw data.
      *
      * @property value The raw value.
@@ -610,6 +764,51 @@ sealed class DevicePropertyCharacteristic {
             is FixedString36 -> value.toData(length = 36)
             is FixedString64 -> value.toData(length = 64)
 
+            // Status:
+            is AccelerationDetection -> byteArrayOf(if (detected) 0x01 else 0x00)
+            is ContactStatus -> byteArrayOf(
+                contacts.take(8).foldIndexed(0) { i, bits, closed ->
+                    if (closed) bits or (1 shl i) else bits
+                }.toByte()
+            )
+            is DoorWindowStatus -> byteArrayOf(raw.toByte())
+            is PushButtonStatus -> byteArrayOf(
+                buttons.take(4).foldIndexed(0) { i, bits, button -> bits or (button.ordinal shl (2 * i)) }
+                    .toByte()
+            )
+            is Floor -> byteArrayOf(value.raw.toByte())
+
+            // ValidDecimal? as Int8 with 0x7E as out of range and 0x7F as unknown:
+            is Acceleration3d -> x.toData(1, ACCELERATION_RANGE, CENTI, 0x7E, 0x7F) +
+                y.toData(1, ACCELERATION_RANGE, CENTI, 0x7E, 0x7F) +
+                z.toData(1, ACCELERATION_RANGE, CENTI, 0x7E, 0x7F)
+
+            // ValidDecimal? as Int16 with 0x7FFE as out of range and 0x7FFF as unknown:
+            is PreciseAcceleration3d -> x.toData(2, PRECISE_ACCELERATION_RANGE, MILLI, 0x7FFE, 0x7FFF) +
+                y.toData(2, PRECISE_ACCELERATION_RANGE, MILLI, 0x7FFE, 0x7FFF) +
+                z.toData(2, PRECISE_ACCELERATION_RANGE, MILLI, 0x7FFE, 0x7FFF)
+
+            // BigDecimal? as UInt8 with 0xFF as unknown:
+            is Humidity8 -> value.toData(
+                length = 1,
+                range = ZERO..HUNDRED,
+                resolution = HALF,
+                unknownValue = 0xFF,
+            )
+
+            // UShort? with 0xFFFF as unknown:
+            is Illuminance16 -> value.toData(length = 2, unknownValue = 0xFFFF)
+
+            // UByte? with 0xFF as unknown:
+            is Percentage8Steps -> byteArrayOf((value?.toInt() ?: 0xFF).toByte())
+
+            // Two characteristics, one after the other:
+            is TemperatureAndHumidity8 -> Temperature8(temperature).data + Humidity8(humidity).data
+            is TemperatureAndHumidity -> Temperature(temperature).data + Humidity(humidity).data
+            is SubSensorWeights -> weights.fold(Percentage8Steps(steps).data) { data, weight ->
+                data + Percentage8(weight).data
+            }
+
             // Other:
             is Other -> value
         }
@@ -709,6 +908,36 @@ sealed class DevicePropertyCharacteristic {
             is FixedString36 -> value
             is FixedString64 -> value
 
+            // Status:
+            is AccelerationDetection ->
+                if (detected) "Change in acceleration detected" else "No change in acceleration"
+            is ContactStatus -> contacts.withIndex().filter { it.value }.map { it.index }.let {
+                if (it.isEmpty()) "All contacts are open" else "Closed: ${it.joinToString()}"
+            }
+            is DoorWindowStatus -> state?.toString()
+                ?: "Reserved (0x${raw.toString(16).padStart(2, '0')})"
+            is PushButtonStatus -> buttons.withIndex()
+                .joinToString { "Button ${it.index}: ${it.value}" }
+            is Floor -> value.describe()
+
+            // ValidDecimal?:
+            is Acceleration3d -> "X: ${x.formatAxis(ACCELERATION_RANGE)}, " +
+                "Y: ${y.formatAxis(ACCELERATION_RANGE)}, Z: ${z.formatAxis(ACCELERATION_RANGE)}"
+            is PreciseAcceleration3d -> "X: ${x.formatAxis(PRECISE_ACCELERATION_RANGE)}, " +
+                "Y: ${y.formatAxis(PRECISE_ACCELERATION_RANGE)}, " +
+                "Z: ${z.formatAxis(PRECISE_ACCELERATION_RANGE)}"
+
+            // Others:
+            is Humidity8 -> value?.format(ZERO..HUNDRED, "%") ?: UNKNOWN
+            is Illuminance16 -> value?.let { "$it lux" } ?: UNKNOWN
+            is Percentage8Steps -> value?.let { "$it steps" } ?: UNKNOWN
+            is TemperatureAndHumidity8 ->
+                "${Temperature8(temperature).description}, ${Humidity8(humidity).description}"
+            is TemperatureAndHumidity ->
+                "${Temperature(temperature).description}, ${Humidity(humidity).description}"
+            is SubSensorWeights -> "${Percentage8Steps(steps).description}, weights: " +
+                weights.joinToString { it?.format(ZERO..HUNDRED, "%") ?: "unknown" }
+
             // Other:
             is Other -> value.toHex()
         }
@@ -730,6 +959,14 @@ sealed class DevicePropertyCharacteristic {
 
         /** Resolution of a voltage value, 1/64 V. */
         internal val VOLTAGE_RESOLUTION: BigDecimal = BigDecimal("0.015625")
+
+        /** Range of an acceleration in g, with a resolution of 0.01 g. */
+        internal val ACCELERATION_RANGE: ClosedRange<BigDecimal> =
+            BigDecimal("-1.28")..BigDecimal("1.25")
+
+        /** Range of a precise acceleration in g, with a resolution of 0.001 g. */
+        internal val PRECISE_ACCELERATION_RANGE: ClosedRange<BigDecimal> =
+            BigDecimal("-32.768")..BigDecimal("32.765")
 
         internal val MAX_CURRENT: BigDecimal = BigDecimal("655.34")
         internal val MAX_VOLTAGE: BigDecimal = BigDecimal("1022")
@@ -836,6 +1073,22 @@ private fun Duration.describe(): String {
     val text = BigDecimal(seconds).setScale(3, RoundingMode.HALF_UP).stripTrailingZeros()
         .toPlainString()
     return if (text == "1") "1 second" else "$text seconds"
+}
+
+/** Describes an acceleration along an axis, which may be out of range or not known. */
+private fun ValidDecimal?.formatAxis(range: ClosedRange<BigDecimal>): String = when (this) {
+    null -> "unknown"
+    is ValidDecimal.Invalid -> "out of range"
+    is ValidDecimal.Valid -> value.format(range, " g")
+}
+
+/** Describes a floor, where the ground floor may be numbered 0 or 1. */
+private fun FloorNumber.describe(): String = when {
+    !isKnown -> "Not configured"
+    isGroundFloor -> "Ground floor ($number)"
+    isMinOrBelow -> "${FloorNumber.MIN} or below"
+    isMaxOrAbove -> "${FloorNumber.MAX} or above"
+    else -> "$number"
 }
 
 /**

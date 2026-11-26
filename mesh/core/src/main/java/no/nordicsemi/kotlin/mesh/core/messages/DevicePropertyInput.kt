@@ -1,9 +1,11 @@
 package no.nordicsemi.kotlin.mesh.core.messages
 
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.*
+import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.Companion.ACCELERATION_RANGE
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.Companion.HUNDRED
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.Companion.MAX_CURRENT
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.Companion.MAX_VOLTAGE
+import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.Companion.PRECISE_ACCELERATION_RANGE
 import no.nordicsemi.kotlin.mesh.core.messages.DevicePropertyCharacteristic.Companion.ZERO
 import java.math.BigDecimal
 import kotlin.time.Duration.Companion.seconds
@@ -121,7 +123,79 @@ private fun DevicePropertyCharacteristic.spec(): Spec? = when (this) {
     is TimeMillisecond24 -> whole("ms", MAX_24) { TimeMillisecond24(it.toLong().toUInt()) }
     is Energy -> whole("kWh", MAX_24) { Energy(it.toLong().toUInt()) }
 
+    is Humidity8 -> decimal("%", ZERO..HUNDRED) { Humidity8(it) }
+    is Illuminance16 -> whole("lx", max = BigDecimal(0xFFFE)) {
+        Illuminance16(it.toInt().toUShort())
+    }
+    is Percentage8Steps ->
+        whole(unit = null, max = BigDecimal(200), min = BigDecimal.ONE) {
+            Percentage8Steps(it.toInt().toUByte())
+        }
+
+    is AccelerationDetection ->
+        Spec(listOf(PropertyField("Change detected", null, PropertyFieldType.BOOLEAN))) {
+            when (it[0].trim().lowercase()) {
+                "true" -> AccelerationDetection(true)
+                "false" -> AccelerationDetection(false)
+                else -> null
+            }
+        }
+    is Acceleration3d -> axes(ACCELERATION_RANGE) { x, y, z -> Acceleration3d(x, y, z) }
+    is PreciseAcceleration3d ->
+        axes(PRECISE_ACCELERATION_RANGE) { x, y, z -> PreciseAcceleration3d(x, y, z) }
+
+    is TemperatureAndHumidity8 ->
+        temperatureAndHumidity(BigDecimal("-64")..BigDecimal("63")) { t, h ->
+            TemperatureAndHumidity8(t, h)
+        }
+    is TemperatureAndHumidity ->
+        temperatureAndHumidity(BigDecimal("-273.15")..BigDecimal("327.67")) { t, h ->
+            TemperatureAndHumidity(t, h)
+        }
+
+    is SubSensorWeights -> {
+        val steps = BigDecimal.ONE..BigDecimal(200)
+        val percent = ZERO..HUNDRED
+        Spec(
+            listOf(PropertyField("Steps", null, PropertyFieldType.WHOLE_NUMBER, steps)) +
+                weights.indices.map {
+                    PropertyField("Weight ${it + 1}", "%", PropertyFieldType.DECIMAL, percent)
+                }
+        ) { values ->
+            val stepCount = values[0].toWhole(steps)
+            val weightValues = values.drop(1).map { it.toDecimal(percent) }
+            if (stepCount == null || weightValues.any { it == null }) null
+            else SubSensorWeights(stepCount.toInt().toUByte(), weightValues)
+        }
+    }
+
     else -> null
+}
+
+/** Three accelerations in g, one for each axis. */
+private fun axes(
+    range: ClosedRange<BigDecimal>,
+    create: (ValidDecimal, ValidDecimal, ValidDecimal) -> DevicePropertyCharacteristic,
+) = Spec(
+    listOf("X", "Y", "Z").map { PropertyField(it, "g", PropertyFieldType.DECIMAL, range) }
+) { values ->
+    val axes = values.map { it.toDecimal(range)?.let { value -> ValidDecimal.Valid(value) } }
+    if (axes.any { it == null }) null else create(axes[0]!!, axes[1]!!, axes[2]!!)
+}
+
+/** A temperature in degrees Celsius and a relative humidity in percent. */
+private fun temperatureAndHumidity(
+    temperatureRange: ClosedRange<BigDecimal>,
+    create: (BigDecimal, BigDecimal) -> DevicePropertyCharacteristic,
+) = Spec(
+    listOf(
+        PropertyField("Temperature", "°C", PropertyFieldType.DECIMAL, temperatureRange),
+        PropertyField("Humidity", "%", PropertyFieldType.DECIMAL, ZERO..HUNDRED),
+    )
+) {
+    val temperature = it[0].toDecimal(temperatureRange)
+    val humidity = it[1].toDecimal(ZERO..HUNDRED)
+    if (temperature == null || humidity == null) null else create(temperature, humidity)
 }
 
 private fun decimal(
@@ -135,9 +209,10 @@ private fun decimal(
 private fun whole(
     unit: String?,
     max: BigDecimal,
+    min: BigDecimal = ZERO,
     create: (BigDecimal) -> DevicePropertyCharacteristic,
 ): Spec {
-    val range = ZERO..max
+    val range = min..max
     return Spec(listOf(PropertyField(VALUE, unit, PropertyFieldType.WHOLE_NUMBER, range))) {
         it[0].toWhole(range)?.let(create)
     }

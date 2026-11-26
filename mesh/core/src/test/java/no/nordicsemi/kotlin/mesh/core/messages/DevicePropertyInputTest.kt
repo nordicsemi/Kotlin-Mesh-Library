@@ -106,7 +106,10 @@ class DevicePropertyInputTest {
         assertTrue(supported.size > 20, "Only ${supported.size} properties are supported")
         supported.forEach { property ->
             val fields = assertNotNull(property.inputFields)
-            val values = fields.map { if (it.type == PropertyFieldType.BOOLEAN) "false" else "0" }
+            val values = fields.map {
+                if (it.type == PropertyFieldType.BOOLEAN) "false"
+                else assertNotNull(it.range).start.toPlainString()
+            }
             val characteristic = assertNotNull(
                 property.characteristicOf(values),
                 "${property.name} was not created from $values"
