@@ -7,6 +7,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DevicePropertyListTest {
 
@@ -93,5 +94,24 @@ class DevicePropertyListTest {
             val value = property.read(ByteArray(length), 0, length)
             assertFalse(value is DevicePropertyCharacteristic.Other, property.name)
         }
+    }
+
+    @Test
+    fun testEveryPropertyIsEncodedBackToTheBytesItWasDecodedFrom() {
+        val decoded = DeviceProperty.entries.filter { it.valueLength != null }
+        assertTrue(decoded.size > 100, "Only ${decoded.size} properties have a decoder")
+        val failures = mutableListOf<String>()
+        decoded.forEach { property ->
+            val length = assertNotNull(property.valueLength)
+            listOf(0x00, 0x01).forEach { fill ->
+                val bytes = ByteArray(length) { fill.toByte() }
+                val value = property.read(bytes, 0, length)
+                if (!bytes.contentEquals(value.data)) {
+                    failures += "${property.name} (0x%04X) with ${bytes.toList()} gave ${value.data.toList()}"
+                        .format(property.id.toInt())
+                }
+            }
+        }
+        assertTrue(failures.isEmpty(), failures.joinToString("\n"))
     }
 }
