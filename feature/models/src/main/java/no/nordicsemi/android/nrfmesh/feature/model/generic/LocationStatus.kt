@@ -82,15 +82,22 @@ internal fun rememberLocationState(messageState: MessageState): LocationState {
                 is GenericLocationLocalStatus -> state.local = response
                 else -> {}
             }
-            // The node does not report back an unacknowledged set, so the location is no longer known.
-            when (messageState.message) {
-                is GenericLocationGlobalSetUnacknowledged -> state.global = null
-                is GenericLocationLocalSetUnacknowledged -> state.local = null
-                else -> {}
-            }
+            state.forgetAfter(message = messageState.message)
         }
     }
     return state
+}
+
+/**
+ * The node does not report back an unacknowledged set, so the location it set is no longer known
+ * once the message is sent.
+ */
+internal fun LocationState.forgetAfter(message: Any?) {
+    when (message) {
+        is GenericLocationGlobalSetUnacknowledged -> global = null
+        is GenericLocationLocalSetUnacknowledged -> local = null
+        else -> {}
+    }
 }
 
 /**

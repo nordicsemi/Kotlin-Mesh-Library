@@ -108,11 +108,7 @@ internal fun GenericLocationSetupServer(
     val state = rememberLocationState(messageState = messageState)
     // The node does not reply to an unacknowledged set, so its location is not known after one is sent.
     val send: (Model, MeshMessage) -> Unit = { target, message ->
-        when (message) {
-            is GenericLocationGlobalSetUnacknowledged -> state.global = null
-            is GenericLocationLocalSetUnacknowledged -> state.local = null
-            else -> {}
-        }
+        state.forgetAfter(message = message)
         sendApplicationMessage(target, message)
     }
     var selected by rememberSaveable { mutableStateOf(LocationKind.GLOBAL) }

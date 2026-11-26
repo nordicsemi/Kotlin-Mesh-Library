@@ -263,12 +263,7 @@ private fun PropertyControls(
     messageState: MessageState,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
-    // The access is what a user may do with the property. A user cannot write the value unless the
-    // node reported that it can be written, but an admin is not limited by it. Until the access is
-    // known, the value can be tried.
-    val canWrite = kind != PropertyServerKind.USER || currentAccess == null ||
-            currentAccess == GenericPropertyAccess.WRITE ||
-            currentAccess == GenericPropertyAccess.READ_WRITE
+    val canWrite = canWriteValue(kind = kind, access = currentAccess)
     val options = when (kind) {
         PropertyServerKind.ADMIN -> GenericPropertyAccess.entries
         PropertyServerKind.MANUFACTURER ->
@@ -297,14 +292,13 @@ private fun PropertyControls(
     }
     val bytes = hex.text.parseHexBytes()
     val typed = if (fields != null) property?.characteristicOf(entries.map { it.text }) else null
-    // A user and an admin property are set with a value, so nothing can be set until one is entered.
-    val isValueValid = when {
-        // A read only property cannot be given a value, so only its access may be set.
-        !canWrite -> kind != PropertyServerKind.USER
-        fields != null -> typed != null
-        kind == PropertyServerKind.MANUFACTURER -> true
-        else -> bytes != null && bytes.isNotEmpty()
-    }
+    val isValueValid = isSetAllowed(
+        kind = kind,
+        canWrite = canWrite,
+        hasTypedFields = fields != null,
+        typed = typed,
+        bytes = bytes
+    )
     val access = options.getOrNull(accessIndex)
     val value = if (!canWrite) null else if (fields != null) typed else {
         bytes?.takeIf { it.isNotEmpty() }?.let { DevicePropertyCharacteristic.Other(it) }
@@ -484,6 +478,41 @@ private fun PropertyFieldInput(
     }
 }
 
+/**
+ * Whether the value of a property can be changed.
+ *
+ * The access is what a user may do with the property. A user cannot write the value unless the
+ * node reported that it can be written, but an admin is not limited by it. Until the access is
+ * known, the value can be tried.
+ */
+internal fun canWriteValue(kind: PropertyServerKind, access: GenericPropertyAccess?): Boolean =
+    kind != PropertyServerKind.USER || access == null ||
+            access == GenericPropertyAccess.WRITE || access == GenericPropertyAccess.READ_WRITE
+
+/**
+ * Whether Set can be pressed. A user and an admin property are set with a value, so nothing can be
+ * set until one is entered. The access of a Manufacturer property is always set.
+ *
+ * @param canWrite       Whether the value can be changed, see [canWriteValue].
+ * @param hasTypedFields Whether the value is entered as typed values, and not as hexadecimal bytes.
+ * @param typed          The characteristic created from the typed values, or `null` if they are
+ *                       not valid.
+ * @param bytes          The bytes entered in hexadecimal, or `null` if they are not valid.
+ */
+internal fun isSetAllowed(
+    kind: PropertyServerKind,
+    canWrite: Boolean,
+    hasTypedFields: Boolean,
+    typed: DevicePropertyCharacteristic?,
+    bytes: ByteArray?,
+): Boolean = when {
+    // A read only property cannot be given a value, so only its access may be set.
+    !canWrite -> kind != PropertyServerKind.USER
+    hasTypedFields -> typed != null
+    kind == PropertyServerKind.MANUFACTURER -> true
+    else -> bytes != null && bytes.isNotEmpty()
+}
+
 internal fun PropertyServerKind.propertiesGet(): MeshMessage = when (this) {
     PropertyServerKind.MANUFACTURER -> GenericManufacturerPropertiesGet()
     PropertyServerKind.ADMIN -> GenericAdminPropertiesGet()
@@ -550,7 +579,7 @@ private fun Any?.isPropertySet() = this is GenericManufacturerPropertySet ||
         this is GenericAdminPropertySet || this is GenericAdminPropertySetUnacknowledged ||
         this is GenericUserPropertySet || this is GenericUserPropertySetUnacknowledged
 
-private fun Any?.isUnacknowledgedPropertySet() =
+internal fun Any?.isUnacknowledgedPropertySet() =
     this is GenericManufacturerPropertySetUnacknowledged ||
             this is GenericAdminPropertySetUnacknowledged ||
             this is GenericUserPropertySetUnacknowledged
