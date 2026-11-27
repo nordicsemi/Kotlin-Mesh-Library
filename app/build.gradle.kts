@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     // Material3
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite-android:1.4.0")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite-android:1.5.0")
 
     implementation(libs.timber)
     implementation(libs.slf4j.timber)
