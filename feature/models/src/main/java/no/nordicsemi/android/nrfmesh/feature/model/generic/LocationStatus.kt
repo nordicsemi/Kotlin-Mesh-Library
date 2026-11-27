@@ -19,6 +19,8 @@ import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.SwapVert
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.Terrain
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SegmentedButton
@@ -50,7 +52,6 @@ import no.nordicsemi.kotlin.mesh.core.messages.Altitude
 import no.nordicsemi.kotlin.mesh.core.messages.FloorNumber
 import no.nordicsemi.kotlin.mesh.core.messages.Latitude
 import no.nordicsemi.kotlin.mesh.core.messages.LocalLocationStatusMessage
-import no.nordicsemi.kotlin.mesh.core.messages.LocationUncertainty
 import no.nordicsemi.kotlin.mesh.core.messages.Longitude
 import no.nordicsemi.kotlin.mesh.core.messages.MeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationGlobalGet
@@ -162,9 +163,16 @@ internal fun LocationSelector(
     }
 }
 
+/** The message that reads this location. */
+private fun LocationKind.get(): MeshMessage = when (this) {
+    LocationKind.GLOBAL -> GenericLocationGlobalGet()
+    LocationKind.LOCAL -> GenericLocationLocalGet()
+}
+
 /**
  * Displays the global or the local location of a Generic Location Server, depending on the
- * selection. The refresh button reads the selected location.
+ * selection. The selected location is read when the screen is shown and when it is selected, and
+ * the refresh button reads it again.
  */
 @Composable
 internal fun LocationStatus(
@@ -179,25 +187,34 @@ internal fun LocationStatus(
     val local = state.local
     var selected by rememberSaveable { mutableStateOf(LocationKind.GLOBAL) }
     val unknown = stringResource(R.string.label_unknown)
+    // The selected location is read once when the screen is shown, as soon as a message can be sent.
+    var isRead by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(key1 = enabled) {
+        if (enabled && !isRead) {
+            isRead = true
+            sendApplicationMessage(model, selected.get())
+        }
+    }
 
     LocationSectionHeader(
-        title = stringResource(R.string.label_status),
+        title = stringResource(R.string.label_location),
         enabled = enabled,
         isReadInProgress = messageState.isInProgress() && when (selected) {
             LocationKind.GLOBAL -> messageState.message is GenericLocationGlobalGet
             LocationKind.LOCAL -> messageState.message is GenericLocationLocalGet
         },
-        onRead = {
-            sendApplicationMessage(
-                model,
-                when (selected) {
-                    LocationKind.GLOBAL -> GenericLocationGlobalGet()
-                    LocationKind.LOCAL -> GenericLocationLocalGet()
-                }
-            )
+        onRead = { sendApplicationMessage(model, selected.get()) }
+    )
+    // The location of the selected side is read when it is selected, so that it is up to date.
+    LocationSelector(
+        selected = selected,
+        onSelected = { kind ->
+            if (kind != selected) {
+                selected = kind
+                if (enabled) sendApplicationMessage(model, kind.get())
+            }
         }
     )
-    LocationSelector(selected = selected, onSelected = { selected = it })
     StableHeight {
     when (selected) {
         LocationKind.GLOBAL -> {
@@ -241,9 +258,24 @@ internal fun LocationStatus(
             )
             LocationItem(
                 icon = Icons.Outlined.MyLocation,
-                title = stringResource(R.string.label_uncertainty),
-                subtitle = local?.uncertainty?.describe(resources) ?: unknown,
-                subtitleMaxLines = 2
+                title = stringResource(R.string.label_stationary),
+                subtitle = local?.uncertainty?.let {
+                    resources.getString(if (it.isMobile) R.string.label_no else R.string.label_yes)
+                } ?: unknown
+            )
+            LocationItem(
+                icon = Icons.Outlined.Timer,
+                title = stringResource(R.string.label_update_time),
+                subtitle = local?.uncertainty?.let {
+                    "${it.updateTimeMillis.thousandthsToString()} s"
+                } ?: unknown
+            )
+            LocationItem(
+                icon = Icons.Outlined.Straighten,
+                title = stringResource(R.string.label_precision),
+                subtitle = local?.uncertainty?.let {
+                    "${it.precisionMillimeters.thousandthsToString()} m"
+                } ?: unknown
             )
         }
     }
@@ -337,9 +369,3 @@ internal fun FloorNumber.describe(resources: Resources): String = when {
 /** Milliseconds as seconds, or millimeters as meters, without trailing zeros: 125 -> 0.125. */
 internal fun Long.thousandthsToString(): String =
     BigDecimal(this).movePointLeft(3).stripTrailingZeros().toPlainString()
-
-internal fun LocationUncertainty.describe(resources: Resources): String = listOf(
-    resources.getString(if (isMobile) R.string.label_mobile else R.string.label_stationary),
-    resources.getString(R.string.label_update_time_s, updateTimeMillis.thousandthsToString()),
-    resources.getString(R.string.label_precision_m, precisionMillimeters.thousandthsToString()),
-).joinToString(separator = ", ")

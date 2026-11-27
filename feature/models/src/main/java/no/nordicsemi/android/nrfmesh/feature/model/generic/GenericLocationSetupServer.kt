@@ -33,6 +33,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +46,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -52,7 +54,9 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import no.nordicsemi.android.common.ui.view.NordicSliderDefaults
 import no.nordicsemi.android.nrfmesh.core.common.MessageState
 import no.nordicsemi.android.nrfmesh.core.ui.ElevatedCardItem
 import no.nordicsemi.android.nrfmesh.core.ui.MeshOutlinedButton
@@ -75,13 +79,9 @@ import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationLocalSetUn
 import no.nordicsemi.kotlin.mesh.core.messages.generic.GenericLocationLocalStatus
 import no.nordicsemi.kotlin.mesh.core.model.Model
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /** Floors that can be selected: the ground floors, unknown and the numbered floors. */
-// The summit of Mount Everest, which the global location fields start with.
-internal const val EVEREST_LATITUDE = "27.988056"
-internal const val EVEREST_LONGITUDE = "86.925278"
-internal const val EVEREST_ALTITUDE = "8849"
-
 /** Formats a latitude or a longitude with 6 decimals, which is about 0.1 m. */
 internal fun formatDegrees(degrees: Double): String = "%.6f".format(Locale.US, degrees)
 
@@ -160,6 +160,17 @@ internal fun globalLocationSetOf(
     GenericLocationGlobalSetUnacknowledged(latitude, longitude, altitude)
 }
 
+/** The update time and the precision that mean the coarsest values, 4096 s and 4096 m. */
+internal const val UNKNOWN_UNCERTAINTY = 0x0F
+
+/** The 16 update times that can be set, from 0.125 s to 4096 s. */
+internal val updateTimes: List<String> =
+    (0..0x0F).map { "${(125L shl it).thousandthsToString()} s" }
+
+/** The 16 precisions that can be set, from 0.125 m to 4096 m. */
+internal val precisions: List<String> =
+    (0..0x0F).map { "${(125L shl it).thousandthsToString()} m" }
+
 /**
  * Creates the message used to set the local location. The update time and precision of the
  * uncertainty are sent as unknown, as they are not known to the setting node.
@@ -171,8 +182,14 @@ internal fun localLocationSetOf(
     floor: FloorNumber,
     isMobile: Boolean,
     acknowledged: Boolean,
+    updateTimeRaw: Int = UNKNOWN_UNCERTAINTY,
+    precisionRaw: Int = UNKNOWN_UNCERTAINTY,
 ): MeshMessage {
-    val uncertainty = LocationUncertainty.of(isMobile = isMobile)
+    val uncertainty = LocationUncertainty.of(
+        isMobile = isMobile,
+        updateTimeRaw = updateTimeRaw,
+        precisionRaw = precisionRaw
+    )
     return if (acknowledged) {
         GenericLocationLocalSet(north, east, altitude, floor, uncertainty)
     } else {
@@ -235,9 +252,9 @@ private fun LocalStatus(status: GenericLocationLocalStatus?) {
     )
     StatusItem(
         icon = Icons.Outlined.MyLocation,
-        title = stringResource(R.string.label_movement),
+        title = stringResource(R.string.label_stationary),
         value = status?.uncertainty?.let {
-            resources.getString(if (it.isMobile) R.string.label_mobile else R.string.label_stationary)
+            resources.getString(if (it.isMobile) R.string.label_no else R.string.label_yes)
         }
     )
     StatusItem(
@@ -281,13 +298,13 @@ private fun GlobalControls(
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
 ) {
     var latitude by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(EVEREST_LATITUDE))
+        mutableStateOf(TextFieldValue())
     }
     var longitude by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(EVEREST_LONGITUDE))
+        mutableStateOf(TextFieldValue())
     }
     var altitude by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(EVEREST_ALTITUDE))
+        mutableStateOf(TextFieldValue())
     }
     var acknowledged by rememberSaveable { mutableStateOf(true) }
     val context = LocalContext.current
@@ -536,6 +553,8 @@ private fun LocalControls(
     var floorIndex by rememberSaveable { mutableIntStateOf(0) }
     var isFloorExpanded by rememberSaveable { mutableStateOf(false) }
     var isMobile by rememberSaveable { mutableStateOf(false) }
+    var updateTimeIndex by rememberSaveable { mutableIntStateOf(UNKNOWN_UNCERTAINTY) }
+    var precisionIndex by rememberSaveable { mutableIntStateOf(UNKNOWN_UNCERTAINTY) }
     var acknowledged by rememberSaveable { mutableStateOf(true) }
     // Shows the location reported by the node when it is read.
     LaunchedEffect(key1 = status) {
@@ -547,6 +566,8 @@ private fun LocalControls(
             altitude = TextFieldValue(it.altitude.orEmpty(Altitude.NOT_CONFIGURED))
             floors.indexOf(it.floor).takeIf { index -> index >= 0 }?.let { index -> floorIndex = index }
             isMobile = it.uncertainty.isMobile
+            updateTimeIndex = it.uncertainty.updateTimeRaw
+            precisionIndex = it.uncertainty.precisionRaw
         }
     }
     val parsedNorth = north.text.toShortOrNull()
@@ -622,12 +643,32 @@ private fun LocalControls(
                     }
                 }
                 MeshSingleLineListItem(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().padding(bottom = 16.dp),
                     imageVector = Icons.Outlined.MyLocation,
-                    title = stringResource(R.string.label_mobile),
+                    title = stringResource(R.string.label_stationary),
                     trailingComposable = {
-                        Switch(enabled = enabled, checked = isMobile, onCheckedChange = { isMobile = it })
+                        Switch(
+                            enabled = enabled,
+                            checked = !isMobile,
+                            onCheckedChange = { isMobile = !it }
+                        )
                     }
+                )
+                SliderField(
+                    icon = Icons.Outlined.Timer,
+                    label = stringResource(R.string.label_update_time),
+                    options = updateTimes,
+                    selectedIndex = updateTimeIndex,
+                    enabled = enabled,
+                    onSelected = { updateTimeIndex = it }
+                )
+                SliderField(
+                    icon = Icons.Outlined.Straighten,
+                    label = stringResource(R.string.label_precision),
+                    options = precisions,
+                    selectedIndex = precisionIndex,
+                    enabled = enabled,
+                    onSelected = { precisionIndex = it }
                 )
                 AcknowledgedItem(
                     enabled = enabled,
@@ -655,7 +696,9 @@ private fun LocalControls(
                                 altitude = parsedAltitude,
                                 floor = floors[floorIndex],
                                 isMobile = isMobile,
-                                acknowledged = acknowledged
+                                acknowledged = acknowledged,
+                                updateTimeRaw = updateTimeIndex,
+                                precisionRaw = precisionIndex
                             )
                         )
                     }
@@ -663,6 +706,48 @@ private fun LocalControls(
             )
         }
     )
+}
+
+/**
+ * A titled slider with the [options] as its steps. The slider is indented to line up with the
+ * title, and the selected option is shown below it, as in the retransmit settings.
+ */
+@Composable
+private fun SliderField(
+    icon: ImageVector,
+    label: String,
+    options: List<String>,
+    selectedIndex: Int,
+    enabled: Boolean,
+    onSelected: (Int) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                modifier = Modifier.padding(end = 16.dp),
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        }
+        Slider(
+            modifier = Modifier.padding(start = 42.dp),
+            value = selectedIndex.toFloat(),
+            onValueChange = { onSelected(it.roundToInt()) },
+            valueRange = 0f..options.lastIndex.toFloat(),
+            steps = options.size - 2,
+            enabled = enabled,
+            colors = NordicSliderDefaults.colors()
+        )
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp),
+            text = options.getOrElse(selectedIndex) { "" },
+            textAlign = TextAlign.End
+        )
+    }
 }
 
 @Composable

@@ -95,6 +95,32 @@ class GenericLocationSetupServerMessagesTest {
         }
     }
 
+    @Test
+    fun testTheChosenUpdateTimeAndPrecisionAreSent() {
+        val message = localLocationSetOf(
+            0, 0, 0, FloorNumber.UNKNOWN,
+            isMobile = false,
+            acknowledged = true,
+            updateTimeRaw = 3,
+            precisionRaw = 0
+        )
+        assertIs<GenericLocationLocalSet>(message)
+        // 0.125 s * 2^3 and 0.125 m * 2^0.
+        assertEquals(1_000L, message.uncertainty.updateTimeMillis)
+        assertEquals(125L, message.uncertainty.precisionMillimeters)
+    }
+
+    @Test
+    fun testTheUpdateTimesAndPrecisionsAreListedFromTheFinestToTheCoarsest() {
+        assertEquals(16, updateTimes.size)
+        assertEquals("0.125 s", updateTimes.first())
+        assertEquals("1 s", updateTimes[3])
+        assertEquals("4096 s", updateTimes.last())
+        assertEquals(16, precisions.size)
+        assertEquals("0.125 m", precisions.first())
+        assertEquals("4096 m", precisions.last())
+    }
+
     // ---------------------------------------------------------------- Floors
 
     @Test

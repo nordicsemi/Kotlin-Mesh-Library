@@ -40,21 +40,11 @@ class LocationFieldsTest {
     }
 
     @Test
-    fun testTheDefaultValuesAreValid() {
-        val latitude = assertNotNull(Latitude.fromDegrees(EVEREST_LATITUDE.toDouble()))
-        val longitude = assertNotNull(Longitude.fromDegrees(EVEREST_LONGITUDE.toDouble()))
-        val altitude = assertNotNull(EVEREST_ALTITUDE.toShortOrNull())
-        assertEquals(27.988056, assertNotNull(latitude.degrees), 0.000001)
-        assertEquals(86.925278, assertNotNull(longitude.degrees), 0.000001)
-        assertEquals(8849.toShort(), altitude)
-    }
-
-    @Test
-    fun testTheDefaultValuesCanBeSent() {
+    fun testTheTypedValuesCanBeSent() {
         val message = globalLocationSetOf(
-            latitude = assertNotNull(Latitude.fromDegrees(EVEREST_LATITUDE.toDouble())),
-            longitude = assertNotNull(Longitude.fromDegrees(EVEREST_LONGITUDE.toDouble())),
-            altitude = Altitude(EVEREST_ALTITUDE.toShort()),
+            latitude = assertNotNull(Latitude.fromDegrees(27.988056)),
+            longitude = assertNotNull(Longitude.fromDegrees(86.925278)),
+            altitude = Altitude(8849),
             acknowledged = true
         )
         assertIs<GenericLocationGlobalSet>(message)
