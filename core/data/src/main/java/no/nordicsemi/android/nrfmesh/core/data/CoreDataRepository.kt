@@ -49,6 +49,8 @@ import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericPowerOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.LightLCClient
 import no.nordicsemi.android.nrfmesh.core.data.model.LightLightnessClient
+import no.nordicsemi.android.nrfmesh.core.data.model.HealthFaults
+import no.nordicsemi.android.nrfmesh.core.data.model.HealthStatusTracker
 import no.nordicsemi.android.nrfmesh.core.data.model.SceneServer
 import no.nordicsemi.android.nrfmesh.core.data.model.SceneSetupServer
 import no.nordicsemi.android.nrfmesh.core.data.model.vendor.lepairing.PairingInitiatorClient
@@ -137,6 +139,14 @@ class CoreDataRepository @Inject constructor(
         field = MutableStateFlow(value = emptyMap())
 
     val networkEvents: SharedFlow<NetworkEvent> = meshNetworkManager.networkEvents
+
+    private val healthStatusTracker = HealthStatusTracker()
+
+    /**
+     * The faults last reported by the Health Servers, by the address of the sending element. They
+     * are kept while no screen is observing the network.
+     */
+    val healthFaults: StateFlow<Map<Address, HealthFaults>> = healthStatusTracker.faults
     val meshNetwork: MeshNetwork?
         get() = meshNetworkManager.network
 
@@ -174,6 +184,7 @@ class CoreDataRepository @Inject constructor(
         // Observe proxy connection state changes
         observerAutomaticProxyConnectionState()
         observeDeveloperSettingsState()
+        networkEvents.onEach(healthStatusTracker::onEvent).launchIn(scope = ioScope)
     }
 
     fun close() {
@@ -302,6 +313,7 @@ class CoreDataRepository @Inject constructor(
      * the correct network.
      */
     private fun onMeshNetworkChanged() {
+        healthStatusTracker.clear()
         val defaultTransitionTimeServer = GenericDefaultTransitionTimeServer(
             storage = storage,
             uuid = meshNetwork?.uuid

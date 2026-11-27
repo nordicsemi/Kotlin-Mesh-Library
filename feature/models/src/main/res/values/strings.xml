@@ -284,4 +284,22 @@
     <string name="label_phone_location_denied">Location permission was not granted</string>
     <string name="label_phone_location_disabled">Location is turned off on the phone</string>
     <string name="label_phone_location_unavailable">The phone could not get its location</string>
+    <string name="label_attention_timer">Attention Timer</string>
+    <string name="label_fast_period_divisor">Fast Period Divisor</string>
+    <string name="label_attention_timer_status">Attention Timer Status</string>
+    <string name="label_fast_period_divisor_status">Fast Period Divisor Status</string>
+    <string name="label_health_fault_test">Health Fault Test</string>
+    <string name="label_fault_status">Fault Status</string>
+    <string name="label_test">Test</string>
+    <string name="label_test_id_placeholder">Decimal (0-255)</string>
+    <string name="label_company_id_placeholder">HEX (e.g. 0059)</string>
+    <string name="label_test_id">Test ID</string>
+    <string name="label_company_id_hex">Company ID</string>
+        <string name="label_faults">Faults</string>
+    <string name="label_most_recent_test_id">Recent Test ID</string>
+    <string name="label_no_faults">No faults</string>
+    <string name="label_clear_faults">Clear</string>
+    <string name="label_seconds_value">%1$d sec</string>
+    <string name="label_fault_vendor">Vendor fault (0x%1$02X)</string>
+    <string name="label_fault_reserved">Reserved (0x%1$02X)</string>
 </resources>

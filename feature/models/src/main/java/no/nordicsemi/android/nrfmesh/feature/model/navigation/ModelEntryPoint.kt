@@ -52,6 +52,7 @@ fun EntryProviderScope<NavKey>.modelEntry(appState: AppState, navigator: Navigat
                     messageState = uiState.messageState,
                     nodeIdentityStates = uiState.nodeIdentityStates,
                     modelState = modelState,
+                    healthFaults = uiState.healthFaults,
                     requestNodeIdentityStates = viewModel::requestNodeIdentityStates,
                     resetMessageState = viewModel::resetMessageState,
                     onAddGroupClicked = { navigator.navigate(GroupsKey) },
