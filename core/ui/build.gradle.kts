@@ -14,7 +14,7 @@ dependencies {
     implementation(nordic.theme)
     implementation(nordic.logger)
     implementation(nordic.log.timber)
-    api("androidx.compose.material3:material3:1.4.0")
+    api("androidx.compose.material3:material3:1.5.0")
 
     implementation(project(":core:common"))
     implementation(project(":core:navigation"))
