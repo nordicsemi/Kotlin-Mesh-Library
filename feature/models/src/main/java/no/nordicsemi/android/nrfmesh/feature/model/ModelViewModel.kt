@@ -21,6 +21,7 @@ import no.nordicsemi.android.nrfmesh.core.common.NodeIdentityStatus
 import no.nordicsemi.android.nrfmesh.core.common.NotStarted
 import no.nordicsemi.android.nrfmesh.core.common.Sending
 import no.nordicsemi.android.nrfmesh.core.data.CoreDataRepository
+import no.nordicsemi.android.nrfmesh.core.data.model.HealthFaults
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedConfigMessage
 import no.nordicsemi.kotlin.mesh.core.messages.AcknowledgedMeshMessage
 import no.nordicsemi.kotlin.mesh.core.messages.ConfigResponse
@@ -49,6 +50,16 @@ internal class ModelViewModel @AssistedInject internal constructor(
 
     init {
         observeNetworkChanges()
+        observeHealthFaults()
+    }
+
+    /** Shows the faults last reported by the node, also those received while away. */
+    private fun observeHealthFaults() {
+        repository.healthFaults
+            .onEach { faults ->
+                uiState.update { it.copy(healthFaults = faults[unicastAddress]) }
+            }
+            .launchIn(scope = viewModelScope)
     }
 
     private fun observeNetworkChanges() {
@@ -258,4 +269,5 @@ internal data class ModelScreenUiState(
     val isRefreshing: Boolean = false,
     val nodeIdentityStates: List<NodeIdentityStatus> = emptyList(),
     val wasNetworkRemoved: Boolean = false,
+    val healthFaults: HealthFaults? = null,
 )

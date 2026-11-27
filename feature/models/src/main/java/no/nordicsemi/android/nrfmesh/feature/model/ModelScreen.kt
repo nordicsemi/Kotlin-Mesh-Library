@@ -45,6 +45,7 @@ import no.nordicsemi.android.nrfmesh.core.common.isLightLightnessServer
 import no.nordicsemi.android.nrfmesh.core.common.isLightLightnessSetupServer
 import no.nordicsemi.android.nrfmesh.core.common.isSensorServer
 import no.nordicsemi.android.nrfmesh.core.common.isVendorModel
+import no.nordicsemi.android.nrfmesh.core.data.model.HealthFaults
 import no.nordicsemi.android.nrfmesh.core.ui.MeshMessageStatusDialog
 import no.nordicsemi.android.nrfmesh.core.ui.SectionTitle
 import no.nordicsemi.android.nrfmesh.feature.model.common.BoundApplicationKeys
@@ -63,6 +64,7 @@ import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericPropertyServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.PropertyServerKind
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericPowerOnOffServer
 import no.nordicsemi.android.nrfmesh.feature.model.generic.GenericPowerOnOffSetupServer
+import no.nordicsemi.android.nrfmesh.feature.model.health.HealthServer
 import no.nordicsemi.android.nrfmesh.feature.model.lepairing.LePairingResponder
 import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLCServer
 import no.nordicsemi.android.nrfmesh.feature.model.lighting.LightLCSetupServer
@@ -84,6 +86,7 @@ internal fun ModelScreen(
     messageState: MessageState,
     nodeIdentityStates: List<NodeIdentityStatus>,
     modelState: ModelState.Success,
+    healthFaults: HealthFaults? = null,
     send: (AcknowledgedConfigMessage) -> Unit,
     sendApplicationMessage: (Model, MeshMessage) -> Unit,
     sendAcknowledgedMessage: suspend (Model, AcknowledgedMeshMessage) -> MeshMessage?,
@@ -241,6 +244,15 @@ internal fun ModelScreen(
                     model = model,
                     kind = PropertyServerKind.CLIENT,
                     messageState = messageState,
+                    sendApplicationMessage = sendApplicationMessage
+                )
+
+            model.isHealthServer ->
+                HealthServer(
+                    model = model,
+                    messageState = messageState,
+                    healthFaults = healthFaults,
+                    onReadingAll = { isBatchInProgress = it },
                     sendApplicationMessage = sendApplicationMessage
                 )
 
