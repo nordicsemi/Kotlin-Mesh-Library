@@ -41,6 +41,8 @@ import no.nordicsemi.android.nrfmesh.core.data.configurator.Messengers
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericDefaultTransitionTimeServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericLevelClient
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericLocationClient
+import no.nordicsemi.android.nrfmesh.core.data.model.GenericPropertyClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericLevelServer
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffClient
 import no.nordicsemi.android.nrfmesh.core.data.model.GenericOnOffServer
@@ -330,6 +332,14 @@ class CoreDataRepository @Inject constructor(
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.GENERIC_POWER_ON_OFF_CLIENT_MODEL_ID),
                     handler = GenericPowerOnOffClient()
+                ),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.GENERIC_LOCATION_CLIENT_MODEL_ID),
+                    handler = GenericLocationClient()
+                ),
+                Model(
+                    modelId = SigModelId(modelIdentifier = Model.GENERIC_PROPERTY_CLIENT_MODEL_ID),
+                    handler = GenericPropertyClient()
                 ),
                 Model(
                     modelId = SigModelId(modelIdentifier = Model.GENERIC_DEFAULT_TRANSITION_TIME_SERVER_MODEL_ID),

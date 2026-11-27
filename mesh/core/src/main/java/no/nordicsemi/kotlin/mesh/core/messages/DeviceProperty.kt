@@ -689,7 +689,77 @@ enum class DeviceProperty(val id: UShort, val valueLength: Int?, val propertyNam
         propertyName = "Output Power Limitation",
     ),
     THERMAL_DERATING(id = 0x00B6u, valueLength = 6, propertyName = "Thermal Derating"),
-    OUTPUT_CURRENT_PERCENT(id = 0x00B7u, valueLength = 1, propertyName = "Output Current Percent");
+    OUTPUT_CURRENT_PERCENT(id = 0x00B7u, valueLength = 1, propertyName = "Output Current Percent"),
+    MOTION_THRESHOLD_STEPS(
+        id = 0x00B8u,
+        valueLength = 1,
+        propertyName = "Motion Threshold Steps",
+    ),
+    BUILDING_FLOOR(id = 0x00B9u, valueLength = 1, propertyName = "Building Floor"),
+    LOCAL_ASSET_IDENTIFIER(id = 0x00BAu, valueLength = 36, propertyName = "Local Asset Identifier"),
+    LOCAL_ASSET_NAME(id = 0x00BBu, valueLength = 36, propertyName = "Local Asset Name"),
+    SPATIAL_UNIT_CATEGORY(id = 0x00BCu, valueLength = 36, propertyName = "Spatial Unit Category"),
+    SPATIAL_UNIT_NAME(id = 0x00BDu, valueLength = 36, propertyName = "Spatial Unit Name"),
+    COARSE_AMBIENT_RELATIVE_HUMIDITY(
+        id = 0x00BEu,
+        valueLength = 1,
+        propertyName = "Coarse Ambient Relative Humidity",
+    ),
+    COARSE_PRESENT_AMBIENT_LIGHT_LEVEL(
+        id = 0x00BFu,
+        valueLength = 2,
+        propertyName = "Coarse Present Ambient Light Level",
+    ),
+    HVAC_OCCUPANCY_MINIMUM_RUN_TIME(
+        id = 0x00C0u,
+        valueLength = 2,
+        propertyName = "HVAC Occupancy Minimum Run Time",
+    ),
+    HVAC_OCCUPANCY_THRESHOLD_TIME(
+        id = 0x00C1u,
+        valueLength = 2,
+        propertyName = "HVAC Occupancy Threshold Time",
+    ),
+    PRESENT_AMBIENT_TEMPERATURE_AND_COARSE_AMBIENT_RELATIVE_HUMIDITY(
+        id = 0x00C2u,
+        valueLength = 2,
+        propertyName = "Present Ambient Temperature and Coarse Ambient Relative Humidity",
+    ),
+    PRESENT_PRECISE_AMBIENT_TEMPERATURE_AND_RELATIVE_HUMIDITY(
+        id = 0x00C3u,
+        valueLength = 4,
+        propertyName = "Present Precise Ambient Temperature and Relative Humidity",
+    ),
+    SUB_SENSOR_WEIGHTS_2(id = 0x00C4u, valueLength = 3, propertyName = "Subsensor Weights 2"),
+    SUB_SENSOR_WEIGHTS_3(id = 0x00C5u, valueLength = 4, propertyName = "Subsensor Weights 3"),
+    SUB_SENSOR_WEIGHTS_4(id = 0x00C6u, valueLength = 5, propertyName = "Subsensor Weights 4"),
+    SUB_SENSOR_WEIGHTS_5(id = 0x00C7u, valueLength = 6, propertyName = "Subsensor Weights 5"),
+    SUB_SENSOR_WEIGHTS_6(id = 0x00C8u, valueLength = 7, propertyName = "Subsensor Weights 6"),
+    SUB_SENSOR_WEIGHTS_7(id = 0x00C9u, valueLength = 8, propertyName = "Subsensor Weights 7"),
+    SUB_SENSOR_WEIGHTS_8(id = 0x00CAu, valueLength = 9, propertyName = "Subsensor Weights 8"),
+    HVAC_VACANCY_THRESHOLD_TIME(
+        id = 0x00CBu,
+        valueLength = 2,
+        propertyName = "HVAC Vacancy Threshold Time",
+    ),
+    ACCELERATION_3D_SENSOR_STATUS(
+        id = 0x00CCu,
+        valueLength = 3,
+        propertyName = "3D Acceleration Sensor Status",
+    ),
+    ACCELERATION_DETECTION_STATUS(
+        id = 0x00CDu,
+        valueLength = 1,
+        propertyName = "Acceleration Detection Status",
+    ),
+    CONTACT_STATUS(id = 0x00CEu, valueLength = 1, propertyName = "Contact Status"),
+    DOOR_WINDOW_STATUS(id = 0x00CFu, valueLength = 1, propertyName = "Door/Window Status"),
+    PRECISE_ACCELERATION_3D_SENSOR_STATUS(
+        id = 0x00D0u,
+        valueLength = 6,
+        propertyName = "Precise 3D Acceleration Sensor Status",
+    ),
+    PUSH_BUTTON_STATUS(id = 0x00D1u, valueLength = 1, propertyName = "Pushbutton Status");
 
     override fun toString() = propertyName
 
@@ -810,7 +880,9 @@ enum class DeviceProperty(val id: UShort, val valueLength: Int?, val propertyNam
                         .unlessUnknown(UNKNOWN_16)
                 )
 
-            TIME_SINCE_PRESENCE_DETECTED ->
+            TIME_SINCE_PRESENCE_DETECTED, HVAC_OCCUPANCY_MINIMUM_RUN_TIME,
+            HVAC_OCCUPANCY_THRESHOLD_TIME, HVAC_VACANCY_THRESHOLD_TIME,
+                ->
                 if (!valid) DevicePropertyCharacteristic.TimeSecond16(null)
                 else DevicePropertyCharacteristic.TimeSecond16(
                     value = data
@@ -1138,7 +1210,9 @@ enum class DeviceProperty(val id: UShort, val valueLength: Int?, val propertyNam
                     )
                 )
 
-            DEVICE_MANUFACTURER_NAME ->
+            DEVICE_MANUFACTURER_NAME, LOCAL_ASSET_IDENTIFIER, LOCAL_ASSET_NAME,
+            SPATIAL_UNIT_CATEGORY, SPATIAL_UNIT_NAME,
+                ->
                 DevicePropertyCharacteristic.FixedString36(
                     value = data.string(
                         offset = offset,
@@ -1154,6 +1228,129 @@ enum class DeviceProperty(val id: UShort, val valueLength: Int?, val propertyNam
                         length = 64,
                         valid = valid
                     )
+                )
+
+
+            // UInt8 -> UInt8? (number of steps)
+            MOTION_THRESHOLD_STEPS ->
+                if (!valid) DevicePropertyCharacteristic.Percentage8Steps(null)
+                else DevicePropertyCharacteristic.Percentage8Steps(
+                    data[offset].toUByte().takeIf { it != 0xFF.toUByte() }
+                )
+
+            BUILDING_FLOOR ->
+                DevicePropertyCharacteristic.Floor(
+                    FloorNumber(if (!valid) 0xFF.toUByte() else data[offset].toUByte())
+                )
+
+            COARSE_AMBIENT_RELATIVE_HUMIDITY ->
+                if (!valid) DevicePropertyCharacteristic.Humidity8(null)
+                else DevicePropertyCharacteristic.Humidity8(
+                    value = data[offset]
+                        .toUByte()
+                        .toLong()
+                        .toDecimal(range = ZERO..HUNDRED, resolution = HALF, unknownValue = 0xFF)
+                )
+
+            COARSE_PRESENT_AMBIENT_LIGHT_LEVEL ->
+                if (!valid) DevicePropertyCharacteristic.Illuminance16(null)
+                else DevicePropertyCharacteristic.Illuminance16(
+                    data.getUShort(offset = offset, order = ByteOrder.LITTLE_ENDIAN)
+                        .unlessUnknown(UNKNOWN_16)
+                )
+
+            PRESENT_AMBIENT_TEMPERATURE_AND_COARSE_AMBIENT_RELATIVE_HUMIDITY ->
+                if (!valid) DevicePropertyCharacteristic.TemperatureAndHumidity8(null, null)
+                else DevicePropertyCharacteristic.TemperatureAndHumidity8(
+                    temperature = data[offset].toLong().toDecimal(
+                        range = BigDecimal("-64.0")..BigDecimal("63.0"),
+                        resolution = HALF,
+                        unknownValue = 0x7F,
+                    ),
+                    humidity = data[offset + 1].toUByte().toLong().toDecimal(
+                        range = ZERO..HUNDRED,
+                        resolution = HALF,
+                        unknownValue = 0xFF,
+                    ),
+                )
+
+            PRESENT_PRECISE_AMBIENT_TEMPERATURE_AND_RELATIVE_HUMIDITY ->
+                if (!valid) DevicePropertyCharacteristic.TemperatureAndHumidity(null, null)
+                else DevicePropertyCharacteristic.TemperatureAndHumidity(
+                    temperature = data
+                        .getShort(offset = offset, order = ByteOrder.LITTLE_ENDIAN)
+                        .toLong()
+                        .toDecimal(
+                            range = BigDecimal("-273.15")..BigDecimal("327.67"),
+                            resolution = CENTI,
+                            unknownValue = -32768,
+                        ),
+                    humidity = data
+                        .getUShort(offset = offset + 2, order = ByteOrder.LITTLE_ENDIAN)
+                        .toLong()
+                        .toDecimal(range = ZERO..HUNDRED, resolution = CENTI, unknownValue = 0xFFFF),
+                )
+
+            // 1 x Percentage 8 Steps and N x Percentage 8
+            SUB_SENSOR_WEIGHTS_2, SUB_SENSOR_WEIGHTS_3, SUB_SENSOR_WEIGHTS_4, SUB_SENSOR_WEIGHTS_5,
+            SUB_SENSOR_WEIGHTS_6, SUB_SENSOR_WEIGHTS_7, SUB_SENSOR_WEIGHTS_8,
+                ->
+                if (!valid) DevicePropertyCharacteristic.SubSensorWeights(null, emptyList())
+                else DevicePropertyCharacteristic.SubSensorWeights(
+                    steps = data[offset].toUByte().takeIf { it != 0xFF.toUByte() },
+                    weights = List(length - 1) { i ->
+                        data[offset + 1 + i].toUByte().toLong().toDecimal(
+                            range = ZERO..HUNDRED,
+                            resolution = HALF,
+                            unknownValue = 0xFF,
+                        )
+                    },
+                )
+
+            // Int8 x 3 -> ValidDecimal?
+            ACCELERATION_3D_SENSOR_STATUS ->
+                if (!valid) DevicePropertyCharacteristic.Acceleration3d(null, null, null)
+                else DevicePropertyCharacteristic.Acceleration3d(
+                    x = data[offset].toLong().toAxis(CENTI, 0x7E, 0x7F),
+                    y = data[offset + 1].toLong().toAxis(CENTI, 0x7E, 0x7F),
+                    z = data[offset + 2].toLong().toAxis(CENTI, 0x7E, 0x7F),
+                )
+
+            // Int16 x 3 -> ValidDecimal?
+            PRECISE_ACCELERATION_3D_SENSOR_STATUS ->
+                if (!valid) DevicePropertyCharacteristic.PreciseAcceleration3d(null, null, null)
+                else DevicePropertyCharacteristic.PreciseAcceleration3d(
+                    x = data.getShort(offset, ByteOrder.LITTLE_ENDIAN).toLong()
+                        .toAxis(MILLI, 0x7FFE, 0x7FFF),
+                    y = data.getShort(offset + 2, ByteOrder.LITTLE_ENDIAN).toLong()
+                        .toAxis(MILLI, 0x7FFE, 0x7FFF),
+                    z = data.getShort(offset + 4, ByteOrder.LITTLE_ENDIAN).toLong()
+                        .toAxis(MILLI, 0x7FFE, 0x7FFF),
+                )
+
+            // UInt8 -> Status
+            ACCELERATION_DETECTION_STATUS ->
+                DevicePropertyCharacteristic.AccelerationDetection(
+                    valid && data[offset] == 0x01.toByte()
+                )
+
+            CONTACT_STATUS ->
+                DevicePropertyCharacteristic.ContactStatus(
+                    List(8) { i -> valid && (data[offset].toInt() shr i) and 1 == 1 }
+                )
+
+            DOOR_WINDOW_STATUS ->
+                DevicePropertyCharacteristic.DoorWindowStatus(
+                    if (!valid) 0xFF.toUByte() else data[offset].toUByte()
+                )
+
+            PUSH_BUTTON_STATUS ->
+                DevicePropertyCharacteristic.PushButtonStatus(
+                    List(4) { i ->
+                        ButtonStatus.entries[
+                            if (!valid) 0 else (data[offset].toInt() shr (2 * i)) and 3
+                        ]
+                    }
                 )
 
             // Other
@@ -1252,6 +1449,17 @@ private fun Long.toDecimal(
     resolution: BigDecimal,
     unknownValue: Long,
 ): BigDecimal? = if (this == unknownValue) null else toDecimal(range, resolution)
+
+/**
+ * Converts a signed value to a [ValidDecimal], where one value means out of range and another that
+ * the value is not known.
+ */
+private fun Long.toAxis(resolution: BigDecimal, invalidValue: Long, unknownValue: Long): ValidDecimal? =
+    when (this) {
+        unknownValue -> null
+        invalidValue -> ValidDecimal.Invalid
+        else -> ValidDecimal.Valid(BigDecimal(this).multiply(resolution))
+    }
 
 /**
  * Converts a 32-bit value to a [ValidDecimal], where 0xFFFFFFFE means invalid and 0xFFFFFFFF

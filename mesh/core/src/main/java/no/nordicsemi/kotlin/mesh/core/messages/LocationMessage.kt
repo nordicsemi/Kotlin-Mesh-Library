@@ -3,6 +3,7 @@ package no.nordicsemi.kotlin.mesh.core.messages
 import no.nordicsemi.kotlin.data.ByteOrder
 import no.nordicsemi.kotlin.data.getInt
 import no.nordicsemi.kotlin.data.getShort
+import no.nordicsemi.kotlin.data.getUShort
 import no.nordicsemi.kotlin.data.toByteArray
 import kotlin.math.floor
 import kotlin.math.max
@@ -162,3 +163,181 @@ internal fun ByteArray.getLongitude(offset: Int) =
 
 internal fun ByteArray.getAltitude(offset: Int) =
     Altitude(getShort(offset = offset, order = ByteOrder.LITTLE_ENDIAN))
+
+/**
+ * Base interface for local location status messages.
+ *
+ * @property north       Local north position in decimeters. [LOCAL_NOT_CONFIGURED] (0x8000) means
+ *                       the position is not configured.
+ * @property east        Local east position in decimeters. [LOCAL_NOT_CONFIGURED] (0x8000) means
+ *                       the position is not configured.
+ * @property altitude    Local altitude in decimeters. [Altitude.NOT_CONFIGURED] (0x7FFF) means the
+ *                       altitude is not configured and [Altitude.TOO_LARGE] (0x7FFE) means the
+ *                       altitude is too large to be represented.
+ * @property floor       Local floor number.
+ * @property uncertainty Uncertainty of the local location.
+ */
+interface LocalLocationStatusMessage : MeshMessage {
+    val north: Short
+    val east: Short
+    val altitude: Short
+    val floor: FloorNumber
+    val uncertainty: LocationUncertainty
+
+    companion object {
+        /** Raw value indicating that the local north or east is not configured. */
+        const val LOCAL_NOT_CONFIGURED: Short = Short.MIN_VALUE // 0x8000
+    }
+}
+
+/**
+ * Encodes the local location fields as 9 bytes: north (2), east (2), altitude (2), floor number (1)
+ * and uncertainty (2), all little endian.
+ */
+internal fun encodeLocalLocation(
+    north: Short,
+    east: Short,
+    altitude: Short,
+    floor: FloorNumber,
+    uncertainty: LocationUncertainty,
+): ByteArray = north.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+        east.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+        altitude.toByteArray(order = ByteOrder.LITTLE_ENDIAN) +
+        byteArrayOf(floor.raw.toByte()) +
+        uncertainty.raw.toByteArray(order = ByteOrder.LITTLE_ENDIAN)
+
+/**
+ * Local floor number as defined in the Generic Location Floor Number state.
+ *
+ * @property raw Raw 8-bit value. 0x01 to 0xFB represent the floors -19 to 231 (floor + 20). 0x00
+ *               represents floor -20 or any floor below, [ABOVE_MAX_RAW] (0xFC) represents floor
+ *               232 or any floor above, [GROUND_FLOOR_0] (0xFD) and [GROUND_FLOOR_1] (0xFE)
+ *               represent the ground floor, depending on whether the ground floor is numbered 0 or
+ *               1, and [UNKNOWN] (0xFF) means the floor is not configured.
+ */
+@JvmInline
+value class FloorNumber(val raw: UByte) {
+
+    /** Returns true if the floor is configured. */
+    val isKnown: Boolean get() = raw != UNKNOWN_RAW
+
+    /** Returns true if this is the ground floor. */
+    val isGroundFloor: Boolean get() = raw == GROUND_FLOOR_0_RAW || raw == GROUND_FLOOR_1_RAW
+
+    /** Returns true if the floor is [MIN] or any floor below. */
+    val isMinOrBelow: Boolean get() = raw == 0x00.toUByte()
+
+    /** Returns true if the floor is [MAX] or any floor above. */
+    val isMaxOrAbove: Boolean get() = raw == MAX_RAW
+
+    /**
+     * Floor number, or null if the floor is not configured. The ground floor is 0 or 1 depending
+     * on [raw].
+     */
+    val number: Int?
+        get() = when (raw) {
+            GROUND_FLOOR_0_RAW -> 0
+            GROUND_FLOOR_1_RAW -> 1
+            UNKNOWN_RAW -> null
+            MAX_RAW -> MAX
+            else -> raw.toInt() - FLOOR_OFFSET
+        }
+
+    override fun toString() = when (raw) {
+        UNKNOWN_RAW -> "FloorNumber(not configured)"
+        GROUND_FLOOR_0_RAW -> "FloorNumber(ground floor, 0)"
+        GROUND_FLOOR_1_RAW -> "FloorNumber(ground floor, 1)"
+        else -> "FloorNumber($number${
+            when {
+                isMinOrBelow -> " or below"
+                isMaxOrAbove -> " or above"
+                else -> ""
+            }
+        })"
+    }
+
+    companion object {
+        private const val FLOOR_OFFSET = 20
+        private val MAX_RAW: UByte = 0xFCu
+        private val GROUND_FLOOR_0_RAW: UByte = 0xFDu
+        private val GROUND_FLOOR_1_RAW: UByte = 0xFEu
+        private val UNKNOWN_RAW: UByte = 0xFFu
+
+        /** Lowest floor number, which also stands for any floor below it. */
+        const val MIN = -20
+
+        /** Highest floor number, which also stands for any floor above it. */
+        const val MAX = 232
+
+        /** Ground floor, where the ground floor is referred to as floor 0. */
+        val GROUND_FLOOR_0 = FloorNumber(GROUND_FLOOR_0_RAW)
+
+        /** Ground floor, where the ground floor is referred to as floor 1. */
+        val GROUND_FLOOR_1 = FloorNumber(GROUND_FLOOR_1_RAW)
+
+        /** Floor that is not configured. */
+        val UNKNOWN = FloorNumber(UNKNOWN_RAW)
+
+        /**
+         * Creates a [FloorNumber] from a floor number between [MIN] and [MAX].
+         *
+         * @return The floor or null if the number is out of range.
+         */
+        fun of(number: Int): FloorNumber? = when (number) {
+            MAX -> FloorNumber(MAX_RAW)
+            in MIN until MAX -> FloorNumber((number + FLOOR_OFFSET).toUByte())
+            else -> null
+        }
+    }
+}
+
+/**
+ * Uncertainty of a local location, which describes whether the device is mobile, how long ago the
+ * location was updated and how precise it is.
+ *
+ * @property raw Raw 16-bit value. Bit 0 is set for a mobile device, bits 8 to 11 hold the update
+ *               time and bits 12 to 15 hold the precision.
+ */
+@JvmInline
+value class LocationUncertainty(val raw: UShort) {
+
+    /** Returns true if the device is mobile, or false if it is stationary. */
+    val isMobile: Boolean get() = raw.toInt() and 0x01 != 0
+
+    /** Raw 4-bit update time. The time is `2^(value - 3)` seconds. */
+    val updateTimeRaw: Int get() = (raw.toInt() shr 8) and 0x0F
+
+    /** Raw 4-bit precision. The precision is `2^(value - 3)` meters. */
+    val precisionRaw: Int get() = (raw.toInt() shr 12) and 0x0F
+
+    /** Time since the last update of the location in milliseconds, 125 ms to 4096 s. */
+    val updateTimeMillis: Long get() = 125L shl updateTimeRaw
+
+    /** Precision of the location in millimeters, 125 mm to 4096 m. */
+    val precisionMillimeters: Long get() = 125L shl precisionRaw
+
+    override fun toString() = "LocationUncertainty(" +
+            "mobile: $isMobile, updateTime: $updateTimeMillis ms, " +
+            "precision: $precisionMillimeters mm)"
+
+    companion object {
+        /**
+         * Creates a [LocationUncertainty] from the raw 4-bit update time and precision values.
+         *
+         * @param isMobile      True if the device is mobile.
+         * @param updateTimeRaw Raw 4-bit update time, 0 to 15 for 0.125 s to 4096 s.
+         * @param precisionRaw  Raw 4-bit precision, 0 to 15 for 0.125 m to 4096 m.
+         */
+        fun of(isMobile: Boolean, updateTimeRaw: Int = 0x0F, precisionRaw: Int = 0x0F) =
+            LocationUncertainty(
+                raw = ((if (isMobile) 1 else 0) or
+                        ((updateTimeRaw and 0x0F) shl 8) or
+                        ((precisionRaw and 0x0F) shl 12)).toUShort()
+            )
+    }
+}
+
+internal fun ByteArray.getFloorNumber(offset: Int) = FloorNumber(raw = this[offset].toUByte())
+
+internal fun ByteArray.getLocationUncertainty(offset: Int) =
+    LocationUncertainty(raw = getUShort(offset = offset, order = ByteOrder.LITTLE_ENDIAN))
